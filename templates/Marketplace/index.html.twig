@@ -143,168 +143,51 @@
           </button>
         </div>
 
-        {# Product Grid #}
+        {# Product Grid — Dynamic from Database #}
         <div class="product-grid">
 
-          {# Product 1 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="0">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/hero_2.jpg') }}" alt="Semences de blé">
-              <span class="product-badge badge-new">Nouveau</span>
-            </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Semences</div>
-              <h3 class="product-card-title">Semences de Blé Dur — Variété Karim</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Béja, Tunisie
+          {% for produit in produits %}
+            <div class="product-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+              <div class="product-card-img">
+                {% if produit.image %}
+                  <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}">
+                {% else %}
+                  <img src="{{ asset('assets/img/marketplace_bg.jpg') }}" alt="{{ produit.nom }}">
+                {% endif %}
+                {% if produit.remise > 0 %}
+                  <span class="product-badge badge-promo">-{{ produit.remise }}{{ produit.typeRemise == 'pourcentage' ? '%' : ' TND' }}</span>
+                {% endif %}
               </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-half"></i>
-                <span>(24)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">45 <small>TND/kg</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-              </div>
-            </div>
-          </div>
-
-          {# Product 2 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="100">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/materiel.jpg') }}" alt="Tracteur">
-            </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Équipement</div>
-              <h3 class="product-card-title">Tracteur Compact 45CV — Occasion révisée</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Sfax, Tunisie
-              </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(12)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">28 500 <small>TND</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              <div class="product-card-body">
+                {% if produit.categorie %}
+                  <div class="product-card-category">{{ produit.categorie }}</div>
+                {% endif %}
+                <h3 class="product-card-title">{{ produit.nom }}</h3>
+                {% if produit.description %}
+                  <p class="product-card-description" style="font-size:13px;color:#636e72;margin-bottom:10px;">
+                    {{ produit.description|length > 80 ? produit.description|slice(0, 80) ~ '...' : produit.description }}
+                  </p>
+                {% endif %}
+                <div class="product-card-footer">
+                  <div class="product-price">
+                    {% if produit.remise > 0 %}
+                      <small style="text-decoration:line-through;color:#b2bec3;">{{ produit.prix }} TND</small><br>
+                      {{ produit.prixFinal|number_format(2, '.', ' ') }}
+                    {% else %}
+                      {{ produit.prix|number_format(2, '.', ' ') }}
+                    {% endif %}
+                    <small>TND/{{ produit.uniteMesure }}</small>
+                  </div>
+                  <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+                </div>
               </div>
             </div>
-          </div>
-
-          {# Product 3 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="200">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/hero_3.jpg') }}" alt="Engrais bio">
-              <span class="product-badge badge-promo">Promo</span>
+          {% else %}
+            <div class="text-center w-100 py-5">
+              <i class="bi bi-basket" style="font-size:3rem;color:#b2bec3;"></i>
+              <p style="color:#636e72;margin-top:12px;">Aucun produit disponible pour le moment.</p>
             </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Engrais</div>
-              <h3 class="product-card-title">Engrais Organique NPK — Sac 50kg</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Nabeul, Tunisie
-              </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(38)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">85 <small>TND</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-              </div>
-            </div>
-          </div>
-
-          {# Product 4 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="300">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/hero_4.jpg') }}" alt="Service conseil">
-              <span class="product-badge badge-new">Nouveau</span>
-            </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Services</div>
-              <h3 class="product-card-title">Consultation Agronomique — Diagnostic terrain</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Tunis, Tunisie
-              </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star"></i>
-                <span>(9)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">120 <small>TND/visite</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-              </div>
-            </div>
-          </div>
-
-          {# Product 5 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="400">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/emp.jpg') }}" alt="Système irrigation">
-            </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Équipement</div>
-              <h3 class="product-card-title">Système d'Irrigation Goutte-à-Goutte — Kit complet</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Sousse, Tunisie
-              </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-half"></i>
-                <span>(31)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">650 <small>TND</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-              </div>
-            </div>
-          </div>
-
-          {# Product 6 #}
-          <div class="product-card" data-aos="fade-up" data-aos-delay="500">
-            <div class="product-card-img">
-              <img src="{{ asset('assets/img/hero_5.jpg') }}" alt="Plants d'olivier">
-              <span class="product-badge badge-promo">Promo</span>
-            </div>
-            <div class="product-card-body">
-              <div class="product-card-category">Semences</div>
-              <h3 class="product-card-title">Plants d'Olivier — Chétoui (lot de 50)</h3>
-              <div class="product-card-location">
-                <i class="bi bi-geo-alt"></i> Bizerte, Tunisie
-              </div>
-              <div class="product-rating">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <span>(56)</span>
-              </div>
-              <div class="product-card-footer">
-                <div class="product-price">375 <small>TND</small></div>
-                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-              </div>
-            </div>
-          </div>
+          {% endfor %}
 
         </div>
 
