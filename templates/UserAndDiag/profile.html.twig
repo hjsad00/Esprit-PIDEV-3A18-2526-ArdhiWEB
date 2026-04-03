@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - Ardhi{% endblock %}
+
+{% block body %}
+<section class="section py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10 shadow p-5 bg-white rounded">
+        <div class="text-center mb-4">
+          <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Mon Profil</h1>
+          <p class="text-muted">Gérez vos informations personnelles</p>
+        </div>
+
+        <form method="post">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
+                <input type="text" name="nom" id="inputNom" class="form-control" value="{{ user.nom }}" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="inputPrenom" class="form-label">Prénom <span class="text-danger">*</span></label>
+                <input type="text" name="prenom" id="inputPrenom" class="form-control" value="{{ user.prenom }}" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputEmail" class="form-label">Email</label>
+              <input type="email" id="inputEmail" class="form-control" value="{{ user.email }}" readonly disabled>
+              <small class="form-text text-muted">L'adresse email ne peut pas être modifiée.</small>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputRole" class="form-label">Rôle <span class="text-danger">*</span></label>
+              <select name="role" id="inputRole" class="form-select" required>
+                <option value="AGRICULTEUR" {{ user.role == 'AGRICULTEUR' ? 'selected' : '' }}>Agriculteur</option>
+                <option value="CLIENT" {{ user.role == 'CLIENT' ? 'selected' : '' }}>Client</option>
+                <option value="AGRONOME" {{ user.role == 'AGRONOME' ? 'selected' : '' }}>Agronome</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="inputPhone" class="form-label">Téléphone</label>
+                <input type="tel" name="phone" id="inputPhone" class="form-control" value="{{ user.phone }}" placeholder="+216 XX XXX XXX">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="inputLocation" class="form-label">Localisation</label>
+                <input type="text" name="location" id="inputLocation" class="form-control" value="{{ user.location }}" placeholder="Ville, Gouvernorat">
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+              <h5 class="mb-3">Changer le mot de passe <small class="text-muted fs-6 text-normal">(optionnel)</small></h5>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="inputPassword" class="form-label">Nouveau mot de passe</label>
+                  <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="new-password" minlength="6" placeholder="Laisser vide pour ne pas changer">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="inputPasswordConfirm" class="form-label">Confirmer nouveau mot de passe</label>
+                  <input type="password" name="password_confirm" id="inputPasswordConfirm" class="form-control" autocomplete="new-password" minlength="6">
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('profile_edit') }}">
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <a href="{{ path('app_home') }}" class="btn btn-secondary">Annuler</a>
+              <button class="btn btn-primary" type="submit">
+                  <i class="bi bi-save me-2"></i>Enregistrer les modifications
+              </button>
+            </div>
+        </form>
+
+        <hr class="my-4">
+        
+        <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+            <div>
+              <h6 class="mb-1 text-muted">Suppression du compte</h6>
+              <small class="text-muted">Si vous ne souhaitez plus utiliser nos services, vous pouvez supprimer votre compte.</small>
+            </div>
+            <form action="{{ path('app_profile_delete') }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.');">
+              <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+              <button type="submit" class="btn btn-sm btn-danger">
+                Supprimer mon compte
+              </button>
+            </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -47,7 +47,7 @@
           {% if app.user %}
           <li class="dropdown"><a href="#"><span>Mon Compte {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
-              <li><a href="#">Mon Profil</a></li>
+              <li><a href="{{ path('app_profile') }}">Mon Profil</a></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
             </ul>
           </li>
