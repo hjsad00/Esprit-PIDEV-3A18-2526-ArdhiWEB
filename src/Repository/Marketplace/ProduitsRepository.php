@@ -57,4 +57,21 @@ class ProduitsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Tous les produits sauf ceux de l'utilisateur connecté.
+     */
+    public function findAllExceptUser(?int $userId): array
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        if ($userId) {
+            $qb->andWhere('p.user != :uid')
+               ->setParameter('uid', $userId);
+        }
+
+        return $qb->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

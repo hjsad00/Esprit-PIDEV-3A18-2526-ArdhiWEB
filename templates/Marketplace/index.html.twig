@@ -29,7 +29,7 @@
               Achetez et vendez semences, équipements, engrais et bien plus
               auprès d'agriculteurs vérifiés à travers toute la Tunisie.
             </p>
-            <a href="#marketplace-products" class="hero-btn-primary">
+            <a href="{{ path('app_marketplace_catalogue') }}" class="hero-btn-primary">
               <i class="bi bi-shop"></i> Explorer le marché
             </a>
           </div>
@@ -39,7 +39,7 @@
             <div class="categories-glass-panel">
               <div class="categories-panel-title">Services Marketplace</div>
 
-              <a href="#" class="category-item">
+              <a href="{{ path('app_marketplace_catalogue') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-cart-fill"></i></div>
                 <div class="category-text">
                   <h4>Catalogue</h4>
@@ -90,107 +90,6 @@
           </div>
 
         </div>
-      </div>
-    </section>
-
-    {# ============================
-       MARKETPLACE PRODUCTS
-       ============================ #}
-    <section id="marketplace-products" class="marketplace-section">
-      <div class="container">
-
-        {# Section Header #}
-        <div class="marketplace-section-header" data-aos="fade-up">
-          <h2>Produits disponibles</h2>
-          <p>Trouvez tout ce dont votre ferme a besoin</p>
-        </div>
-
-        {# Search & Filter Bar #}
-        <div class="marketplace-filters" data-aos="fade-up" data-aos-delay="100">
-          <div class="filter-search">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Rechercher un produit...">
-          </div>
-          <div class="filter-select">
-            <select>
-              <option value="">Catégorie</option>
-              <option value="semences">Semences</option>
-              <option value="equipement">Équipement</option>
-              <option value="engrais">Engrais</option>
-              <option value="betail">Bétail</option>
-              <option value="services">Services</option>
-            </select>
-          </div>
-          <div class="filter-select">
-            <select>
-              <option value="">Prix</option>
-              <option value="asc">Prix croissant</option>
-              <option value="desc">Prix décroissant</option>
-            </select>
-          </div>
-          <div class="filter-select">
-            <select>
-              <option value="">Localisation</option>
-              <option value="tunis">Tunis</option>
-              <option value="sfax">Sfax</option>
-              <option value="sousse">Sousse</option>
-              <option value="bizerte">Bizerte</option>
-              <option value="nabeul">Nabeul</option>
-            </select>
-          </div>
-          <button class="filter-btn">
-            <i class="bi bi-funnel"></i> Filtrer
-          </button>
-        </div>
-
-        {# Product Grid — Dynamic from Database #}
-        <div class="product-grid">
-
-          {% for produit in produits %}
-            <div class="product-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-              <div class="product-card-img">
-                {% if produit.image %}
-                  <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}">
-                {% else %}
-                  <img src="{{ asset('assets/img/marketplace_bg.jpg') }}" alt="{{ produit.nom }}">
-                {% endif %}
-                {% if produit.remise > 0 %}
-                  <span class="product-badge badge-promo">-{{ produit.remise }}{{ produit.typeRemise == 'pourcentage' ? '%' : ' TND' }}</span>
-                {% endif %}
-              </div>
-              <div class="product-card-body">
-                {% if produit.categorie %}
-                  <div class="product-card-category">{{ produit.categorie }}</div>
-                {% endif %}
-                <h3 class="product-card-title">{{ produit.nom }}</h3>
-                {% if produit.description %}
-                  <p class="product-card-description" style="font-size:13px;color:#636e72;margin-bottom:10px;">
-                    {{ produit.description|length > 80 ? produit.description|slice(0, 80) ~ '...' : produit.description }}
-                  </p>
-                {% endif %}
-                <div class="product-card-footer">
-                  <div class="product-price">
-                    {% if produit.remise > 0 %}
-                      <small style="text-decoration:line-through;color:#b2bec3;">{{ produit.prix }} TND</small><br>
-                      {{ produit.prixFinal|number_format(2, '.', ' ') }}
-                    {% else %}
-                      {{ produit.prix|number_format(2, '.', ' ') }}
-                    {% endif %}
-                    <small>TND/{{ produit.uniteMesure }}</small>
-                  </div>
-                  <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
-                </div>
-              </div>
-            </div>
-          {% else %}
-            <div class="text-center w-100 py-5">
-              <i class="bi bi-basket" style="font-size:3rem;color:#b2bec3;"></i>
-              <p style="color:#636e72;margin-top:12px;">Aucun produit disponible pour le moment.</p>
-            </div>
-          {% endfor %}
-
-        </div>
-
       </div>
     </section>
 

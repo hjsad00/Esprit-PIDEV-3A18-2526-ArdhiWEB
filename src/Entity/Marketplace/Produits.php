@@ -175,7 +175,7 @@ class Produits
             return $this->prix;
         }
 
-        if ($this->typeRemise === 'pourcentage') {
+        if ($this->typeRemise === 'POURCENTAGE') {
             return $this->prix * (1 - $this->remise / 100);
         }
 
