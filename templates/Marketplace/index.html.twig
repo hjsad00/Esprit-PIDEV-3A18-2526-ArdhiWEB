@@ -1,0 +1,314 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Marketplace{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       HERO SECTION
+       ============================ #}
+    <section class="marketplace-hero">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Marketplace Ardhi">
+      </div>
+
+      <div class="container">
+        <div class="hero-inner">
+
+          {# --- Left Content --- #}
+          <div class="hero-left">
+            <div class="hero-label">ARDHI MARKETPLACE</div>
+            <h1 class="hero-headline">Votre marché<br>agricole<br>en ligne.</h1>
+            <p class="hero-description">
+              Achetez et vendez semences, équipements, engrais et bien plus
+              auprès d'agriculteurs vérifiés à travers toute la Tunisie.
+            </p>
+            <a href="#marketplace-products" class="hero-btn-primary">
+              <i class="bi bi-shop"></i> Explorer le marché
+            </a>
+          </div>
+
+          {# --- Right: Categories Panel --- #}
+          <div class="hero-right">
+            <div class="categories-glass-panel">
+              <div class="categories-panel-title">Services Marketplace</div>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-cart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Catalogue</h4>
+                  <span>Parcourir les produits</span>
+                </div>
+              </a>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-box-seam-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Commandes</h4>
+                  <span>Suivre mes achats</span>
+                </div>
+              </a>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Favoris</h4>
+                  <span>Mes produits sauvegar...</span>
+                </div>
+              </a>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-shop-window"></i></div>
+                <div class="category-text">
+                  <h4>Mes Produits</h4>
+                  <span>Gérer mes produits</span>
+                </div>
+              </a>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Statistiques</h4>
+                  <span>Performances & ventes</span>
+                </div>
+              </a>
+                 <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-box-arrow-in-down"></i></div>
+                <div class="category-text">
+                  <h4>Commandes reçues</h4>
+                  <span>Gérer les commandes</span>
+                </div>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       MARKETPLACE PRODUCTS
+       ============================ #}
+    <section id="marketplace-products" class="marketplace-section">
+      <div class="container">
+
+        {# Section Header #}
+        <div class="marketplace-section-header" data-aos="fade-up">
+          <h2>Produits disponibles</h2>
+          <p>Trouvez tout ce dont votre ferme a besoin</p>
+        </div>
+
+        {# Search & Filter Bar #}
+        <div class="marketplace-filters" data-aos="fade-up" data-aos-delay="100">
+          <div class="filter-search">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Rechercher un produit...">
+          </div>
+          <div class="filter-select">
+            <select>
+              <option value="">Catégorie</option>
+              <option value="semences">Semences</option>
+              <option value="equipement">Équipement</option>
+              <option value="engrais">Engrais</option>
+              <option value="betail">Bétail</option>
+              <option value="services">Services</option>
+            </select>
+          </div>
+          <div class="filter-select">
+            <select>
+              <option value="">Prix</option>
+              <option value="asc">Prix croissant</option>
+              <option value="desc">Prix décroissant</option>
+            </select>
+          </div>
+          <div class="filter-select">
+            <select>
+              <option value="">Localisation</option>
+              <option value="tunis">Tunis</option>
+              <option value="sfax">Sfax</option>
+              <option value="sousse">Sousse</option>
+              <option value="bizerte">Bizerte</option>
+              <option value="nabeul">Nabeul</option>
+            </select>
+          </div>
+          <button class="filter-btn">
+            <i class="bi bi-funnel"></i> Filtrer
+          </button>
+        </div>
+
+        {# Product Grid #}
+        <div class="product-grid">
+
+          {# Product 1 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="0">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/hero_2.jpg') }}" alt="Semences de blé">
+              <span class="product-badge badge-new">Nouveau</span>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Semences</div>
+              <h3 class="product-card-title">Semences de Blé Dur — Variété Karim</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Béja, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+                <span>(24)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">45 <small>TND/kg</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+          {# Product 2 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/materiel.jpg') }}" alt="Tracteur">
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Équipement</div>
+              <h3 class="product-card-title">Tracteur Compact 45CV — Occasion révisée</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Sfax, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star"></i>
+                <span>(12)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">28 500 <small>TND</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+          {# Product 3 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/hero_3.jpg') }}" alt="Engrais bio">
+              <span class="product-badge badge-promo">Promo</span>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Engrais</div>
+              <h3 class="product-card-title">Engrais Organique NPK — Sac 50kg</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Nabeul, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <span>(38)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">85 <small>TND</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+          {# Product 4 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/hero_4.jpg') }}" alt="Service conseil">
+              <span class="product-badge badge-new">Nouveau</span>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Services</div>
+              <h3 class="product-card-title">Consultation Agronomique — Diagnostic terrain</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Tunis, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star"></i>
+                <span>(9)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">120 <small>TND/visite</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+          {# Product 5 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="400">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/emp.jpg') }}" alt="Système irrigation">
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Équipement</div>
+              <h3 class="product-card-title">Système d'Irrigation Goutte-à-Goutte — Kit complet</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Sousse, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+                <span>(31)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">650 <small>TND</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+          {# Product 6 #}
+          <div class="product-card" data-aos="fade-up" data-aos-delay="500">
+            <div class="product-card-img">
+              <img src="{{ asset('assets/img/hero_5.jpg') }}" alt="Plants d'olivier">
+              <span class="product-badge badge-promo">Promo</span>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">Semences</div>
+              <h3 class="product-card-title">Plants d'Olivier — Chétoui (lot de 50)</h3>
+              <div class="product-card-location">
+                <i class="bi bi-geo-alt"></i> Bizerte, Tunisie
+              </div>
+              <div class="product-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <span>(56)</span>
+              </div>
+              <div class="product-card-footer">
+                <div class="product-price">375 <small>TND</small></div>
+                <a href="#" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+{% endblock %}

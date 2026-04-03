@@ -28,7 +28,7 @@
   {% block stylesheets %}{% endblock %}
 </head>
 
-<body class="index-page">
+<body class="{% block body_class %}index-page{% endblock %}">
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
@@ -40,7 +40,7 @@
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/">Diagnostic IA</a></li>
-          <li><a href="#">Marketplace</a></li>
+          <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
           <li><a href="#">Maintenance</a></li>
           <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
