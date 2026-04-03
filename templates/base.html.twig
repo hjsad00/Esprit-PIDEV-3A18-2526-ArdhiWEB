@@ -30,7 +30,7 @@
 
 <body class="index-page">
 
-  <header id="header" class="header d-flex align-items-center position-relative">
+  <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
       <a href="/" class="logo d-flex align-items-center">
@@ -48,7 +48,7 @@
           
           {% if app.user %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
-            <div style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s; background: rgba(255, 255, 255, 0.1);">
+            <div class="nav-user-circle">
               <i class="bi bi-person-fill" style="font-size: 1.3rem;"></i>
             </div></a>
             <ul>
@@ -57,15 +57,7 @@
             </ul>
           </li>
           {% else %}
-          <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
-            <div style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
-              <i class="bi bi-person" style="font-size: 1.3rem;"></i>
-            </div></a>
-            <ul>
-              <li><a href="{{ path('app_login') }}">Connexion</a></li>
-              <li><a href="{{ path('app_register') }}">Inscription</a></li>
-            </ul>
-          </li>
+          <li><a href="{{ path('app_login') }}" class="nav-cta-btn">Se connecter</a></li>
           {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

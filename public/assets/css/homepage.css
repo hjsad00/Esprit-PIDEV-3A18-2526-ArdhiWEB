@@ -1,0 +1,714 @@
+/* ================================================================
+   HOMEPAGE — Glassmorphism & Enterprise Design
+   ================================================================ */
+
+/* --- Google Font Import (Inter for modern feel) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* --- CSS Variables --- */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-bg-strong: rgba(255, 255, 255, 0.18);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --glass-blur: blur(16px);
+    --ardhi-green: #4a8c3f;
+    --ardhi-green-light: #5ea851;
+    --ardhi-green-dark: #3a7030;
+    --ardhi-green-glow: rgba(74, 140, 63, 0.4);
+    --hero-gradient: linear-gradient(135deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.1) 100%);
+    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ================================================================
+   TRANSPARENT NAVBAR (HOME PAGE ONLY)
+   ================================================================ */
+.index-page .header {
+    background: transparent !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 12px 0;
+    transition: var(--transition-smooth);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.index-page .header .logo img {
+    max-height: 44px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    transition: var(--transition-smooth);
+}
+
+.index-page .header .navmenu ul>li>a {
+    color: #fff !important;
+    font-family: 'Inter', var(--nav-font), sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: var(--transition-smooth);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.index-page .header .navmenu ul>li>a:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.12);
+    text-shadow: none;
+}
+
+/* "Se connecter" CTA Button in Nav */
+.nav-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ardhi-green) !important;
+    color: #fff !important;
+    padding: 10px 24px !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.3px;
+    text-shadow: none !important;
+    box-shadow: 0 4px 15px var(--ardhi-green-glow);
+    transition: var(--transition-smooth) !important;
+    border: none;
+    text-decoration: none !important;
+}
+
+.nav-cta-btn:hover {
+    background: var(--ardhi-green-light) !important;
+    box-shadow: 0 6px 25px var(--ardhi-green-glow) !important;
+    transform: translateY(-2px);
+}
+
+/* Scrolled state — solid glass header */
+.scrolled.index-page .header,
+.index-page.scrolled .header {
+    background: rgba(15, 20, 15, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 0;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* User dropdown icon on home */
+.index-page .header .nav-user-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.index-page .header .nav-user-circle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ================================================================
+   HERO SECTION — Full Viewport with Left Content + Right Sidebar
+   ================================================================ */
+.hero {
+    padding: 0 !important;
+    position: relative;
+}
+
+.hero .carousel {
+    min-height: 100vh !important;
+}
+
+.hero .carousel-item:before {
+    background: var(--hero-gradient) !important;
+}
+
+/* --- Hero Content (Left Side) --- */
+.hero-content-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: stretch;
+    padding-top: 80px;
+}
+
+.hero-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 40px 60px 80px;
+    max-width: 60%;
+}
+
+.hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ardhi-green-light);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeInDown 0.8s both;
+}
+
+.hero-label::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 28px;
+    background: var(--ardhi-green);
+    border-radius: 3px;
+    box-shadow: 0 0 12px var(--ardhi-green-glow);
+}
+
+.hero-headline {
+    font-family: 'Marcellus', var(--heading-font), serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    animation: fadeInDown 0.8s both 0.15s;
+}
+
+.hero-description {
+    font-family: 'Inter', var(--default-font), sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 500px;
+    margin-bottom: 36px;
+    animation: fadeInDown 0.8s both 0.3s;
+}
+
+/* --- Hero CTA Buttons --- */
+.hero-cta-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s both 0.45s;
+}
+
+.hero-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 36px;
+    background: var(--ardhi-green);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 50px;
+    border: none;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 20px var(--ardhi-green-glow);
+    cursor: pointer;
+}
+
+.hero-btn-primary:hover {
+    background: var(--ardhi-green-light);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px var(--ardhi-green-glow);
+    color: #fff;
+}
+
+.hero-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 36px;
+    background: transparent;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+}
+
+.hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #fff;
+    color: #fff;
+    transform: translateY(-3px);
+}
+
+/* --- Glassmorphic Services Sidebar --- */
+.hero-services-sidebar {
+    width: 340px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 20px 30px 0;
+    animation: fadeInRight 0.8s both 0.4s;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.services-glass-panel {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    padding: 28px 20px;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for services panel */
+.services-glass-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.services-glass-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.services-glass-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.services-panel-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    letter-spacing: 0.5px;
+}
+
+.service-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 10px;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+}
+
+.service-sidebar-item:last-child {
+    margin-bottom: 0;
+}
+
+.service-sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateX(-4px);
+    box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.15);
+    color: #fff;
+}
+
+.service-sidebar-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+    transition: var(--transition-smooth);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.service-sidebar-item:hover .service-sidebar-icon {
+    background: var(--ardhi-green);
+    border-color: var(--ardhi-green);
+    box-shadow: 0 4px 15px var(--ardhi-green-glow);
+}
+
+.service-sidebar-text h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+    color: #fff;
+}
+
+.service-sidebar-text span {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Custom Carousel Controls --- */
+.hero .carousel-control-prev,
+.hero .carousel-control-next {
+    width: 48px !important;
+    height: 48px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 0.7 !important;
+    transition: var(--transition-smooth) !important;
+    margin: 0 20px;
+}
+
+.hero .carousel-control-prev {
+    left: 10px;
+}
+
+.hero .carousel-control-next {
+    left: auto;
+    right: 370px;
+}
+
+.hero .carousel-control-prev:hover,
+.hero .carousel-control-next:hover {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.hero .carousel-control-next-icon,
+.hero .carousel-control-prev-icon {
+    background: none;
+    font-size: 20px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+}
+
+/* --- Carousel Indicators (Bottom Left Dots) --- */
+.hero .carousel-indicators {
+    justify-content: flex-start !important;
+    margin-left: 80px !important;
+    margin-bottom: 30px !important;
+    margin-right: auto !important;
+    z-index: 5;
+}
+
+.hero .carousel-indicators li,
+.hero .carousel-indicators [data-bs-target] {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    opacity: 1 !important;
+    margin: 0 5px !important;
+    transition: var(--transition-smooth) !important;
+    cursor: pointer;
+}
+
+.hero .carousel-indicators .active {
+    background: #fff !important;
+    border-color: #fff !important;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* ================================================================
+   SERVICES SECTION — Glassmorphic Cards
+   ================================================================ */
+.services.section {
+    background: linear-gradient(180deg, #f8faf7 0%, #ffffff 100%) !important;
+    padding: 80px 0 !important;
+}
+
+.services .section-title h2 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.services .section-title p {
+    font-family: 'Marcellus', serif;
+    color: #2d3436;
+}
+
+.services .content .service-item {
+    background: #fff !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    transition: var(--transition-smooth) !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.services .content .service-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ardhi-green), var(--ardhi-green-light));
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+.services .content .service-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(74, 140, 63, 0.12) !important;
+    border-color: rgba(74, 140, 63, 0.15) !important;
+}
+
+.services .content .service-item:hover::before {
+    opacity: 1;
+}
+
+.services .content .service-item .number {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 40px;
+    color: rgba(74, 140, 63, 0.08) !important;
+}
+
+.services .content .service-item .service-item-icon {
+    color: var(--ardhi-green) !important;
+}
+
+.services .content .service-item .service-heading {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+.services .content .service-item p {
+    font-family: 'Inter', sans-serif;
+    color: #636e72;
+    line-height: 1.6;
+}
+
+/* ================================================================
+   ABOUT SECTION — Premium Dark with Glass Elements
+   ================================================================ */
+.about .content {
+    background: linear-gradient(135deg, #2d5a27 0%, #1a3a15 50%, #0f2b0c 100%) !important;
+    padding: 7rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle pattern overlay */
+.about .content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(74, 140, 63, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(94, 168, 81, 0.1) 0%, transparent 40%);
+    pointer-events: none;
+}
+
+.about .content-subtitle {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.about .content-title {
+    font-family: 'Marcellus', serif !important;
+}
+
+.about .content .col-lg-5>.row>div {
+    padding: 16px 0;
+    transition: var(--transition-smooth);
+}
+
+.about .content .col-lg-5>.row>div:hover {
+    transform: translateX(8px);
+}
+
+.about .content i.bi {
+    color: var(--ardhi-green-light) !important;
+    transition: var(--transition-smooth);
+}
+
+.about .content .col-lg-5>.row>div:hover i.bi {
+    transform: scale(1.15);
+}
+
+/* ================================================================
+   FOOTER PREMIUM POLISH
+   ================================================================ */
+.footer.dark-background {
+    background: linear-gradient(180deg, #1a1a1a 0%, #111 100%) !important;
+}
+
+.footer .footer-top {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1200px) {
+    .hero-services-sidebar {
+        width: 280px;
+        min-width: 260px;
+    }
+
+    .hero .carousel-control-next {
+        right: 300px;
+    }
+
+    .hero-left {
+        padding-left: 50px;
+        max-width: 55%;
+    }
+}
+
+@media (max-width: 991px) {
+    .hero-content-wrapper {
+        flex-direction: column;
+        padding-top: 70px;
+    }
+
+    .hero-left {
+        max-width: 100%;
+        padding: 40px 30px 20px 30px;
+        justify-content: flex-end;
+        flex: 1;
+    }
+
+    .hero-headline {
+        font-size: clamp(2rem, 6vw, 3rem);
+    }
+
+    .hero-services-sidebar {
+        width: 100%;
+        min-width: 100%;
+        padding: 0 20px 20px 20px;
+    }
+
+    .services-glass-panel {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 10px;
+        padding: 16px;
+        max-height: none;
+    }
+
+    .services-panel-title {
+        display: none;
+    }
+
+    .service-sidebar-item {
+        min-width: 160px;
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    .hero .carousel-control-prev,
+    .hero .carousel-control-next {
+        display: none !important;
+    }
+
+    .hero .carousel-indicators {
+        margin-left: 30px !important;
+        margin-bottom: 20px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-left {
+        padding: 30px 20px 10px 20px;
+    }
+
+    .hero-label {
+        font-size: 11px;
+        letter-spacing: 1.5px;
+    }
+
+    .hero-cta-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hero-btn-primary,
+    .hero-btn-secondary {
+        justify-content: center;
+        padding: 12px 28px;
+    }
+
+    .hero .carousel-indicators {
+        margin-left: 20px !important;
+    }
+
+    .service-sidebar-item {
+        min-width: 140px;
+    }
+}
+
+/* ================================================================
+   MICRO-ANIMATIONS & EXTRAS
+   ================================================================ */
+@keyframes subtle-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 20px var(--ardhi-green-glow);
+    }
+
+    50% {
+        box-shadow: 0 4px 30px rgba(74, 140, 63, 0.6);
+    }
+}
+
+.hero-btn-primary {
+    animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* Smooth fade for carousel transitions */
+.hero .carousel-item {
+    transition: opacity 1s ease-in-out !important;
+}
+
+/* Ensure the preloader covers everything */
+#preloader {
+    z-index: 99999 !important;
+}
