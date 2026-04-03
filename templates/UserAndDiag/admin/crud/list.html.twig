@@ -1,0 +1,82 @@
+{% extends 'UserAndDiag/admin/admin_base.html.twig' %}
+
+{% block title %}{{ page_title }} - Ardhi Admin{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block body %}
+<div class="admin-table-card">
+  <div class="admin-table-header">
+    <h2><i class="bi {{ icon ?? 'bi-table' }} me-2"></i>{{ page_title }}</h2>
+    {% if new_route is defined and new_route %}
+    <a href="{{ path(new_route) }}" class="btn btn-admin">
+      <i class="bi bi-plus-lg me-1"></i>Ajouter
+    </a>
+    {% endif %}
+  </div>
+
+  {% if items|length > 0 %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          {% for col in columns %}
+            <th>{{ col.label }}</th>
+          {% endfor %}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          {% for col in columns %}
+            <td>
+              {% set value = attribute(item, col.field) %}
+              {% if col.type|default('text') == 'date' %}
+                {{ value ? value|date('d/m/Y H:i') : '-' }}
+              {% elseif col.type|default('text') == 'bool' %}
+                {% if value %}
+                  <span class="badge bg-success badge-admin">Oui</span>
+                {% else %}
+                  <span class="badge bg-secondary badge-admin">Non</span>
+                {% endif %}
+              {% elseif col.type|default('text') == 'relation' %}
+                {{ value ? value.id ~ (col.display is defined and col.display ? ' - ' ~ attribute(value, col.display) : '') : '-' }}
+              {% elseif col.type|default('text') == 'badge' %}
+                <span class="badge badge-admin" style="background: {{ col.color|default('#6c757d') }}22; color: {{ col.color|default('#6c757d') }};">{{ value ?? '-' }}</span>
+              {% elseif col.type|default('text') == 'truncate' %}
+                {{ value|length > 50 ? value|slice(0, 50) ~ '...' : value ?? '-' }}
+              {% else %}
+                {{ value ?? '-' }}
+              {% endif %}
+            </td>
+          {% endfor %}
+          <td>
+            <div class="action-btns">
+              {% if edit_route is defined and edit_route %}
+              <a href="{{ path(edit_route, {id: id_getter is defined ? attribute(item, id_getter) : item.id}) }}" class="btn btn-outline-primary btn-sm" title="Modifier">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% endif %}
+              {% if delete_route is defined and delete_route %}
+              <form method="post" action="{{ path(delete_route, {id: id_getter is defined ? attribute(item, id_getter) : item.id}) }}" class="delete-form" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet élément ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ (id_getter is defined ? attribute(item, id_getter) : item.id)) }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi {{ icon ?? 'bi-inbox' }}"></i>
+    <p>Aucun élément trouvé.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

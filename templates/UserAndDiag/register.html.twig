@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - Ardhi{% endblock %}
+
+{% block body %}
+<section class="section d-flex align-items-center justify-content-center" style="min-height: 60vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8 shadow p-5 bg-white rounded">
+        <form method="post">
+
+            <div class="text-center mb-4">
+              <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Créer un compte</h1>
+              <p class="text-muted">Rejoignez la communauté Ardhi</p>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
+                <input type="text" name="nom" id="inputNom" class="form-control" value="{{ last_nom }}" required autofocus>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="inputPrenom" class="form-label">Prénom <span class="text-danger">*</span></label>
+                <input type="text" name="prenom" id="inputPrenom" class="form-control" value="{{ last_prenom }}" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputEmail" class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" name="email" id="inputEmail" class="form-control" value="{{ last_email }}" autocomplete="email" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputRole" class="form-label">Rôle <span class="text-danger">*</span></label>
+              <select name="role" id="inputRole" class="form-select" required>
+                <option value="AGRICULTEUR" {{ last_role == 'AGRICULTEUR' ? 'selected' : '' }}>Agriculteur</option>
+                <option value="CLIENT" {{ last_role == 'CLIENT' ? 'selected' : '' }}>Client</option>
+                <option value="AGRONOME" {{ last_role == 'AGRONOME' ? 'selected' : '' }}>Agronome</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="inputPhone" class="form-label">Téléphone</label>
+                <input type="tel" name="phone" id="inputPhone" class="form-control" value="{{ last_phone }}" placeholder="+216 XX XXX XXX">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="inputLocation" class="form-label">Localisation</label>
+                <input type="text" name="location" id="inputLocation" class="form-control" value="{{ last_location }}" placeholder="Ville, Gouvernorat">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="inputPassword" class="form-label">Mot de passe <span class="text-danger">*</span></label>
+                <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="new-password" required minlength="6">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="inputPasswordConfirm" class="form-label">Confirmer <span class="text-danger">*</span></label>
+                <input type="password" name="password_confirm" id="inputPasswordConfirm" class="form-control" autocomplete="new-password" required minlength="6">
+              </div>
+            </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+
+            <div class="d-grid mb-3">
+              <button class="btn btn-primary btn-lg" type="submit">
+                  <i class="bi bi-person-plus me-2"></i>S'inscrire
+              </button>
+            </div>
+
+            <div class="text-center">
+              <p class="text-muted mb-0">
+                  Vous avez déjà un compte ?
+                  <a href="{{ path('app_login') }}" style="color: var(--accent-color);">Se connecter</a>
+              </p>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

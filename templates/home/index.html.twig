@@ -1,0 +1,166 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Accueil{% endblock %}
+
+{% block body %}
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section dark-background">
+      <div id="hero-carousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+
+        <div class="carousel-item active">
+          <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="">
+          <div class="carousel-container">
+            <h2>Bienvenue sur Ardhi</h2>
+            <p>Votre plateforme intelligente pour l'agriculture de précision.   ostiquez, suivez et optimisez vos cultures en temps réel.</p>
+          </div>
+        </div>
+
+        <div class="carousel-item">
+          <img src="{{ asset('assets/img/hero_2.jpg') }}" alt="">
+          <div class="carousel-container">
+            <h2>Diagnostics IA avancés</h2>
+            <p>Utilisez l'intelligence artificielle pour détecter les maladies et les carences de vos plantes grâce à une simple photo.</p>
+          </div>
+        </div>
+
+        <div class="carousel-item">
+          <img src="{{ asset('assets/img/hero_3.jpg') }}" alt="">
+          <div class="carousel-container">
+            <h2>Suivi de vos parcelles</h2>
+            <p>Gérez vos parcelles, planifiez vos traitements et suivez la santé de vos exploitations depuis un seul tableau de bord.</p>
+          </div>
+        </div>
+
+        <div class="carousel-item">
+          <img src="{{ asset('assets/img/hero_4.jpg') }}" alt="">
+          <div class="carousel-container">
+            <h2>Communauté d'agriculteurs</h2>
+            <p>Partagez vos expériences, posez des questions et échangez avec d'autres agriculteurs et agronomes.</p>
+          </div>
+        </div>
+
+        <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
+        </a>
+        <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
+        </a>
+        <ol class="carousel-indicators"></ol>
+
+      </div>
+    </section><!-- /Hero Section -->
+
+    <!-- Services Section -->
+    <section id="services" class="services section">
+      <div class="container section-title" data-aos="fade-up">
+        <h2>NOS SERVICES</h2>
+        <p>Des outils puissants pour votre agriculture</p>
+      </div>
+      <div class="content">
+        <div class="container">
+          <div class="row g-0">
+
+            <div class="col-lg-3 col-md-6">
+              <div class="service-item">
+                <span class="number">01</span>
+                <div class="service-item-icon">
+                  <i class="bi bi-camera display-4"></i>
+                </div>
+                <div class="service-item-content">
+                  <h3 class="service-heading">Diagnostic IA</h3>
+                  <p>Prenez une photo de votre plante et obtenez un diagnostic instantané grâce à l'IA.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+              <div class="service-item">
+                <span class="number">02</span>
+                <div class="service-item-icon">
+                  <i class="bi bi-geo-alt display-4"></i>
+                </div>
+                <div class="service-item-content">
+                  <h3 class="service-heading">Gestion Parcelles</h3>
+                  <p>Suivez vos parcelles, leur état de santé et planifiez vos interventions.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+              <div class="service-item">
+                <span class="number">03</span>
+                <div class="service-item-icon">
+                  <i class="bi bi-shield-check display-4"></i>
+                </div>
+                <div class="service-item-content">
+                  <h3 class="service-heading">Plans de Prévention</h3>
+                  <p>Recevez des plans de prévention personnalisés pour protéger vos cultures.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+              <div class="service-item">
+                <span class="number">04</span>
+                <div class="service-item-icon">
+                  <i class="bi bi-people display-4"></i>
+                </div>
+                <div class="service-item-content">
+                  <h3 class="service-heading">Communauté</h3>
+                  <p>Échangez avec d'autres agriculteurs et agronomes pour partager vos connaissances.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section><!-- /Services Section -->
+
+    <!-- About Section -->
+    <section id="about" class="about section">
+      <div class="content">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+              <img src="{{ asset('assets/img/img_long_5.jpg') }}" alt="À propos d'Ardhi" class="img-fluid img-overlap" data-aos="zoom-out">
+            </div>
+            <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
+              <h3 class="content-subtitle text-white opacity-50">Pourquoi Ardhi ?</h3>
+              <h2 class="content-title mb-4">
+                Une plateforme <strong>complète</strong> pour l'agriculture intelligente
+              </h2>
+              <p class="opacity-50">
+                Ardhi combine intelligence artificielle, données satellites et expertise agronomique pour vous aider à prendre les meilleures décisions pour vos cultures.
+              </p>
+              <div class="row my-5">
+                <div class="col-lg-12 d-flex align-items-start mb-4">
+                  <i class="bi bi-lightning-charge me-4 display-6"></i>
+                  <div>
+                    <h4 class="m-0 h5 text-white">Diagnostics rapides</h4>
+                    <p class="text-white opacity-50">Résultats en quelques secondes grâce à l'IA.</p>
+                  </div>
+                </div>
+                <div class="col-lg-12 d-flex align-items-start mb-4">
+                  <i class="bi bi-bar-chart me-4 display-6"></i>
+                  <div>
+                    <h4 class="m-0 h5 text-white">Suivi en temps réel</h4>
+                    <p class="text-white opacity-50">Tableaux de bord pour visualiser la santé de vos exploitations.</p>
+                  </div>
+                </div>
+                <div class="col-lg-12 d-flex align-items-start">
+                  <i class="bi bi-chat-dots me-4 display-6"></i>
+                  <div>
+                    <h4 class="m-0 h5 text-white">Communauté active</h4>
+                    <p class="text-white opacity-50">Échangez et apprenez avec d'autres professionnels.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /About Section -->
+
+{% endblock %}
