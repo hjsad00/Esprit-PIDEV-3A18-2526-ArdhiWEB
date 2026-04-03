@@ -1,0 +1,412 @@
+/* ===================================================
+   Ardhi Admin Dashboard Styles
+   =================================================== */
+
+:root {
+  --admin-sidebar-width: 260px;
+  --admin-sidebar-bg: #1a1f2e;
+  --admin-sidebar-color: #a8b2c1;
+  --admin-sidebar-active: #116530;
+  --admin-sidebar-hover-bg: rgba(17, 101, 48, 0.15);
+  --admin-topbar-height: 64px;
+  --admin-bg: #f0f2f5;
+  --admin-card-bg: #ffffff;
+  --admin-text: #2d465e;
+  --admin-text-muted: #6c757d;
+  --admin-border: #e3e6ea;
+  --admin-accent: #116530;
+  --admin-radius: 10px;
+  --admin-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --admin-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Sidebar ===== */
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--admin-sidebar-width);
+  height: 100vh;
+  background: var(--admin-sidebar-bg);
+  color: var(--admin-sidebar-color);
+  z-index: 1040;
+  overflow-y: auto;
+  transition: transform var(--admin-transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar::-webkit-scrollbar { width: 4px; }
+.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(168, 178, 193, 0.2); border-radius: 4px; }
+
+.sidebar-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.sidebar-brand:hover { color: #ffffff; }
+
+.sidebar-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  color: var(--admin-sidebar-color);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.sidebar-nav { padding: 12px 0; flex: 1; }
+
+.nav-section-title {
+  padding: 16px 20px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(168, 178, 193, 0.5);
+}
+
+.sidebar-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  color: var(--admin-sidebar-color);
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: 0;
+  transition: all var(--admin-transition);
+  border-left: 3px solid transparent;
+}
+
+.sidebar-nav .nav-link i { font-size: 17px; width: 20px; text-align: center; }
+
+.sidebar-nav .nav-link:hover {
+  background: var(--admin-sidebar-hover-bg);
+  color: #ffffff;
+}
+
+.sidebar-nav .nav-link.active {
+  background: var(--admin-sidebar-hover-bg);
+  color: #ffffff;
+  border-left-color: var(--admin-sidebar-active);
+  font-weight: 500;
+}
+
+/* ===== Main Content ===== */
+.admin-main {
+  margin-left: var(--admin-sidebar-width);
+  min-height: 100vh;
+  background: var(--admin-bg);
+  transition: margin var(--admin-transition);
+}
+
+.admin-topbar {
+  height: var(--admin-topbar-height);
+  background: var(--admin-card-bg);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.topbar-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--admin-text);
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.topbar-right { margin-left: auto; }
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.topbar-user i { font-size: 22px; }
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--admin-text);
+  cursor: pointer;
+}
+
+.admin-content {
+  padding: 24px;
+}
+
+/* ===== Stat Cards ===== */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  padding: 20px;
+  box-shadow: var(--admin-shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--admin-transition);
+  border: 1px solid var(--admin-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--card-accent, var(--admin-accent));
+  border-radius: 4px 0 0 4px;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  color: inherit;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.stat-info { display: flex; flex-direction: column; }
+
+.stat-count {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--admin-text);
+  line-height: 1;
+  font-family: 'Inter', sans-serif;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+/* ===== Data Tables ===== */
+.admin-table-card {
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+
+.admin-table-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--admin-border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-table-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+  font-family: 'Inter', sans-serif;
+}
+
+.table { margin: 0; }
+
+.table thead th {
+  background: #f8f9fa;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--admin-text-muted);
+  border-bottom: 2px solid var(--admin-border);
+  padding: 12px 16px;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--admin-text);
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.table tbody tr:hover { background: #f8fdf9; }
+
+.table tbody tr:last-child td { border-bottom: none; }
+
+/* ===== Forms ===== */
+.admin-form-card {
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  border: 1px solid var(--admin-border);
+  padding: 24px;
+  max-width: 800px;
+}
+
+.admin-form-card .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text);
+  margin-bottom: 6px;
+}
+
+.admin-form-card .form-control,
+.admin-form-card .form-select {
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: all var(--admin-transition);
+}
+
+.admin-form-card .form-control:focus,
+.admin-form-card .form-select:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(17, 101, 48, 0.12);
+}
+
+/* ===== Buttons ===== */
+.btn-admin {
+  background: var(--admin-accent);
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--admin-transition);
+}
+
+.btn-admin:hover {
+  background: #0d5226;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-admin-outline {
+  background: transparent;
+  color: var(--admin-accent);
+  border: 1px solid var(--admin-accent);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--admin-transition);
+}
+
+.btn-admin-outline:hover {
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.btn-sm { padding: 5px 12px; font-size: 13px; }
+
+/* ===== Badges ===== */
+.badge-admin {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--admin-text-muted);
+}
+
+.empty-state i { font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.4; }
+.empty-state p { font-size: 15px; margin: 0; }
+
+/* ===== Responsive overlay ===== */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1030;
+  display: none;
+}
+
+.sidebar-overlay.active { display: block; }
+
+/* ===== Mobile ===== */
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* ===== Table Responsive Wrapper ===== */
+.table-responsive { overflow-x: auto; }
+
+/* ===== Action buttons in tables ===== */
+.action-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.action-btns .btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* ===== Delete form inline ===== */
+.delete-form { display: inline; }
