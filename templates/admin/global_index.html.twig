@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Ardhi - Administration Globale</title>
+
+  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+</head>
+<body style="background-color: #f4f6f9;">
+
+<!-- Admin Global Topbar -->
+<header style="background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 35px;">
+        <span style="font-weight: 700; font-size: 1.25rem; color: #116530;">Ardhi Admin</span>
+    </div>
+    
+    <div>
+        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-house-door me-1"></i>Retour au Site</a>
+        {% if app.user %}
+            <a href="{{ path('app_logout') }}" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container py-5" style="margin-top: 20px;">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="fw-bold" style="color: #116530;">Portail d'Administration</h1>
+            <p class="text-muted">Sélectionnez un module pour continuer</p>
+        </div>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        <!-- User & Diag -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('admin_user_diag_dashboard') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#212529'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-heart-pulse display-4 text-dark mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">User & Diagnostics</h5>
+                    <p class="text-muted small">19 entités de gestion...</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Marketplace -->
+        <div class="col-md-4 col-lg-3">
+            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#198754'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-shop display-4 text-success mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark mb-0">Marketplace</h5>
+                </div>
+            </a>
+        </div>
+
+        <!-- Maintenance -->
+        <div class="col-md-4 col-lg-3">
+            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#fd7e14'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-tools display-4 text-warning mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark mb-0">Maintenance</h5>
+                </div>
+            </a>
+        </div>
+
+        <!-- Cultures -->
+        <div class="col-md-4 col-lg-3">
+            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#20c997'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-tree display-4 text-info mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark mb-0">Cultures</h5>
+                </div>
+            </a>
+        </div>
+
+        <!-- Évènements -->
+        <div class="col-md-4 col-lg-3">
+            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#6f42c1'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-calendar-event display-4 text-purple mb-3" style="color: #6f42c1;"></i>
+                    <h5 class="card-title fw-bold text-dark mb-0">Évènements</h5>
+                </div>
+            </a>
+        </div>
+
+        <!-- Employés -->
+        <div class="col-md-4 col-lg-3">
+            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#dc3545'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-people display-4 text-danger mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark mb-0">Employés</h5>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

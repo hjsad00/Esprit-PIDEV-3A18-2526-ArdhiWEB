@@ -3,7 +3,7 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Repository\UserAndDiag\AbonnementRepository;
-use App\Repository\UserAndDiag\AvisRepository;
+
 use App\Repository\UserAndDiag\BadgeRepository;
 use App\Repository\UserAndDiag\CommunityCommentRepository;
 use App\Repository\UserAndDiag\CommunityLikeRepository;
@@ -25,15 +25,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/admin')]
+#[Route('/admin/user-diag')]
 class AdminController extends AbstractController
 {
-    #[Route('', name: 'admin_dashboard')]
+    #[Route('/dashboard', name: 'admin_user_diag_dashboard')]
     public function dashboard(
         UserRepository $userRepo,
         DiagnosticRepository $diagnosticRepo,
         AbonnementRepository $abonnementRepo,
-        AvisRepository $avisRepo,
+
         BadgeRepository $badgeRepo,
         CommunityPostRepository $postRepo,
         CommunityCommentRepository $commentRepo,
@@ -54,7 +54,7 @@ class AdminController extends AbstractController
             ['label' => 'Utilisateurs', 'count' => $userRepo->count([]), 'icon' => 'bi-people-fill', 'color' => '#116530', 'route' => 'admin_user_index'],
             ['label' => 'Diagnostics', 'count' => $diagnosticRepo->count([]), 'icon' => 'bi-search', 'color' => '#0d6efd', 'route' => 'admin_diagnostic_index'],
             ['label' => 'Abonnements', 'count' => $abonnementRepo->count([]), 'icon' => 'bi-credit-card-fill', 'color' => '#6f42c1', 'route' => 'admin_abonnement_index'],
-            ['label' => 'Avis', 'count' => $avisRepo->count([]), 'icon' => 'bi-star-fill', 'color' => '#fd7e14', 'route' => 'admin_avis_index'],
+
             ['label' => 'Badges', 'count' => $badgeRepo->count([]), 'icon' => 'bi-award-fill', 'color' => '#d63384', 'route' => 'admin_badge_index'],
             ['label' => 'Posts', 'count' => $postRepo->count([]), 'icon' => 'bi-chat-square-text-fill', 'color' => '#20c997', 'route' => 'admin_community_post_index'],
             ['label' => 'Commentaires', 'count' => $commentRepo->count([]), 'icon' => 'bi-chat-dots-fill', 'color' => '#0dcaf0', 'route' => 'admin_community_comment_index'],

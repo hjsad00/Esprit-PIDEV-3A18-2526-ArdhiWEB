@@ -39,21 +39,33 @@
 
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="/" class="active">Accueil</a></li>
-          <li><a href="#">Services</a></li>
-          <li><a href="#">Diagnostics</a></li>
-          <li><a href="#">Communauté</a></li>
+          <li><a href="/">Diagnostic IA</a></li>
+          <li><a href="#">Marketplace</a></li>
+          <li><a href="#">Maintenance</a></li>
+          <li><a href="#">Cultures</a></li>
+          <li><a href="#">Évènements</a></li>
+          <li><a href="#">Employés</a></li>
           
           {% if app.user %}
-          <li class="dropdown"><a href="#"><span>Mon Compte {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+          <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
+            <div style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s; background: rgba(255, 255, 255, 0.1);">
+              <i class="bi bi-person-fill" style="font-size: 1.3rem;"></i>
+            </div></a>
             <ul>
-              <li><a href="{{ path('app_profile') }}">Mon Profil</a></li>
+              <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
             </ul>
           </li>
           {% else %}
-          <li><a href="{{ path('app_login') }}">Connexion</a></li>
-          <li><a href="{{ path('app_register') }}">Inscription</a></li>
+          <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
+            <div style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+              <i class="bi bi-person" style="font-size: 1.3rem;"></i>
+            </div></a>
+            <ul>
+              <li><a href="{{ path('app_login') }}">Connexion</a></li>
+              <li><a href="{{ path('app_register') }}">Inscription</a></li>
+            </ul>
+          </li>
           {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

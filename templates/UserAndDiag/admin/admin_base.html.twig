@@ -28,107 +28,111 @@
       <div class="nav-section-title">Navigation</div>
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'active' : '' }}" href="{{ path('admin_dashboard') }}">
+          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_user_diag_dashboard' ? 'active' : '' }}" href="{{ path('admin_user_diag_dashboard') }}">
             <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
           </a>
         </li>
       </ul>
 
-      <div class="nav-section-title">Gestion des Entités</div>
+      <div class="nav-section-title">Module: User & Diagnostics</div>
       <ul class="nav flex-column">
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_user' ? 'active' : '' }}" href="{{ path('admin_user_index') }}">
-            <i class="bi bi-people-fill"></i><span>Utilisateurs</span>
-          </a>
+        
+        <li class="nav-item mt-2 mb-1">
+          <span class="nav-link fw-bold text-secondary text-uppercase" style="font-size: 0.70rem; padding-left: 0.5rem;">Utilisateurs & Communauté</span>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_diagnostic' ? 'active' : '' }}" href="{{ path('admin_diagnostic_index') }}">
-            <i class="bi bi-search"></i><span>Diagnostics</span>
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_user' and app.request.attributes.get('_route') != 'admin_user_badge_index' ? 'active' : '' }}" href="{{ path('admin_user_index') }}">
+            <i class="bi bi-people-fill text-success"></i><span>Utilisateurs</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_abonnement' ? 'active' : '' }}" href="{{ path('admin_abonnement_index') }}">
-            <i class="bi bi-credit-card-fill"></i><span>Abonnements</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_avis' ? 'active' : '' }}" href="{{ path('admin_avis_index') }}">
-            <i class="bi bi-star-fill"></i><span>Avis</span>
+            <i class="bi bi-credit-card-fill text-success"></i><span>Abonnements</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_badge' ? 'active' : '' }}" href="{{ path('admin_badge_index') }}">
-            <i class="bi bi-award-fill"></i><span>Badges</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_post' ? 'active' : '' }}" href="{{ path('admin_community_post_index') }}">
-            <i class="bi bi-chat-square-text-fill"></i><span>Posts</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_comment' ? 'active' : '' }}" href="{{ path('admin_community_comment_index') }}">
-            <i class="bi bi-chat-dots-fill"></i><span>Commentaires</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_like' ? 'active' : '' }}" href="{{ path('admin_community_like_index') }}">
-            <i class="bi bi-heart-fill"></i><span>Likes</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_offre' ? 'active' : '' }}" href="{{ path('admin_offre_index') }}">
-            <i class="bi bi-tag-fill"></i><span>Offres</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_review' ? 'active' : '' }}" href="{{ path('admin_review_index') }}">
-            <i class="bi bi-clipboard-check-fill"></i><span>Reviews</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_traitement' ? 'active' : '' }}" href="{{ path('admin_traitement_index') }}">
-            <i class="bi bi-capsule"></i><span>Traitements</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_farm_health_scan' ? 'active' : '' }}" href="{{ path('admin_farm_health_scan_index') }}">
-            <i class="bi bi-activity"></i><span>Scans Santé</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_farm_health_report' ? 'active' : '' }}" href="{{ path('admin_farm_health_report_index') }}">
-            <i class="bi bi-file-earmark-medical-fill"></i><span>Rapports Santé</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_prevention_plan' ? 'active' : '' }}" href="{{ path('admin_prevention_plan_index') }}">
-            <i class="bi bi-shield-fill-check"></i><span>Plans Prévention</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_prevention_task' ? 'active' : '' }}" href="{{ path('admin_prevention_task_index') }}">
-            <i class="bi bi-list-check"></i><span>Tâches Prévention</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_treatment_plan' ? 'active' : '' }}" href="{{ path('admin_treatment_plan_index') }}">
-            <i class="bi bi-journal-medical"></i><span>Plans Traitement</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_treatment_task' ? 'active' : '' }}" href="{{ path('admin_treatment_task_index') }}">
-            <i class="bi bi-check2-square"></i><span>Tâches Traitement</span>
+            <i class="bi bi-award-fill text-success"></i><span>Badges</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_user_badge' ? 'active' : '' }}" href="{{ path('admin_user_badge_index') }}">
-            <i class="bi bi-patch-check-fill"></i><span>User Badges</span>
+            <i class="bi bi-patch-check-fill text-success"></i><span>User Badges</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_post' ? 'active' : '' }}" href="{{ path('admin_community_post_index') }}">
+            <i class="bi bi-chat-square-text-fill text-success"></i><span>Posts</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_comment' ? 'active' : '' }}" href="{{ path('admin_community_comment_index') }}">
+            <i class="bi bi-chat-dots-fill text-success"></i><span>Commentaires</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_community_like' ? 'active' : '' }}" href="{{ path('admin_community_like_index') }}">
+            <i class="bi bi-heart-fill text-success"></i><span>Likes</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_review' ? 'active' : '' }}" href="{{ path('admin_review_index') }}">
+            <i class="bi bi-clipboard-check-fill text-success"></i><span>Reviews</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_offre' ? 'active' : '' }}" href="{{ path('admin_offre_index') }}">
+            <i class="bi bi-tag-fill text-success"></i><span>Offres</span>
+          </a>
+        </li>
+        
+        <li class="nav-item mt-3 mb-1">
+          <span class="nav-link fw-bold text-secondary text-uppercase" style="font-size: 0.70rem; padding-left: 0.5rem;">Santé & Diagnostics</span>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_diagnostic' ? 'active' : '' }}" href="{{ path('admin_diagnostic_index') }}">
+            <i class="bi bi-search text-primary"></i><span>Diagnostics</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_farm_health_scan' ? 'active' : '' }}" href="{{ path('admin_farm_health_scan_index') }}">
+            <i class="bi bi-activity text-primary"></i><span>Scans Santé</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_farm_health_report' ? 'active' : '' }}" href="{{ path('admin_farm_health_report_index') }}">
+            <i class="bi bi-file-earmark-medical-fill text-primary"></i><span>Rapports Santé</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_prevention_plan' ? 'active' : '' }}" href="{{ path('admin_prevention_plan_index') }}">
+            <i class="bi bi-shield-fill-check text-primary"></i><span>Plans Prévention</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_prevention_task' ? 'active' : '' }}" href="{{ path('admin_prevention_task_index') }}">
+            <i class="bi bi-list-check text-primary"></i><span>Tâches Prévention</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_treatment_plan' ? 'active' : '' }}" href="{{ path('admin_treatment_plan_index') }}">
+            <i class="bi bi-journal-medical text-primary"></i><span>Plans Traitement</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_treatment_task' ? 'active' : '' }}" href="{{ path('admin_treatment_task_index') }}">
+            <i class="bi bi-check2-square text-primary"></i><span>Tâches Traitement</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_traitement' ? 'active' : '' }}" href="{{ path('admin_traitement_index') }}">
+            <i class="bi bi-capsule text-primary"></i><span>Traitements</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_vulnerability' ? 'active' : '' }}" href="{{ path('admin_vulnerability_index') }}">
-            <i class="bi bi-bug-fill"></i><span>Vulnérabilités</span>
+            <i class="bi bi-bug-fill text-primary"></i><span>Vulnérabilités</span>
           </a>
         </li>
       </ul>
