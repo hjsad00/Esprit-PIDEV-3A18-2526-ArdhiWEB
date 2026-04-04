@@ -65,23 +65,72 @@
     </section>
 
     {# ============================
-       FLASH MESSAGES
+       TOAST NOTIFICATIONS
        ============================ #}
-    {% for type, messages in app.flashes %}
-      {% for message in messages %}
-        <div class="mp-flash mp-flash-{{ type }}" id="mp-flash-msg">
-          <span>
-            {% if type == 'success' %}<i class="bi bi-check-circle-fill"></i>
-            {% elseif type == 'danger' %}<i class="bi bi-x-circle-fill"></i>
-            {% elseif type == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
-            {% else %}<i class="bi bi-info-circle-fill"></i>
-            {% endif %}
-            {{ message }}
-          </span>
-          <button type="button" onclick="this.parentElement.remove()"><i class="bi bi-x-lg"></i></button>
-        </div>
+    <div id="mp-toast-container" style="
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    ">
+      {% for type, messages in app.flashes %}
+        {% for message in messages %}
+          {% set bgColor  = type == 'success' ? '#ffffff' : (type == 'danger' ? '#ffffff' : '#ffffff') %}
+          {% set barColor = type == 'success' ? '#4a8c3f' : (type == 'danger' ? '#e74c3c' : (type == 'warning' ? '#f39c12' : '#3498db')) %}
+          {% set icon     = type == 'success' ? 'check-circle-fill' : (type == 'danger' ? 'x-circle-fill' : (type == 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill')) %}
+          <div id="mp-toast-{{ loop.index }}" style="
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 0;
+            min-width: 300px;
+            max-width: 380px;
+            overflow: hidden;
+            animation: toastIn .4s cubic-bezier(.22,1,.36,1);
+            border: 1px solid #ececec;
+          ">
+            {# Barre colorée à gauche #}
+            <div style="width:6px; min-height:64px; background:{{ barColor }}; flex-shrink:0;"></div>
+
+            {# Icône #}
+            <i class="bi bi-{{ icon }}" style="font-size:26px; color:{{ barColor }}; flex-shrink:0;"></i>
+
+            {# Texte #}
+            <span style="flex:1; font-size:14px; font-weight:600; color:#2d3436; padding: 14px 0;">
+              {{ message }}
+            </span>
+
+            {# Bouton fermer #}
+            <button type="button"
+                    onclick="mpToastClose('mp-toast-{{ loop.index }}')"
+                    style="background:none; border:none; cursor:pointer; color:#b2bec3; font-size:16px; padding:14px 14px; line-height:1; transition:color .2s;"
+                    onmouseover="this.style.color='#636e72'"
+                    onmouseout="this.style.color='#b2bec3'">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        {% endfor %}
       {% endfor %}
-    {% endfor %}
+    </div>
+
+    <style>
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateX(60px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateX(0); max-height: 100px; margin: 0; }
+        to   { opacity: 0; transform: translateX(60px); max-height: 0; margin: 0; }
+      }
+    </style>
 
     {# ============================
        INFO BANNER
@@ -588,7 +637,22 @@
     });
   }
 
-  // ==================== AUTO-SCROLL SI ERREURS ====================
+  // ==================== TOAST CLOSE ====================
+  function mpToastClose(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.animation = 'toastOut .35s ease forwards';
+    setTimeout(() => el.remove(), 350);
+  }
+
+  // Auto-fermeture des toasts après 4 secondes
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[id^="mp-toast-"]').forEach(function (toast) {
+      setTimeout(() => mpToastClose(toast.id), 4000);
+    });
+  });
+
+
   document.addEventListener('DOMContentLoaded', function () {
     const formSection = document.getElementById('form-section');
     if (formSection && formSection.style.display === 'block') {
@@ -597,7 +661,10 @@
       }, 200);
     }
 
-    
+    // ==================== CLEAR ERREUR À LA SAISIE ====================
+    // Dès que l'utilisateur modifie un champ, on supprime :
+    //  - le message d'erreur <small class="text-danger"> sous le champ
+    //  - la classe has-error sur le groupe parent
     const form = document.querySelector('#form-section form');
     if (!form) return;
 

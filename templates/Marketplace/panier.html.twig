@@ -1,0 +1,313 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Mon Panier{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       PAGE HEADER
+       ============================ #}
+    <section class="marketplace-hero" style="min-height: 30vh;">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Mon Panier">
+      </div>
+      <div class="container">
+        <div class="hero-inner" style="padding: 20px 0;">
+          <div class="hero-left" style="max-width: 100%; text-align: center;">
+            <div class="hero-label">VOTRE COMMANDE</div>
+            <h1 class="hero-headline">Mon Panier</h1>
+            <a href="{{ path('app_marketplace_catalogue') }}" class="hero-btn-primary">
+              <i class="bi bi-arrow-left"></i> Continuer mes achats
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       CART SECTION
+       ============================ #}
+    <section class="cart-section">
+      <div class="container">
+        <div class="cart-card">
+
+          {# ── HEADER ─────────────────────────────────── #}
+          <div class="cart-header">
+            <h2 class="cart-title">
+              <i class="bi bi-cart-check"></i> Récapitulatif de commande
+            </h2>
+            <div class="text-muted">
+              <i class="bi bi-box-seam"></i>&nbsp;
+              {{ panier ? panier.totalProduits : 0 }} article(s)
+            </div>
+          </div>
+
+          <div class="cart-body">
+
+            {# ══════════════════════════
+               BLOC 1 — TABLEAU (full width)
+               ══════════════════════════ #}
+            <div class="cart-table-block">
+              <div class="mp-table-wrapper" style="box-shadow:none; border:1px solid #eef2ee;">
+                <table class="mp-table">
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Prix unitaire</th>
+                      <th>Quantité</th>
+                      <th>Sous-total</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if panier and panier.panierProduits|length > 0 %}
+                      {% for ligne in panier.panierProduits %}
+                        <tr class="mp-table-row">
+                          <td>
+                            <div style="display:flex;align-items:center;gap:14px;">
+                              <div class="cart-table-img">
+                                {% if ligne.produit.image %}
+                                  <img src="{{ asset('uploads/produits/' ~ ligne.produit.image) }}"
+                                       alt="{{ ligne.produit.nom }}">
+                                {% else %}
+                                  <div style="width:62px;height:62px;background:#f0f7ee;border-radius:10px;
+                                              display:flex;align-items:center;justify-content:center;">
+                                    <i class="bi bi-image" style="color:#b2bec3;font-size:22px;"></i>
+                                  </div>
+                                {% endif %}
+                              </div>
+                              <div>
+                                <strong style="display:block;font-family:'Inter',sans-serif;
+                                               font-size:14px;color:#2d3436;">
+                                  {{ ligne.produit.nom }}
+                                </strong>
+                                {% if ligne.produit.categorie %}
+                                  <span class="mp-table-badge" style="margin-top:4px;display:inline-block;">
+                                    {{ ligne.produit.categorie }}
+                                  </span>
+                                {% endif %}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <strong style="color:var(--ardhi-green-dark);font-family:'Inter',sans-serif;">
+                              {{ ligne.produit.prixFinal|number_format(2, '.', ' ') }} DT
+                            </strong>
+                            {% if ligne.produit.remise > 0 %}
+                              <br>
+                              <small style="text-decoration:line-through;color:#b2bec3;font-size:11px;">
+                                {{ ligne.produit.prix|number_format(2, '.', ' ') }} DT
+                              </small>
+                            {% endif %}
+                          </td>
+                          <td>
+                            <form action="{{ path('app_marketplace_panier_update', {id: ligne.produit.id}) }}"
+                                  method="POST" class="qty-control">
+                              <input type="number" name="quantite" value="{{ ligne.quantite }}"
+                                     min="1" max="{{ ligne.produit.quantiteStock }}" class="qty-input">
+                              <button type="submit" class="btn-qty-update" title="Mettre à jour">
+                                <i class="bi bi-arrow-repeat"></i>
+                              </button>
+                            </form>
+                          </td>
+                          <td>
+                            <strong style="color:var(--ardhi-green);font-family:'Inter',sans-serif;
+                                           font-size:16px;font-weight:700;">
+                              {{ ligne.sousTotal|number_format(2, '.', ' ') }} DT
+                            </strong>
+                          </td>
+                          <td>
+                            <form action="{{ path('app_marketplace_panier_delete', {id: ligne.produit.id}) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Retirer ce produit du panier ?');">
+                              <button type="submit" class="mp-action-delete" title="Retirer">
+                                <i class="bi bi-trash3"></i>
+                              </button>
+                            </form>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="5" style="text-align:center;padding:70px 20px;color:#b2bec3;">
+                          <i class="bi bi-cart-x" style="font-size:3.5rem;display:block;
+                                                          margin-bottom:16px;opacity:.5;"></i>
+                          <span style="font-family:'Inter',sans-serif;font-size:15px;">
+                            Votre panier est vide.
+                          </span><br>
+                          <a href="{{ path('app_marketplace_catalogue') }}"
+                             style="display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+                                    color:var(--ardhi-green);font-family:'Inter',sans-serif;
+                                    font-weight:600;font-size:14px;text-decoration:none;">
+                            <i class="bi bi-arrow-left"></i> Parcourir le catalogue
+                          </a>
+                        </td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {# ══════════════════════════════════════
+               BLOC 2 — OPTIONS + RÉSUMÉ (sous tableau)
+               Layout : [Promo][Livraison][Paiement] | [Résumé]
+               ══════════════════════════════════════ #}
+            {% if panier and panier.panierProduits|length > 0 %}
+            <div class="cart-bottom">
+
+              {# — 3 boxes options — #}
+              <div class="cart-options-grid">
+
+                {# Code Promo #}
+                <div class="checkout-box">
+                  <div class="checkout-box-title">
+                    <i class="bi bi-tag-fill"></i> Code Promo
+                  </div>
+                  <div class="promo-input-group">
+                    <input type="text" placeholder="Entrez votre code...">
+                    <button type="button" class="btn-apply">Appliquer</button>
+                  </div>
+                </div>
+
+                {# Livraison #}
+                <div class="checkout-box">
+                  <div class="checkout-box-title">
+                    <i class="bi bi-truck"></i> Livraison
+                  </div>
+                  <div class="option-group">
+                    <div class="option-tile selected" data-group="delivery" data-fee="0"
+                         onclick="selectTile(this,'delivery')">
+                      <input type="radio" name="delivery" value="pickup" checked>
+                      <div class="tile-radio"></div>
+                      <div class="tile-icon green"><i class="bi bi-house-door-fill"></i></div>
+                      <div class="tile-content">
+                        <strong>Récupération sur place</strong>
+                        <small class="free-badge">Gratuit — 0 DT</small>
+                      </div>
+                    </div>
+                    <div class="option-tile" data-group="delivery" data-fee="7"
+                         onclick="selectTile(this,'delivery')">
+                      <input type="radio" name="delivery" value="home">
+                      <div class="tile-radio"></div>
+                      <div class="tile-icon green"><i class="bi bi-truck"></i></div>
+                      <div class="tile-content">
+                        <strong>Livraison à domicile</strong>
+                        <small>+7 DT / vendeur</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {# Paiement #}
+                <div class="checkout-box accent">
+                  <div class="checkout-box-title">
+                    <i class="bi bi-credit-card-fill"></i> Paiement
+                  </div>
+                  <div class="option-group">
+                    <div class="option-tile selected-pay" data-group="payment"
+                         onclick="selectTile(this,'payment')">
+                      <input type="radio" name="payment" value="stripe" checked>
+                      <div class="tile-radio"></div>
+                      <div class="tile-icon amber"><i class="bi bi-credit-card-2-front-fill"></i></div>
+                      <div class="tile-content">
+                        <strong>Payer par Carte</strong>
+                        <small>Visa, Mastercard — via Stripe</small>
+                      </div>
+                    </div>
+                    <div class="option-tile" data-group="payment"
+                         onclick="selectTile(this,'payment')">
+                      <input type="radio" name="payment" value="points">
+                      <div class="tile-radio"></div>
+                      <div class="tile-icon amber"><i class="bi bi-gem"></i></div>
+                      <div class="tile-content">
+                        <strong>Points de Fidélité</strong>
+                        <small>Utiliser vos points accumulés</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>{# /cart-options-grid #}
+
+              {# — Résumé + CTA — #}
+              <div class="cart-summary-block">
+                <div class="cart-summary">
+                  <div class="summary-row">
+                    <span><i class="bi bi-box-seam"></i>&nbsp; Articles</span>
+                    <strong>{{ panier.totalProduits }}</strong>
+                  </div>
+                  <div class="summary-row">
+                    <span>Sous-total</span>
+                    <span>{{ panier.totalMontant|number_format(2, '.', ' ') }} DT</span>
+                  </div>
+                  <div class="summary-row">
+                    <span><i class="bi bi-truck"></i>&nbsp; Livraison</span>
+                    <span id="summary-delivery-cost"
+                          style="color:#6ee7b7;font-weight:700;">Gratuit</span>
+                  </div>
+                  <hr class="summary-divider">
+                  <div class="summary-total">
+                    <span>Total</span>
+                    <span class="total-amount" id="summary-total-amount">
+                      {{ panier.totalMontant|number_format(2, '.', ' ') }} DT
+                    </span>
+                  </div>
+                </div>
+                <div class="cart-summary-actions">
+                  <button type="button" class="btn-checkout-final">
+                    <i class="bi bi-shield-check"></i> Confirmer la commande
+                  </button>
+                  <form action="{{ path('app_marketplace_panier_clear') }}" method="POST"
+                        onsubmit="return confirm('Vider tout le panier ?');">
+                    <button type="submit" class="btn-clear w-100">
+                      <i class="bi bi-trash"></i> Vider le panier
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>{# /cart-bottom #}
+            {% endif %}
+
+          </div>{# /cart-body #}
+        </div>{# /cart-card #}
+      </div>
+    </section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+  const BASE_TOTAL = {{ panier ? panier.totalMontant : 0 }};
+
+  function selectTile(tile, group) {
+    const activeClass = group === 'payment' ? 'selected-pay' : 'selected';
+    document.querySelectorAll(`.option-tile[data-group="${group}"]`).forEach(t => {
+      t.classList.remove('selected', 'selected-pay');
+      const r = t.querySelector('input[type="radio"]');
+      if (r) r.checked = false;
+    });
+    tile.classList.add(activeClass);
+    const radio = tile.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+
+    if (group === 'delivery') {
+      const fee = parseFloat(tile.dataset.fee || 0);
+      const costEl  = document.getElementById('summary-delivery-cost');
+      const totalEl = document.getElementById('summary-total-amount');
+      if (costEl) {
+        costEl.textContent = fee === 0 ? 'Gratuit' : '+' + fee.toFixed(2) + ' DT';
+        costEl.style.color  = fee === 0 ? '#6ee7b7' : '#fcd34d';
+      }
+      if (totalEl) totalEl.textContent = (BASE_TOTAL + fee).toFixed(2) + ' DT';
+    }
+  }
+</script>
+{% endblock %}

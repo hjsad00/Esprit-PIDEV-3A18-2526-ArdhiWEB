@@ -19,7 +19,9 @@
       </div>
       <div class="container">
         <div class="hero-inner" style="padding: 30px 0;">
-          <div class="hero-left" style="max-width: 100%; text-align: center;">
+          <div class="hero-left" style="max-width: 100%; text-align: center; position: relative;">
+            
+
             <div class="hero-label">ARDHI MARKETPLACE</div>
             <h1 class="hero-headline">Catalogue<br>des produits</h1>
             <p class="hero-description" style="margin-left: auto; margin-right: auto;">
@@ -44,35 +46,48 @@
           <h2>Tous les produits</h2>
           <p>Découvrez les offres des autres agriculteurs</p>
         </div>
+{# Search & Filter Bar + Cart #}
+<div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
 
-        {# Search & Filter Bar #}
-        <div class="marketplace-filters" data-aos="fade-up" data-aos-delay="100">
-          <div class="filter-search">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Rechercher un produit...">
-          </div>
-          <div class="filter-select">
-            <select>
-              <option value="">Catégorie</option>
-              <option value="semences">Semences</option>
-              <option value="equipement">Équipement</option>
-              <option value="engrais">Engrais</option>
-              <option value="betail">Bétail</option>
-              <option value="services">Services</option>
-            </select>
-          </div>
-          <div class="filter-select">
-            <select>
-              <option value="">Prix</option>
-              <option value="asc">Prix croissant</option>
-              <option value="desc">Prix décroissant</option>
-            </select>
-          </div>
-          <button class="filter-btn">
-            <i class="bi bi-funnel"></i> Filtrer
-          </button>
-        </div>
+  <div class="marketplace-filters" data-aos="fade-up" data-aos-delay="100" style="flex:1; margin-bottom:0;">
+    <div class="filter-search">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Rechercher un produit...">
+    </div>
+    <div class="filter-select">
+      <select>
+        <option value="">Catégorie</option>
+        <option value="semences">Semences</option>
+        <option value="equipement">Équipement</option>
+        <option value="engrais">Engrais</option>
+        <option value="betail">Bétail</option>
+        <option value="services">Services</option>
+      </select>
+    </div>
+    <div class="filter-select">
+      <select>
+        <option value="">Prix</option>
+        <option value="asc">Prix croissant</option>
+        <option value="desc">Prix décroissant</option>
+      </select>
+    </div>
+    <button class="filter-btn">
+      <i class="bi bi-funnel"></i> Filtrer
+    </button>
+  </div>
+    <a href="{{ path('app_marketplace_panier') }}" class="cart-indicator" style="flex-shrink:0;">
+    <div class="cart-icon-wrapper">
+      <i class="bi bi-cart3"></i>
+      <span class="cart-badge">{{ panier ? panier.totalProduits : 0 }}</span>
+    </div>
+    <div class="cart-info">
+      <span>{{ panier ? panier.totalProduits : 0 }} article(s)</span>
+      <strong>{{ panier ? panier.totalMontant|number_format(2, '.', ' ') : '0.00' }} DT</strong>
+    </div>
+  </a>
 
+</div>
+       
         {# Product Grid — Dynamic (exclut les produits du user connecté) #}
         <div class="product-grid">
 
@@ -93,17 +108,25 @@
                     <span class="product-badge badge-promo">-{{ produit.remise|number_format(2, '.', ' ') }} TND</span>
                   {% endif %}
                 {% endif %}
+
+                {# Indicateur de Stock #}
+                <div class="product-stock-status {{ produit.quantiteStock > 0 ? 'stock-in' : 'stock-out' }}">
+                  {{ produit.quantiteStock > 0 ? 'En stock (' ~ produit.quantiteStock ~ ')' : 'Rupture' }}
+                </div>
               </div>
               <div class="product-card-body">
                 {% if produit.categorie %}
                   <div class="product-card-category">{{ produit.categorie }}</div>
                 {% endif %}
                 <h3 class="product-card-title">{{ produit.nom }}</h3>
-                {% if produit.description %}
-                  <p class="product-card-description" style="font-size:13px;color:#636e72;margin-bottom:10px;">
+                <div class="product-card-seller">
+                  <i class="bi bi-person-circle"></i> Vendu par <strong>{{ produit.user.prenom ?? '' }} {{ produit.user.nom ?? '' }}</strong>
+                </div>
+                <p class="product-card-description">
+                  {% if produit.description %}
                     {{ produit.description|length > 80 ? produit.description|slice(0, 80) ~ '...' : produit.description }}
-                  </p>
-                {% endif %}
+                  {% endif %}
+                </p>
                 <div class="product-card-footer">
                   <div class="product-price">
                     {% if produit.remise > 0 %}
@@ -122,6 +145,18 @@
                     <small>TND/{{ produit.uniteMesure }}</small>
                   </div>
                   <a href="{{ path('app_marketplace_produit_show', {id: produit.id}) }}" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
+                </div>
+
+                {# Actions Panier #}
+                <div class="product-card-actions">
+                  <form action="{{ path('app_marketplace_panier_add', {id: produit.id}) }}" method="POST" class="product-cart-controls">
+                    <input type="number" name="quantite" class="product-qty-input" value="1" min="1" max="{{ produit.quantiteStock }}" 
+                           {{ produit.quantiteStock <= 0 ? 'disabled' : '' }}>
+                    <button type="submit" class="product-btn-cart {{ produit.quantiteStock <= 0 ? 'disabled' : '' }}" 
+                            {{ produit.quantiteStock <= 0 ? 'disabled' : '' }}>
+                      <i class="bi bi-cart-plus"></i> Ajouter
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
