@@ -258,11 +258,10 @@
                       <button type="button" class="mp-action-edit" title="Modifier" onclick="editProduit(this.closest('tr'))">
                         <i class="bi bi-pencil-square"></i>
                       </button>
-                      <form action="{{ path('app_marketplace_produit_delete', {id: produit.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce produit ?');">
-                        <button type="submit" class="mp-action-delete" title="Supprimer">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </form>
+                      <button type="button" class="mp-action-delete" title="Supprimer" 
+                              data-delete-url="{{ path('app_marketplace_produit_delete', {id: produit.id}) }}">
+                        <i class="bi bi-trash3"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -317,7 +316,7 @@
           {% endif %}
           {# ─────────────────────────────────────────────────────────────── #}
 
-          <form action="{{ path('app_marketplace_produit_save') }}" method="POST" enctype="multipart/form-data">
+          <form action="{{ path('app_marketplace_produit_save') }}" method="POST" enctype="multipart/form-data" novalidate>
             {# Conservation de l'ID en mode édition #}
             <input type="hidden" name="id" id="form-id"
                    value="{{ formProduit and formProduit.id ? formProduit.id : '' }}">
@@ -489,199 +488,355 @@
     </section>
 
 {% endblock %}
-
 {% block javascripts %}
 <script>
-  // ==================== TOGGLE FORM ====================
-  function toggleForm(reset = true) {
-    const section = document.getElementById('form-section');
-    const isHidden = section.style.display === 'none';
-    section.style.display = isHidden ? 'block' : 'none';
+// ==================== TOGGLE FORM ====================
+function toggleForm(reset = true) {
+  const section = document.getElementById('form-section');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  if (isHidden && reset) resetForm();
+  if (isHidden) setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
 
-    if (isHidden && reset) {
-      resetForm();
-    }
+function resetForm() {
+  document.getElementById('form-id').value = '';
+  document.getElementById('form-nom').value = '';
+  document.getElementById('form-description').value = '';
+  document.getElementById('form-prix').value = '';
+  document.getElementById('form-stock').value = '';
+  document.getElementById('form-unite').value = 'Kg';
+  document.getElementById('form-categorie').value = '';
+  document.getElementById('form-type-remise').value = 'AUCUNE';
+  document.getElementById('form-remise').value = '';
+  document.getElementById('remise-value-group').style.display = 'none';
+  document.getElementById('form-image').value = '';
+  document.getElementById('upload-preview').innerHTML =
+    '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
+  document.getElementById('form-title').innerHTML =
+    '<i class="bi bi-plus-square"></i> Ajouter un nouveau produit';
+  document.getElementById('form-submit-btn').innerHTML =
+    '<i class="bi bi-plus-lg"></i> Ajouter le produit';
+  clearAllFieldErrors();
+}
 
-    if (isHidden) {
-      setTimeout(() => {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  }
+function editProduit(row) {
+  const data = row.dataset;
+  document.getElementById('form-id').value = data.id;
+  document.getElementById('form-nom').value = data.nom;
+  document.getElementById('form-description').value = data.description || '';
+  document.getElementById('form-prix').value = data.prix;
+  document.getElementById('form-stock').value = data.stock;
+  document.getElementById('form-unite').value = data.unite;
+  document.getElementById('form-categorie').value = data.categorie || '';
 
-  // ==================== RESET FORM ====================
-  function resetForm() {
-    document.getElementById('form-id').value = '';
-    document.getElementById('form-nom').value = '';
-    document.getElementById('form-description').value = '';
-    document.getElementById('form-prix').value = '';
-    document.getElementById('form-stock').value = '';
-    document.getElementById('form-unite').value = 'Kg';
-    document.getElementById('form-categorie').value = '';
+  const typeRemise = data.typeRemise;
+  if (typeRemise && typeRemise !== '' && typeRemise !== 'null') {
+    document.getElementById('form-type-remise').value = typeRemise;
+    document.getElementById('form-remise').value = data.remise;
+    document.getElementById('remise-value-group').style.display = 'block';
+  } else {
     document.getElementById('form-type-remise').value = 'AUCUNE';
     document.getElementById('form-remise').value = '';
     document.getElementById('remise-value-group').style.display = 'none';
-    document.getElementById('form-image').value = '';
-
-    // Reset preview
-    const preview = document.getElementById('upload-preview');
-    preview.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
-
-    document.getElementById('form-title').innerHTML = '<i class="bi bi-plus-square"></i> Ajouter un nouveau produit';
-    document.getElementById('form-submit-btn').innerHTML = '<i class="bi bi-plus-lg"></i> Ajouter le produit';
   }
 
-  // ==================== EDIT PRODUCT ====================
-  function editProduit(row) {
-    const data = row.dataset;
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = data.image
+    ? '<img src="/uploads/produits/' + data.image + '" alt="Image actuelle">'
+    : '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
 
-    document.getElementById('form-id').value = data.id;
-    document.getElementById('form-nom').value = data.nom;
-    document.getElementById('form-description').value = data.description || '';
-    document.getElementById('form-prix').value = data.prix;
-    document.getElementById('form-stock').value = data.stock;
-    document.getElementById('form-unite').value = data.unite;
-    document.getElementById('form-categorie').value = data.categorie || '';
+  document.getElementById('form-title').innerHTML =
+    '<i class="bi bi-pencil-square"></i> Modifier le produit #' + data.id;
+  document.getElementById('form-submit-btn').innerHTML =
+    '<i class="bi bi-check-lg"></i> Enregistrer les modifications';
 
-    // Remise
-    const typeRemise = data.typeRemise;
-    if (typeRemise && typeRemise !== '' && typeRemise !== 'null') {
-      document.getElementById('form-type-remise').value = typeRemise;
-      document.getElementById('form-remise').value = data.remise;
-      document.getElementById('remise-value-group').style.display = 'block';
-    } else {
-      document.getElementById('form-type-remise').value = 'AUCUNE';
-      document.getElementById('form-remise').value = '';
-      document.getElementById('remise-value-group').style.display = 'none';
-    }
+  clearAllFieldErrors();
+  const section = document.getElementById('form-section');
+  section.style.display = 'block';
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
 
-    // Image preview
-    const preview = document.getElementById('upload-preview');
-    if (data.image) {
-      preview.innerHTML = '<img src="/uploads/produits/' + data.image + '" alt="Image actuelle">';
-    } else {
-      preview.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
-    }
+function toggleRemiseField() {
+  const type = document.getElementById('form-type-remise').value;
+  document.getElementById('remise-value-group').style.display = (type !== 'AUCUNE') ? 'block' : 'none';
+  if (type === 'AUCUNE') document.getElementById('form-remise').value = '';
+}
 
-    document.getElementById('form-title').innerHTML = '<i class="bi bi-pencil-square"></i> Modifier le produit #' + data.id;
-    document.getElementById('form-submit-btn').innerHTML = '<i class="bi bi-check-lg"></i> Enregistrer les modifications';
-
-    // Show form
-    const section = document.getElementById('form-section');
-    section.style.display = 'block';
-    setTimeout(() => {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+function previewImage(input) {
+  const preview = document.getElementById('upload-preview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+    reader.readAsDataURL(input.files[0]);
   }
+}
 
-  // ==================== TOGGLE REMISE FIELD ====================
-  function toggleRemiseField() {
-    const type = document.getElementById('form-type-remise').value;
-    const group = document.getElementById('remise-value-group');
-    group.style.display = (type !== 'AUCUNE') ? 'block' : 'none';
-    if (type === 'AUCUNE') {
-      document.getElementById('form-remise').value = '';
-    }
+function addNewCategory() {
+  const input = document.getElementById('new-categorie');
+  const val = input.value.trim();
+  if (!val) return;
+  const select = document.getElementById('form-categorie');
+  for (let opt of select.options) {
+    if (opt.value.toLowerCase() === val.toLowerCase()) { select.value = opt.value; input.value = ''; return; }
   }
+  select.add(new Option(val, val, true, true));
+  input.value = '';
+}
 
-  // ==================== IMAGE PREVIEW ====================
-  function previewImage(input) {
-    const preview = document.getElementById('upload-preview');
-    if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
-      };
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
-
-  // ==================== ADD NEW CATEGORY ====================
-  function addNewCategory() {
-    const input = document.getElementById('new-categorie');
-    const val = input.value.trim();
-    if (!val) return;
-
-    const select = document.getElementById('form-categorie');
-    // Check if already exists
-    for (let opt of select.options) {
-      if (opt.value.toLowerCase() === val.toLowerCase()) {
-        select.value = opt.value;
-        input.value = '';
-        return;
-      }
-    }
-    // Add new option and select it
-    const option = new Option(val, val, true, true);
-    select.add(option);
-    input.value = '';
-  }
-
-  // ==================== CLIENT-SIDE FILTER ====================
-  function filterTable() {
-    const filterId  = document.getElementById('filter-id').value.toLowerCase();
-    const filterNom = document.getElementById('filter-nom').value.toLowerCase();
-    const filterCat = document.getElementById('filter-cat').value.toLowerCase();
-
-    const rows = document.querySelectorAll('#produits-table tbody .mp-table-row');
-    rows.forEach(row => {
-      const id  = (row.dataset.id       || '').toLowerCase();
-      const nom = (row.dataset.nom      || '').toLowerCase();
-      const cat = (row.dataset.categorie|| '').toLowerCase();
-
-      const matchId  = !filterId  || id.includes(filterId);
-      const matchNom = !filterNom || nom.includes(filterNom);
-      const matchCat = !filterCat || cat.includes(filterCat);
-
-      row.style.display = (matchId && matchNom && matchCat) ? '' : 'none';
-    });
-  }
-
-  // ==================== TOAST CLOSE ====================
-  function mpToastClose(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.animation = 'toastOut .35s ease forwards';
-    setTimeout(() => el.remove(), 350);
-  }
-
-  // Auto-fermeture des toasts après 4 secondes
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[id^="mp-toast-"]').forEach(function (toast) {
-      setTimeout(() => mpToastClose(toast.id), 4000);
-    });
+function filterTable() {
+  const filterId  = document.getElementById('filter-id').value.toLowerCase();
+  const filterNom = document.getElementById('filter-nom').value.toLowerCase();
+  const filterCat = document.getElementById('filter-cat').value.toLowerCase();
+  document.querySelectorAll('#produits-table tbody .mp-table-row').forEach(row => {
+    const match =
+      (!filterId  || (row.dataset.id        || '').toLowerCase().includes(filterId))  &&
+      (!filterNom || (row.dataset.nom       || '').toLowerCase().includes(filterNom)) &&
+      (!filterCat || (row.dataset.categorie || '').toLowerCase().includes(filterCat));
+    row.style.display = match ? '' : 'none';
   });
+}
 
+// ==================== TOAST ====================
+function showToast(message, isError = false) {
+  let container = document.getElementById('mp-toast-container');
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const formSection = document.getElementById('form-section');
-    if (formSection && formSection.style.display === 'block') {
-      setTimeout(() => {
-        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
-    }
+  // Auto-créer le conteneur s'il n'existe pas dans le DOM
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'mp-toast-container';
+    container.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+    document.body.appendChild(container);
+  }
 
-    // ==================== CLEAR ERREUR À LA SAISIE ====================
-    // Dès que l'utilisateur modifie un champ, on supprime :
-    //  - le message d'erreur <small class="text-danger"> sous le champ
-    //  - la classe has-error sur le groupe parent
-    const form = document.querySelector('#form-section form');
-    if (!form) return;
+  const id = 'toast-' + Date.now();
+  const barColor = isError ? '#e74c3c' : '#4a8c3f';
+  const icon = isError ? 'x-circle-fill' : 'check-circle-fill';
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = `pointer-events:all;display:flex;align-items:center;gap:14px;
+    background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    min-width:300px;max-width:380px;overflow:hidden;
+    animation:toastIn .4s cubic-bezier(.22,1,.36,1);border:1px solid #ececec;`;
+  el.innerHTML = `
+    <div style="width:6px;min-height:64px;background:${barColor};flex-shrink:0;"></div>
+    <i class="bi bi-${icon}" style="font-size:26px;color:${barColor};flex-shrink:0;"></i>
+    <span style="flex:1;font-size:14px;font-weight:600;color:#2d3436;padding:14px 0;">${message}</span>
+    <button type="button" onclick="mpToastClose('${id}')"
+      style="background:none;border:none;cursor:pointer;color:#b2bec3;font-size:16px;padding:14px;line-height:1;">
+      <i class="bi bi-x-lg"></i>
+    </button>`;
+  container.appendChild(el);
+  setTimeout(() => mpToastClose(id), 4000);
+}
 
-    form.querySelectorAll('input, select, textarea').forEach(function (field) {
-      const eventType = (field.tagName === 'SELECT') ? 'change' : 'input';
-      field.addEventListener(eventType, function () {
+function mpToastClose(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = 'toastOut .35s ease forwards';
+  setTimeout(() => el.remove(), 350);
+}
+
+// ==================== FIELD ERRORS ====================
+function showFieldErrors(errors) {
+  clearAllFieldErrors();
+  const fieldMap = {
+    nom: 'form-nom', prix: 'form-prix',
+    quantiteStock: 'form-stock', categorie: 'form-categorie',
+    uniteMesure: 'form-unite', remise: 'form-remise',
+  };
+  for (const [field, messages] of Object.entries(errors)) {
+    const input = document.getElementById(fieldMap[field]);
+    if (!input) continue;
+    const group = input.closest('.mp-form-group');
+    if (!group) continue;
+    group.classList.add('has-error');
+    const small = document.createElement('small');
+    small.className = 'text-danger field-ajax-error';
+    small.innerHTML = '<i class="bi bi-exclamation-circle"></i> ' + messages.join(' ');
+    group.appendChild(small);
+  }
+}
+
+function clearAllFieldErrors() {
+  document.querySelectorAll('.field-ajax-error').forEach(el => el.remove());
+  document.querySelectorAll('.mp-form-group.has-error').forEach(el => el.classList.remove('has-error'));
+}
+
+// ==================== INIT — window.onload garanti après tout le DOM ====================
+window.addEventListener('load', function () {
+
+  // Auto-scroll si erreurs serveur
+  const formSection = document.getElementById('form-section');
+  if (formSection && formSection.style.display === 'block') {
+    setTimeout(() => formSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+
+  // Clear erreurs à la saisie
+  const form = document.querySelector('#form-section form');
+  console.log('FORM FOUND:', form); // debug — à retirer après confirmation
+
+  if (form) {
+    form.querySelectorAll('input, select, textarea').forEach(field => {
+      field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', function () {
         const group = field.closest('.mp-form-group');
         if (!group) return;
-
-        // Supprimer le message d'erreur inline
-        const errorMsg = group.querySelector('small.text-danger');
-        if (errorMsg) errorMsg.remove();
-
-        // Retirer la classe has-error
+        group.querySelector('small.text-danger')?.remove();
         group.classList.remove('has-error');
       });
     });
+
+    // ── AJAX SUBMIT ──
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      console.log('SUBMIT intercepté'); // debug
+
+      const btn = document.getElementById('form-submit-btn');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .6s linear infinite"></i> Enregistrement...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('{{ path("app_marketplace_produit_save") }}', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+        });
+
+        const data = await response.json();
+        console.log('DATA:', data); // debug
+
+        if (data.success) {
+          showToast(data.message);
+          clearAllFieldErrors();
+
+          const p = data.produit;
+          const tbody = document.querySelector('#produits-table tbody');
+
+          const imgHtml = p.image
+            ? `<img src="/uploads/produits/${p.image}" alt="${p.nom}">`
+            : `<div class="mp-table-img-placeholder"><i class="bi bi-image"></i></div>`;
+
+          const catHtml = p.categorie
+            ? `<span class="mp-table-badge">${p.categorie}</span>`
+            : `<span style="color:#b2bec3;">—</span>`;
+
+          let prixHtml = p.remise > 0
+            ? `<span style="text-decoration:line-through;color:#b2bec3;font-size:12px;">${p.prix}</span><br><strong style="color:#4a8c3f;">${p.prixFinal}</strong>`
+            : `<strong>${p.prix}</strong>`;
+          prixHtml += ` <small style="color:#b2bec3;"> /${p.unite}</small>`;
+
+          const remiseHtml = p.remise > 0
+            ? `<span class="mp-table-remise">-${p.typeRemise === 'POURCENTAGE' ? parseFloat(p.remise).toFixed(0)+'%' : parseFloat(p.remise).toFixed(2)+' DT'}</span>`
+            : `<span style="color:#b2bec3;">—</span>`;
+
+          const rowHtml = `
+            <tr class="mp-table-row" onclick="editProduit(this)" style="cursor:pointer;"
+                data-id="${p.id}" data-nom="${p.nom}" data-description="${p.description}"
+                data-prix="${p.prix}" data-stock="${p.stock}" data-categorie="${p.categorie}"
+                data-unite="${p.unite}" data-remise="${p.remise}" data-type-remise="${p.typeRemise}"
+                data-image="${p.image}">
+              <td><div class="mp-table-img">${imgHtml}</div></td>
+              <td><span class="mp-table-id">#${p.id}</span></td>
+              <td><strong>${p.nom}</strong></td>
+              <td>${catHtml}</td>
+              <td>${prixHtml}</td>
+              <td><span class="mp-table-stock ${p.stock > 0 ? 'in-stock' : 'out-stock'}">${p.stock}</span></td>
+              <td>${remiseHtml}</td>
+              <td onclick="event.stopPropagation();">
+                <div class="mp-table-actions">
+                  <button type="button" class="mp-action-edit" onclick="editProduit(this.closest('tr'))">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="mp-action-delete"
+                          data-delete-url="/marketplace/mes-produits/delete/${p.id}">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+
+          if (data.isNew) {
+            const emptyRow = tbody.querySelector('td[colspan="8"]');
+            if (emptyRow) emptyRow.closest('tr').remove();
+            tbody.insertAdjacentHTML('afterbegin', rowHtml);
+          } else {
+            const existing = tbody.querySelector(`tr[data-id="${p.id}"]`);
+            if (existing) existing.outerHTML = rowHtml;
+          }
+
+          formSection.style.display = 'none';
+          resetForm();
+
+          // Ré-attacher les listeners de suppression sur les nouveaux boutons
+          if (window.attachDeleteListeners) window.attachDeleteListeners();
+
+        } else if (data.errors) {
+          showFieldErrors(data.errors);
+          showToast('Veuillez corriger les erreurs.', true);
+        } else {
+          showToast(data.message || 'Erreur inconnue.', true);
+        }
+
+      } catch (err) {
+        console.error('CATCH ERR:', err);
+        showToast("Erreur: " + err.message, true);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // ── AJAX DELETE ──
+  function attachDeleteListeners() {
+    document.querySelectorAll('.mp-action-delete[data-delete-url]').forEach(btn => {
+      // Éviter les doublons d'événements
+      if (btn.dataset.listenerAttached) return;
+      btn.dataset.listenerAttached = 'true';
+
+      btn.addEventListener('click', async function (e) {
+        e.stopPropagation();
+        if (!confirm('Supprimer ce produit ?')) return;
+
+        const row = btn.closest('tr');
+        try {
+          const response = await fetch(btn.dataset.deleteUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await response.json();
+          if (data.success) {
+            row.style.transition = 'opacity .35s, transform .35s';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(30px)';
+            setTimeout(() => row.remove(), 380);
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Erreur suppression.', true);
+          }
+        } catch (err) {
+          showToast('Erreur réseau lors de la suppression.', true);
+        }
+      });
+    });
+  }
+
+  // Attacher les listeners au chargement
+  attachDeleteListeners();
+
+  // Exposer globalement pour ré-attacher après un ajout/modification AJAX
+  window.attachDeleteListeners = attachDeleteListeners;
+
+  // Auto-fermeture toasts Twig
+  document.querySelectorAll('[id^="mp-toast-"]').forEach(toast => {
+    setTimeout(() => mpToastClose(toast.id), 4000);
   });
+
+});
 </script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}

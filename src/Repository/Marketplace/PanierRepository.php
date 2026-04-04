@@ -81,7 +81,7 @@ class PanierRepository extends ServiceEntityRepository
 
         // 1. Récupérer les IDs des paniers de l'utilisateur
         $panierIds = $this->createQueryBuilder('p')
-            ->select('p.idPanier')
+            ->select('p.id')
             ->andWhere('p.user = :user')
             ->setParameter('user', $user)
             ->getQuery()

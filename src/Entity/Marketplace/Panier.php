@@ -139,4 +139,21 @@ class Panier
         $this->totalMontant  = round($montant, 2);
         $this->totalProduits = $quantite;
     }
+    /**
+ * Retourne le nombre de vendeurs uniques dans le panier.
+ * Utilisé pour calculer les frais de livraison dynamiques (7 DT x vendeur).
+ */
+public function getNombreVendeurs(): int
+{
+    $vendeurIds = [];
+
+    foreach ($this->panierProduits as $ligne) {
+        $vendeur = $ligne->getProduit()->getUser();
+        if ($vendeur !== null) {
+            $vendeurIds[$vendeur->getId()] = true;
+        }
+    }
+
+    return count($vendeurIds);
+}
 }

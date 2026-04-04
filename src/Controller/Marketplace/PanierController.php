@@ -10,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
+use Symfony\Component\HttpFoundation\JsonResponse;
 /**
  * Contrôleur dédié à la gestion du panier d'achat.
  */
@@ -30,38 +30,57 @@ class PanierController extends AbstractController
         ]);
     }
 
-    #[Route('/marketplace/panier/add/{id}', name: 'app_marketplace_panier_add', methods: ['POST'])]
-    public function ajouterAuPanier(
-        int $id,
-        Request $request,
-        ProduitsRepository $produitsRepository,
-        PanierRepository $panierRepository,
-        PanierProduitRepository $ppRepository,
-        EntityManagerInterface $em
-    ): Response {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+#[Route('/marketplace/panier/add/{id}', name: 'app_marketplace_panier_add', methods: ['POST'])]
+public function ajouterAuPanier(
+    int $id,
+    Request $request,
+    ProduitsRepository $produitsRepository,
+    PanierRepository $panierRepository,
+    PanierProduitRepository $ppRepository,
+    EntityManagerInterface $em
+): Response {
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        $user = $this->getUser();
-        $produit = $produitsRepository->find($id);
+    $user    = $this->getUser();
+    $produit = $produitsRepository->find($id);
+    $isAjax  = $request->headers->get('X-Requested-With') === 'XMLHttpRequest'
+               || $request->headers->get('Accept') === 'application/json';
 
-        if (!$produit || $produit->getUser()->getId() === $user->getId()) {
-            $this->addFlash('danger', 'Ajout impossible : produit invalide ou vous appartenant.');
-            return $this->redirectToRoute('app_marketplace_catalogue');
+    if (!$produit || $produit->getUser()->getId() === $user->getId()) {
+        if ($isAjax) {
+            return $this->json(['success' => false, 'message' => 'Ajout impossible.'], 400);
         }
-
-        $quantite = (int) $request->request->get('quantite', 1);
-        if ($quantite > $produit->getQuantiteStock()) {
-            $this->addFlash('warning', 'Quantité demandée supérieure au stock disponible.');
-            return $this->redirectToRoute('app_marketplace_catalogue');
-        }
-
-        $panier = $panierRepository->getOrCreatePanier($user);
-        $ppRepository->ajouterOuIncrementer($panier, $produit, $quantite);
-
-        $this->addFlash('success', 'Produit ajouté au panier !');
+        $this->addFlash('danger', 'Ajout impossible : produit invalide ou vous appartenant.');
         return $this->redirectToRoute('app_marketplace_catalogue');
     }
 
+    $quantite = (int) $request->request->get('quantite', 1);
+    if ($quantite > $produit->getQuantiteStock()) {
+        if ($isAjax) {
+            return $this->json(['success' => false, 'message' => 'Stock insuffisant.'], 400);
+        }
+        $this->addFlash('warning', 'Quantité demandée supérieure au stock disponible.');
+        return $this->redirectToRoute('app_marketplace_catalogue');
+    }
+
+    $panier = $panierRepository->getOrCreatePanier($user);
+    $ppRepository->ajouterOuIncrementer($panier, $produit, $quantite);
+
+    // Recharger le panier pour avoir les totaux à jour
+    $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+
+    if ($isAjax) {
+        return $this->json([
+            'success'    => true,
+            'message'    => 'Produit ajouté au panier !',
+            'cartCount'  => $panierFrais->getTotalProduits(),
+            'cartTotal'  => number_format($panierFrais->getTotalMontant(), 2, '.', ' '),
+        ]);
+    }
+
+    $this->addFlash('success', 'Produit ajouté au panier !');
+    return $this->redirectToRoute('app_marketplace_catalogue');
+}
     #[Route('/marketplace/panier/update/{id}', name: 'app_marketplace_panier_update', methods: ['POST'])]
     public function modifierQuantite(
         int $id,

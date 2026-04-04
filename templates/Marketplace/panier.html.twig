@@ -192,19 +192,21 @@
                         <small class="free-badge">Gratuit — 0 DT</small>
                       </div>
                     </div>
-                    <div class="option-tile" data-group="delivery" data-fee="7"
-                         onclick="selectTile(this,'delivery')">
-                      <input type="radio" name="delivery" value="home">
-                      <div class="tile-radio"></div>
-                      <div class="tile-icon green"><i class="bi bi-truck"></i></div>
-                      <div class="tile-content">
-                        <strong>Livraison à domicile</strong>
-                        <small>+7 DT / vendeur</small>
-                      </div>
-                    </div>
+                    {% set fraisLivraison = panier.getNombreVendeurs() * 7 %}
+<div class="option-tile" data-group="delivery" data-fee="{{ fraisLivraison }}"
+     onclick="selectTile(this,'delivery')">
+  <input type="radio" name="delivery" value="home">
+  <div class="tile-radio"></div>
+  <div class="tile-icon green"><i class="bi bi-truck"></i></div>
+  <div class="tile-content">
+    <strong>Livraison à domicile</strong>
+    <small>+{{ fraisLivraison }} DT
+      ({{ panier.getNombreVendeurs() }} vendeur{{ panier.getNombreVendeurs() > 1 ? 's' : '' }} × 7 DT)
+    </small>
+  </div>
+</div>
                   </div>
                 </div>
-
                 {# Paiement #}
                 <div class="checkout-box accent">
                   <div class="checkout-box-title">
