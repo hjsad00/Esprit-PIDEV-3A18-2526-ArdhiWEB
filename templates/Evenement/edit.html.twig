@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% block title %}Modifier événement - Ardhi{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.56), rgba(10, 15, 8, 0.16)), url('{{ asset('assets/img/hero_2.jpg') }}'); background-size: cover; background-position: center; min-height: 320px; margin-top: 70px;">
+  <div class="hero-content-wrapper" style="align-items: center; justify-content: center;">
+    <div class="hero-left" style="max-width: 760px; padding: 90px 40px;">
+      <span class="hero-label">MODIFIER UN ÉVÉNEMENT</span>
+      <h1 class="hero-headline">{{ evenement.titre }}</h1>
+      <p class="hero-description">Mettez à jour les détails de votre événement et publiez les dernières informations.</p>
+    </div>
+  </div>
+</section>
+<section class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Modifier l'événement</h2>
+    <p>Corrigez les informations de l'événement et enregistrez vos modifications.</p>
+  </div>
+  <div class="container py-4">
+    <div class="card shadow-sm p-4">
+      {% include 'evenement/_form.html.twig' with {submitLabel: 'Enregistrer'} %}
+    </div>
+  </div>
+</section>
+{% endblock %}

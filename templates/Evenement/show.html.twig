@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ evenement.titre }} - Ardhi{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.48), rgba(10, 15, 8, 0.14)), url('{{ asset('assets/img/hero_2.jpg') }}'); background-size: cover; background-position: center; min-height: 320px; margin-top: 70px;">
+  <div class="hero-content-wrapper" style="align-items: flex-end;">
+    <div class="hero-left" style="max-width: 800px; padding: 80px 40px;">
+      <span class="hero-label">ÉVÉNEMENT AGRICOLE</span>
+      <h1 class="hero-headline">{{ evenement.titre }}</h1>
+      <p class="hero-description">{{ evenement.description ? evenement.description|striptags|slice(0, 120) ~ '...' : 'Détails de l’événement et options d’inscription.' }}</p>
+      <div class="d-flex gap-3 flex-wrap">
+        <span class="badge bg-success">{{ evenement.type }}</span>
+        <span class="badge bg-secondary">{{ evenement.statut }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Détails de l'événement</h2>
+    <p>Informations essentielles et actions rapides pour cet événement.</p>
+  </div>
+  <div class="container py-4">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h4>Informations</h4>
+            <p><i class="bi bi-geo-alt-fill me-2"></i>{{ evenement.lieu }}</p>
+            <p><i class="bi bi-calendar3 me-2"></i>{{ evenement.dateDebut|date('d/m/Y') }} → {{ evenement.dateFin|date('d/m/Y') }}</p>
+            <p><i class="bi bi-person-badge-fill me-2"></i>{{ evenement.organisateur }}</p>
+            <p><i class="bi bi-people-fill me-2"></i>{{ evenement.nombreParticipants }} / {{ evenement.nombrePlacesMax }} places</p>
+          </div>
+        </div>
+        {% if evenement.description %}
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h4>Description</h4>
+              <p>{{ evenement.description|nl2br }}</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-lg-4">
+        <div class="card shadow-sm p-4">
+          <h4 class="mb-3">Statut et actions</h4>
+          <div class="mb-3">
+            <p class="mb-1"><strong>État de l'événement</strong></p>
+            <span class="badge bg-{{ evenement.statut == 'A_VENIR' ? 'success' : evenement.statut == 'EN_COURS' ? 'info text-dark' : evenement.statut == 'TERMINE' ? 'secondary' : 'danger' }}">
+              {{ evenement.statut|replace({'A_VENIR':'À VENIR','EN_COURS':'EN COURS','TERMINE':'TERMINÉ','ANNULE':'ANNULÉ'}) }}
+            </span>
+          </div>
+          <div class="mb-3">
+            <p class="mb-1"><strong>Disponibilité</strong></p>
+            {% if evenement.placesRestantes <= 0 %}
+              <span class="badge bg-danger">Complet</span>
+            {% else %}
+              <span class="badge bg-success">{{ evenement.placesRestantes }} place{{ evenement.placesRestantes > 1 ? 's' : '' }} restantes</span>
+            {% endif %}
+          </div>
+          <div class="mb-4 p-3 rounded-3" style="background: rgba(74, 140, 63, 0.07);">
+            {% if not app.user %}
+              <p class="mb-2"><strong>Inscription</strong></p>
+              <p class="text-muted">Connectez-vous pour accéder au formulaire d'inscription.</p>
+              <a href="{{ path('app_login') }}" class="btn btn-success w-100 mb-2">Connexion</a>
+              <a href="{{ path('app_register') }}" class="btn btn-outline-secondary w-100">Créer un compte</a>
+            {% elseif app.user == evenement.createur or is_granted('ROLE_ADMIN') %}
+              <p class="mb-2"><strong>Vous êtes organisateur</strong></p>
+              <p class="text-muted">Modifiez ou supprimez l'événement à partir des boutons ci-dessous.</p>
+              <a href="{{ path('app_evenement_edit', {id: evenement.id}) }}" class="btn btn-outline-success w-100 mb-2">Modifier</a>
+              <form method="post" action="{{ path('app_evenement_delete', {id: evenement.id}) }}" onsubmit="return confirm('Supprimer cet événement ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                <button type="submit" class="btn btn-outline-danger w-100">Supprimer</button>
+              </form>
+            {% elseif userParticipation and userParticipation.statut != 'ANNULE' %}
+              <p class="mb-2"><strong>Inscription confirmée</strong></p>
+              <p class="text-muted">Vous êtes déjà inscrit pour cet événement.</p>
+              <form method="post" action="{{ path('app_evenement_desinscrire', {id: evenement.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('desinscrire' ~ evenement.id) }}">
+                <button type="submit" class="btn btn-outline-danger w-100">Se désinscrire</button>
+              </form>
+            {% elseif evenement.statut in ['TERMINE','ANNULE'] %}
+              <p class="mb-2"><strong>Inscription non disponible</strong></p>
+              <p class="text-muted">Cet événement n'accepte plus de nouvelles inscriptions.</p>
+              <button class="btn btn-secondary w-100" disabled>Inscriptions fermées</button>
+            {% elseif evenement.placesRestantes <= 0 %}
+              <p class="mb-2"><strong>Nombre de places</strong></p>
+              <p class="text-muted">Toutes les places ont été réservées.</p>
+              <button class="btn btn-danger w-100" disabled>Complet</button>
+            {% else %}
+              <p class="mb-2"><strong>Inscription possible</strong></p>
+              <p class="text-muted">Cliquez sur le bouton suivant pour réserver votre place.</p>
+              <form method="post" action="{{ path('app_evenement_inscrire', {id: evenement.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('inscrire' ~ evenement.id) }}">
+                <button type="submit" class="btn btn-success w-100 mb-3">S'inscrire</button>
+              </form>
+            {% endif %}
+          </div>
+          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('favori' ~ evenement.id) }}">
+            <button class="btn btn-outline-danger w-100">
+              <i class="bi bi-heart{% if isFavori %}-fill{% endif %}"></i>
+              {{ isFavori ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

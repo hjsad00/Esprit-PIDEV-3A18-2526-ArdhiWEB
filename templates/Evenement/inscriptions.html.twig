@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes inscriptions - Ardhi{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.54), rgba(10, 15, 8, 0.14)), url('{{ asset('assets/img/hero_4.jpg') }}'); background-size: cover; background-position: center; min-height: 340px; margin-top: 70px;">
+  <div class="hero-content-wrapper" style="align-items: center; justify-content: center;">
+    <div class="hero-left" style="max-width: 720px; padding: 90px 40px;">
+      <div class="hero-label">MES INSCRIPTIONS</div>
+      <h1 class="hero-headline">Suivez vos inscriptions aux événements</h1>
+      <p class="hero-description">Consultez le statut de chaque inscription et retrouvez facilement vos événements réservés.</p>
+      <div class="hero-cta-group">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir les événements</a>
+        <a href="{{ path('app_evenement_favoris') }}" class="hero-btn-primary">Mes favoris</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Liste des inscriptions</h2>
+    <p>Toutes vos inscriptions récentes et leur statut.</p>
+  </div>
+  <div class="container">
+    {% if inscriptions is empty %}
+      <div class="alert alert-warning">Vous n'avez pas encore d'inscriptions.</div>
+    {% else %}
+      <div class="row g-4">
+        {% for participation in inscriptions %}
+          <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h5 class="card-title mb-1">{{ participation.evenement.titre }}</h5>
+                    <p class="text-muted mb-0"><i class="bi bi-geo-alt-fill"></i> {{ participation.evenement.lieu }}</p>
+                  </div>
+                  <span class="badge bg-{{ participation.statut == 'CONFIRME' ? 'success' : participation.statut == 'EN_ATTENTE' ? 'warning text-dark' : participation.statut == 'REFUSE' ? 'danger' : 'secondary' }}">
+                    {{ participation.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}
+                  </span>
+                </div>
+                <p class="mb-2"><strong>Date :</strong> {{ participation.evenement.dateDebut|date('d/m/Y') }}</p>
+                <p class="mb-2"><strong>Inscrit le :</strong> {{ participation.dateInscription|date('d/m/Y') }}</p>
+                <p class="mb-2"><strong>Nombre :</strong> {{ participation.nombrePersonnes }} place(s)</p>
+                {% if participation.commentaire %}
+                  <p class="text-muted mb-2"><strong>Commentaire :</strong> {{ participation.commentaire }}</p>
+                {% endif %}
+              </div>
+              <div class="card-footer d-flex justify-content-between align-items-center">
+                <a href="{{ path('app_evenement_show', {id: participation.evenement.id}) }}" class="btn btn-sm btn-outline-success">Voir</a>
+                {% if participation.statut != 'ANNULE' %}
+                  <form method="post" action="{{ path('app_evenement_desinscrire', {id: participation.evenement.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('desinscrire' ~ participation.evenement.id) }}">
+                    <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

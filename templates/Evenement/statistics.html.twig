@@ -1,0 +1,361 @@
+﻿{% extends "base.html.twig" %}
+
+{% block title %}Statistiques - Évènements{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="hero-section" style="background-image: linear-gradient(135deg, rgba(36, 49, 88, 0.95), rgba(74, 37, 153, 0.86)), url('{{ asset('assets/img/hero-bg.jpg') }}'); background-size: cover; background-position: center; padding: 4rem 0; margin-bottom: 2.5rem; border-radius: 28px; overflow: hidden;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-white text-dark mb-3" style="letter-spacing: 0.08em;">STATISTIQUES ÉVÈNEMENTS</span>
+                <h1 class="text-white fw-bold mb-3">Vue d'ensemble du module événementiel</h1>
+                <p class="text-white-50 mb-4">Consultez les chiffres clés, suivez les statuts et optimisez vos événements avec des indicateurs clairs.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <span class="badge bg-light text-dark">Rôle : {{ role }}</span>
+                    {% if role == 'ADMIN' %}
+                        <span class="badge bg-warning text-dark">Vue administrateur</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    {% if role == 'ADMIN' %}
+        <div class="row gy-4 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0" style="background: #2d365f; color: white;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-white-50 small mb-2">Total événements</p>
+                        <h2 class="fw-bold mb-0">{{ globalStats.totalEvents }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0" style="background: #4b2b7f; color: white;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-white-50 small mb-2">Total participations</p>
+                        <h2 class="fw-bold mb-0">{{ globalStats.totalParticipations }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0" style="background: #1864ab; color: white;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-white-50 small mb-2">Statuts d'événements</p>
+                        <h2 class="fw-bold mb-0">{{ globalStats.eventsByStatus|length }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row gy-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Événements par statut</h5>
+                        <div class="list-group list-group-flush">
+                            {% for status in globalStats.eventsByStatus %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
+                                    <span>
+                                        {% if status.statut == 'A_VENIR' %}
+                                            <span class="badge bg-info me-2">À VENIR</span>
+                                        {% elseif status.statut == 'EN_COURS' %}
+                                            <span class="badge bg-warning text-dark me-2">EN COURS</span>
+                                        {% elseif status.statut == 'TERMINE' %}
+                                            <span class="badge bg-success me-2">TERMINÉ</span>
+                                        {% else %}
+                                            <span class="badge bg-danger me-2">ANNULÉ</span>
+                                        {% endif %}
+                                        Statut
+                                    </span>
+                                    <span class="fw-semibold">{{ status.count }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Événements par type</h5>
+                        <div class="list-group list-group-flush">
+                            {% for type in globalStats.eventsByType %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
+                                    <span>{{ type.type }}</span>
+                                    <span class="fw-semibold">{{ type.count }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row gy-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Participations par statut</h5>
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    {% for status in globalStats.participationsByStatus %}
+                                        <tr>
+                                            <td>
+                                                {% if status.statut == 'CONFIRME' %}
+                                                    <span class="badge bg-success">CONFIRMÉ</span>
+                                                {% elseif status.statut == 'EN_ATTENTE' %}
+                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
+                                                {% elseif status.statut == 'REFUSE' %}
+                                                    <span class="badge bg-danger">REFUSÉ</span>
+                                                {% elseif status.statut == 'PRESENT' %}
+                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">ANNULÉ</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end fw-semibold">{{ status.count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Top événements</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    {% for event in topRatedEvents %}
+                                        <tr>
+                                            <td>{{ event.titre|slice(0, 25) }}{% if event.titre|length > 25 %}...{% endif %}</td>
+                                            <td class="text-end"><span class="badge bg-warning">★ {{ event.avgRating|number_format(1) }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elseif role == 'AGRICULTEUR' %}
+        <div class="row gy-4 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #667eea;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Inscriptions</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.totalInscriptions }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #f093fb;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Confirmées</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.confirmations }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #4facfe;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Favoris</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.totalFavorites }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #fd7e14;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Événements créés</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.createdEvents }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row gy-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Aperçu organisateur</h5>
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <p class="text-muted small mb-1">Participants</p>
+                                <h3 class="fw-bold mb-0">{{ creatorStats.totalParticipants }}</h3>
+                            </div>
+                            <div class="col-6">
+                                <p class="text-muted small mb-1">Note Moyenne</p>
+                                <h3 class="fw-bold mb-0">{{ creatorStats.avgRating }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Participants par statut</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    {% for status in creatorStats.participantsByStatus %}
+                                        <tr>
+                                            <td>
+                                                {% if status.statut == 'CONFIRME' %}
+                                                    <span class="badge bg-success">CONFIRMÉ</span>
+                                                {% elseif status.statut == 'EN_ATTENTE' %}
+                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
+                                                {% elseif status.statut == 'REFUSE' %}
+                                                    <span class="badge bg-danger">REFUSÉ</span>
+                                                {% elseif status.statut == 'PRESENT' %}
+                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">ANNULÉ</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end fw-semibold">{{ status.count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Mes inscriptions par statut</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    {% for status in userStats.inscriptionsByStatus %}
+                                        <tr>
+                                            <td>
+                                                {% if status.statut == 'CONFIRME' %}
+                                                    <span class="badge bg-success">CONFIRMÉ</span>
+                                                {% elseif status.statut == 'EN_ATTENTE' %}
+                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
+                                                {% elseif status.statut == 'REFUSE' %}
+                                                    <span class="badge bg-danger">REFUSÉ</span>
+                                                {% elseif status.statut == 'PRESENT' %}
+                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">ANNULÉ</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end fw-semibold">{{ status.count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row gy-4 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #667eea;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Total inscriptions</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.totalInscriptions }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #f093fb;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Confirmées</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.confirmations }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100" style="border-left: 4px solid #4facfe;">
+                    <div class="card-body">
+                        <p class="text-uppercase text-muted small mb-2">Favoris</p>
+                        <h2 class="fw-bold mb-0">{{ userStats.totalFavorites }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Mes inscriptions par statut</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    {% for status in userStats.inscriptionsByStatus %}
+                                        <tr>
+                                            <td>
+                                                {% if status.statut == 'CONFIRME' %}
+                                                    <span class="badge bg-success">CONFIRMÉ</span>
+                                                {% elseif status.statut == 'EN_ATTENTE' %}
+                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
+                                                {% elseif status.statut == 'REFUSE' %}
+                                                    <span class="badge bg-danger">REFUSÉ</span>
+                                                {% elseif status.statut == 'PRESENT' %}
+                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">ANNULÉ</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end fw-semibold">{{ status.count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .hero-section {
+        position: relative;
+        display: flex;
+        align-items: center;
+        border-radius: 28px;
+    }
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(18, 30, 70, 0.42);
+        border-radius: 28px;
+    }
+    .hero-section h1,
+    .hero-section p,
+    .hero-section .badge {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+{% endblock %}

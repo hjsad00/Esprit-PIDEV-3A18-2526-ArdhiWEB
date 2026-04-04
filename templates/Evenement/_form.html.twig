@@ -1,0 +1,33 @@
+{{ form_start(form) }}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="mb-4">Informations de l'événement</h4>
+        <div class="mb-3">{{ form_label(form.titre) }}{{ form_widget(form.titre) }}</div>
+        <div class="mb-3">{{ form_label(form.description) }}{{ form_widget(form.description) }}</div>
+        <div class="mb-3">{{ form_label(form.lieu) }}{{ form_widget(form.lieu) }}</div>
+        <div class="row g-3">
+          <div class="col-md-6 mb-3">{{ form_label(form.dateDebut) }}{{ form_widget(form.dateDebut) }}</div>
+          <div class="col-md-6 mb-3">{{ form_label(form.dateFin) }}{{ form_widget(form.dateFin) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="mb-4">Paramètres</h4>
+        <div class="mb-3">{{ form_label(form.type) }}{{ form_widget(form.type) }}</div>
+        <div class="mb-3">{{ form_label(form.statut) }}{{ form_widget(form.statut) }}</div>
+        <div class="mb-3">{{ form_label(form.organisateur) }}{{ form_widget(form.organisateur) }}</div>
+        <div class="mb-3">{{ form_label(form.nombrePlacesMax) }}{{ form_widget(form.nombrePlacesMax) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="d-flex gap-3">
+  <button type="submit" class="btn btn-success">{{ submitLabel ?? 'Enregistrer' }}</button>
+  <a href="{{ path('app_evenement_index') }}" class="btn btn-secondary">Annuler</a>
+</div>
+{{ form_end(form) }}

@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% block title %}Tableau de bord des participations - Ardhi{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.62), rgba(10, 15, 8, 0.2)), url('{{ asset('assets/img/hero_3.jpg') }}'); background-size: cover; background-position: center; min-height: 380px; margin-top: 70px;">
+  <div class="hero-content-wrapper" style="align-items: center; justify-content: center;">
+    <div class="hero-left" style="max-width: 720px; padding: 100px 40px;">
+      <div class="hero-label">TABLEAU DE BORD</div>
+      <h1 class="hero-headline">Gestion des participations</h1>
+      <p class="hero-description">
+        {% if isAdmin %}
+          Toutes les participations sont affichées ici, y compris celles des événements créés par les agriculteurs.
+        {% else %}
+          Acceptez, mettez en attente ou refusez les inscriptions pour vos événements agricoles.
+        {% endif %}
+      </p>
+      <div class="hero-cta-group">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Retour à la liste</a>
+        <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary">Mes inscriptions</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Demandes de participation</h2>
+    <p>Liste des inscriptions en attente et des demandes pour vos événements.</p>
+  </div>
+  <div class="container">
+    {% if participations is empty %}
+      <div class="alert alert-info">Aucune participation à gérer pour l'instant.</div>
+    {% else %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Événement</th>
+              <th>Utilisateur</th>
+              <th>Date d'inscription</th>
+              <th>Places</th>
+              <th>Statut</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for participation in participations %}
+              <tr>
+                <td><a href="{{ path('app_evenement_show', {id: participation.evenement.id}) }}">{{ participation.evenement.titre }}</a></td>
+                <td>{{ participation.utilisateur.prenom ? participation.utilisateur.prenom ~ ' ' ~ participation.utilisateur.nom : participation.utilisateur.email }}</td>
+                <td>{{ participation.dateInscription ? participation.dateInscription|date('d/m/Y H:i') : '-' }}</td>
+                <td>{{ participation.nombrePersonnes }}</td>
+                <td>
+                  <span class="badge bg-{{ participation.statut == 'CONFIRME' ? 'success' : participation.statut == 'EN_ATTENTE' ? 'warning text-dark' : participation.statut == 'REFUSE' ? 'danger' : 'secondary' }}">
+                    {{ participation.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <form method="post" action="{{ path('app_evenement_participation_update', {id: participation.id}) }}" class="d-flex gap-2 justify-content-end">
+                    <select name="statut" class="form-select form-select-sm" style="width: 160px;">
+                      {% set statusOptions = {'CONFIRME':'Confirmer','EN_ATTENTE':'En attente','REFUSE':'Refuser','ANNULE':'Annuler'} %}
+                      {% for code, label in statusOptions %}
+                        <option value="{{ code }}" {% if participation.statut == code %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-success">Appliquer</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

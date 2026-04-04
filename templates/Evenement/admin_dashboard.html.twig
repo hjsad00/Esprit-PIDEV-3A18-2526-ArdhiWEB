@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Admin - Évènements{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(135deg, rgba(48, 38, 142, 0.88), rgba(102, 126, 234, 0.8)), url('{{ asset('assets/img/hero_3.jpg') }}'); background-size: cover; background-position: center; min-height: 380px; margin-top: 70px; position: relative;">
+  <div class="hero-content-wrapper" style="padding: 4rem 2rem; align-items: flex-end;">
+    <div class="hero-left" style="max-width: 720px;">
+      <div class="hero-label">DASHBOARD ADMIN</div>
+      <h1 class="hero-headline">Gestion centrale des événements</h1>
+      <p class="hero-description">Accédez rapidement à toutes les fonctionnalités de gestion : création, modification, suppression et suivi des performances.</p>
+      <div class="d-flex gap-3 flex-wrap mt-4">
+        <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
+        <a href="{{ path('app_evenement_statistics') }}" class="hero-btn-secondary">Voir les statistiques</a>
+        <a href="{{ path('app_evenement_participations') }}" class="hero-btn-secondary">Gérer les participations</a>
+        <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-secondary">Voir les inscriptions</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-5">
+  <div class="row g-4 mb-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100" style="border-left: 4px solid #6f42c1;">
+        <div class="card-body">
+          <h5 class="card-title">Total événements</h5>
+          <p class="display-6 mb-0">{{ globalStats.totalEvents }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100" style="border-left: 4px solid #0d6efd;">
+        <div class="card-body">
+          <h5 class="card-title">Inscriptions totales</h5>
+          <p class="display-6 mb-0">{{ globalStats.totalParticipations }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100" style="border-left: 4px solid #198754;">
+        <div class="card-body">
+          <h5 class="card-title">Top événements</h5>
+          <p class="display-6 mb-0">{{ globalStats.topEvents|length }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Événements par statut</h5>
+          <ul class="list-group list-group-flush">
+            {% for status in globalStats.eventsByStatus %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ status.statut|replace({'A_VENIR': 'À VENIR', 'EN_COURS': 'EN COURS', 'TERMINE': 'TERMINÉ', 'ANNULE': 'ANNULÉ'}) }}</span>
+                <span class="badge bg-primary rounded-pill">{{ status.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Événements par type</h5>
+          <ul class="list-group list-group-flush">
+            {% for type in globalStats.eventsByType %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ type.type }}</span>
+                <span class="badge bg-success rounded-pill">{{ type.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="card-title mb-0">Liste des événements</h4>
+          <p class="text-muted mb-0">Modifier ou consulter chaque événement directement depuis ce tableau.</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Titre</th>
+              <th>Statut</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for evenement in evenements %}
+              <tr>
+                <td>{{ evenement.titre }}</td>
+                <td><span class="badge bg-{{ evenement.statut == 'A_VENIR' ? 'info' : evenement.statut == 'EN_COURS' ? 'warning text-dark' : evenement.statut == 'TERMINE' ? 'secondary' : 'danger' }}">{{ evenement.statut|replace({'A_VENIR': 'À VENIR', 'EN_COURS': 'EN COURS', 'TERMINE': 'TERMINÉ', 'ANNULE': 'ANNULÉ'}) }}</span></td>
+                <td>{{ evenement.type }}</td>
+                <td>{{ evenement.dateDebut|date('d/m/Y') }}</td>
+                <td class="text-end">
+                  <a href="{{ path('app_evenement_show', {id: evenement.id}) }}" class="btn btn-sm btn-outline-primary me-2">Voir</a>
+                  <a href="{{ path('app_evenement_edit', {id: evenement.id}) }}" class="btn btn-sm btn-primary me-2">Modifier</a>
+                  <form method="post" action="{{ path('app_evenement_delete', {id: evenement.id}) }}" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Confirmer la suppression de cet événement ?');">Supprimer</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center">Aucun événement trouvé.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

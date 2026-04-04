@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+{% block title %}Événements Agricoles à Ardhi{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.42), rgba(10, 15, 8, 0.12)), url('{{ asset('assets/img/hero_1.jpg') }}'); background-size: cover; background-position: center; min-height: calc(100vh - 70px); margin-top: 70px; position: relative;">
+  <div class="hero-content-wrapper">
+    <div class="hero-left">
+      <div class="hero-label">MODULE ÉVÉNEMENTS</div>
+      {% if app.user and app.user.role == 'ADMIN' %}
+        <h1 class="hero-headline">Administration des événements</h1>
+        <p class="hero-description">Gérez tous les événements de la plateforme avec visibilité, actions de modification et accès rapide aux statistiques.</p>
+      {% elseif app.user and app.user.role == 'AGRICULTEUR' %}
+        <h1 class="hero-headline">Vos événements agricoles</h1>
+        <p class="hero-description">Créez, modifiez et suivez vos événements en un seul endroit, tout en gardant le contrôle sur vos inscriptions.</p>
+      {% else %}
+        <h1 class="hero-headline">Découvrez et participez aux événements agricoles</h1>
+        <p class="hero-description">Accédez aux inscriptions, participez aux rencontres et suivez vos favoris depuis un seul endroit.</p>
+      {% endif %}
+      <div class="hero-cta-group">
+        {% if app.user and app.user.role in ['AGRICULTEUR', 'ADMIN'] %}
+          <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
+        {% endif %}
+        <a href="#events" class="hero-btn-secondary">Voir les événements</a>
+      </div>
+      {% if app.user and app.user.role == 'ADMIN' %}
+      <div class="mt-4 p-4 rounded-4" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.12);">
+        <h3 class="text-white mb-2">Espace Admin</h3>
+        <p class="text-white-50 mb-0">Vous pouvez voir tous les événements, gérer chaque fiche et accéder aux statistiques depuis votre menu.</p>
+      </div>
+      {% elseif app.user and app.user.role == 'AGRICULTEUR' %}
+      <div class="mt-4 p-4 rounded-4" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08);">
+        <h3 class="text-white mb-2">Espace Organisateur</h3>
+        <p class="text-white-50 mb-0">Vous pouvez créer et modifier vos événements. Vos événements apparaîtront dans la liste ci-dessous.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="hero-services-sidebar">
+      <div class="services-glass-panel">
+        <div class="services-panel-title">Services Événements</div>
+
+        <a href="{{ path('app_evenement_index') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_index' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar-event-fill"></i></div>
+          <div class="service-sidebar-text">
+            <h4>Évènements</h4>
+            <span>Voir tous les événements disponibles</span>
+          </div>
+        </a>
+
+        {% if app.user and app.user.role == 'AGRICULTEUR' %}
+        <a href="{{ path('app_evenement_participations') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_participations' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+          <div class="service-sidebar-text">
+            <h4>Participations</h4>
+            <span>Gérer vos participations actives</span>
+          </div>
+        </a>
+        {% endif %}
+
+        <a href="{{ path('app_evenement_inscriptions') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_inscriptions' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
+          <div class="service-sidebar-text">
+            <h4>Inscriptions</h4>
+            <span>Suivre vos inscriptions aux prochains événements</span>
+          </div>
+        </a>
+
+        <a href="{{ path('app_evenement_favoris') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_favoris' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-heart-fill"></i></div>
+          <div class="service-sidebar-text">
+            <h4>Favoris</h4>
+            <span>Retrouver vos événements favoris</span>
+          </div>
+        </a>
+
+        {% if app.user %}
+        <a href="{{ path('app_evenement_statistics') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_statistics' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-graph-up"></i></div>
+          <div class="service-sidebar-text">
+            <h4>Statistiques</h4>
+            <span>Consulter vos statistiques</span>
+          </div>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="events" class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>ÉVÉNEMENTS DISPONIBLES</h2>
+    <p>Filtrez et trouvez l'événement qui vous convient</p>
+  </div>
+  <div class="content">
+    <div class="container">
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4"><input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Rechercher..."></div>
+        <div class="col-md-3"><select name="type" class="form-select"><option value="">-- Type --</option><option value="FOIRE" {% if type=='FOIRE' %}selected{% endif %}>Foire</option><option value="FORMATION" {% if type=='FORMATION' %}selected{% endif %}>Formation</option><option value="CONFERENCE" {% if type=='CONFERENCE' %}selected{% endif %}>Conférence</option><option value="ATELIER" {% if type=='ATELIER' %}selected{% endif %}>Atelier</option></select></div>
+        <div class="col-md-3"><select name="statut" class="form-select"><option value="">-- Statut --</option><option value="A_VENIR" {% if statut=='A_VENIR' %}selected{% endif %}>À venir</option><option value="EN_COURS" {% if statut=='EN_COURS' %}selected{% endif %}>En cours</option><option value="TERMINE" {% if statut=='TERMINE' %}selected{% endif %}>Terminé</option><option value="ANNULE" {% if statut=='ANNULE' %}selected{% endif %}>Annulé</option></select></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-success w-100">Filtrer</button></div>
+      </form>
+      {% if evenements is empty %}
+        <div class="text-center py-5"><h5>Aucun événement trouvé</h5></div>
+      {% else %}
+      <div class="row g-4">
+        {% for evenement in evenements %}
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index0 * 100) % 500 }}">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <span class="badge bg-success mb-2">{{ evenement.type }}</span>
+              <span class="badge bg-secondary mb-2">{{ evenement.statut }}</span>
+              <h5 class="card-title">{{ evenement.titre }}</h5>
+              <p class="card-text text-muted"><i class="bi bi-geo-alt-fill"></i> {{ evenement.lieu }}</p>
+              <p class="card-text text-muted"><i class="bi bi-calendar3"></i> {{ evenement.dateDebut|date('d/m/Y') }}</p>
+              <p class="card-text text-muted"><i class="bi bi-person-fill"></i> {{ evenement.organisateur }}</p>
+              <div class="progress mb-2" style="height:6px;"><div class="progress-bar bg-success" style="width:{{ ((evenement.nombreParticipants/evenement.nombrePlacesMax)*100)|round }}%"></div></div>
+              <small>{{ evenement.nombreParticipants }} inscrits / {{ evenement.placesRestantes }} places restantes</small>
+            </div>
+            <div class="card-footer d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <a href="{{ path('app_evenement_show', {id: evenement.id}) }}" class="btn btn-sm btn-success">Voir</a>
+              <div class="d-flex gap-2">
+                {% if app.user and (app.user == evenement.createur or is_granted('ROLE_ADMIN')) %}
+                  <a href="{{ path('app_evenement_edit', {id: evenement.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                {% endif %}
+                {% if app.user %}
+                <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}" class="m-0">
+                  <input type="hidden" name="_token" value="{{ csrf_token('favori' ~ evenement.id) }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-heart{% if evenement.id in favorisIds %}-fill{% endif %}"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

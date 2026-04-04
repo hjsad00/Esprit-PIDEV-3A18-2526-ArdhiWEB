@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}Ardhi - Accueil{% endblock %}
 
@@ -7,113 +7,52 @@
 {% endblock %}
 
 {% block body %}
-
-    <!-- Hero Section -->
     <section id="hero" class="hero section dark-background">
       <div id="hero-carousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
-
-        <!-- Carousel Slides (background images) -->
-        <div class="carousel-item active">
-          <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="">
-        </div>
-        <div class="carousel-item">
-          <img src="{{ asset('assets/img/hero_2.jpg') }}" alt="">
-        </div>
-        <div class="carousel-item">
-          <img src="{{ asset('assets/img/hero_3.jpg') }}" alt="">
-        </div>
-        <div class="carousel-item">
-          <img src="{{ asset('assets/img/hero_4.jpg') }}" alt="">
-        </div>
-
-        <!-- Hero Content Overlay -->
+        <div class="carousel-item active"><img src="{{ asset('assets/img/hero_1.jpg') }}" alt=""></div>
+        <div class="carousel-item"><img src="{{ asset('assets/img/hero_2.jpg') }}" alt=""></div>
+        <div class="carousel-item"><img src="{{ asset('assets/img/hero_3.jpg') }}" alt=""></div>
+        <div class="carousel-item"><img src="{{ asset('assets/img/hero_4.jpg') }}" alt=""></div>
         <div class="hero-content-wrapper">
-
-          <!-- Left Content -->
           <div class="hero-left">
             <div class="hero-label">ARDHI PLATEFORME INTELLIGENTE</div>
             <h1 class="hero-headline">L'Agriculture de<br>demain,<br>aujourd'hui.</h1>
-            <p class="hero-description">
-              Accédez à un marché vaste pour acheter et vendre vos produits
-              agricoles et équipements en toute sécurité.
-            </p>
+            <p class="hero-description">Accedez a un marche vaste pour acheter et vendre vos produits agricoles et equipements en toute securite.</p>
             <div class="hero-cta-group">
               <a href="{{ app.user ? path('app_profile') : path('app_register') }}" class="hero-btn-primary">Commencer</a>
               <a href="#services" class="hero-btn-secondary">En savoir plus</a>
             </div>
           </div>
-
-          <!-- Right — Glassmorphic Services Sidebar -->
           <div class="hero-services-sidebar">
             <div class="services-glass-panel">
               <div class="services-panel-title">Nos Services</div>
-
               <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-cpu"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Diagnostic IA</h4>
-                  <span>Analyse de maladies</span>
-                </div>
+                <div class="service-sidebar-icon"><i class="bi bi-cpu"></i></div>
+                <div class="service-sidebar-text"><h4>Diagnostic IA</h4><span>Analyse de maladies</span></div>
               </a>
-
               <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-shop"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Marketplace</h4>
-                  <span>Vente et achat</span>
-                </div>
+                <div class="service-sidebar-icon"><i class="bi bi-shop"></i></div>
+                <div class="service-sidebar-text"><h4>Marketplace</h4><span>Vente et achat</span></div>
               </a>
-
               <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-wrench-adjustable"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Maintenance</h4>
-                  <span>Gestion matériel</span>
-                </div>
+                <div class="service-sidebar-icon"><i class="bi bi-wrench-adjustable"></i></div>
+                <div class="service-sidebar-text"><h4>Maintenance</h4><span>Gestion materiel</span></div>
               </a>
-
               <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-flower1"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Cultures</h4>
-                  <span>Suivi parcellaire</span>
-                </div>
+                <div class="service-sidebar-icon"><i class="bi bi-flower1"></i></div>
+                <div class="service-sidebar-text"><h4>Cultures</h4><span>Suivi parcellaire</span></div>
               </a>
-
+              <a href="{{ path('app_evenement_index') }}" class="service-sidebar-item">
+                <div class="service-sidebar-icon"><i class="bi bi-calendar2-event"></i></div>
+                <div class="service-sidebar-text"><h4>Evenements</h4><span>Agenda agricole</span></div>
+              </a>
               <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-calendar2-event"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Évènements</h4>
-                  <span>Agenda agricole</span>
-                </div>
+                <div class="service-sidebar-icon"><i class="bi bi-people"></i></div>
+                <div class="service-sidebar-text"><h4>Employes</h4><span>Gestion d'equipe</span></div>
               </a>
-
-              <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-people"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Employés</h4>
-                  <span>Gestion d'équipe</span>
-                </div>
-              </a>
-
             </div>
           </div>
-
         </div>
-
-        <!-- Carousel Controls -->
         <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
           <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
         </a>
@@ -121,11 +60,9 @@
           <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
         </a>
         <ol class="carousel-indicators"></ol>
-
       </div>
-    </section><!-- /Hero Section -->
+    </section>
 
-    <!-- Services Section -->
     <section id="services" class="services section">
       <div class="container section-title" data-aos="fade-up">
         <h2>NOS SERVICES</h2>
@@ -134,133 +71,54 @@
       <div class="content">
         <div class="container">
           <div class="row g-4">
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="0">
               <div class="service-item">
                 <span class="number">01</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-camera display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Diagnostic IA</h3>
-                  <p>Prenez une photo de votre plante et obtenez un diagnostic instantané grâce à l'IA pour traiter vos cultures efficacement.</p>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-camera display-4"></i></div>
+                <div class="service-item-content"><h3 class="service-heading">Diagnostic IA</h3><p>Prenez une photo de votre plante et obtenez un diagnostic instantane grace a l'IA.</p></div>
               </div>
             </div>
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
               <div class="service-item">
                 <span class="number">02</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-shop display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Marketplace</h3>
-                  <p>Une place de marché intégrée pour acheter et vendre vos produits, intrants et matériels agricoles en toute sécurité.</p>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-shop display-4"></i></div>
+                <div class="service-item-content"><h3 class="service-heading">Marketplace</h3><p>Une place de marche integree pour acheter et vendre vos produits agricoles en toute securite.</p></div>
               </div>
             </div>
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
               <div class="service-item">
                 <span class="number">03</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-tools display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Maintenance</h3>
-                  <p>Planifiez et suivez facilement la maintenance de vos engins et équipements agricoles pour éviter les pannes.</p>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-tools display-4"></i></div>
+                <div class="service-item-content"><h3 class="service-heading">Maintenance</h3><p>Planifiez et suivez facilement la maintenance de vos engins agricoles.</p></div>
               </div>
             </div>
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
               <div class="service-item">
                 <span class="number">04</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-tree display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Cultures</h3>
-                  <p>Gérez le cycle complet de vos cultures, optimisez vos rendements et suivez l'évolution de vos parcelles au quotidien.</p>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-tree display-4"></i></div>
+                <div class="service-item-content"><h3 class="service-heading">Cultures</h3><p>Gerez le cycle complet de vos cultures et suivez l'evolution de vos parcelles.</p></div>
               </div>
             </div>
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
               <div class="service-item">
                 <span class="number">05</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-calendar-event display-4"></i>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-calendar-event display-4"></i></div>
                 <div class="service-item-content">
-                  <h3 class="service-heading">Évènements</h3>
-                  <p>Découvrez et participez aux événements, foires et formations agricoles pour enrichir vos connaissances et votre réseau.</p>
+                  <h3 class="service-heading">Evenements</h3>
+                  <p>Decouvrez et participez aux evenements, foires et formations agricoles.</p>
+                  <a href="{{ path('app_evenement_index') }}" style="display:inline-block;margin-top:10px;color:#667A3F;font-weight:600;font-size:.9rem;">Voir les evenements</a>
                 </div>
               </div>
             </div>
-
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
               <div class="service-item">
                 <span class="number">06</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-people display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Employés</h3>
-                  <p>Gérez les plannings, les tâches et les profils de vos ouvriers agricoles ou consultants directement depuis une interface centralisée.</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section><!-- /Services Section -->
-
-    <!-- About Section -->
-    <section id="about" class="about section">
-      <div class="content">
-        <div class="container">
-          <div class="row">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-              <img src="{{ asset('assets/img/img_long_5.jpg') }}" alt="À propos d'Ardhi" class="img-fluid img-overlap" data-aos="zoom-out">
-            </div>
-            <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
-              <h3 class="content-subtitle text-white opacity-50">Pourquoi Ardhi ?</h3>
-              <h2 class="content-title mb-4">
-                Une plateforme <strong>complète</strong> pour l'agriculture intelligente
-              </h2>
-              <p class="opacity-50">
-                Ardhi combine intelligence artificielle, données satellites et expertise agronomique pour vous aider à prendre les meilleures décisions pour vos cultures.
-              </p>
-              <div class="row my-5">
-                <div class="col-lg-12 d-flex align-items-start mb-4">
-                  <i class="bi bi-robot me-4 display-6"></i>
-                  <div>
-                    <h4 class="m-0 h5 text-white">Intelligence Artificielle</h4>
-                    <p class="text-white opacity-50">Diagnostic instantané des maladies pour toutes vos cultures agricoles en un simple clic.</p>
-                  </div>
-                </div>
-                <div class="col-lg-12 d-flex align-items-start mb-4">
-                  <i class="bi bi-briefcase me-4 display-6"></i>
-                  <div>
-                    <h4 class="m-0 h5 text-white">Gestion Opérationnelle</h4>
-                    <p class="text-white opacity-50">De la maintenance de vos équipements au suivi précis de vos employés et plannings.</p>
-                  </div>
-                </div>
-                <div class="col-lg-12 d-flex align-items-start">
-                  <i class="bi bi-bag-check me-4 display-6"></i>
-                  <div>
-                    <h4 class="m-0 h5 text-white">Marketplace & Écosystème</h4>
-                    <p class="text-white opacity-50">Achetez, vendez et participez activement aux événements clés du secteur agricole.</p>
-                  </div>
-                </div>
+                <div class="service-item-icon"><i class="bi bi-people display-4"></i></div>
+                <div class="service-item-content"><h3 class="service-heading">Employes</h3><p>Gerez les plannings et les profils de vos ouvriers agricoles.</p></div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section><!-- /About Section -->
-
+    </section>
 {% endblock %}
