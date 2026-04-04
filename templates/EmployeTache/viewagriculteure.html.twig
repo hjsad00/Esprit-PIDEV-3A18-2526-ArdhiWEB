@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Gestion Employés{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       HERO SECTION (comme Marketplace)
+       ============================ #}
+    <section class="marketplace-hero">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Gestion Employés">
+      </div>
+
+      <div class="container">
+        <div class="hero-inner">
+
+          {# LEFT CONTENT #}
+          <div class="hero-left">
+            <div class="hero-label">ARDHI GESTION RH</div>
+            <h1 class="hero-headline">
+              Gérez vos<br>employés<br>facilement.
+            </h1>
+            <p class="hero-description">
+              Suivez vos employés, organisez leurs tâches et optimisez
+              la gestion de votre équipe agricole en toute simplicité.
+            </p>
+
+            <a href="{{ path('employe_index') }}" class="hero-btn-primary">
+              <i class="bi bi-people"></i> Voir les employés
+            </a>
+          </div>
+
+          {# RIGHT PANEL (comme Marketplace) #}
+          <div class="hero-right">
+            <div class="categories-glass-panel">
+
+              <div class="categories-panel-title">
+                Services Employés
+              </div>
+
+              {# EMPLOYES #}
+              <a href="{{ path('employe_index') }}" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="category-text">
+                  <h4>Employés</h4>
+                  <span>Gérer les employés</span>
+                </div>
+              </a>
+
+              {# TACHES (à connecter plus tard) #}
+              <a href="#" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-list-check"></i>
+                </div>
+                <div class="category-text">
+                  <h4>Tâches</h4>
+                  <span>Gérer les tâches</span>
+                </div>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}

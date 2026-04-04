@@ -45,10 +45,10 @@
           <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
           <li>
-            <a href="{{ path('employe_index') }}"
-              class="{{ app.request.get('_route') starts with 'employe_' ? 'active' : '' }}">
-              Employés
-            </a>
+           <a href="{{ path('app_employe_dashboard') }}"
+            class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">
+            Employés
+          </a>
           </li>
           
           {% if app.user %}
