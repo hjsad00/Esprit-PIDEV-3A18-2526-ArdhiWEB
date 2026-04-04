@@ -5,6 +5,7 @@ namespace App\Controller\UserAndDiag\Admin;
 use App\Entity\UserAndDiag\User;
 use App\Repository\UserAndDiag\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +39,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_user_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $hasher): Response
+    public function new(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $hasher, ValidatorInterface $validator): Response
     {
         if ($request->isMethod('POST')) {
             $user = new User();
@@ -54,7 +55,41 @@ class AdminUserController extends AbstractController
             if ($pwd) {
                 $user->setPassword($hasher->hashPassword($user, $pwd));
             }
+            $violationList = $validator->validate($user);
+            $errors = [];
+            if (count($violationList) > 0) {
+                foreach ($violationList as $violation) {
+                    $pieces = preg_split('/(?=[A-Z])/', $violation->getPropertyPath());
+                    $path = strtolower(implode('_', $pieces));
+                    $errors[$path] = $violation->getMessage();
+                }
+                return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+                    'page_title' => 'Erreur de validation',
+                    'fields' => isset($isEdit) ? $this->getFields(true) : $this->getFields(),
+                    'item' => $user,
+                    'errors' => $errors,
+                    'cancel_route' => str_replace(['_new', '_edit'], '_index', $request->attributes->get('_route')),
+                    'csrf_token_id' => 'form'
+                ]);
+            }
             $em->persist($user);
+            $violationList = $validator->validate($user);
+            $errors = [];
+            if (count($violationList) > 0) {
+                foreach ($violationList as $violation) {
+                    $pieces = preg_split('/(?=[A-Z])/', $violation->getPropertyPath());
+                    $path = strtolower(implode('_', $pieces));
+                    $errors[$path] = $violation->getMessage();
+                }
+                return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+                    'page_title' => 'Erreur de validation',
+                    'fields' => isset($isEdit) ? $this->getFields(true) : $this->getFields(),
+                    'item' => $user,
+                    'errors' => $errors,
+                    'cancel_route' => str_replace(['_new', '_edit'], '_index', $request->attributes->get('_route')),
+                    'csrf_token_id' => 'form'
+                ]);
+            }
             $em->flush();
             $this->addFlash('success', 'Utilisateur créé.');
             return $this->redirectToRoute('admin_user_index');
@@ -69,7 +104,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'admin_user_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, UserRepository $repo, UserPasswordHasherInterface $hasher): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, UserRepository $repo, UserPasswordHasherInterface $hasher, ValidatorInterface $validator): Response
     {
         $user = $repo->find($id);
         if (!$user) {
@@ -88,6 +123,23 @@ class AdminUserController extends AbstractController
             $pwd = $request->request->get('password', '');
             if ($pwd) {
                 $user->setPassword($hasher->hashPassword($user, $pwd));
+            }
+            $violationList = $validator->validate($user);
+            $errors = [];
+            if (count($violationList) > 0) {
+                foreach ($violationList as $violation) {
+                    $pieces = preg_split('/(?=[A-Z])/', $violation->getPropertyPath());
+                    $path = strtolower(implode('_', $pieces));
+                    $errors[$path] = $violation->getMessage();
+                }
+                return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+                    'page_title' => 'Erreur de validation',
+                    'fields' => isset($isEdit) ? $this->getFields(true) : $this->getFields(),
+                    'item' => $user,
+                    'errors' => $errors,
+                    'cancel_route' => str_replace(['_new', '_edit'], '_index', $request->attributes->get('_route')),
+                    'csrf_token_id' => 'form'
+                ]);
             }
             $em->flush();
             $this->addFlash('success', 'Utilisateur modifié.');
