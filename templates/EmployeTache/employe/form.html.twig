@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ page_title }} — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+.form-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
+
+.form-card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.09); overflow: hidden; max-width: 750px; margin: 0 auto; }
+
+.form-header { background: linear-gradient(135deg, #1B5E20, #4a7c59); padding: 22px 30px; color: white; display: flex; align-items: center; gap: 12px; }
+.form-header h2 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+
+.form-body { padding: 30px; }
+
+.section-title { font-size: .75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4a7c59; margin: 22px 0 14px; padding-bottom: 7px; border-bottom: 2px solid #e8f5e9; }
+
+.form-label { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 5px; }
+.req { color: #e74c3c; }
+
+.form-control, .form-select { border: 1.5px solid #d0d0d0; border-radius: 9px; padding: 9px 13px; font-size: .92rem; transition: all .2s; width: 100%; }
+.form-control:focus, .form-select:focus { border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,.13); outline: none; }
+.form-control.is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 3px rgba(220,53,69,.1) !important; }
+
+.field-error { color: #dc3545; font-size: .8rem; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+.alert-errors { background: #fff5f5; border: 1.5px solid #f5c6cb; border-radius: 10px; padding: 14px 18px; margin-bottom: 22px; }
+.alert-errors ul { margin: 5px 0 0; padding-left: 18px; }
+.alert-errors li { color: #721c24; font-size: .85rem; margin-bottom: 2px; }
+
+/* Photo */
+.photo-wrap { display: flex; align-items: center; gap: 20px; }
+.emp-avatar-prev { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; background: #27ae60; flex-shrink: 0; }
+.emp-photo-prev  { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #27ae60; flex-shrink: 0; }
+
+/* Switch */
+.form-switch .form-check-input { width: 3rem; height: 1.5rem; cursor: pointer; }
+.form-switch .form-check-input:checked { background-color: #27ae60; border-color: #27ae60; }
+
+/* Boutons */
+.btn-save { background: #27ae60; color: white; border: none; border-radius: 10px; padding: 11px 30px; font-weight: 700; font-size: .95rem; transition: all .2s; }
+.btn-save:hover { background: #219150; color: white; transform: translateY(-1px); }
+.btn-cancel { background: #f0f0f0; color: #555; border: none; border-radius: 10px; padding: 11px 22px; font-weight: 600; font-size: .95rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-cancel:hover { background: #e0e0e0; color: #333; }
+
+.char-count { font-size: .75rem; color: #bbb; text-align: right; margin-top: 2px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="form-page">
+<div class="container">
+
+    <div class="form-card">
+        <div class="form-header">
+            <i class="bi bi-person-badge-fill" style="font-size:1.5rem"></i>
+            <h2>{{ page_title }}</h2>
+        </div>
+
+        <div class="form-body">
+
+            {# ── Erreurs globales ──────────────────────────────────── #}
+            {% if errors is defined and errors|length > 0 %}
+            <div class="alert-errors">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                    <strong class="text-danger">{{ errors|length }} erreur(s) à corriger :</strong>
+                </div>
+                <ul>{% for f, m in errors %}<li>{{ m }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data"
+                  action="{{ employe ? path('employe_edit', {id: employe.id}) : path('employe_new') }}"
+                  novalidate>
+                <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+
+                {# ── Photo ─────────────────────────────────────────── #}
+                <div class="section-title">📷 Photo de profil</div>
+                <div class="photo-wrap mb-3">
+                    {% if employe and employe.hasPhoto %}
+                        <img src="{{ employe.photoPath }}" class="emp-photo-prev" id="photoPreview">
+                    {% else %}
+                        <div class="emp-avatar-prev" id="avatarPrev">{{ employe ? employe.initiales : '?' }}</div>
+                        <img src="" class="emp-photo-prev d-none" id="photoPreview">
+                    {% endif %}
+                    <div style="flex:1">
+                        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp"
+                               class="form-control {{ errors.photo is defined ? 'is-invalid' : '' }}"
+                               onchange="previewPhoto(this)">
+                        {% if errors.photo is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.photo }}</div>
+                        {% else %}
+                            <small class="text-muted d-block mt-1">JPG / PNG / WebP — max 5 Mo
+                            {% if employe and employe.hasPhoto %} · Laisser vide pour garder la photo actuelle{% endif %}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# ── Identité ──────────────────────────────────────── #}
+                <div class="section-title">👤 Identité</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nom <span class="req">*</span></label>
+                        <input type="text" name="nom"
+                               class="form-control {{ errors.nom is defined ? 'is-invalid' : '' }}"
+                               value="{{ old.nom ?? (employe ? employe.nom : '') }}"
+                               placeholder="Ex : Benattia" maxlength="100"
+                               oninput="cnt(this,'cNom',100)">
+                        <div class="char-count" id="cNom"></div>
+                        {% if errors.nom is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.nom }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Prénom <span class="req">*</span></label>
+                        <input type="text" name="prenom"
+                               class="form-control {{ errors.prenom is defined ? 'is-invalid' : '' }}"
+                               value="{{ old.prenom ?? (employe ? employe.prenom : '') }}"
+                               placeholder="Ex : Asma" maxlength="100"
+                               oninput="cnt(this,'cPrenom',100)">
+                        <div class="char-count" id="cPrenom"></div>
+                        {% if errors.prenom is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.prenom }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Poste</label>
+                        <input type="text" name="poste"
+                               class="form-control {{ errors.poste is defined ? 'is-invalid' : '' }}"
+                               value="{{ old.poste ?? (employe ? employe.poste : '') }}"
+                               placeholder="Ex : Technicien, Directeur..." maxlength="100"
+                               oninput="cnt(this,'cPoste',100)">
+                        <div class="char-count" id="cPoste"></div>
+                        {% if errors.poste is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.poste }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center pt-4">
+                        <div class="form-check form-switch ms-2">
+                            <input class="form-check-input" type="checkbox" name="actif" value="1" id="actif"
+                                   {{ (old.actif is defined ? old.actif == '1' : (employe is null or employe.actif)) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="actif">Employé actif</label>
+                        </div>
+                    </div>
+                </div>
+
+                {# ── Contact ───────────────────────────────────────── #}
+                <div class="section-title">📞 Contact</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Email <span class="req">*</span></label>
+                        <input type="email" name="email"
+                               class="form-control {{ errors.email is defined ? 'is-invalid' : '' }}"
+                               value="{{ old.email ?? (employe ? employe.email : '') }}"
+                               placeholder="Ex : asma@ardhi.com" maxlength="150">
+                        {% if errors.email is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.email }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" name="telephone"
+                               class="form-control {{ errors.telephone is defined ? 'is-invalid' : '' }}"
+                               value="{{ old.telephone ?? (employe ? employe.telephone : '') }}"
+                               placeholder="Ex : 23987675" maxlength="20">
+                        {% if errors.telephone is defined %}
+                            <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.telephone }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# ── Boutons ───────────────────────────────────────── #}
+                <div class="d-flex gap-3 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {{ employe ? 'Enregistrer les modifications' : "Créer l'employé" }}
+                    </button>
+                    <a href="{{ path('employe_index') }}" class="btn-cancel">
+                        <i class="bi bi-x-lg"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+function previewPhoto(input) {
+    if (!input.files?.[0]) return;
+    const r = new FileReader();
+    r.onload = e => {
+        const p = document.getElementById('photoPreview');
+        const a = document.getElementById('avatarPrev');
+        p.src = e.target.result;
+        p.classList.remove('d-none');
+        if (a) a.classList.add('d-none');
+    };
+    r.readAsDataURL(input.files[0]);
+}
+function cnt(el, id, max) {
+    const c = document.getElementById(id);
+    if (!c) return;
+    c.textContent = el.value.length + ' / ' + max;
+    c.style.color = el.value.length > max * .85 ? '#e74c3c' : '#bbb';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    [['nom','cNom',100],['prenom','cPrenom',100],['poste','cPoste',100]].forEach(([f,c,m]) => {
+        const el = document.querySelector('[name="'+f+'"]');
+        if (el?.value) cnt(el, c, m);
+    });
+});
+</script>
+{% endblock %}

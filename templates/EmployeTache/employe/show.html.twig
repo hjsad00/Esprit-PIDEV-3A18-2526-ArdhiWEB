@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+{% block title %}Fiche — {{ employe.nomComplet }} — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+.show-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
+.profile-card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.09); overflow: hidden; max-width: 640px; margin: 0 auto; }
+.profile-header { background: linear-gradient(135deg, #1B5E20, #4a7c59); padding: 32px; text-align: center; color: white; }
+.emp-photo-big { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,.4); margin: 0 auto 14px; display: block; }
+.emp-avatar-big { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; margin: 0 auto 14px; border: 4px solid rgba(255,255,255,.3); }
+.profile-name  { font-size: 1.5rem; font-weight: 700; }
+.profile-poste { opacity: .8; margin-top: 4px; }
+.badge-actif-w   { background:rgba(255,255,255,.2); color:white; padding:4px 16px; border-radius:20px; font-size:.82rem; font-weight:600; display:inline-block; margin-top:10px; }
+.badge-inactif-w { background:rgba(231,76,60,.4); color:white; padding:4px 16px; border-radius:20px; font-size:.82rem; font-weight:600; display:inline-block; margin-top:10px; }
+
+.profile-body { padding: 28px 30px; }
+.section-title { font-size:.75rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#4a7c59; margin:20px 0 14px; padding-bottom:7px; border-bottom:2px solid #e8f5e9; }
+.info-row { display:flex; align-items:flex-start; padding:11px 0; border-bottom:1px solid #f5f5f5; }
+.info-row:last-child { border:none; }
+.info-icon { width:36px; height:36px; border-radius:9px; background:#e8f5e9; display:flex; align-items:center; justify-content:center; font-size:.95rem; margin-right:13px; flex-shrink:0; }
+.info-label { font-size:.75rem; color:#aaa; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+.info-value { font-size:.93rem; font-weight:600; color:#2d3748; }
+
+.qr-block { background:#f8f9fa; border-radius:10px; padding:16px; text-align:center; margin-top:16px; }
+.qr-code  { font-family:monospace; font-size:1rem; background:white; border:2px dashed #27ae60; border-radius:8px; padding:8px 18px; display:inline-block; color:#1B5E20; font-weight:700; }
+
+.btn-edit { background:#27ae60; color:white; border:none; border-radius:10px; padding:10px 24px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:.2s; }
+.btn-edit:hover { background:#219150; color:white; }
+.btn-back { background:#f0f0f0; color:#555; border:none; border-radius:10px; padding:10px 20px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:7px; }
+.btn-back:hover { background:#e0e0e0; color:#333; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="show-page">
+<div class="container">
+<div class="profile-card">
+
+    <div class="profile-header">
+        {% if employe.hasPhoto %}
+            <img src="{{ employe.photoPath }}" class="emp-photo-big" alt="{{ employe.nomComplet }}">
+        {% else %}
+            {% set colors = ['#1abc9c','#3498db','#9b59b6','#e67e22','#e74c3c','#27ae60'] %}
+            <div class="emp-avatar-big" style="background:{{ colors[employe.id % 6] }}">{{ employe.initiales }}</div>
+        {% endif %}
+        <div class="profile-name">{{ employe.nomComplet }}</div>
+        <div class="profile-poste">{{ employe.poste ?? 'Poste non défini' }}</div>
+        {% if employe.actif %}
+            <span class="badge-actif-w"><i class="bi bi-check-circle me-1"></i>Actif</span>
+        {% else %}
+            <span class="badge-inactif-w"><i class="bi bi-x-circle me-1"></i>Inactif</span>
+        {% endif %}
+    </div>
+
+    <div class="profile-body">
+
+        <div class="section-title">👤 Identité</div>
+        <div class="info-row"><div class="info-icon">🪪</div><div><div class="info-label">Nom complet</div><div class="info-value">{{ employe.nomComplet }}</div></div></div>
+        <div class="info-row"><div class="info-icon">💼</div><div><div class="info-label">Poste</div><div class="info-value">{{ employe.poste ?? '—' }}</div></div></div>
+        <div class="info-row"><div class="info-icon">🔢</div><div><div class="info-label">ID Employé</div><div class="info-value">#{{ employe.id }}</div></div></div>
+
+        <div class="section-title">📞 Contact</div>
+        <div class="info-row">
+            <div class="info-icon">📧</div>
+            <div><div class="info-label">Email</div>
+            <div class="info-value"><a href="mailto:{{ employe.email }}" class="text-success text-decoration-none">{{ employe.email }}</a></div></div>
+        </div>
+        <div class="info-row">
+            <div class="info-icon">📱</div>
+            <div><div class="info-label">Téléphone</div>
+            <div class="info-value">{% if employe.telephone %}<a href="tel:{{ employe.telephone }}" class="text-success text-decoration-none">{{ employe.telephone }}</a>{% else %}—{% endif %}</div></div>
+        </div>
+
+        {% if employe.qrCodeUnique %}
+        <div class="qr-block">
+            <div class="section-title" style="text-align:left;margin-top:0">📱 QR Code de pointage</div>
+            <div class="qr-code"><i class="bi bi-qr-code me-2"></i>{{ employe.qrCodeUnique }}</div>
+            <div class="text-muted mt-2" style="font-size:.82rem">Présentez ce code devant la caméra pour pointer</div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-3 mt-4 pt-3 border-top">
+            <a href="{{ path('employe_edit', {id: employe.id}) }}" class="btn-edit">
+                <i class="bi bi-pencil-square"></i> Modifier
+            </a>
+            <a href="{{ path('employe_index') }}" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+</div>
+</div>
+</div>
+{% endblock %}
