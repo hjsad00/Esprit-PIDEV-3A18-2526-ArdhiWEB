@@ -11,28 +11,69 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EmployeRepository extends ServiceEntityRepository
 {
+    // Champs autorisés pour le tri (sécurité — évite l'injection SQL)
+    private const CHAMPS_TRI_AUTORISES = [
+        'id'        => 'e.id',
+        'nom'       => 'e.nom',
+        'prenom'    => 'e.prenom',
+        'email'     => 'e.email',
+        'poste'     => 'e.poste',
+        'actif'     => 'e.actif',
+        'telephone' => 'e.telephone',
+    ];
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Employe::class);
     }
 
     /**
-     * Tous les employés d'un agriculteur — multi-tenant
+     * Tous les employés d'un agriculteur avec tri + recherche
+     * Identique au SortedList + FilteredList du desktop JavaFX
+     */
+    public function findByAgriculteurTrie(
+        int    $idAgriculteur,
+        string $tri       = 'nom',
+        string $direction = 'asc',
+        string $search    = ''
+    ): array {
+        // Champ de tri sécurisé (whitelist)
+        $champ = self::CHAMPS_TRI_AUTORISES[$tri] ?? 'e.nom';
+        // Direction sécurisée
+        $dir   = strtolower($direction) === 'desc' ? 'DESC' : 'ASC';
+
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.idAgriculteur = :id')
+            ->setParameter('id', $idAgriculteur);
+
+        // Recherche (identique au listener txtRecherche du desktop)
+        if ($search !== '') {
+            $qb->andWhere(
+                'e.nom LIKE :s OR e.prenom LIKE :s OR e.email LIKE :s
+                 OR e.poste LIKE :s OR e.telephone LIKE :s'
+            )->setParameter('s', '%' . $search . '%');
+        }
+
+        // Tri actif : les actifs d'abord si tri=actif
+        if ($tri === 'actif') {
+            $qb->orderBy($champ, 'DESC'); // TRUE (1) avant FALSE (0)
+        } else {
+            $qb->orderBy($champ, $dir);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Alias simple sans tri (utilisé en interne)
      */
     public function findByAgriculteur(int $idAgriculteur): array
     {
-        return $this->createQueryBuilder('e')
-            ->where('e.idAgriculteur = :id')
-            ->setParameter('id', $idAgriculteur)
-            ->orderBy('e.nom', 'ASC')
-            ->addOrderBy('e.prenom', 'ASC')
-            ->getQuery()
-            ->getResult();
+        return $this->findByAgriculteurTrie($idAgriculteur);
     }
 
     /**
      * Uniquement les employés ACTIFS d'un agriculteur
-     * Utilisé par le moteur IA (scoring, chatbot)
      */
     public function findActifsByAgriculteur(int $idAgriculteur): array
     {
@@ -46,20 +87,12 @@ class EmployeRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recherche par nom / prénom / email / poste dans le contexte agriculteur
+     * Recherche par nom / prénom / email / poste / téléphone
      */
-    public function search(string $terme, int $idAgriculteur): array
+    public function search(string $terme, int $idAgriculteur,
+                           string $tri = 'nom', string $direction = 'asc'): array
     {
-        return $this->createQueryBuilder('e')
-            ->where('e.idAgriculteur = :id')
-            ->andWhere(
-                'e.nom LIKE :terme OR e.prenom LIKE :terme OR e.email LIKE :terme OR e.poste LIKE :terme'
-            )
-            ->setParameter('id', $idAgriculteur)
-            ->setParameter('terme', '%' . $terme . '%')
-            ->orderBy('e.nom', 'ASC')
-            ->getQuery()
-            ->getResult();
+        return $this->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $terme);
     }
 
     /**

@@ -3,113 +3,132 @@
 
 {% block stylesheets %}
 <style>
-/* ── Page wrapper ──────────────────────────────────────────────── */
+/* ── Page ──────────────────────────────────────────────────────── */
 .emp-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
 
-/* ── Barre du haut (comme le header JavaFX) ────────────────────── */
+/* ── Top bar ───────────────────────────────────────────────────── */
 .emp-topbar {
-    background: white;
-    border-radius: 14px;
-    padding: 16px 24px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
+    background: white; border-radius: 14px; padding: 14px 22px;
+    margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
-.emp-topbar-title {
-    font-size: 1.35rem; font-weight: 700; color: #1B5E20;
-    display: flex; align-items: center; gap: 10px;
-}
-.emp-counter {
-    background: #e8f5e9; color: #1B5E20; font-weight: 700;
-    border-radius: 20px; padding: 4px 14px; font-size: .9rem;
-}
+.emp-topbar-title { font-size: 1.25rem; font-weight: 700; color: #1B5E20;
+    display: flex; align-items: center; gap: 9px; }
+.emp-badge { border-radius: 20px; padding: 3px 13px; font-size: .82rem; font-weight: 700; }
+.badge-total   { background:#e8f5e9; color:#1B5E20; }
+.badge-actif   { background:#d4edda; color:#155724; }
+.badge-inactif { background:#f8d7da; color:#721c24; }
+.badge-top     { background:#e8eaf6; color:#283593; font-size:.76rem; }
 
-/* ── Barre de recherche + tris ─────────────────────────────────── */
+/* ── Toolbar recherche + tri ───────────────────────────────────── */
 .emp-toolbar {
-    background: white; border-radius: 12px; padding: 14px 20px;
-    margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    background: white; border-radius: 12px; padding: 12px 18px;
+    margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .emp-search {
-    flex: 1; min-width: 240px;
-    border: 1.5px solid #ccc; border-radius: 8px;
-    padding: 9px 14px; font-size: .9rem;
-    transition: border-color .2s;
+    flex: 1; min-width: 220px; border: 1.5px solid #ccc;
+    border-radius: 8px; padding: 8px 13px; font-size: .9rem; transition: .2s;
 }
 .emp-search:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 0 3px rgba(39,174,96,.12); }
 
-/* ── Table — identique couleur header desktop (#4a7c59 vert) ───── */
+/* Séparateur vertical */
+.toolbar-sep { width: 1px; height: 32px; background: #e0e0e0; flex-shrink: 0; }
+
+/* Label tri */
+.tri-label { font-size: .82rem; font-weight: 600; color: #777; white-space: nowrap; }
+
+/* Sélecteur de tri — identique au ComboBox desktop */
+.tri-select {
+    border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px;
+    font-size: .88rem; background: white; cursor: pointer; transition: .2s;
+    min-width: 130px;
+}
+.tri-select:focus { border-color: #27ae60; outline: none; }
+
+/* Boutons direction ↑ ↓ — identiques aux boutons desktop */
+.btn-dir {
+    width: 34px; height: 34px; border: 1.5px solid #ccc; border-radius: 8px;
+    background: white; cursor: pointer; font-size: 1rem; display: flex;
+    align-items: center; justify-content: center; transition: .15s; flex-shrink: 0;
+}
+.btn-dir:hover { border-color: #27ae60; background: #e8f5e9; color: #1B5E20; }
+.btn-dir.active { background: #27ae60; border-color: #27ae60; color: white; }
+
+/* Bouton Actualiser */
+.btn-actualiser {
+    border: 1.5px solid #ccc; border-radius: 8px; background: white;
+    padding: 7px 14px; font-size: .85rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; color: #555; transition: .15s;
+    text-decoration: none;
+}
+.btn-actualiser:hover { border-color: #27ae60; color: #1B5E20; }
+
+/* ── Table ─────────────────────────────────────────────────────── */
 .emp-table-wrap {
     background: white; border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden;
-    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 18px;
 }
 .emp-table { width: 100%; border-collapse: collapse; }
 .emp-table thead th {
-    background: #4a7c59; color: white;
-    font-size: .82rem; font-weight: 700; letter-spacing: .4px;
-    padding: 13px 14px; text-align: left; border: none;
-    white-space: nowrap;
+    background: #4a7c59; color: white; font-size: .81rem; font-weight: 700;
+    letter-spacing: .3px; padding: 12px 13px; text-align: left; border: none;
+    white-space: nowrap; user-select: none;
 }
-.emp-table thead th:first-child { border-radius: 0; }
-.emp-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .15s; }
+/* En-tête cliquable pour le tri */
+.emp-table thead th.sortable { cursor: pointer; }
+.emp-table thead th.sortable:hover { background: #3d6b4b; }
+.emp-table thead th.sorted-asc::after  { content: ' ↑'; opacity: .9; }
+.emp-table thead th.sorted-desc::after { content: ' ↓'; opacity: .9; }
+
+.emp-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .12s; cursor: pointer; }
 .emp-table tbody tr:hover { background: #f6fbf6; }
-.emp-table tbody td { padding: 12px 14px; vertical-align: middle; font-size: .9rem; color: #333; }
+.emp-table tbody tr.selected { background: #e8f5e9 !important; }
+.emp-table tbody td { padding: 11px 13px; vertical-align: middle; font-size: .89rem; color: #333; }
 
-/* ── Avatar / Photo ────────────────────────────────────────────── */
-.emp-avatar {
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .95rem; color: white;
-    border: 2px solid rgba(255,255,255,.5);
-    flex-shrink: 0;
-}
-.emp-photo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #27ae60; }
+/* ── Avatar ────────────────────────────────────────────────────── */
+.emp-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 700;
+    font-size: .92rem; color: white; flex-shrink: 0; }
+.emp-photo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #27ae60; }
 
-/* ── QR Code miniature ─────────────────────────────────────────── */
-.qr-badge {
-    font-family: monospace; font-size: .72rem;
-    background: #f5f5f5; border: 1px solid #ddd;
-    border-radius: 6px; padding: 3px 8px; color: #444;
-    white-space: nowrap;
-}
+/* ── QR badge ──────────────────────────────────────────────────── */
+.qr-badge { font-family: monospace; font-size: .7rem; background: #f5f5f5;
+    border: 1px solid #ddd; border-radius: 5px; padding: 2px 7px; color: #555; }
 
-/* ── Badges statut ─────────────────────────────────────────────── */
-.badge-actif   { background:#d4edda; color:#155724; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:600; white-space:nowrap; }
-.badge-inactif { background:#f8d7da; color:#721c24; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:600; white-space:nowrap; }
+/* ── Statut badges ─────────────────────────────────────────────── */
+.st-actif   { background:#d4edda; color:#155724; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
+.st-inactif { background:#f8d7da; color:#721c24; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
 
-/* ── Boutons d'action dans la table ────────────────────────────── */
-.btn-voir    { background:#e8f5e9; color:#1B5E20; border:none; border-radius:7px; padding:5px 10px; font-size:.8rem; font-weight:600; cursor:pointer; transition:.15s; }
-.btn-modif   { background:#fff3cd; color:#856404; border:none; border-radius:7px; padding:5px 10px; font-size:.8rem; font-weight:600; cursor:pointer; transition:.15s; }
-.btn-suppr   { background:#f8d7da; color:#842029; border:none; border-radius:7px; padding:5px 10px; font-size:.8rem; font-weight:600; cursor:pointer; transition:.15s; }
-.btn-toggle-on  { background:#d1ecf1; color:#0c5460; border:none; border-radius:7px; padding:5px 10px; font-size:.8rem; font-weight:600; cursor:pointer; }
-.btn-toggle-off { background:#e2e3e5; color:#41464b; border:none; border-radius:7px; padding:5px 10px; font-size:.8rem; font-weight:600; cursor:pointer; }
+/* ── Boutons action ligne ──────────────────────────────────────── */
+.btn-voir  { background:#e8f5e9; color:#1B5E20; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
+.btn-modif { background:#fff3cd; color:#856404; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
+.btn-suppr { background:#f8d7da; color:#842029; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
+.btn-tog-on  { background:#d1ecf1; color:#0c5460; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
+.btn-tog-off { background:#e2e3e5; color:#41464b; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
 .btn-voir:hover  { background:#27ae60; color:white; }
 .btn-modif:hover { background:#ffc107; color:#000; }
 .btn-suppr:hover { background:#dc3545; color:white; }
 
-/* ── Barre du bas — boutons principaux (identique desktop) ────── */
+/* ── Barre du bas ──────────────────────────────────────────────── */
 .emp-bottombar {
-    background: white; border-radius: 14px;
-    padding: 16px 24px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    background: white; border-radius: 14px; padding: 14px 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.btn-ajouter { background:#27ae60; color:white; border:none; border-radius:10px; padding:11px 26px; font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:.2s; text-decoration:none; }
-.btn-ajouter:hover { background:#219150; color:white; transform:translateY(-1px); }
-.btn-bottom-orange { background:#f39c12; color:white; border:none; border-radius:10px; padding:11px 22px; font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:.2s; text-decoration:none; }
-.btn-bottom-orange:hover { background:#d68910; color:white; }
-.btn-bottom-red { background:#e74c3c; color:white; border:none; border-radius:10px; padding:11px 22px; font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:.2s; }
-.btn-bottom-red:hover { background:#c0392b; color:white; }
-.btn-bottom-blue { background:#2980b9; color:white; border:none; border-radius:10px; padding:11px 22px; font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; gap:8px; transition:.2s; text-decoration:none; }
-.btn-bottom-blue:hover { background:#1f6391; color:white; }
-.bottom-info { margin-left:auto; color:#aaa; font-size:.85rem; font-style:italic; }
+.btn-add   { background:#27ae60; color:white; border:none; border-radius:10px; padding:10px 22px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-add:hover { background:#219150; color:white; transform:translateY(-1px); }
+.btn-orange { background:#f39c12; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-orange:hover { background:#d68910; color:white; }
+.btn-red    { background:#e74c3c; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; }
+.btn-red:hover { background:#c0392b; color:white; }
+.btn-dark   { background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-dark:hover { background:#1a252f; color:white; }
+.bottom-info { margin-left:auto; color:#aaa; font-size:.83rem; font-style:italic; }
 
-/* ── Empty state ───────────────────────────────────────────────── */
-.emp-empty { text-align:center; padding:60px 20px; color:#bbb; }
-.emp-empty i { font-size:4rem; margin-bottom:14px; display:block; }
+/* ── Empty ─────────────────────────────────────────────────────── */
+.emp-empty { text-align:center; padding:55px 20px; color:#bbb; }
+.emp-empty i { font-size:3.5rem; margin-bottom:12px; display:block; }
 </style>
 {% endblock %}
 
@@ -117,62 +136,121 @@
 <div class="emp-page">
 <div class="container-fluid px-4">
 
-    {# ── Barre du haut ─────────────────────────────────────────────── #}
+    {# ── Top bar : titre + compteurs + Top 3 ─────────────────────── #}
     <div class="emp-topbar">
         <div class="emp-topbar-title">
-            <i class="bi bi-people-fill"></i>
-            Gestion des Employés
+            <i class="bi bi-people-fill"></i> Gestion des Employés
         </div>
-        <span class="emp-counter">{{ total }} Total</span>
-        <span class="emp-counter" style="background:#d4edda;color:#155724;">{{ total_actifs }} Actifs</span>
-        <span class="emp-counter" style="background:#f8d7da;color:#721c24;">{{ total - total_actifs }} Inactifs</span>
-
-        {# Top 3 employés (affichage rapide) #}
+        <span class="emp-badge badge-total">{{ total }} Total</span>
+        <span class="emp-badge badge-actif">{{ total_actifs }} Actifs</span>
+        <span class="emp-badge badge-inactif">{{ total - total_actifs }} Inactifs</span>
         {% for emp in employes|slice(0, 3) %}
-            <span class="emp-counter" style="background:#e8eaf6;color:#283593;font-size:.78rem;">
-                🏅 {{ emp.nomComplet }}
-            </span>
+            <span class="emp-badge badge-top">🏅 {{ emp.nomComplet }}</span>
         {% endfor %}
     </div>
 
-    {# ── Toolbar recherche ─────────────────────────────────────────── #}
+    {# ── Toolbar : recherche + tri ──────────────────────────────────── #}
+    <form method="GET" action="{{ path('employe_index') }}">
     <div class="emp-toolbar">
-        <form method="GET" action="{{ path('employe_index') }}" class="d-flex align-items-center gap-2 flex-grow-1">
-            <i class="bi bi-search text-muted"></i>
-            <input type="text" name="search" value="{{ search }}" class="emp-search"
-                   placeholder="Rechercher par nom, prénom, email, poste...">
-            <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:7px">Rechercher</button>
-            {% if search %}
-                <a href="{{ path('employe_index') }}" class="btn btn-outline-secondary btn-sm" style="border-radius:7px">
-                    <i class="bi bi-x-lg"></i> Réinitialiser
-                </a>
-            {% endif %}
-        </form>
-    </div>
 
-    {# ── Table employés ────────────────────────────────────────────── #}
+        {# Recherche #}
+        <i class="bi bi-search text-muted"></i>
+        <input type="text" name="search" value="{{ search }}" class="emp-search"
+               placeholder="Rechercher par nom, prénom, email, poste...">
+
+        {% if search %}
+            <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}"
+               class="btn btn-outline-secondary btn-sm" style="border-radius:7px">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        {% endif %}
+
+        <div class="toolbar-sep"></div>
+
+        {# Tri : label + sélecteur ─ identique au ComboBox "Trier par" desktop #}
+        <span class="tri-label">Trier par :</span>
+        <select name="tri" class="tri-select" onchange="this.form.submit()">
+            <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
+            <option value="nom"       {{ tri == 'nom'       ? 'selected' : '' }}>Nom</option>
+            <option value="prenom"    {{ tri == 'prenom'    ? 'selected' : '' }}>Prénom</option>
+            <option value="email"     {{ tri == 'email'     ? 'selected' : '' }}>Email</option>
+            <option value="poste"     {{ tri == 'poste'     ? 'selected' : '' }}>Poste</option>
+            <option value="telephone" {{ tri == 'telephone' ? 'selected' : '' }}>Téléphone</option>
+            <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>Actif</option>
+        </select>
+
+        {# Boutons direction ↑ ↓ — identiques aux boutons desktop #}
+        <input type="hidden" name="direction" id="directionInput" value="{{ direction }}">
+
+        <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
+                title="Ordre croissant" onclick="setDir('asc')">↑</button>
+        <button type="submit" class="btn-dir {{ direction == 'desc' ? 'active' : '' }}"
+                title="Ordre décroissant" onclick="setDir('desc')">↓</button>
+
+        <div class="toolbar-sep"></div>
+
+        {# Bouton Actualiser #}
+        <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </a>
+
+        {# Bouton rechercher explicite #}
+        <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
+            <i class="bi bi-search me-1"></i>Rechercher
+        </button>
+
+    </div>
+    </form>
+
+    {# ── Table ──────────────────────────────────────────────────────── #}
     <div class="emp-table-wrap">
         {% if employes|length > 0 %}
         <div class="table-responsive">
         <table class="emp-table">
             <thead>
-                <tr>
-                    <th>Photo</th>
-                    <th>QR</th>
-                    <th>ID</th>
-                    <th>Nom</th>
-                    <th>Prénom</th>
-                    <th>Email</th>
-                    <th>Poste</th>
-                    <th>Téléphone</th>
-                    <th>Statut</th>
-                    <th class="text-center">Actions</th>
-                </tr>
+            <tr>
+                <th>Photo</th>
+                {# En-têtes cliquables pour tri — identique aux colonnes du tableau desktop #}
+                <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'id', direction: (tri == 'id' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">QR</a>
+                </th>
+                <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'id', direction: (tri == 'id' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">ID</a>
+                </th>
+                <th class="sortable {{ tri == 'nom' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'nom', direction: (tri == 'nom' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Nom</a>
+                </th>
+                <th class="sortable {{ tri == 'prenom' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'prenom', direction: (tri == 'prenom' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Prénom</a>
+                </th>
+                <th class="sortable {{ tri == 'email' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'email', direction: (tri == 'email' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Email</a>
+                </th>
+                <th class="sortable {{ tri == 'poste' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'poste', direction: (tri == 'poste' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Poste</a>
+                </th>
+                <th class="sortable {{ tri == 'telephone' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'telephone', direction: (tri == 'telephone' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Téléphone</a>
+                </th>
+                <th class="sortable {{ tri == 'actif' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('employe_index', {tri: 'actif', direction: (tri == 'actif' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
+                       style="color:white;text-decoration:none">Actif</a>
+                </th>
+                <th class="text-center">Actions</th>
+            </tr>
             </thead>
             <tbody>
             {% for emp in employes %}
             <tr id="row-{{ emp.id }}">
-                {# Photo #}
+
+                {# Photo / Avatar #}
                 <td>
                     {% if emp.hasPhoto %}
                         <img src="{{ emp.photoPath }}" class="emp-photo" alt="{{ emp.nomComplet }}">
@@ -184,59 +262,46 @@
                     {% endif %}
                 </td>
 
-                {# QR miniature #}
+                {# QR #}
                 <td>
                     {% if emp.qrCodeUnique %}
-                        <span class="qr-badge" title="{{ emp.qrCodeUnique }}">
-                            <i class="bi bi-qr-code me-1"></i>{{ emp.qrCodeUnique }}
-                        </span>
-                    {% else %}
-                        <span class="text-muted">—</span>
-                    {% endif %}
+                        <span class="qr-badge"><i class="bi bi-qr-code me-1"></i>{{ emp.qrCodeUnique }}</span>
+                    {% else %}—{% endif %}
                 </td>
 
                 <td><strong>{{ emp.id }}</strong></td>
                 <td>{{ emp.nom }}</td>
                 <td>{{ emp.prenom }}</td>
                 <td>
-                    <a href="mailto:{{ emp.email }}" class="text-primary text-decoration-none">
+                    <a href="mailto:{{ emp.email }}" class="text-primary text-decoration-none" style="font-style:italic">
                         {{ emp.email }}
                     </a>
                 </td>
                 <td>{{ emp.poste ?? '—' }}</td>
                 <td>{{ emp.telephone ?? '—' }}</td>
-
-                {# Statut #}
                 <td>
                     {% if emp.actif %}
-                        <span class="badge-actif">✓ Actif</span>
+                        <span class="st-actif">✓ Actif</span>
                     {% else %}
-                        <span class="badge-inactif">✗ Inactif</span>
+                        <span class="st-inactif">✗ Inactif</span>
                     {% endif %}
                 </td>
 
-                {# Actions #}
+                {# Actions inline #}
                 <td>
                     <div class="d-flex gap-1 justify-content-center">
-                        {# Voir fiche #}
-                        <a href="{{ path('employe_show', {id: emp.id}) }}" class="btn-voir" title="Voir la fiche">
+                        <a href="{{ path('employe_show', {id: emp.id}) }}" class="btn-voir" title="Voir">
                             <i class="bi bi-eye"></i>
                         </a>
-
-                        {# Modifier #}
                         <a href="{{ path('employe_edit', {id: emp.id}) }}" class="btn-modif" title="Modifier">
                             <i class="bi bi-pencil-square"></i>
                         </a>
-
-                        {# Toggle actif #}
                         <form method="POST" action="{{ path('employe_toggle', {id: emp.id}) }}" style="margin:0">
-                            <button type="submit" class="{{ emp.actif ? 'btn-toggle-on' : 'btn-toggle-off' }}"
+                            <button type="submit" class="{{ emp.actif ? 'btn-tog-on' : 'btn-tog-off' }}"
                                     title="{{ emp.actif ? 'Désactiver' : 'Activer' }}">
                                 <i class="bi bi-toggle-{{ emp.actif ? 'on' : 'off' }}"></i>
                             </button>
                         </form>
-
-                        {# Supprimer #}
                         <form method="POST" action="{{ path('employe_delete', {id: emp.id}) }}"
                               onsubmit="return confirmDelete('{{ emp.nomComplet }}')" style="margin:0">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ emp.id) }}">
@@ -251,7 +316,6 @@
             </tbody>
         </table>
         </div>
-
         {% else %}
         <div class="emp-empty">
             <i class="bi bi-people"></i>
@@ -260,40 +324,32 @@
                 <a href="{{ path('employe_index') }}" class="btn btn-outline-success mt-2">Voir tous les employés</a>
             {% else %}
                 <h5>Aucun employé pour le moment</h5>
-                <p>Cliquez sur "+ Ajouter un Employé" pour commencer</p>
             {% endif %}
         </div>
         {% endif %}
     </div>
 
-    {# ── Barre du bas — boutons principaux (identique desktop) ──────── #}
+    {# ── Barre du bas ────────────────────────────────────────────────── #}
     <div class="emp-bottombar">
-        <a href="{{ path('employe_new') }}" class="btn-ajouter">
+        <a href="{{ path('employe_new') }}" class="btn-add">
             <i class="bi bi-plus-lg"></i> Ajouter un Employé
         </a>
-
-        {# Modifier — nécessite une sélection (JS) #}
-        <button class="btn-bottom-orange" id="btnModifier" onclick="modifierSelectionne()" disabled>
+        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled>
             <i class="bi bi-pencil-square"></i> Modifier
         </button>
-
-        {# Supprimer — nécessite une sélection #}
-        <button class="btn-bottom-red" id="btnSupprimer" onclick="supprimerSelectionne()" disabled>
+        <button class="btn-red" id="btnSupprimer" onclick="supprimerSelectionne()" disabled>
             <i class="bi bi-trash3"></i> Supprimer
         </button>
-
-        {# Attestation de Travail #}
-        <a href="#" class="btn-bottom-blue" id="btnAttestation" onclick="attestationSelectionne(event)">
+        <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()">
             <i class="bi bi-file-earmark-text"></i> Attestation de Travail
         </a>
-
         <span class="bottom-info" id="selectionInfo">Aucune sélection</span>
     </div>
 
 </div>
 </div>
 
-{# Formulaire caché pour suppression via bouton du bas #}
+{# Formulaire caché pour delete via bouton du bas #}
 <form id="formDeleteBottom" method="POST" style="display:none">
     <input type="hidden" name="_token" id="tokenDeleteBottom">
 </form>
@@ -301,68 +357,60 @@
 
 {% block javascripts %}
 <script>
-// ── Sélection d'une ligne ─────────────────────────────────────────
-let selectedId   = null;
-let selectedNom  = null;
-let selectedEdit = null;
-let selectedDel  = null;
-let selectedTok  = null;
+// ── Direction tri ───────────────────────────────────────────────────
+function setDir(d) {
+    document.getElementById('directionInput').value = d;
+}
+
+// ── Sélection de ligne (pour boutons du bas) ────────────────────────
+let selId = null, selNom = null, selEdit = null, selDel = null, selTok = null;
 
 document.querySelectorAll('.emp-table tbody tr').forEach(row => {
-    row.style.cursor = 'pointer';
     row.addEventListener('click', function(e) {
-        // Ignorer si clic sur un bouton/lien d'action
         if (e.target.closest('a, button, form')) return;
 
-        document.querySelectorAll('.emp-table tbody tr').forEach(r => r.style.background = '');
-        this.style.background = '#e8f5e9';
+        document.querySelectorAll('.emp-table tbody tr').forEach(r => r.classList.remove('selected'));
+        this.classList.add('selected');
 
-        selectedId   = this.id.replace('row-', '');
-        selectedNom  = this.querySelector('td:nth-child(4)').textContent.trim()
-                     + ' '
-                     + this.querySelector('td:nth-child(5)').textContent.trim();
+        selId   = this.id.replace('row-', '');
+        const tds = this.querySelectorAll('td');
+        selNom  = (tds[3]?.textContent.trim() ?? '') + ' ' + (tds[4]?.textContent.trim() ?? '');
 
-        // Récupérer les URLs depuis les boutons de la ligne
-        const editLink = this.querySelector('a.btn-modif');
-        const delForm  = this.querySelector('form:has(button.btn-suppr)');
-        if (editLink) selectedEdit = editLink.href;
-        if (delForm)  {
-            selectedDel = delForm.action;
-            selectedTok = delForm.querySelector('input[name="_token"]').value;
+        const editBtn = this.querySelector('a.btn-modif');
+        const delForm = this.querySelector('form:has(button.btn-suppr)');
+        if (editBtn) selEdit = editBtn.href;
+        if (delForm) {
+            selDel = delForm.action;
+            selTok = delForm.querySelector('input[name="_token"]')?.value;
         }
 
         document.getElementById('btnModifier').disabled  = false;
         document.getElementById('btnSupprimer').disabled = false;
-        document.getElementById('selectionInfo').textContent = '✔ Sélectionné : ' + selectedNom;
+        document.getElementById('selectionInfo').textContent = '✔ Sélectionné : ' + selNom.trim();
     });
 });
 
 function modifierSelectionne() {
-    if (selectedEdit) window.location.href = selectedEdit;
+    if (selEdit) window.location.href = selEdit;
 }
 
 function supprimerSelectionne() {
-    if (!selectedId) return;
-    if (!confirm('Supprimer ' + selectedNom + ' ?')) return;
+    if (!selId) return;
+    if (!confirm('Supprimer ' + selNom.trim() + ' ?\n\nCette action est irréversible.')) return;
     const form = document.getElementById('formDeleteBottom');
-    form.action = selectedDel;
-    document.getElementById('tokenDeleteBottom').value = selectedTok;
+    form.action = selDel;
+    document.getElementById('tokenDeleteBottom').value = selTok;
     form.submit();
 }
 
-function attestationSelectionne(e) {
-    e.preventDefault();
-    if (!selectedId) {
-        alert('Veuillez sélectionner un employé dans la liste.');
-        return;
-    }
-    // À implémenter : rediriger vers la génération de l'attestation
-    window.location.href = '/employes/' + selectedId + '/attestation';
+function attestationSelectionne() {
+    if (!selId) { alert('Veuillez sélectionner un employé dans la liste.'); return false; }
+    window.location.href = '/employes/' + selId + '/attestation';
+    return false;
 }
 
-// ── Confirmation suppression via bouton inline ────────────────────
 function confirmDelete(nom) {
-    return confirm('Supprimer l\'employé ' + nom + ' ?\n\nCette action est irréversible.');
+    return confirm('Supprimer ' + nom + ' ?\n\nCette action est irréversible.');
 }
 </script>
 {% endblock %}

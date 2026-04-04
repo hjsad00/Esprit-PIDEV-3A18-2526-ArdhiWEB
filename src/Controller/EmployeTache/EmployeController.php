@@ -17,21 +17,35 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[IsGranted('ROLE_AGRICULTEUR')]
 class EmployeController extends AbstractController
 {
-    // ── Liste ─────────────────────────────────────────────────────────────
+    // Critères de tri autorisés — identiques au desktop (CRITERES_TRI)
+    private const TRIS_VALIDES = ['id', 'nom', 'prenom', 'email', 'poste', 'actif', 'telephone'];
+
+    // ── Liste + Recherche + Tri ───────────────────────────────────────────
 
     #[Route('', name: 'employe_index')]
     public function index(EmployeRepository $repo, Request $request): Response
     {
-        $search        = $request->query->get('search', '');
         $idAgriculteur = $this->getUser()->getId();
 
-        $employes = $search
-            ? $repo->search($search, $idAgriculteur)
-            : $repo->findByAgriculteur($idAgriculteur);
+        // Paramètres GET (persistés dans l'URL pour garder le tri après navigation)
+        $search    = $request->query->get('search', '');
+        $tri       = $request->query->get('tri', 'nom');
+        $direction = $request->query->get('direction', 'asc');
+
+        // Sécurisation des paramètres
+        if (!in_array($tri, self::TRIS_VALIDES, true)) {
+            $tri = 'nom';
+        }
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        // Une seule requête fait tout : recherche + tri
+        $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
         return $this->render('EmployeTache/employe/index.html.twig', [
             'employes'     => $employes,
             'search'       => $search,
+            'tri'          => $tri,
+            'direction'    => $direction,
             'total'        => count($employes),
             'total_actifs' => count(array_filter($employes, fn($e) => $e->isActif())),
         ]);
@@ -40,7 +54,8 @@ class EmployeController extends AbstractController
     // ── Création ──────────────────────────────────────────────────────────
 
     #[Route('/new', name: 'employe_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, ValidatorInterface $validator, EmployeRepository $repo): Response
+    public function new(Request $request, EntityManagerInterface $em,
+                        ValidatorInterface $validator, EmployeRepository $repo): Response
     {
         $errors = [];
         $old    = [];
@@ -90,7 +105,8 @@ class EmployeController extends AbstractController
     // ── Modification ──────────────────────────────────────────────────────
 
     #[Route('/{id}/edit', name: 'employe_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, ValidatorInterface $validator, EmployeRepository $repo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em,
+                         ValidatorInterface $validator, EmployeRepository $repo): Response
     {
         $employe = $repo->find($id);
         if (!$employe || $employe->getIdAgriculteur() !== $this->getUser()->getId()) {
@@ -138,7 +154,8 @@ class EmployeController extends AbstractController
     // ── Suppression ───────────────────────────────────────────────────────
 
     #[Route('/{id}/delete', name: 'employe_delete', methods: ['POST'])]
-    public function delete(int $id, Request $request, EntityManagerInterface $em, EmployeRepository $repo): Response
+    public function delete(int $id, Request $request, EntityManagerInterface $em,
+                           EmployeRepository $repo): Response
     {
         $employe = $repo->find($id);
         if ($employe && $employe->getIdAgriculteur() === $this->getUser()->getId()
@@ -182,27 +199,31 @@ class EmployeController extends AbstractController
     // VALIDATION SERVEUR
     // ══════════════════════════════════════════════════════════════════════
 
-    private function validerDonnees(array $data, ValidatorInterface $validator, EmployeRepository $repo, ?int $excludeId = null): array
+    private function validerDonnees(array $data, ValidatorInterface $validator,
+                                    EmployeRepository $repo, ?int $excludeId = null): array
     {
         $errors = [];
 
-        // Nom
         $v = $validator->validate($data['nom'], [
             new Assert\NotBlank(message: 'Le nom est obligatoire.'),
-            new Assert\Length(min: 2, max: 100, minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.', maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'),
-            new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
+            new Assert\Length(min: 2, max: 100,
+                minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
+                maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'),
+            new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u',
+                message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
         ]);
         if (count($v)) $errors['nom'] = $v[0]->getMessage();
 
-        // Prénom
         $v = $validator->validate($data['prenom'], [
             new Assert\NotBlank(message: 'Le prénom est obligatoire.'),
-            new Assert\Length(min: 2, max: 100, minMessage: 'Le prénom doit contenir au moins {{ limit }} caractères.', maxMessage: 'Le prénom ne peut pas dépasser {{ limit }} caractères.'),
-            new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le prénom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
+            new Assert\Length(min: 2, max: 100,
+                minMessage: 'Le prénom doit contenir au moins {{ limit }} caractères.',
+                maxMessage: 'Le prénom ne peut pas dépasser {{ limit }} caractères.'),
+            new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u',
+                message: 'Le prénom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
         ]);
         if (count($v)) $errors['prenom'] = $v[0]->getMessage();
 
-        // Email
         $v = $validator->validate($data['email'], [
             new Assert\NotBlank(message: "L'email est obligatoire."),
             new Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide."),
@@ -214,17 +235,19 @@ class EmployeController extends AbstractController
             $errors['email'] = 'Cet email est déjà utilisé par un autre employé.';
         }
 
-        // Poste (optionnel)
         if ($data['poste'] !== null) {
-            $v = $validator->validate($data['poste'], [new Assert\Length(max: 100, maxMessage: 'Le poste ne peut pas dépasser {{ limit }} caractères.')]);
+            $v = $validator->validate($data['poste'], [
+                new Assert\Length(max: 100, maxMessage: 'Le poste ne peut pas dépasser {{ limit }} caractères.')]);
             if (count($v)) $errors['poste'] = $v[0]->getMessage();
         }
 
-        // Téléphone (optionnel)
         if ($data['telephone'] !== null) {
             $v = $validator->validate($data['telephone'], [
-                new Assert\Length(min: 8, max: 20, minMessage: 'Le téléphone doit contenir au moins {{ limit }} chiffres.', maxMessage: 'Le téléphone ne peut pas dépasser {{ limit }} caractères.'),
-                new Assert\Regex(pattern: '/^[0-9\s\+\-\(\)]+$/', message: 'Le téléphone ne peut contenir que des chiffres, espaces, +, - et parenthèses.'),
+                new Assert\Length(min: 8, max: 20,
+                    minMessage: 'Le téléphone doit contenir au moins {{ limit }} chiffres.',
+                    maxMessage: 'Le téléphone ne peut pas dépasser {{ limit }} caractères.'),
+                new Assert\Regex(pattern: '/^[0-9\s\+\-\(\)]+$/',
+                    message: 'Le téléphone ne peut contenir que des chiffres, espaces, +, - et parenthèses.'),
             ]);
             if (count($v)) $errors['telephone'] = $v[0]->getMessage();
         }
@@ -236,7 +259,9 @@ class EmployeController extends AbstractController
     {
         if (!$photoFile) return [];
         $v = \Symfony\Component\Validator\Validation::createValidator()->validate($photoFile, [
-            new Assert\File(maxSize: '5M', maxSizeMessage: 'La photo ne doit pas dépasser 5 Mo.', mimeTypes: ['image/jpeg','image/png','image/webp'], mimeTypesMessage: 'La photo doit être au format JPG, PNG ou WebP.'),
+            new Assert\File(maxSize: '5M', maxSizeMessage: 'La photo ne doit pas dépasser 5 Mo.',
+                mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+                mimeTypesMessage: 'La photo doit être au format JPG, PNG ou WebP.'),
         ]);
         return count($v) ? ['photo' => $v[0]->getMessage()] : [];
     }
@@ -263,7 +288,8 @@ class EmployeController extends AbstractController
         $employe->setActif($data['actif']);
     }
 
-    private function uploadPhoto(\Symfony\Component\HttpFoundation\File\UploadedFile $file, int $idEmploye): ?string
+    private function uploadPhoto(\Symfony\Component\HttpFoundation\File\UploadedFile $file,
+                                  int $idEmploye): ?string
     {
         try {
             $dir = $this->getParameter('kernel.project_dir') . '/public/uploads/employes/';
