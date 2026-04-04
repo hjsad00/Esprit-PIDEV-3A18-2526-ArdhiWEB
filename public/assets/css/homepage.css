@@ -2,23 +2,7 @@
    HOMEPAGE — Glassmorphism & Enterprise Design
    ================================================================ */
 
-/* --- Google Font Import (Inter for modern feel) --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-/* --- CSS Variables --- */
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.12);
-    --glass-bg-strong: rgba(255, 255, 255, 0.18);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    --glass-blur: blur(16px);
-    --ardhi-green: #4a8c3f;
-    --ardhi-green-light: #5ea851;
-    --ardhi-green-dark: #3a7030;
-    --ardhi-green-glow: rgba(74, 140, 63, 0.4);
-    --hero-gradient: linear-gradient(135deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.1) 100%);
-    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+/* --- CSS Variables (Moved to main.css for global use) --- */
 
 /* ================================================================
    TRANSPARENT NAVBAR (HOME PAGE ONLY)

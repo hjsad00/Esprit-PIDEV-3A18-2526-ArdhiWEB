@@ -7,15 +7,28 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-5 col-md-8 shadow p-5 bg-white rounded">
-        <form method="post">
+        <form method="post" novalidate>
+            {# Login errors are now handled via a premium toast style #}
             {% if error %}
-                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                <div class="flash-container">
+                    <div class="premium-alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
             {% endif %}
 
-            {% if app.user %}
+            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
                 <div class="alert alert-info">
-                    Vous êtes connecté en tant que {{ app.user.userIdentifier }} <br>
+                    Vous êtes déjà connecté en tant que {{ app.user.userIdentifier }} <br>
                     <a href="{{ path('app_logout') }}">Me déconnecter</a>
+                </div>
+            {% elseif is_granted('IS_AUTHENTICATED_2FA_IN_PROGRESS') %}
+                <div class="alert alert-warning">
+                    Authentification 2FA en cours pour {{ app.user.userIdentifier }}. <br>
+                    <a href="{{ path('2fa_login') }}" class="fw-bold">Terminer la vérification</a> ou 
+                    <a href="{{ path('app_logout') }}" class="text-danger">se déconnecter</a> pour changer de compte.
                 </div>
             {% endif %}
 
@@ -26,21 +39,24 @@
 
             <div class="mb-3">
               <label for="inputEmail" class="form-label">Email</label>
-              <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
+              <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" autofocus>
             </div>
             
             <div class="mb-3">
               <label for="inputPassword" class="form-label">Mot de passe</label>
-              <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
+              <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password">
             </div>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-            <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" name="_remember_me" id="rememberMe">
-                <label class="form-check-label" for="rememberMe">
-                    Se souvenir de moi
-                </label>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="_remember_me" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        Se souvenir de moi
+                    </label>
+                </div>
+                <a href="{{ path('app_forgot_password_request') }}" style="color: var(--accent-color); font-size: 0.9em;">Mot de passe oublié ?</a>
             </div>
 
             <div class="d-grid mb-3">

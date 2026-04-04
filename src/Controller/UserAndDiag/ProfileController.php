@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProfileController extends AbstractController
 {
@@ -15,7 +16,8 @@ class ProfileController extends AbstractController
     public function profile(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        ValidatorInterface $validator,
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -36,52 +38,51 @@ class ProfileController extends AbstractController
             $role = trim($request->request->get('role', ''));
             $password = $request->request->get('password', '');
             $passwordConfirm = $request->request->get('password_confirm', '');
+            $twoFactorEnabled = $request->request->has('two_factor_enabled');
+
+            $user->setNom($nom);
+            $user->setPrenom($prenom);
+            $user->setPhone($phone ?: null);
+            $user->setLocation($location ?: null);
+            $user->setRole($role);
+            $user->setTwoFactorEnabled($twoFactorEnabled);
+
+            $validationGroups = ['Default'];
+            if (!empty($password)) {
+                $user->setPassword($password); // Temporarily set plain password for length validation
+                $user->setPasswordConfirm($passwordConfirm);
+                $validationGroups[] = 'profile_password';
+            }
+
+            $violationList = $validator->validate($user, null, $validationGroups);
 
             $errors = [];
-
-            if (empty($nom)) {
-                $errors[] = 'Le nom est obligatoire.';
-            }
-            if (empty($prenom)) {
-                $errors[] = 'Le prénom est obligatoire.';
-            }
-            if (!in_array($role, ['AGRICULTEUR', 'CLIENT', 'AGRONOME'])) {
-                $errors[] = 'Le rôle sélectionné est invalide.';
-            }
-
-            if (!empty($password)) {
-                if (strlen($password) < 6) {
-                    $errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
-                }
-                if ($password !== $passwordConfirm) {
-                    $errors[] = 'Les mots de passe ne correspondent pas.';
+            if (count($violationList) > 0) {
+                foreach ($violationList as $violation) {
+                    $errors[$violation->getPropertyPath()] = $violation->getMessage();
                 }
             }
 
             if (!empty($errors)) {
-                foreach ($errors as $error) {
-                    $this->addFlash('danger', $error);
-                }
-            } else {
-                $user->setNom($nom);
-                $user->setPrenom($prenom);
-                $user->setPhone($phone ?: null);
-                $user->setLocation($location ?: null);
-                $user->setRole($role);
-
-                if (!empty($password)) {
-                    $user->setPassword($passwordHasher->hashPassword($user, $password));
-                }
-
-                $entityManager->flush();
-                $this->addFlash('success', 'Votre profil a été mis à jour avec succès.');
-
-                return $this->redirectToRoute('app_profile');
+                return $this->render('UserAndDiag/profile.html.twig', [
+                    'user' => $user,
+                    'errors' => $errors,
+                ]);
             }
+
+            if (!empty($password)) {
+                $user->setPassword($passwordHasher->hashPassword($user, $password));
+            }
+
+            $entityManager->flush();
+            $this->addFlash('success', 'Votre profil a été mis à jour avec succès.');
+
+            return $this->redirectToRoute('app_profile');
         }
 
         return $this->render('UserAndDiag/profile.html.twig', [
             'user' => $user,
+            'errors' => [],
         ]);
     }
 

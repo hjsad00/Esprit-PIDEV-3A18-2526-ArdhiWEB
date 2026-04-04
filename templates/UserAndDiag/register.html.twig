@@ -7,8 +7,7 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-6 col-md-8 shadow p-5 bg-white rounded">
-        <form method="post">
-
+        <form method="post" novalidate>
             <div class="text-center mb-4">
               <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Créer un compte</h1>
               <p class="text-muted">Rejoignez la communauté Ardhi</p>
@@ -17,26 +16,38 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
-                <input type="text" name="nom" id="inputNom" class="form-control" value="{{ last_nom }}" required autofocus>
+                <input type="text" name="nom" id="inputNom" class="form-control {{ errors.nom is defined ? 'is-invalid' : '' }}" value="{{ last_nom }}" autofocus>
+                {% if errors.nom is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.nom }}</div>
+                {% endif %}
               </div>
               <div class="col-md-6 mb-3">
                 <label for="inputPrenom" class="form-label">Prénom <span class="text-danger">*</span></label>
-                <input type="text" name="prenom" id="inputPrenom" class="form-control" value="{{ last_prenom }}" required>
+                <input type="text" name="prenom" id="inputPrenom" class="form-control {{ errors.prenom is defined ? 'is-invalid' : '' }}" value="{{ last_prenom }}">
+                {% if errors.prenom is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.prenom }}</div>
+                {% endif %}
               </div>
             </div>
 
             <div class="mb-3">
               <label for="inputEmail" class="form-label">Email <span class="text-danger">*</span></label>
-              <input type="email" name="email" id="inputEmail" class="form-control" value="{{ last_email }}" autocomplete="email" required>
+              <input type="email" name="email" id="inputEmail" class="form-control {{ errors.email is defined ? 'is-invalid' : '' }}" value="{{ last_email }}" autocomplete="email">
+              {% if errors.email is defined %}
+                <div class="premium-invalid-feedback">{{ errors.email }}</div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="inputRole" class="form-label">Rôle <span class="text-danger">*</span></label>
-              <select name="role" id="inputRole" class="form-select" required>
+              <select name="role" id="inputRole" class="form-select {{ errors.role is defined ? 'is-invalid' : '' }}">
                 <option value="AGRICULTEUR" {{ last_role == 'AGRICULTEUR' ? 'selected' : '' }}>Agriculteur</option>
                 <option value="CLIENT" {{ last_role == 'CLIENT' ? 'selected' : '' }}>Client</option>
                 <option value="AGRONOME" {{ last_role == 'AGRONOME' ? 'selected' : '' }}>Agronome</option>
               </select>
+              {% if errors.role is defined %}
+                <div class="premium-invalid-feedback">{{ errors.role }}</div>
+              {% endif %}
             </div>
 
             <div class="row">
@@ -53,11 +64,17 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputPassword" class="form-label">Mot de passe <span class="text-danger">*</span></label>
-                <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="new-password" required minlength="6">
+                <input type="password" name="password" id="inputPassword" class="form-control {{ errors.password is defined ? 'is-invalid' : '' }}" autocomplete="new-password">
+                {% if errors.password is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.password }}</div>
+                {% endif %}
               </div>
               <div class="col-md-6 mb-3">
                 <label for="inputPasswordConfirm" class="form-label">Confirmer <span class="text-danger">*</span></label>
-                <input type="password" name="password_confirm" id="inputPasswordConfirm" class="form-control" autocomplete="new-password" required minlength="6">
+                <input type="password" name="password_confirm" id="inputPasswordConfirm" class="form-control {{ errors.password_confirm is defined ? 'is-invalid' : '' }}" autocomplete="new-password">
+                {% if errors.password_confirm is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.password_confirm }}</div>
+                {% endif %}
               </div>
             </div>
 

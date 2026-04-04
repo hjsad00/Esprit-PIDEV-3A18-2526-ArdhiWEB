@@ -7,10 +7,14 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+#[UniqueEntity(fields: ['email'], message: 'Un compte existe déjà avec cet email.')]
+class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\TwoFactorBundle\Model\Email\TwoFactorInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -18,18 +22,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Assert\NotBlank(message: 'L\'adresse email est obligatoire.')]
+    #[Assert\Email(message: 'Veuillez entrer une adresse email valide.')]
     private ?string $email = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, columnDefinition: "ENUM('ADMIN','AGRICULTEUR','CLIENT','AGRONOME') NOT NULL DEFAULT 'AGRICULTEUR'")]
+    #[Assert\NotBlank(message: 'Le rôle est obligatoire.')]
+    #[Assert\Choice(choices: ['AGRICULTEUR', 'CLIENT', 'AGRONOME', 'ADMIN'], message: 'Le rôle sélectionné est invalide.')]
     private ?string $role = 'AGRICULTEUR';
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.', groups: ['registration'])]
+    #[Assert\Length(min: 6, minMessage: 'Le mot de passe doit contenir au moins 6 caractères.', groups: ['registration', 'profile_password'])]
     private ?string $password = null;
 
+    private ?string $passwordConfirm = null;
+
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
     private ?string $prenom = null;
 
     #[ORM\Column(options: ["default" => 0])]
@@ -44,7 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $two_factor_code = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeInterface $two_factor_expires_at = null;
 
 
@@ -57,10 +71,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::FLOAT, options: ["default" => 0])]
     private ?float $points_fidelite = 0;
 
-    #[ORM\Column(length: 10, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $reset_password_code = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeInterface $reset_password_expires_at = null;
 
     #[ORM\Column(length: 20, nullable: true)]
@@ -225,12 +239,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getResetPasswordCode(): ?string
     {
+        // If the reset link has expired, treat it as non-existent
+        if ($this->reset_password_expires_at !== null && $this->reset_password_expires_at < new \DateTime()) {
+            return null;
+        }
+
         return $this->reset_password_code;
     }
 
     public function setResetPasswordCode(?string $reset_password_code): static
     {
         $this->reset_password_code = $reset_password_code;
+
+        // Default to 15 minutes if a code is set, or NULL if wiped.
+        if ($reset_password_code !== null) {
+            $this->reset_password_expires_at = new \DateTimeImmutable('+15 minutes');
+        } else {
+            $this->reset_password_expires_at = null;
+        }
         return $this;
     }
 
@@ -281,5 +307,59 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    public function isEmailAuthEnabled(): bool
+    {
+        return $this->two_factor_enabled;
+    }
+
+    public function getEmailAuthRecipient(): string
+    {
+        return $this->email;
+    }
+
+    public function getEmailAuthCode(): ?string
+    {
+        // If the code has expired, treat it as non-existent to force a new code generation
+        if ($this->two_factor_expires_at !== null && $this->two_factor_expires_at < new \DateTime()) {
+            return null;
+        }
+
+        return $this->two_factor_code;
+    }
+
+    public function setEmailAuthCode(?string $authCode): void
+    {
+        $this->two_factor_code = $authCode;
+
+        // Automatically set expiry to 15 minutes from now if a new code is set.
+        // If null is passed (meaning authentication succeeded), nullify the expiry too!
+        if ($authCode !== null) {
+            $this->two_factor_expires_at = new \DateTimeImmutable('+15 minutes');
+        } else {
+            $this->two_factor_expires_at = null;
+        }
+    }
+
+    public function getPasswordConfirm(): ?string
+    {
+        return $this->passwordConfirm;
+    }
+
+    public function setPasswordConfirm(?string $passwordConfirm): self
+    {
+        $this->passwordConfirm = $passwordConfirm;
+        return $this;
+    }
+
+    #[Assert\Callback(groups: ['registration', 'profile_password'])]
+    public function validatePasswordConfirm(ExecutionContextInterface $context): void
+    {
+        if ($this->password !== $this->passwordConfirm && !empty($this->passwordConfirm)) {
+            $context->buildViolation('Les mots de passe ne correspondent pas.')
+                ->atPath('password_confirm')
+                ->addViolation();
+        }
     }
 }

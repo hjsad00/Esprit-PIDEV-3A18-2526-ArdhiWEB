@@ -1,0 +1,58 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Authentification à deux facteurs{% endblock %}
+
+{% block body %}
+<section class="section d-flex align-items-center justify-content-center" style="min-height: 60vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-8 shadow p-5 bg-white rounded">
+        <form action="{{ checkPathUrl ? checkPathUrl : path(checkPathRoute) }}" method="post" novalidate>
+            {% if authenticationError %}
+                <div class="flash-container">
+                    <div class="premium-alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>{{ authenticationError|trans(authenticationErrorData, 'security') | raw }}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="text-center mb-4">
+              <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Vérification de Sécurité</h1>
+              <p class="text-muted">Un code d'authentification a été envoyé à votre adresse email.</p>
+            </div>
+
+            <div class="mb-3">
+              <label for="_auth_code" class="form-label">Code d'authentification</label>
+              <input id="_auth_code" class="form-control" type="text" name="{{ authCodeParameterName }}" autocomplete="one-time-code" autofocus />
+            </div>
+
+            {% if displayTrustedOption %}
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" name="{{ trustedParameterName }}" id="_trusted" value="1">
+                    <label class="form-check-label" for="_trusted">Se souvenir de cet appareil</label>
+                </div>
+            {% endif %}
+
+            {% if isCsrfProtectionEnabled %}
+                <input type="hidden" name="{{ csrfParameterName }}" value="{{ csrfToken }}">
+            {% endif %}
+
+            <div class="d-grid mb-3">
+              <button class="btn btn-primary btn-lg" type="submit">
+                  Vérifier
+              </button>
+            </div>
+
+            <div class="text-center">
+              <p class="text-muted mb-0">
+                  <a href="{{ path('app_logout') }}" style="color: var(--accent-color);">Annuler et se déconnecter</a>
+              </p>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

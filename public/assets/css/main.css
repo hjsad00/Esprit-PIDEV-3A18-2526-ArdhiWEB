@@ -12,29 +12,59 @@
 --------------------------------------------------------------*/
 /* Fonts */
 :root {
-  --default-font: "Open Sans",  system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --heading-font: "Marcellus",  sans-serif;
-  --nav-font: "Marcellus",  sans-serif;
+  --default-font: "Inter", "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --heading-font: "Marcellus", sans-serif;
+  --nav-font: "Inter", "Marcellus", sans-serif;
+}
+
+/* --- Premium Design Variables (Glassmorphism) --- */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-strong: rgba(255, 255, 255, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --glass-blur: blur(16px);
+  --ardhi-green: #4a8c3f;
+  --ardhi-green-light: #5ea851;
+  --ardhi-green-dark: #3a7030;
+  --ardhi-green-glow: rgba(74, 140, 63, 0.4);
+  --premium-success: rgba(74, 140, 63, 0.95);
+  --premium-danger: rgba(220, 53, 69, 0.9);
+  --premium-warning: rgba(255, 193, 7, 0.9);
+  --premium-info: rgba(13, 110, 253, 0.9);
+  --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
-:root { 
-  --background-color: #ffffff; /* Background color for the entire website, including individual sections */
-  --default-color: #212529; /* Default color used for the majority of the text content across the entire website */
-  --heading-color: #2d465e; /* Color for headings, subheadings and title throughout the website */
-  --accent-color: #116530; /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
-  --surface-color: #ffffff; /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
-  --contrast-color: #ffffff; /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
+:root {
+  --background-color: #ffffff;
+  /* Background color for the entire website, including individual sections */
+  --default-color: #212529;
+  /* Default color used for the majority of the text content across the entire website */
+  --heading-color: #2d465e;
+  /* Color for headings, subheadings and title throughout the website */
+  --accent-color: #4a8c3f;
+  /* Updated to Match Ardhi Green */
+  --surface-color: #ffffff;
+  /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
+  --contrast-color: #ffffff;
+  /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
 }
 
 /* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
 :root {
-  --nav-color: #212529;  /* The default color of the main navmenu links */
-  --nav-hover-color: #116530; /* Applied to main navmenu links when they are hovered over or active */
-  --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
-  --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
-  --nav-dropdown-color: #212529; /* Used for navigation links of the dropdown items in the navigation menu. */
-  --nav-dropdown-hover-color: #116530; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
+  --nav-color: #212529;
+  /* The default color of the main navmenu links */
+  --nav-hover-color: #116530;
+  /* Applied to main navmenu links when they are hovered over or active */
+  --nav-mobile-background-color: #ffffff;
+  /* Used as the background color for mobile navigation menu */
+  --nav-dropdown-background-color: #ffffff;
+  /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
+  --nav-dropdown-color: #212529;
+  /* Used for navigation links of the dropdown items in the navigation menu. */
+  --nav-dropdown-hover-color: #116530;
+  /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
 }
 
 /* Color Presets - These classes override global colors when applied to any section or element, providing reuse of the sam color scheme. */
@@ -137,6 +167,164 @@ h6 {
 
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* --- Premium Flash Notifications --- */
+.flash-container {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11000;
+  width: auto;
+  min-width: 320px;
+  max-width: 90vw;
+  padding: 0;
+  pointer-events: none;
+}
+
+.premium-alert {
+  pointer-events: auto;
+  background: rgba(15, 20, 15, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  /* Pill shape */
+  padding: 12px 28px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  animation: toastEntrance 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+  position: relative;
+  text-wrap: balance;
+}
+
+.premium-alert i {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Premium Field-Level Feedback */
+.premium-invalid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.08);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 77, 77, 0.15);
+  animation: slideInDownSmall 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: rgba(255, 77, 77, 0.5) !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 0.25rem rgba(255, 77, 77, 0.1) !important;
+}
+
+@keyframes slideInDownSmall {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.premium-alert.alert-success {
+  background: rgba(74, 140, 63, 0.88);
+  border-color: rgba(120, 255, 120, 0.3);
+  box-shadow: 0 10px 40px rgba(74, 140, 63, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.premium-alert.alert-danger {
+  background: rgba(220, 53, 69, 0.85);
+  border-color: rgba(255, 150, 150, 0.3);
+}
+
+.premium-alert.alert-warning {
+  background: rgba(255, 193, 7, 0.85);
+  border-color: rgba(255, 255, 150, 0.3);
+}
+
+.premium-alert .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.6;
+  transition: 0.3s;
+  margin-left: 10px;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.premium-alert .btn-close:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+@keyframes toastEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.premium-alert.alert-success {
+  background: var(--premium-success);
+}
+
+.premium-alert.alert-danger {
+  background: var(--premium-danger);
+}
+
+.premium-alert.alert-warning {
+  background: var(--premium-warning);
+}
+
+.premium-alert .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.8;
+  transition: 0.3s;
+  margin-left: auto;
+}
+
+.premium-alert .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+@keyframes alertFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

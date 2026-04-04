@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationController extends AbstractController
 {
@@ -21,9 +22,10 @@ class RegistrationController extends AbstractController
         EntityManagerInterface $entityManager,
         UserRepository $userRepository,
         Security $security,
+        ValidatorInterface $validator,
     ): Response {
-        // Redirect if already logged in
-        if ($this->getUser()) {
+        // Redirect if already fully logged in
+        if ($this->isGranted('IS_AUTHENTICATED_FULLY')) {
             return $this->redirectToRoute('app_home');
         }
 
@@ -44,38 +46,28 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
-            // Validation
+            // Create user object for validation
+            $user = new User();
+            $user->setNom($nom);
+            $user->setPrenom($prenom);
+            $user->setEmail($email);
+            $user->setRole($role);
+            $user->setPhone($phone ?: null);
+            $user->setLocation($location ?: null);
+            $user->setPassword($password); // Plain password for validation
+            $user->setPasswordConfirm($passwordConfirm);
+
+            // Validate the entity
+            $violationList = $validator->validate($user, null, ['registration', 'Default']);
+
             $errors = [];
-
-            if (empty($nom)) {
-                $errors[] = 'Le nom est obligatoire.';
-            }
-            if (empty($prenom)) {
-                $errors[] = 'Le prénom est obligatoire.';
-            }
-            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'Veuillez entrer une adresse email valide.';
-            }
-            if (strlen($password) < 6) {
-                $errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
-            }
-            if ($password !== $passwordConfirm) {
-                $errors[] = 'Les mots de passe ne correspondent pas.';
-            }
-            if (!in_array($role, ['AGRICULTEUR', 'CLIENT', 'AGRONOME'])) {
-                $errors[] = 'Le rôle sélectionné est invalide.';
-            }
-
-            // Check email uniqueness
-            if (empty($errors) && $userRepository->findOneBy(['email' => $email])) {
-                $errors[] = 'Un compte existe déjà avec cet email.';
+            if (count($violationList) > 0) {
+                foreach ($violationList as $violation) {
+                    $errors[$violation->getPropertyPath()] = $violation->getMessage();
+                }
             }
 
             if (!empty($errors)) {
-                foreach ($errors as $error) {
-                    $this->addFlash('danger', $error);
-                }
-
                 return $this->render('UserAndDiag/register.html.twig', [
                     'last_nom' => $nom,
                     'last_prenom' => $prenom,
@@ -83,17 +75,11 @@ class RegistrationController extends AbstractController
                     'last_role' => $role,
                     'last_phone' => $phone,
                     'last_location' => $location,
+                    'errors' => $errors,
                 ]);
             }
 
-            // Create user
-            $user = new User();
-            $user->setNom($nom);
-            $user->setPrenom($prenom);
-            $user->setEmail($email);
-            $user->setPhone($phone ?: null);
-            $user->setLocation($location ?: null);
-            $user->setRole($role);
+            // If valid, hash password and save
             $user->setPassword($passwordHasher->hashPassword($user, $password));
 
             $entityManager->persist($user);
@@ -113,6 +99,7 @@ class RegistrationController extends AbstractController
             'last_role' => 'AGRICULTEUR',
             'last_phone' => '',
             'last_location' => '',
+            'errors' => [],
         ]);
     }
 }

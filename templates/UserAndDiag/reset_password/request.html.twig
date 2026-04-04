@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réinitialisation du mot de passe{% endblock %}
+
+{% block body %}
+<section class="section d-flex align-items-center justify-content-center" style="min-height: 60vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-8 shadow p-5 bg-white rounded">
+        
+        <div class="text-center mb-4">
+            <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Oubli de Mot de Passe</h1>
+            <p class="text-muted">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+        </div>
+
+        {{ form_start(requestForm, {'attr': {'novalidate': 'novalidate'}}) }}
+            <div class="mb-3">
+                {{ form_row(requestForm.email, {'attr': {'class': 'form-control', 'placeholder': 'votre.email@exemple.com'}, 'row_attr': {'class': 'mb-0'}}) }}
+            </div>
+
+            <div class="d-grid mb-3 mt-4">
+                <button class="btn btn-primary btn-lg">Recevoir le lien</button>
+            </div>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted mb-0">
+                    <a href="{{ path('app_login') }}" style="color: var(--accent-color);">Retour à la connexion</a>
+                </p>
+            </div>
+        {{ form_end(requestForm) }}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
