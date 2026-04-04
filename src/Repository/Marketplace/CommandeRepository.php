@@ -50,4 +50,62 @@ class CommandeRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Récupère les commandes contenant des produits d'un vendeur donné.
+     */
+    public function findOrdersBySeller(User $seller): array
+    {
+        return $this->createQueryBuilder('c')
+            ->innerJoin('c.details', 'd')
+            ->innerJoin('d.produit', 'p')
+            ->addSelect('d', 'p')
+            ->andWhere('p.user = :seller')
+            ->setParameter('seller', $seller)
+            ->orderBy('c.dateCommande', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Statistiques acheteur : nombre de commandes et total dépensé.
+     */
+    public function getStatsForBuyer(User $user): array
+    {
+        $result = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id) AS nbCommandes, COALESCE(SUM(c.total), 0) AS totalDepense')
+            ->andWhere('c.user = :user')
+            ->andWhere('c.etat != :annulee')
+            ->setParameter('user', $user)
+            ->setParameter('annulee', 'annulee')
+            ->getQuery()
+            ->getSingleResult();
+
+        return [
+            'nbCommandes'  => (int) $result['nbCommandes'],
+            'totalDepense' => round((float) $result['totalDepense'], 2),
+        ];
+    }
+
+    /**
+     * Statistiques vendeur : nombre de commandes reçues et total gagné.
+     */
+    public function getStatsForSeller(User $seller): array
+    {
+        $result = $this->createQueryBuilder('c')
+            ->select('COUNT(DISTINCT c.id) AS nbCommandes, COALESCE(SUM(d.prixUnitaire * d.quantite), 0) AS totalGagne')
+            ->innerJoin('c.details', 'd')
+            ->innerJoin('d.produit', 'p')
+            ->andWhere('p.user = :seller')
+            ->andWhere('c.etat != :annulee')
+            ->setParameter('seller', $seller)
+            ->setParameter('annulee', 'annulee')
+            ->getQuery()
+            ->getSingleResult();
+
+        return [
+            'nbCommandes' => (int) $result['nbCommandes'],
+            'totalGagne'  => round((float) $result['totalGagne'], 2),
+        ];
+    }
 }

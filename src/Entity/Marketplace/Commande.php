@@ -18,7 +18,7 @@ class Commande
     #[ORM\Column(name: 'idCommande')]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'date_commande', type: Types::DATE_MUTABLE)]
+    #[ORM\Column(name: 'dateCommande', type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dateCommande = null;
 
     #[ORM\Column(length: 50, options: ['default' => 'en_cours'])]

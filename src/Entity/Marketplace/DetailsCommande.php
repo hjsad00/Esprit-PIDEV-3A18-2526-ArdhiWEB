@@ -26,7 +26,7 @@ class DetailsCommande
     #[ORM\Column(options: ['default' => 1])]
     private int $quantite = 1;
 
-    #[ORM\Column(name: 'prix_unitaire', type: Types::FLOAT)]
+    #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
     private ?float $prixUnitaire = null;
 
     // ==================== GETTERS & SETTERS ====================
