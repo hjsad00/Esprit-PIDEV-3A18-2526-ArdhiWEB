@@ -6,6 +6,37 @@
 
 {% block stylesheets %}
     <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+      .mp-flash {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 16px auto;
+        max-width: 860px;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        animation: flashIn .35s ease;
+      }
+      @keyframes flashIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .mp-flash span { display: flex; align-items: center; gap: 10px; }
+      .mp-flash button {
+        background: none; border: none; cursor: pointer;
+        font-size: 16px; opacity: .6; transition: opacity .2s;
+        padding: 0; line-height: 1;
+      }
+      .mp-flash button:hover { opacity: 1; }
+      .mp-flash-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+      .mp-flash-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+      .mp-flash-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+      .mp-flash-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -17,7 +48,6 @@
       <div class="container">
         <div class="mp-header-inner">
           <div class="mp-header-left">
-          
             <h1 class="mp-header-title">
               <i class="bi bi-shop-window"></i> Gestion des Produits
             </h1>
@@ -26,13 +56,32 @@
             <button type="button" class="mp-btn-add" onclick="toggleForm()">
               <i class="bi bi-plus-lg"></i> Ajouter un produit
             </button>
-       <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
-    <i class="bi bi-arrow-left"></i>
-</a>
+            <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
+              <i class="bi bi-arrow-left"></i>
+            </a>
           </div>
         </div>
       </div>
     </section>
+
+    {# ============================
+       FLASH MESSAGES
+       ============================ #}
+    {% for type, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="mp-flash mp-flash-{{ type }}" id="mp-flash-msg">
+          <span>
+            {% if type == 'success' %}<i class="bi bi-check-circle-fill"></i>
+            {% elseif type == 'danger' %}<i class="bi bi-x-circle-fill"></i>
+            {% elseif type == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+            {% else %}<i class="bi bi-info-circle-fill"></i>
+            {% endif %}
+            {{ message }}
+          </span>
+          <button type="button" onclick="this.parentElement.remove()"><i class="bi bi-x-lg"></i></button>
+        </div>
+      {% endfor %}
+    {% endfor %}
 
     {# ============================
        INFO BANNER
@@ -184,54 +233,114 @@
 
     {# ============================
        ADD / EDIT FORM PANEL
+       Le formulaire reste ouvert (display:block) si des erreurs de validation sont présentes.
        ============================ #}
-    <section class="mp-form-section" id="form-section" style="display:none;">
+    <section class="mp-form-section" id="form-section"
+             style="{{ validationErrors is not empty ? 'display:block' : 'display:none' }}">
       <div class="container">
         <div class="mp-form-card">
 
           <div class="mp-form-header">
-            <h2 id="form-title"><i class="bi bi-plus-square"></i> Ajouter un nouveau produit</h2>
+            <h2 id="form-title">
+              {% if formProduit and formProduit.id %}
+                <i class="bi bi-pencil-square"></i> Modifier le produit #{{ formProduit.id }}
+              {% else %}
+                <i class="bi bi-plus-square"></i> Ajouter un nouveau produit
+              {% endif %}
+            </h2>
             <button type="button" class="mp-form-close" onclick="toggleForm()">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
 
+          {# ── BLOC ERREURS DE VALIDATION ────────────────────────────────── #}
+          {% if validationErrors is not empty %}
+            <div class="alert alert-danger" style="margin:0 0 20px 0; border-radius:8px; padding:16px 20px;">
+              <strong><i class="bi bi-exclamation-triangle-fill"></i> Veuillez corriger les erreurs suivantes :</strong>
+              <ul style="margin:10px 0 0 0; padding-left:20px;">
+                {% for field, messages in validationErrors %}
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          {# ─────────────────────────────────────────────────────────────── #}
+
           <form action="{{ path('app_marketplace_produit_save') }}" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="id" id="form-id" value="">
+            {# Conservation de l'ID en mode édition #}
+            <input type="hidden" name="id" id="form-id"
+                   value="{{ formProduit and formProduit.id ? formProduit.id : '' }}">
 
             <div class="mp-form-grid">
               {# LEFT COLUMN #}
               <div class="mp-form-left">
 
-                <div class="mp-form-group">
+                <div class="mp-form-group {% if validationErrors['nom'] is defined %}has-error{% endif %}">
                   <label>NOM DU PRODUIT *</label>
-                  <input type="text" name="nom" id="form-nom" placeholder="Ex: Engrais organique" required>
+                  <input type="text" name="nom" id="form-nom"
+                         placeholder="Ex: Engrais organique"
+                         value="{{ formProduit ? formProduit.nom : '' }}"
+                        >
+                  {% if validationErrors['nom'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['nom']|join(' ') }}
+                    </small>
+                  {% endif %}
                 </div>
 
                 <div class="mp-form-group">
                   <label>DESCRIPTION</label>
-                  <textarea name="description" id="form-description" rows="4" placeholder="Description détaillée..."></textarea>
+                  <textarea name="description" id="form-description" rows="4"
+                            placeholder="Description détaillée...">{{ formProduit ? formProduit.description : '' }}</textarea>
                 </div>
 
                 <div class="mp-form-row">
-                  <div class="mp-form-group">
+                  <div class="mp-form-group {% if validationErrors['prix'] is defined %}has-error{% endif %}">
                     <label>PRIX (DT) *</label>
-                    <input type="number" step="0.01" name="prix" id="form-prix" placeholder="29.99" required>
+                    <input type="number" step="0.01" name="prix" id="form-prix"
+                           placeholder="29.99"
+                           value="{{ formProduit ? formProduit.prix : '' }}"
+                          >
                     <small><i class="bi bi-info-circle"></i> En Dinar Tunisien (DT)</small>
+                    {% if validationErrors['prix'] is defined %}
+                      <small class="text-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                        {{ validationErrors['prix']|join(' ') }}
+                      </small>
+                    {% endif %}
                   </div>
-                  <div class="mp-form-group">
+
+                  <div class="mp-form-group {% if validationErrors['quantiteStock'] is defined %}has-error{% endif %}">
                     <label>STOCK *</label>
-                    <input type="number" name="quantiteStock" id="form-stock" placeholder="100" required>
+                    <input type="number" name="quantiteStock" id="form-stock"
+                           placeholder="100"
+                           value="{{ formProduit ? formProduit.quantiteStock : '' }}"
+                          >
+                    {% if validationErrors['quantiteStock'] is defined %}
+                      <small class="text-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                        {{ validationErrors['quantiteStock']|join(' ') }}
+                      </small>
+                    {% endif %}
                   </div>
                 </div>
 
-                <div class="mp-form-group">
+                <div class="mp-form-group {% if validationErrors['uniteMesure'] is defined %}has-error{% endif %}">
                   <label>UNITÉ DE MESURE *</label>
-                  <select name="uniteMesure" id="form-unite" required>
-                    <option value="Kg">Kg</option>
-                    <option value="L">L</option>
-                    <option value="Piece">Pièce</option>
+                  <select name="uniteMesure" id="form-unite">
+                    <option value="Kg"    {{ formProduit and formProduit.uniteMesure == 'Kg'    ? 'selected' : '' }}>Kg</option>
+                    <option value="L"     {{ formProduit and formProduit.uniteMesure == 'L'     ? 'selected' : '' }}>L</option>
+                    <option value="Piece" {{ formProduit and formProduit.uniteMesure == 'Piece' ? 'selected' : '' }}>Pièce</option>
                   </select>
+                  {% if validationErrors['uniteMesure'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['uniteMesure']|join(' ') }}
+                    </small>
+                  {% endif %}
                 </div>
 
               </div>
@@ -239,14 +348,27 @@
               {# RIGHT COLUMN #}
               <div class="mp-form-right">
 
-                <div class="mp-form-group">
+                <div class="mp-form-group {% if validationErrors['categorie'] is defined %}has-error{% endif %}">
                   <label>CATÉGORIE *</label>
-                  <select name="categorie" id="form-categorie" required>
+                  <select name="categorie" id="form-categorie">
                     <option value="">— Choisir une catégorie —</option>
                     {% for cat in categories %}
-                      <option value="{{ cat }}">{{ cat }}</option>
+                      <option value="{{ cat }}"
+                              {{ formProduit and formProduit.categorie == cat ? 'selected' : '' }}>
+                        {{ cat }}
+                      </option>
                     {% endfor %}
+                    {# Si la catégorie saisie n'existe pas encore dans la liste, on l'ajoute dynamiquement #}
+                    {% if formProduit and formProduit.categorie and formProduit.categorie not in categories %}
+                      <option value="{{ formProduit.categorie }}" selected>{{ formProduit.categorie }}</option>
+                    {% endif %}
                   </select>
+                  {% if validationErrors['categorie'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['categorie']|join(' ') }}
+                    </small>
+                  {% endif %}
                   <div class="mp-form-newcat" style="margin-top:8px;">
                     <small style="color:#636e72;">Ou ajouter une nouvelle :</small>
                     <input type="text" id="new-categorie" placeholder="Nouvelle catégorie..." style="margin-top:4px;">
@@ -259,23 +381,38 @@
                 <div class="mp-form-group">
                   <label>REMISE / SOLDE</label>
                   <select name="typeRemise" id="form-type-remise" onchange="toggleRemiseField()">
-                    <option value="AUCUNE">Aucune remise</option>
-                    <option value="POURCENTAGE">Pourcentage (%)</option>
-                    <option value="FIXE">Montant fixe (DT)</option>
+                    <option value="AUCUNE"     {{ formProduit and formProduit.typeRemise == null   ? 'selected' : '' }}>Aucune remise</option>
+                    <option value="POURCENTAGE"{{ formProduit and formProduit.typeRemise == 'POURCENTAGE' ? 'selected' : '' }}>Pourcentage (%)</option>
+                    <option value="FIXE"       {{ formProduit and formProduit.typeRemise == 'FIXE' ? 'selected' : '' }}>Montant fixe (DT)</option>
                   </select>
                 </div>
 
-                <div class="mp-form-group" id="remise-value-group" style="display:none;">
+                <div class="mp-form-group {% if validationErrors['remise'] is defined %}has-error{% endif %}"
+                     id="remise-value-group"
+                     style="{{ formProduit and formProduit.typeRemise is not null ? 'display:block' : 'display:none' }}">
                   <label>VALEUR DE LA REMISE *</label>
-                  <input type="number" step="0.01" name="remise" id="form-remise" placeholder="0">
+                  <input type="number" step="0.01" name="remise" id="form-remise"
+                         placeholder="0"
+                         value="{{ formProduit ? formProduit.remise : '' }}">
+                  {% if validationErrors['remise'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['remise']|join(' ') }}
+                    </small>
+                  {% endif %}
                 </div>
 
                 <div class="mp-form-group">
                   <label>IMAGE DU PRODUIT</label>
                   <div class="mp-form-upload" id="upload-area">
                     <div class="mp-form-upload-preview" id="upload-preview">
-                      <i class="bi bi-cloud-arrow-up"></i>
-                      <span>Glissez ou cliquez pour choisir</span>
+                      {# Affiche l'image actuelle si on est en mode édition avec une image existante #}
+                      {% if formProduit and formProduit.image %}
+                        <img src="{{ asset('uploads/produits/' ~ formProduit.image) }}" alt="Image actuelle">
+                      {% else %}
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <span>Glissez ou cliquez pour choisir</span>
+                      {% endif %}
                     </div>
                     <input type="file" name="image" id="form-image" accept="image/*" onchange="previewImage(this)">
                   </div>
@@ -289,7 +426,11 @@
 
             <div class="mp-form-submit">
               <button type="submit" class="mp-btn-submit" id="form-submit-btn">
-                <i class="bi bi-plus-lg"></i> Ajouter le produit
+                {% if formProduit and formProduit.id %}
+                  <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                {% else %}
+                  <i class="bi bi-plus-lg"></i> Ajouter le produit
+                {% endif %}
               </button>
             </div>
 
@@ -421,7 +562,7 @@
         return;
       }
     }
-    // Add new option
+    // Add new option and select it
     const option = new Option(val, val, true, true);
     select.add(option);
     input.value = '';
@@ -429,22 +570,51 @@
 
   // ==================== CLIENT-SIDE FILTER ====================
   function filterTable() {
-    const filterId = document.getElementById('filter-id').value.toLowerCase();
+    const filterId  = document.getElementById('filter-id').value.toLowerCase();
     const filterNom = document.getElementById('filter-nom').value.toLowerCase();
     const filterCat = document.getElementById('filter-cat').value.toLowerCase();
 
     const rows = document.querySelectorAll('#produits-table tbody .mp-table-row');
     rows.forEach(row => {
-      const id = (row.dataset.id || '').toLowerCase();
-      const nom = (row.dataset.nom || '').toLowerCase();
-      const cat = (row.dataset.categorie || '').toLowerCase();
+      const id  = (row.dataset.id       || '').toLowerCase();
+      const nom = (row.dataset.nom      || '').toLowerCase();
+      const cat = (row.dataset.categorie|| '').toLowerCase();
 
-      const matchId = !filterId || id.includes(filterId);
+      const matchId  = !filterId  || id.includes(filterId);
       const matchNom = !filterNom || nom.includes(filterNom);
       const matchCat = !filterCat || cat.includes(filterCat);
 
       row.style.display = (matchId && matchNom && matchCat) ? '' : 'none';
     });
   }
+
+  // ==================== AUTO-SCROLL SI ERREURS ====================
+  document.addEventListener('DOMContentLoaded', function () {
+    const formSection = document.getElementById('form-section');
+    if (formSection && formSection.style.display === 'block') {
+      setTimeout(() => {
+        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    }
+
+    
+    const form = document.querySelector('#form-section form');
+    if (!form) return;
+
+    form.querySelectorAll('input, select, textarea').forEach(function (field) {
+      const eventType = (field.tagName === 'SELECT') ? 'change' : 'input';
+      field.addEventListener(eventType, function () {
+        const group = field.closest('.mp-form-group');
+        if (!group) return;
+
+        // Supprimer le message d'erreur inline
+        const errorMsg = group.querySelector('small.text-danger');
+        if (errorMsg) errorMsg.remove();
+
+        // Retirer la classe has-error
+        group.classList.remove('has-error');
+      });
+    });
+  });
 </script>
 {% endblock %}

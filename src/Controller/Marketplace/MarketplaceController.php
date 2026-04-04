@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class MarketplaceController extends AbstractController
 {
@@ -63,6 +64,8 @@ class MarketplaceController extends AbstractController
         return $this->render('Marketplace/mes_produits.html.twig', [
             'produits' => $produits,
             'categories' => $categories,
+            'validationErrors' => [],      // Pas d'erreurs au chargement initial
+            'formProduit' => null,    // Pas de données pré-remplies
         ]);
     }
 
@@ -71,7 +74,8 @@ class MarketplaceController extends AbstractController
         Request $request,
         ProduitsRepository $produitsRepository,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        ValidatorInterface $validator          // ← Injection du service de validation
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -93,12 +97,13 @@ class MarketplaceController extends AbstractController
             $flashMsg = 'Produit ajouté avec succès !';
         }
 
-        $produit->setNom($request->request->get('nom'));
+        // ── Hydratation de l'objet depuis le formulaire ──────────────────────
+        $produit->setNom((string) $request->request->get('nom'));
         $produit->setDescription($request->request->get('description'));
         $produit->setPrix((float) $request->request->get('prix'));
         $produit->setQuantiteStock((int) $request->request->get('quantiteStock'));
         $produit->setCategorie($request->request->get('categorie'));
-        $produit->setUniteMesure($request->request->get('uniteMesure'));
+        $produit->setUniteMesure((string) $request->request->get('uniteMesure'));
 
         // Gestion de la remise
         $typeRemise = $request->request->get('typeRemise');
@@ -110,7 +115,31 @@ class MarketplaceController extends AbstractController
             $produit->setRemise(0);
         }
 
-        // Upload d'image
+        // ── Validation ───────────────────────────────────────────────────────
+        $violations = $validator->validate($produit);
+
+        if (count($violations) > 0) {
+            // Collecte des messages d'erreur indexés par propriété
+            $validationErrors = [];
+            foreach ($violations as $violation) {
+                $field = $violation->getPropertyPath(); // ex: "nom", "prix", "remise"
+                $validationErrors[$field][] = $violation->getMessage();
+            }
+
+            // Rechargement de la liste des produits et catégories pour re-rendre la vue complète
+            $produits = $produitsRepository->findByUser($user->getId());
+            $categories = $produitsRepository->findDistinctCategories();
+
+            // Ré-affichage du formulaire avec les erreurs et les données saisies (pas de redirection)
+            return $this->render('Marketplace/mes_produits.html.twig', [
+                'produits' => $produits,
+                'categories' => $categories,
+                'validationErrors' => $validationErrors,
+                'formProduit' => $produit,   // Objet hydraté pour pré-remplir les champs
+            ]);
+        }
+
+        // ── Upload d'image (uniquement si la validation est OK) ───────────────
         $imageFile = $request->files->get('image');
         if ($imageFile) {
             $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
@@ -124,10 +153,11 @@ class MarketplaceController extends AbstractController
                 );
                 $produit->setImage($newFilename);
             } catch (FileException $e) {
-                $this->addFlash('warning', 'Erreur lors de l\'upload de l\'image.');
+                $this->addFlash('warning', "Erreur lors de l'upload de l'image.");
             }
         }
 
+        // ── Persistance ───────────────────────────────────────────────────────
         $em->persist($produit);
         $em->flush();
 
@@ -166,4 +196,3 @@ class MarketplaceController extends AbstractController
         return $this->redirectToRoute('app_marketplace_mes_produits');
     }
 }
-
