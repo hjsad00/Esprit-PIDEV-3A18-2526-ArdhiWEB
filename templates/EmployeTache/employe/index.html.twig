@@ -193,7 +193,10 @@
         <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
             <i class="bi bi-arrow-clockwise"></i> Actualiser
         </a>
-
+        {# Pdf#}
+        <a href="{{ path('employe_pdf') }}" class="btn btn-danger" style="border-radius:8px">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </a
         {# Bouton rechercher explicite #}
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
             <i class="bi bi-search me-1"></i>Rechercher

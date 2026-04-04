@@ -167,7 +167,79 @@ class EmployeController extends AbstractController
         }
         return $this->redirectToRoute('employe_index');
     }
+  // ── Export PDF ────────────────────────────────────────────────────────
+#[Route('/pdf', name: 'employe_pdf', methods: ['GET'])]
+public function exportPdf(EmployeRepository $repo): Response
+{
+    $idAgriculteur = $this->getUser()->getId();
+    $employes = $repo->findByAgriculteur($idAgriculteur);
 
+    // Créer PDF
+    $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+
+    // Infos
+    $pdf->SetCreator('Ardhi');
+    $pdf->SetAuthor('Ardhi');
+    $pdf->SetTitle('Liste des Employés');
+
+    // Marges
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetAutoPageBreak(true, 10);
+
+    $pdf->AddPage();
+
+    // Titre
+    $pdf->SetFont('helvetica', 'B', 18);
+    $pdf->Cell(0, 10, 'LISTE DES EMPLOYÉS', 0, 1, 'C');
+
+    // Date + total
+    $pdf->SetFont('helvetica', '', 10);
+    $date = (new \DateTime())->format('d/m/Y H:i');
+    $total = count($employes);
+    $pdf->Cell(0, 6, "Généré le : $date | Total : $total employé(s)", 0, 1, 'C');
+
+    $pdf->Ln(5);
+
+    // Header tableau
+    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->SetFillColor(60, 90, 60);
+    $pdf->SetTextColor(255, 255, 255);
+
+    $pdf->Cell(15, 8, 'ID', 1, 0, 'C', true);
+    $pdf->Cell(40, 8, 'Nom', 1, 0, 'C', true);
+    $pdf->Cell(40, 8, 'Prénom', 1, 0, 'C', true);
+    $pdf->Cell(60, 8, 'Email', 1, 0, 'C', true);
+    $pdf->Cell(40, 8, 'Poste', 1, 0, 'C', true);
+    $pdf->Cell(35, 8, 'Téléphone', 1, 0, 'C', true);
+    $pdf->Cell(20, 8, 'Actif', 1, 1, 'C', true);
+
+    // Reset couleur texte
+    $pdf->SetFont('helvetica', '', 9);
+    $pdf->SetTextColor(0, 0, 0);
+
+    foreach ($employes as $emp) {
+        $pdf->Cell(15, 7, $emp->getId(), 1, 0, 'C');
+        $pdf->Cell(40, 7, $emp->getNom(), 1, 0, 'L');
+        $pdf->Cell(40, 7, $emp->getPrenom(), 1, 0, 'L');
+        $pdf->Cell(60, 7, $emp->getEmail(), 1, 0, 'L');
+        $pdf->Cell(40, 7, $emp->getPoste() ?? '-', 1, 0, 'L');
+        $pdf->Cell(35, 7, $emp->getTelephone() ?? '-', 1, 0, 'C');
+
+        if ($emp->isActif()) {
+            $pdf->SetFillColor(144, 238, 144);
+            $pdf->Cell(20, 7, 'Oui', 1, 1, 'C', true);
+        } else {
+            $pdf->SetFillColor(255, 200, 200);
+            $pdf->Cell(20, 7, 'Non', 1, 1, 'C', true);
+        }
+    }
+
+        return new Response(
+            $pdf->Output('employes_' . date('Ymd_His') . '.pdf', 'I'),
+            200,
+            ['Content-Type' => 'application/pdf']
+        );
+    }
     // ── Fiche détail ──────────────────────────────────────────────────────
 
     #[Route('/{id}', name: 'employe_show', methods: ['GET'])]
@@ -301,4 +373,5 @@ class EmployeController extends AbstractController
             return null;
         }
     }
+  
 }
