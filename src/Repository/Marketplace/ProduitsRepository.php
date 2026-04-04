@@ -74,4 +74,32 @@ class ProduitsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Tous les produits d'un utilisateur donné.
+     */
+    public function findByUser(int $userId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.user = :uid')
+            ->setParameter('uid', $userId)
+            ->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Liste des catégories distinctes existantes en base.
+     */
+    public function findDistinctCategories(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->select('DISTINCT p.categorie')
+            ->where('p.categorie IS NOT NULL')
+            ->andWhere('p.categorie != :empty')
+            ->setParameter('empty', '')
+            ->orderBy('p.categorie', 'ASC')
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
 }
