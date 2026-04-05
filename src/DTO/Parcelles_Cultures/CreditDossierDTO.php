@@ -26,10 +26,27 @@ class CreditDossierDTO
     #[Assert\Range(min: 0, max: 10)]
     public ?string $score_historique = null;
 
+    #[Assert\NotBlank(message: 'Le prix de vente est obligatoire')]
+    #[Assert\PositiveOrZero(message: 'Le prix de vente doit être >= 0')]
     public ?string $prixVente = null;
+
+    #[Assert\NotBlank(message: 'Le coût des semences est obligatoire')]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être >= 0')]
     public ?string $coutSemences = null;
+
+    #[Assert\NotBlank(message: 'Le coût des engrais est obligatoire')]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être >= 0')]
     public ?string $coutEngrais = null;
+
+    #[Assert\NotBlank(message: 'Le coût de la main d\'œuvre est obligatoire')]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être >= 0')]
     public ?string $coutMainOeuvre = null;
+
+    #[Assert\NotBlank(message: 'Le coût d\'irrigation est obligatoire')]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être >= 0')]
     public ?string $coutIrrigation = null;
+
+    #[Assert\NotBlank(message: 'Les autres coûts sont obligatoires')]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être >= 0')]
     public ?string $coutAutres = null;
 }

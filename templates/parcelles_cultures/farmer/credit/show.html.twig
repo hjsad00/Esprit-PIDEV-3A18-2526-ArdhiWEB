@@ -27,9 +27,9 @@
                             <h5>Informations Générales</h5>
                             <table class="table table-sm">
                                 <tr><th>Parcelle:</th><td><a href="{{ path('farmer_parcelle_show', {id: dossier.parcelle.id}) }}">#{{ dossier.parcelle.id }}</a></td></tr>
-                                <tr><th>Montant Demandé:</th><td class="fw-bold">{{ dossier.montant_pret_max|round(2) }} DT</td></tr>
-                                <tr><th>Durée:</th><td>{{ dossier.duree_annees }} ans</td></tr>
-                                <tr><th>Capacité Remboursement:</th><td>{{ dossier.capacite_remboursement|round(2) }} DT/an</td></tr>
+                                <tr><th>Montant Demandé:</th><td class="fw-bold">{{ dossier.montantPretMax|round(2) }} DT</td></tr>
+                                <tr><th>Durée:</th><td>{{ dossier.dureeAnnees }} ans</td></tr>
+                                <tr><th>Capacité Remboursement:</th><td>{{ dossier.capaciteRemboursement|round(2) }} DT/an</td></tr>
                                 <tr><th>Statut:</th><td><span class="badge bg-info">{{ dossier.statut }}</span></td></tr>
                             </table>
                         </div>
@@ -38,14 +38,14 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Score Risque:</th>
-                                    <td class="fw-bold">{{ dossier.score_risque|round(2) }}/10</td>
+                                    <td class="fw-bold">{{ dossier.scoreRisque|round(2) }}/10</td>
                                 </tr>
                                 <tr>
                                     <th>Niveau Risque:</th>
                                     <td>
-                                        {% if dossier.niveau_risque == 'faible' %}
+                                        {% if dossier.niveauRisque == 'faible' %}
                                             <span class="badge bg-success">Faible</span>
-                                        {% elseif dossier.niveau_risque == 'modere' %}
+                                        {% elseif dossier.niveauRisque == 'modere' %}
                                             <span class="badge bg-warning">Modéré</span>
                                         {% else %}
                                             <span class="badge bg-danger">Élevé</span>
@@ -63,25 +63,25 @@
                         <div class="col-md-3">
                             <div class="p-3 bg-light rounded text-center">
                                 <h6 class="text-muted">Rentabilité</h6>
-                                <h4 class="text-primary">{{ dossier.score_rentabilite|round(2) }}/10</h4>
+                                <h4 class="text-primary">{{ dossier.scoreRentabilite|round(2) }}/10</h4>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 bg-light rounded text-center">
                                 <h6 class="text-muted">Climat</h6>
-                                <h4 class="text-info">{{ dossier.score_climat|round(2) }}/10</h4>
+                                <h4 class="text-info">{{ dossier.scoreStabiliteClimat|round(2) }}/10</h4>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 bg-light rounded text-center">
                                 <h6 class="text-muted">Diversification</h6>
-                                <h4 class="text-warning">{{ dossier.score_diversification|round(2) }}/10</h4>
+                                <h4 class="text-warning">{{ dossier.scoreDiversification|round(2) }}/10</h4>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 bg-light rounded text-center">
                                 <h6 class="text-muted">Historique</h6>
-                                <h4 class="text-success">{{ dossier.score_historique|round(2) }}/10</h4>
+                                <h4 class="text-success">{{ dossier.scoreHistorique|round(2) }}/10</h4>
                             </div>
                         </div>
                     </div>

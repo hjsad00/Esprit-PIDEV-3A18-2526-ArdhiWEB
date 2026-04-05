@@ -49,6 +49,17 @@ class CreditController extends AbstractController
         return $this->render('parcelles_cultures/farmer/credit/index.html.twig', ['dossiers' => $dossiers]);
     }
 
+    #[Route('/new', name: 'new', methods: ['GET'])]
+    public function new(): Response
+    {
+        $user = $this->getUser();
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+
+        return $this->render('parcelles_cultures/farmer/credit/new.html.twig', [
+            'parcelles' => $parcelles
+        ]);
+    }
+
     #[Route('/{id}/show', name: 'show', methods: ['GET'])]
     public function show(CreditDossier $dossier): Response
     {
@@ -56,7 +67,7 @@ class CreditController extends AbstractController
         return $this->render('parcelles_cultures/farmer/credit/show.html.twig', ['dossier' => $dossier]);
     }
 
-    #[Route('/{id}/generate', name: 'generate', methods: ['POST'])]
+    #[Route('/{id}/generate', name: 'generate', methods: ['GET', 'POST'])]
     public function generate(Request $request, Parcelle $parcelle): Response
     {
         $this->denyAccessUnlessGranted('view', $parcelle);
@@ -66,16 +77,18 @@ class CreditController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $margeBrute = 5000; // Simulated
+            // Utiliser le service d'analyse pour obtenir les scores réels si possible
+            // Pour l'instant on garde une simulation basée sur le DTO ou des défauts
+            $margeBrute = 5000; 
             
             $dossier = $this->creditService->genererDossier(
                 $parcelle,
                 $this->getUser(),
                 $dto->duree_annees,
-                (float) ($dto->score_rentabilite ?? 5),
-                (float) ($dto->score_stabilite_climat ?? 5),
-                (float) ($dto->score_diversification ?? 5),
-                (float) ($dto->score_historique ?? 5),
+                (float) ($dto->score_rentabilite ?? 7.5),
+                (float) ($dto->score_stabilite_climat ?? 8.0),
+                (float) ($dto->score_diversification ?? 7.0),
+                (float) ($dto->score_historique ?? 9.0),
                 $margeBrute
             );
 
@@ -87,7 +100,7 @@ class CreditController extends AbstractController
         }
 
         return $this->render('parcelles_cultures/farmer/credit/generate.html.twig', [
-            'form' => $form,
+            'form' => $form->createView(),
             'parcelle' => $parcelle,
         ]);
     }

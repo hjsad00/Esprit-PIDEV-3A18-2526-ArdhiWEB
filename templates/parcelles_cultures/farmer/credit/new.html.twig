@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Dossier de Crédit{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('farmer_credit_index') }}">Mes Dossiers</a></li>
+                    <li class="breadcrumb-item active">Nouvelle Demande</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-plus-circle"></i> Étape 1 : Choisir une Parcelle</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Sélectionnez la parcelle pour laquelle vous souhaitez générer un dossier de crédit agricole.</p>
+                    
+                    {% if parcelles|length > 0 %}
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for parcelle in parcelles %}
+                                <div class="col">
+                                    <div class="card h-100 border-success shadow-sm hover-shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-success">Parcelle #{{ parcelle.id }}</h5>
+                                            <p class="card-text">
+                                                <i class="fas fa-map-marker-alt"></i> {{ parcelle.localisation }}<br>
+                                                <i class="fas fa-expand-arrows-alt"></i> {{ parcelle.surface }} ha
+                                            </p>
+                                        </div>
+                                        <div class="card-footer bg-transparent border-top-0">
+                                            <a href="{{ path('farmer_credit_generate', {id: parcelle.id}) }}" class="btn btn-success w-100">
+                                                Choisir cette parcelle <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Vous n'avez aucune parcelle enregistrée. 
+                            <a href="{{ path('farmer_parcelle_new') }}" class="alert-link">Créez une parcelle d'abord.</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
