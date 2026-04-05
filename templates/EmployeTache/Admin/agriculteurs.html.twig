@@ -1,0 +1,171 @@
+{% extends 'base.html.twig' %}
+{% block title %}Administration — Employés & Tâches{% endblock %}
+
+{% block stylesheets %}
+<style>
+.admin-page { padding: 90px 0 60px; background: #f4f6f9; min-height: 100vh; }
+
+.admin-header {
+    background: white; border-radius: 14px; padding: 16px 24px;
+    margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.admin-title { font-size: 1.25rem; font-weight: 700; color: #1B5E20;
+    display: flex; align-items: center; gap: 10px; }
+.admin-total { color: #888; font-size: .85rem; }
+.hint-text { color: #27ae60; font-size: .82rem; font-style: italic; }
+
+/* Barre recherche */
+.admin-search {
+    background: white; border-radius: 10px; padding: 10px 16px;
+    margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: 10px;
+}
+.admin-search input {
+    flex: 1; border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px; font-size: .88rem;
+}
+.admin-search input:focus { border-color: #27ae60; outline: none; }
+
+/* Table — identique au desktop */
+.admin-table-wrap {
+    background: white; border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden;
+}
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table thead th {
+    background: #4a7c59; color: white; font-size: .81rem; font-weight: 700;
+    padding: 12px 14px; text-align: left; border: none; white-space: nowrap;
+}
+.admin-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
+.admin-table tbody tr:hover { background: #f6fbf6; }
+.admin-table tbody td { padding: 14px; vertical-align: middle; font-size: .89rem; color: #333; }
+
+/* Compteurs */
+.nb-badge { background: #e8f5e9; color: #1B5E20; border-radius: 20px;
+    padding: 3px 10px; font-size: .8rem; font-weight: 600; }
+
+/* Boutons Employés / Tâches — identiques au desktop */
+.btn-employes { background: #27ae60; color: white; border: none; border-radius: 8px;
+    padding: 7px 16px; font-weight: 600; font-size: .85rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: .2s; text-decoration: none; }
+.btn-employes:hover { background: #219150; color: white; }
+
+.btn-taches { background: #3498db; color: white; border: none; border-radius: 8px;
+    padding: 7px 16px; font-weight: 600; font-size: .85rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: .2s; text-decoration: none; }
+.btn-taches:hover { background: #2176ae; color: white; }
+
+/* Empty */
+.admin-empty { text-align:center; padding:50px 20px; color:#bbb; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+<div class="container-fluid px-4">
+
+    {# ── Header ─────────────────────────────────────────────────── #}
+    <div class="admin-header">
+        <div>
+            <div class="admin-title">
+                <i class="bi bi-people-fill"></i>
+                Gestion des Agriculteurs
+            </div>
+            <div class="admin-total">Total : {{ total }}</div>
+        </div>
+        <div class="hint-text">
+            <i class="bi bi-info-circle me-1"></i>
+            Cliquez sur Employés ou Tâches pour gérer ceux d'un agriculteur
+        </div>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Retour Admin
+        </a>
+    </div>
+
+    {# ── Recherche ───────────────────────────────────────────────── #}
+    <form method="GET" action="{{ path('admin_agriculteurs_employe') }}">
+    <div class="admin-search">
+        <i class="bi bi-search text-muted"></i>
+        <input type="text" name="search" value="{{ search }}"
+               placeholder="Rechercher par nom, prénom, email...">
+        <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:7px">
+            Rechercher
+        </button>
+        {% if search %}
+            <a href="{{ path('admin_agriculteurs_employe') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        {% endif %}
+        <a href="{{ path('admin_agriculteurs_employe') }}" class="btn btn-outline-secondary btn-sm ms-1">
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+        </a>
+    </div>
+    </form>
+
+    {# ── Table agriculteurs ──────────────────────────────────────── #}
+    <div class="admin-table-wrap">
+        {% if data|length > 0 %}
+        <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Nb Employés</th>
+                <th>Nb Tâches</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in data %}
+            <tr>
+                <td><strong>{{ row.user.id }}</strong></td>
+                <td>{{ row.user.nom }}</td>
+                <td>{{ row.user.prenom }}</td>
+                <td>
+                    <span title="{{ row.user.email }}">
+                        {{ row.user.email|length > 28
+                            ? row.user.email|slice(0,25) ~ '...'
+                            : row.user.email }}
+                    </span>
+                </td>
+                <td>
+                    <span class="nb-badge">{{ row.nbEmployes }}</span>
+                </td>
+                <td>
+                    <span class="nb-badge" style="background:#e3f2fd;color:#0d47a1">
+                        {{ row.nbTaches }}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        {# Bouton Employés — identique au desktop #}
+                        <a href="{{ path('admin_gerer_employes', {id: row.user.id}) }}"
+                           class="btn-employes">
+                            <i class="bi bi-people-fill"></i> Employés
+                        </a>
+                        {# Bouton Tâches — identique au desktop #}
+                        <a href="{{ path('admin_gerer_taches', {id: row.user.id}) }}"
+                           class="btn-taches">
+                            <i class="bi bi-clipboard-check"></i> Tâches
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="admin-empty">
+            <i class="bi bi-people d-block" style="font-size:3rem;margin-bottom:10px"></i>
+            <h5>Aucun agriculteur trouvé</h5>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+</div>
+{% endblock %}
