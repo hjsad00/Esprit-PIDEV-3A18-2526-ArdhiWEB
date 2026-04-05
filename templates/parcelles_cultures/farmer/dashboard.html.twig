@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Tableau de Bord Agriculteur{% endblock %}
+
+{% block body %}
+
+<div class="container py-5" style="margin-top: 60px;">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="fw-bold" style="color: #116530;">Tableau de Bord Agriculteur</h1>
+            <p class="text-muted">Bienvenue {{ app.user.prenom }}, gérez vos parcelles et cultures</p>
+        </div>
+    </div>
+    
+    <!-- Stats rapides -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm text-center py-4" style="background: linear-gradient(135deg, #116530 0%, #1a8c45 100%); color: white;">
+                <h3 class="fw-bold">{{ total_parcelles }}</h3>
+                <p class="mb-0">Parcelles</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Services disponibles -->
+    <div class="row g-4 justify-content-center">
+        <!-- Parcelles -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_parcelle_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#116530'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-map display-4 text-success mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">Mes Parcelles</h5>
+                    <p class="text-muted small">Gérer vos parcelles</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Cultures -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_culture_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#198754'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-sprout display-4 text-info mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">Mes Cultures</h5>
+                    <p class="text-muted small">Suivi des cultures</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Irrigation -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_irrigation_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#0dcaf0'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-droplet-fill display-4 text-primary mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">Irrigation</h5>
+                    <p class="text-muted small">Calculs d'irrigation</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- ROI -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_roi_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#ffc107'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-graph-up display-4 text-warning mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">ROI</h5>
+                    <p class="text-muted small">Rentabilité cultures</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Crédit -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_credit_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#6f42c1'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-wallet2 display-4 text-purple mb-3" style="color: #6f42c1;"></i>
+                    <h5 class="card-title fw-bold text-dark">Dossiers Crédit</h5>
+                    <p class="text-muted small">Analyse de crédit</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ path('farmer_stats_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#dc3545'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+                <div class="card-body py-5">
+                    <i class="bi bi-bar-chart display-4 text-danger mb-3"></i>
+                    <h5 class="card-title fw-bold text-dark">Statistiques</h5>
+                    <p class="text-muted small">Vue d'ensemble</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

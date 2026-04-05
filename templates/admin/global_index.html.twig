@@ -1,34 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Ardhi - Administration Globale</title>
+{% extends 'base.html.twig' %}
 
-  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
-  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
-</head>
-<body style="background-color: #f4f6f9;">
+{% block title %}Ardhi - Portail d'Administration{% endblock %}
 
-<!-- Admin Global Topbar -->
-<header style="background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 35px;">
-        <span style="font-weight: 700; font-size: 1.25rem; color: #116530;">Ardhi Admin</span>
-    </div>
-    
-    <div>
-        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-house-door me-1"></i>Retour au Site</a>
-        {% if app.user %}
-            <a href="{{ path('app_logout') }}" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
-        {% endif %}
-    </div>
-</header>
+{% block body %}
 
-<div class="container py-5" style="margin-top: 20px;">
+<div class="container py-5" style="margin-top: 60px;">
     <div class="row mb-5">
         <div class="col-12 text-center">
             <h1 class="fw-bold" style="color: #116530;">Portail d'Administration</h1>
@@ -50,7 +26,7 @@
 
         <!-- Marketplace -->
         <div class="col-md-4 col-lg-3">
-            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#198754'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+            <a href="{{ path('app_marketplace') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#198754'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
                 <div class="card-body py-5">
                     <i class="bi bi-shop display-4 text-success mb-3"></i>
                     <h5 class="card-title fw-bold text-dark mb-0">Marketplace</h5>
@@ -70,7 +46,7 @@
 
         <!-- Cultures -->
         <div class="col-md-4 col-lg-3">
-            <a href="#" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#20c997'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
+            <a href="{{ path('admin_parcelle_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#20c997'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
                 <div class="card-body py-5">
                     <i class="bi bi-tree display-4 text-info mb-3"></i>
                     <h5 class="card-title fw-bold text-dark mb-0">Cultures</h5>
@@ -100,5 +76,4 @@
     </div>
 </div>
 
-</body>
-</html>
+{% endblock %}
