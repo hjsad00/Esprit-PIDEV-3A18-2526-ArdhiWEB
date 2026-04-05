@@ -39,23 +39,29 @@ class IrrigationController extends AbstractController
         $result = null;
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Get parcelle from request
-            $parcelleId = $request->request->get('parcelle_id');
-            // Get culture from request
-            $cultureId = $request->request->get('culture_id');
+            $et0 = 0.0023 * ($dto->temperature_moyenne + 17.8) * sqrt($dto->temperature_max - $dto->temperature_min);
+            $besoinBrut = $dto->kc * $et0;
+            $besoinNet = max(0, $besoinBrut - $dto->precipitations);
+            
+            // Dummy surface for now since it's not linked to a specific parcelle in this form
+            $surface = 1.0; 
+            $volumeLitres = $besoinNet * $surface * 10000;
 
-            // For now, use dummy data for calculation
             $result = [
-                'et0' => 5.2,
-                'besoin_brut' => 7.8,
-                'besoin_net' => 4.3,
-                'volume_litres' => 43000,
+                'et0' => $et0,
+                'besoin_brut' => $besoinBrut,
+                'besoin_net' => $besoinNet,
+                'volume_litres' => $volumeLitres,
+                'volume_m3' => $volumeLitres / 1000,
+                'temp' => $dto->temperature_moyenne,
+                'precip' => $dto->precipitations,
+                'humidite' => $dto->humidite,
             ];
         }
 
         return $this->render('parcelles_cultures/farmer/irrigation/calculator.html.twig', [
-            'form' => $form,
-            'result' => $result,
+            'form' => $form->createView(),
+            'calculation_result' => $result,
         ]);
     }
 }

@@ -24,7 +24,7 @@
                         <div class="col-md-6 mb-4">
                             <div class="card h-100 shadow-sm">
                                 <div class="card-header bg-success text-white">
-                                    <h5 class="card-title mb-0">{{ culture.nom_culture }}</h5>
+                                    <h5 class="card-title mb-0">{{ culture.nomCulture }}</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-2">
@@ -35,28 +35,23 @@
                                     </div>
                                     <table class="table table-sm">
                                         <tr>
-                                            <th>Type:</th>
-                                            <td>{{ culture.type_culture }}</td>
+                                            <td>{{ culture.typeCulture }}</td>
                                         </tr>
                                         <tr>
                                             <th>Saison:</th>
                                             <td>{{ culture.saison }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Surface:</th>
-                                            <td>{{ culture.surface_utilisee }} ha</td>
+                                            <td>{{ culture.surfaceUtilisee }} ha</td>
                                         </tr>
                                         <tr>
-                                            <th>Rendement:</th>
-                                            <td>{{ culture.rendement_estime }}</td>
+                                            <td>{{ culture.rendementEstime }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Production Est.:</th>
-                                            <td class="fw-bold text-success">{{ culture.production_estimee|round(2) }}</td>
+                                            <td class="fw-bold text-success">{{ culture.productionEstimee|round(2) }}</td>
                                         </tr>
                                         <tr>
-                                            <th>État:</th>
-                                            <td><span class="badge bg-info">{{ culture.etat_culture }}</span></td>
+                                            <td><span class="badge bg-info">{{ culture.etatCulture }}</span></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -83,23 +78,23 @@
                 {# Pagination #}
                 <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
-                        {% if cultures.hasPreviousPage %}
+                        {% if cultures.paginationData.previous is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_culture_index', {'page': cultures.previousPage}) }}">Précédent</a>
+                                <a class="page-link" href="{{ path('farmer_culture_index', {'page': cultures.paginationData.previous}) }}">Précédent</a>
                             </li>
                         {% endif %}
 
-                        {% for page in cultures.paginationData.pages %}
-                            {% if page == cultures.currentPage %}
+                        {% for page in cultures.paginationData.pagesInRange %}
+                            {% if page == cultures.currentPageNumber %}
                                 <li class="page-item active"><span class="page-link">{{ page }}</span></li>
                             {% else %}
                                 <li class="page-item"><a class="page-link" href="{{ path('farmer_culture_index', {'page': page}) }}">{{ page }}</a></li>
                             {% endif %}
                         {% endfor %}
 
-                        {% if cultures.hasNextPage %}
+                        {% if cultures.paginationData.next is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_culture_index', {'page': cultures.nextPage}) }}">Suivant</a>
+                                <a class="page-link" href="{{ path('farmer_culture_index', {'page': cultures.paginationData.next}) }}">Suivant</a>
                             </li>
                         {% endif %}
                     </ul>

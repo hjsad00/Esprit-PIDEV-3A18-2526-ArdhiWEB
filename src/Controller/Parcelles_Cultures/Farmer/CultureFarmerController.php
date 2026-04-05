@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/farmer/cultures', name: 'farmer_culture_')]
 #[IsGranted('ROLE_AGRICULTEUR')]
@@ -24,24 +25,27 @@ class CultureFarmerController extends AbstractController
         private CultureRepository $cultureRepository,
         private ParcelleRepository $parcelleRepository,
         private CultureService $cultureService,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private PaginatorInterface $paginator
     ) {
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $user = $this->getUser();
-        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
-        $cultures = [];
+        
+        $query = $this->cultureRepository->createQueryBuilder('c')
+            ->join('c.parcelle', 'p')
+            ->where('p.agriculteur = :user')
+            ->setParameter('user', $user)
+            ->orderBy('c.created_at', 'DESC')
+            ->getQuery();
 
-        foreach ($parcelles as $parcelle) {
-            $cultures = array_merge($cultures, $this->cultureRepository->findByParcelle($parcelle->getId()));
-        }
+        $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
 
         return $this->render('parcelles_cultures/farmer/cultures/index.html.twig', [
             'cultures' => $cultures,
-            'parcelles' => $parcelles,
         ]);
     }
 
@@ -50,6 +54,11 @@ class CultureFarmerController extends AbstractController
     {
         $user = $this->getUser();
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+        $remainingSurfaces = [];
+        foreach ($parcelles as $p) {
+            $used = $this->cultureService->getSurfaceUtiliseeParParcelle($p->getId());
+            $remainingSurfaces[$p->getId()] = (float)$p->getSurface() - $used;
+        }
 
         if (empty($parcelles)) {
             $this->addFlash('warning', 'Vous devez créer une parcelle avant d\'ajouter une culture.');
@@ -57,39 +66,50 @@ class CultureFarmerController extends AbstractController
         }
 
         $dto = new CultureDTO();
-        $form = $this->createForm(CultureFormType::class, $dto);
+        $form = $this->createForm(CultureFormType::class, $dto, [
+            'user_parcelles' => $parcelles,
+            'remaining_surfaces' => $remainingSurfaces
+        ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $parcelleId = $request->request->get('parcelle_id');
-            $parcelle = $this->parcelleRepository->find($parcelleId);
+        if ($form->isSubmitted()) {
+            $parcelle = $dto->parcelle;
 
             if (!$parcelle || $parcelle->getAgriculteur() !== $user) {
                 throw $this->createAccessDeniedException();
             }
 
-            $culture = new Culture();
-            $culture->setNomCulture($dto->nom_culture);
-            $culture->setTypeCulture($dto->type_culture);
-            $culture->setSaison($dto->saison);
-            $culture->setDatePlantation($dto->date_plantation);
-            $culture->setDateRecolteProvue($dto->date_recolte_prevue);
-            $culture->setSurfaceUtilisee($dto->surface_utilisee);
-            $culture->setRendementEstime($dto->rendement_estime);
-            $culture->setParcelle($parcelle);
+            // Check surface constraint
+            $remaining = $remainingSurfaces[$parcelle->getId()];
+            if (!$this->cultureService->verifierContrainteSurface($parcelle->getId(), (float)$dto->surface_utilisee)) {
+                $form->get('surface_utilisee')->addError(new \Symfony\Component\Form\FormError(
+                    sprintf('Surface insuffisante sur cette parcelle. Restant: %s ha', round($remaining, 2))
+                ));
+            }
 
-            $this->cultureService->mettreAJourProductionEstimee($culture);
+            if ($form->isValid()) {
+                $culture = new Culture();
+                $culture->setNomCulture($dto->nom_culture);
+                $culture->setTypeCulture($dto->type_culture);
+                $culture->setSaison($dto->saison);
+                $culture->setDatePlantation($dto->date_plantation);
+                $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
+                $culture->setSurfaceUtilisee($dto->surface_utilisee);
+                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setParcelle($parcelle);
 
-            $this->em->persist($culture);
-            $this->em->flush();
+                $this->cultureService->mettreAJourProductionEstimee($culture);
 
-            $this->addFlash('success', 'Culture créée avec succès.');
-            return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
+                $this->em->persist($culture);
+                $this->em->flush();
+
+                $this->addFlash('success', 'Culture créée avec succès.');
+                return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
+            }
         }
 
         return $this->render('parcelles_cultures/farmer/cultures/new.html.twig', [
-            'form' => $form,
-            'parcelles' => $parcelles,
+            'form' => $form->createView(),
         ]);
     }
 
@@ -113,32 +133,60 @@ class CultureFarmerController extends AbstractController
         $dto->type_culture = $culture->getTypeCulture();
         $dto->saison = $culture->getSaison();
         $dto->date_plantation = $culture->getDatePlantation();
-        $dto->date_recolte_prevue = $culture->getDateRecolteProvue();
+        $dto->date_recolte_prevue = $culture->getDateRecoltePrevue();
         $dto->surface_utilisee = $culture->getSurfaceUtilisee();
         $dto->rendement_estime = $culture->getRendementEstime();
+        $dto->parcelle = $culture->getParcelle();
 
-        $form = $this->createForm(CultureFormType::class, $dto);
+        $parcelles = $this->parcelleRepository->findByAgriculteur($this->getUser());
+        $remainingSurfaces = [];
+        foreach ($parcelles as $p) {
+            $used = $this->cultureService->getSurfaceUtiliseeParParcelle($p->getId(), $culture->getId());
+            $remainingSurfaces[$p->getId()] = (float)$p->getSurface() - $used;
+        }
+
+        $form = $this->createForm(CultureFormType::class, $dto, [
+            'user_parcelles' => $parcelles,
+            'remaining_surfaces' => $remainingSurfaces
+        ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $culture->setNomCulture($dto->nom_culture);
-            $culture->setTypeCulture($dto->type_culture);
-            $culture->setSaison($dto->saison);
-            $culture->setDatePlantation($dto->date_plantation);
-            $culture->setDateRecolteProvue($dto->date_recolte_prevue);
-            $culture->setSurfaceUtilisee($dto->surface_utilisee);
-            $culture->setRendementEstime($dto->rendement_estime);
-            $culture->setUpdatedAt(new \DateTimeImmutable());
+        if ($form->isSubmitted()) {
+            $parcelle = $dto->parcelle;
+            if (!$parcelle || $parcelle->getAgriculteur() !== $this->getUser()) {
+                throw $this->createAccessDeniedException();
+            }
 
-            $this->cultureService->mettreAJourProductionEstimee($culture);
+            // Check surface constraint (excluding current culture)
+            $remaining = $remainingSurfaces[$parcelle->getId()];
+            if (!$this->cultureService->verifierContrainteSurface($parcelle->getId(), (float)$dto->surface_utilisee, $culture->getId())) {
+                $form->get('surface_utilisee')->addError(new \Symfony\Component\Form\FormError(
+                    sprintf('Surface insuffisante sur cette parcelle. Disponible: %s ha', round($remaining, 2))
+                ));
+            }
 
-            $this->em->flush();
-            $this->addFlash('success', 'Culture modifiée avec succès.');
-            return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
+            if ($form->isValid()) {
+                $culture->setNomCulture($dto->nom_culture);
+                $culture->setTypeCulture($dto->type_culture);
+                $culture->setSaison($dto->saison);
+                $culture->setDatePlantation($dto->date_plantation);
+                $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
+                $culture->setSurfaceUtilisee($dto->surface_utilisee);
+                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setParcelle($parcelle);
+                $culture->setUpdatedAt(new \DateTimeImmutable());
+
+                $this->cultureService->mettreAJourProductionEstimee($culture);
+
+                $this->em->flush();
+
+                $this->addFlash('success', 'Culture modifiée avec succès.');
+                return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
+            }
         }
 
         return $this->render('parcelles_cultures/farmer/cultures/edit.html.twig', [
-            'form' => $form,
+            'form' => $form->createView(),
             'culture' => $culture,
         ]);
     }

@@ -18,9 +18,7 @@
                 <div class="card-body">
                     {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-                    <div class="alert alert-info">
-                        <strong>Important:</strong> Vous devez avoir créé au moins une parcelle avant de créer une culture.
-                    </div>
+
 
                     <div class="row">
                         <div class="col-md-6">
@@ -38,6 +36,11 @@
                             <div class="mb-3">
                                 {{ form_label(form.type_culture) }}
                                 {{ form_widget(form.type_culture, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.type_culture.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.type_culture) }}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -47,6 +50,11 @@
                             <div class="mb-3">
                                 {{ form_label(form.saison) }}
                                 {{ form_widget(form.saison, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.saison.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.saison) }}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -91,7 +99,23 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form_label(form.rendement_estime) }}
-                                {{ form_widget(form.rendement_estime, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_widget(form.rendement_estime, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 4500'}}) }}
+                                {% if form.rendement_estime.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.rendement_estime) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.parcelle) }}
+                                {{ form_widget(form.parcelle) }}
+                                {% if form.parcelle.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.parcelle) }}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

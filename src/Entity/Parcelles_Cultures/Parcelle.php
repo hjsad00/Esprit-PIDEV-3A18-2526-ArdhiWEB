@@ -47,7 +47,7 @@ class Parcelle
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'parcelles')]
@@ -78,6 +78,7 @@ class Parcelle
         $this->irrigationRequests = new ArrayCollection();
         $this->creditDossiers = new ArrayCollection();
         $this->created_at = new \DateTimeImmutable();
+        $this->updated_at = new \DateTimeImmutable();
     }
 
     public function getId(): ?int

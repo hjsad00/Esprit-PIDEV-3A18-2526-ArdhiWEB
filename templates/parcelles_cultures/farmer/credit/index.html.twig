@@ -70,23 +70,23 @@
                 {# Pagination #}
                 <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
-                        {% if dossiers.hasPreviousPage %}
+                        {% if dossiers.paginationData.previous is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.previousPage}) }}">Précédent</a>
+                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.paginationData.previous}) }}">Précédent</a>
                             </li>
                         {% endif %}
 
-                        {% for page in dossiers.paginationData.pages %}
-                            {% if page == dossiers.currentPage %}
+                        {% for page in dossiers.paginationData.pagesInRange %}
+                            {% if page == dossiers.currentPageNumber %}
                                 <li class="page-item active"><span class="page-link">{{ page }}</span></li>
                             {% else %}
                                 <li class="page-item"><a class="page-link" href="{{ path('farmer_credit_index', {'page': page}) }}">{{ page }}</a></li>
                             {% endif %}
                         {% endfor %}
 
-                        {% if dossiers.hasNextPage %}
+                        {% if dossiers.paginationData.next is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.nextPage}) }}">Suivant</a>
+                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.paginationData.next}) }}">Suivant</a>
                             </li>
                         {% endif %}
                     </ul>

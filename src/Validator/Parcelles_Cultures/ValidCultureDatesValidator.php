@@ -19,11 +19,11 @@ class ValidCultureDatesValidator extends ConstraintValidator
             throw new UnexpectedTypeException($value, Culture::class);
         }
 
-        if (null === $value->getDatePlantation() || null === $value->getDateRecolteProvue()) {
+        if (null === $value->getDatePlantation() || null === $value->getDateRecoltePrevue()) {
             return;
         }
 
-        if ($value->getDatePlantation() >= $value->getDateRecolteProvue()) {
+        if ($value->getDatePlantation() >= $value->getDateRecoltePrevue()) {
             $this->context->buildViolation($constraint->message)
                 ->atPath('date_recolte_prevue')
                 ->addViolation();

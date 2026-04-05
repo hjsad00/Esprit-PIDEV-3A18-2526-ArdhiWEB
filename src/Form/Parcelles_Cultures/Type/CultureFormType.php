@@ -69,6 +69,24 @@ class CultureFormType extends AbstractType
                 'required' => true,
                 'attr' => ['min' => 0.01, 'step' => 0.01]
             ])
+            ->add('parcelle', \Symfony\Bridge\Doctrine\Form\Type\EntityType::class, [
+                'class' => \App\Entity\Parcelles_Cultures\Parcelle::class,
+                'label' => 'Parcelle',
+                'choices' => $options['user_parcelles'],
+                'choice_label' => function (\App\Entity\Parcelles_Cultures\Parcelle $p) use ($options) {
+                    $remaining = $options['remaining_surfaces'][$p->getId()] ?? $p->getSurface();
+                    return sprintf(
+                        "#%d - %s (Total: %s ha, Restant: %s ha)",
+                        $p->getId(),
+                        $p->getLocalisation(),
+                        $p->getSurface(),
+                        round($remaining, 2)
+                    );
+                },
+                'placeholder' => 'Choisir une parcelle',
+                'required' => true,
+                'attr' => ['class' => 'form-select']
+            ])
         ;
     }
 
@@ -76,6 +94,8 @@ class CultureFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => CultureDTO::class,
+            'user_parcelles' => [],
+            'remaining_surfaces' => [],
         ]);
     }
 }

@@ -58,7 +58,7 @@ class Culture
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(targetEntity: Parcelle::class, inversedBy: 'cultures')]
@@ -68,6 +68,7 @@ class Culture
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
+        $this->updated_at = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -119,12 +120,12 @@ class Culture
         return $this;
     }
 
-    public function getDateRecolteProvue(): ?\DateTimeInterface
+    public function getDateRecoltePrevue(): ?\DateTimeInterface
     {
         return $this->date_recolte_prevue;
     }
 
-    public function setDateRecolteProvue(\DateTimeInterface $date_recolte_prevue): static
+    public function setDateRecoltePrevue(\DateTimeInterface $date_recolte_prevue): static
     {
         $this->date_recolte_prevue = $date_recolte_prevue;
         return $this;

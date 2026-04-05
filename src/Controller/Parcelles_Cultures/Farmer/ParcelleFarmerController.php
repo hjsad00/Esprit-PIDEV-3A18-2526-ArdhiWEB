@@ -11,21 +11,29 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/farmer/parcelles', name: 'farmer_parcelle_')]
 #[IsGranted('ROLE_AGRICULTEUR')]
-class ParceleFarmerController extends AbstractController
+class ParcelleFarmerController extends AbstractController
 {
     public function __construct(
         private ParcelleRepository $parcelleRepository,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private PaginatorInterface $paginator
     ) {
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $parcelles = $this->parcelleRepository->findByAgriculteur($this->getUser());
+        $query = $this->parcelleRepository->createQueryBuilder('p')
+            ->where('p.agriculteur = :user')
+            ->setParameter('user', $this->getUser())
+            ->orderBy('p.created_at', 'DESC')
+            ->getQuery();
+
+        $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
         $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
 
         return $this->render('parcelles_cultures/farmer/parcelles/index.html.twig', [

@@ -36,15 +36,15 @@
                             {% for culture in cultures %}
                                 <tr>
                                     <td>#{{ culture.id }}</td>
-                                    <td>{{ culture.nom_culture }}</td>
+                                    <td>{{ culture.nomCulture }}</td>
                                     <td>#{{ culture.parcelle.id }}</td>
                                     <td>{{ culture.parcelle.agriculteur.email }}</td>
-                                    <td><span class="badge bg-success">{{ culture.type_culture }}</span></td>
-                                    <td>{{ culture.surface_utilisee }} ha</td>
-                                    <td>{{ culture.rendement_estime }}</td>
-                                    <td>{{ culture.production_estimee|round(2) }}</td>
+                                    <td><span class="badge bg-success">{{ culture.typeCulture }}</span></td>
+                                    <td>{{ culture.surfaceUtilisee }} ha</td>
+                                    <td>{{ culture.rendementEstime }}</td>
+                                    <td>{{ culture.productionEstimee|round(2) }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ culture.etat_culture }}</span>
+                                        <span class="badge bg-info">{{ culture.etatCulture }}</span>
                                     </td>
                                     <td>
                                         <a href="{{ path('admin_culture_show', {id: culture.id}) }}" class="btn btn-sm btn-info">
@@ -60,23 +60,23 @@
                 {# Pagination #}
                 <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
-                        {% if cultures.hasPreviousPage %}
+                        {% if cultures.paginationData.previous is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_culture_index', {'page': cultures.previousPage}) }}">Précédent</a>
+                                <a class="page-link" href="{{ path('admin_culture_index', {'page': cultures.paginationData.previous}) }}">Précédent</a>
                             </li>
                         {% endif %}
 
-                        {% for page in cultures.paginationData.pages %}
-                            {% if page == cultures.currentPage %}
+                        {% for page in cultures.paginationData.pagesInRange %}
+                            {% if page == cultures.currentPageNumber %}
                                 <li class="page-item active"><span class="page-link">{{ page }}</span></li>
                             {% else %}
                                 <li class="page-item"><a class="page-link" href="{{ path('admin_culture_index', {'page': page}) }}">{{ page }}</a></li>
                             {% endif %}
                         {% endfor %}
 
-                        {% if cultures.hasNextPage %}
+                        {% if cultures.paginationData.next is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_culture_index', {'page': cultures.nextPage}) }}">Suivant</a>
+                                <a class="page-link" href="{{ path('admin_culture_index', {'page': cultures.paginationData.next}) }}">Suivant</a>
                             </li>
                         {% endif %}
                     </ul>

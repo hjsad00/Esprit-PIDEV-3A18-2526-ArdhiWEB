@@ -37,8 +37,8 @@
                                     <td>{{ parcelle.agriculteur.email }}</td>
                                     <td>{{ parcelle.surface }} ha</td>
                                     <td>{{ parcelle.localisation }}</td>
-                                    <td><span class="badge bg-info">{{ parcelle.type_sol }}</span></td>
-                                    <td>{{ parcelle.systeme_irrigation }}</td>
+                                    <td><span class="badge bg-info">{{ parcelle.typeSol }}</span></td>
+                                    <td>{{ parcelle.systemeIrrigation }}</td>
                                     <td>
                                         {% if parcelle.statut == 'actif' %}
                                             <span class="badge bg-success">Actif</span>
@@ -60,23 +60,23 @@
                 {# Pagination #}
                 <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
-                        {% if parcelles.hasPreviousPage %}
+                        {% if parcelles.paginationData.previous is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_parcelle_index', {'page': parcelles.previousPage}) }}">Précédent</a>
+                                <a class="page-link" href="{{ path('admin_parcelle_index', {'page': parcelles.paginationData.previous}) }}">Précédent</a>
                             </li>
                         {% endif %}
 
-                        {% for page in parcelles.paginationData.pages %}
-                            {% if page == parcelles.currentPage %}
+                        {% for page in parcelles.paginationData.pagesInRange %}
+                            {% if page == parcelles.currentPageNumber %}
                                 <li class="page-item active"><span class="page-link">{{ page }}</span></li>
                             {% else %}
                                 <li class="page-item"><a class="page-link" href="{{ path('admin_parcelle_index', {'page': page}) }}">{{ page }}</a></li>
                             {% endif %}
                         {% endfor %}
 
-                        {% if parcelles.hasNextPage %}
+                        {% if parcelles.paginationData.next is defined %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_parcelle_index', {'page': parcelles.nextPage}) }}">Suivant</a>
+                                <a class="page-link" href="{{ path('admin_parcelle_index', {'page': parcelles.paginationData.next}) }}">Suivant</a>
                             </li>
                         {% endif %}
                     </ul>

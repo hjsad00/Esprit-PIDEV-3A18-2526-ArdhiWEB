@@ -10,40 +10,17 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 {% if is_granted('ROLE_AGRICULTEUR') %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="farmerMenu" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-farm"></i> Mes Parcelles
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('farmer_agriculture_index') }}">
+                            <i class="fas fa-leaf"></i> Cultures
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ path('farmer_parcelle_index') }}">Liste des Parcelles</a></li>
-                            <li><a class="dropdown-item" href="{{ path('farmer_parcelle_new') }}">Nouvelle Parcelle</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ path('farmer_culture_index') }}">Mes Cultures</a></li>
-                            <li><a class="dropdown-item" href="{{ path('farmer_culture_new') }}">Nouvelle Culture</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="toolsMenu" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-tools"></i> Outils
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ path('farmer_irrigation_index') }}">Irrigation</a></li>
-                            <li><a class="dropdown-item" href="{{ path('farmer_roi_index') }}">ROI/Finances</a></li>
-                            <li><a class="dropdown-item" href="{{ path('farmer_credit_index') }}">Crédit</a></li>
-                        </ul>
                     </li>
                 {% endif %}
                 {% if is_granted('ROLE_ADMIN') %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('admin_agriculture_index') }}">
                             <i class="fas fa-cog"></i> Administration
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ path('admin_parcelle_index') }}">Parcelles</a></li>
-                            <li><a class="dropdown-item" href="{{ path('admin_culture_index') }}">Cultures</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ path('admin_stats_index') }}">Statistiques</a></li>
-                        </ul>
                     </li>
                 {% endif %}
                 <li class="nav-item">

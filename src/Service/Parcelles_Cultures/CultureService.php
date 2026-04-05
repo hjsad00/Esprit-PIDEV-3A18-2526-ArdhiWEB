@@ -7,8 +7,10 @@ use App\Repository\Parcelles_Cultures\CultureRepository;
 
 class CultureService
 {
-    public function __construct(private CultureRepository $cultureRepository)
-    {
+    public function __construct(
+        private CultureRepository $cultureRepository,
+        private \App\Repository\Parcelles_Cultures\ParcelleRepository $parcelleRepository
+    ) {
     }
 
     /**
@@ -16,7 +18,7 @@ class CultureService
      */
     public function isValidDates(Culture $culture): bool
     {
-        return $culture->getDatePlantation() < $culture->getDateRecolteProvue();
+        return $culture->getDatePlantation() < $culture->getDateRecoltePrevue();
     }
 
     /**
@@ -26,7 +28,7 @@ class CultureService
     public function verifierContrainteSurface(int $parcelleId, float $nouvelleSurface, ?int $excludeCultureId = null): bool
     {
         $totalSurfaceOthers = $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId, $excludeCultureId);
-        $parcelle = $this->cultureRepository->findOneBySql("SELECT p FROM Parcelle p WHERE p.id = ?", [$parcelleId]);
+        $parcelle = $this->parcelleRepository->find($parcelleId);
 
         if (!$parcelle) {
             return false;

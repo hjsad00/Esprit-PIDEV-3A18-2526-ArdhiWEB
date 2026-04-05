@@ -19,7 +19,7 @@
 
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h3 class="card-title mb-0"><i class="fas fa-leaf"></i> Détails de la Culture: {{ culture.nom_culture }}</h3>
+                    <h3 class="card-title mb-0"><i class="fas fa-leaf"></i> Détails de la Culture: {{ culture.nomCulture }}</h3>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
@@ -28,11 +28,11 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Nom:</th>
-                                    <td>{{ culture.nom_culture }}</td>
+                                    <td>{{ culture.nomCulture }}</td>
                                 </tr>
                                 <tr>
                                     <th>Type:</th>
-                                    <td>{{ culture.type_culture }}</td>
+                                    <td>{{ culture.typeCulture }}</td>
                                 </tr>
                                 <tr>
                                     <th>Saison:</th>
@@ -55,19 +55,19 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Surface utilisée:</th>
-                                    <td>{{ culture.surface_utilisee }} ha</td>
+                                    <td>{{ culture.surfaceUtilisee }} ha</td>
                                 </tr>
                                 <tr>
                                     <th>Rendement estimé:</th>
-                                    <td>{{ culture.rendement_estime }}</td>
+                                    <td>{{ culture.rendementEstime }}</td>
                                 </tr>
                                 <tr>
                                     <th>Production estimée:</th>
-                                    <td class="fw-bold text-success">{{ culture.production_estimee|round(2) }}</td>
+                                    <td class="fw-bold text-success">{{ culture.productionEstimee|round(2) }}</td>
                                 </tr>
                                 <tr>
                                     <th>État:</th>
-                                    <td><span class="badge bg-info">{{ culture.etat_culture }}</span></td>
+                                    <td><span class="badge bg-info">{{ culture.etatCulture }}</span></td>
                                 </tr>
                             </table>
                         </div>
@@ -81,15 +81,15 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Plantation:</th>
-                                    <td>{{ culture.date_plantation|date('d/m/Y') }}</td>
+                                    <td>{{ culture.datePlantation|date('d/m/Y') }}</td>
                                 </tr>
                                 <tr>
                                     <th>Récolte prévue:</th>
-                                    <td>{{ culture.date_recolte_prevue|date('d/m/Y') }}</td>
+                                    <td>{{ culture.dateRecoltePrevue|date('d/m/Y') }}</td>
                                 </tr>
                                 <tr>
                                     <th>Créé le:</th>
-                                    <td>{{ culture.created_at|date('d/m/Y H:i') }}</td>
+                                    <td>{{ culture.createdAt|date('d/m/Y H:i') }}</td>
                                 </tr>
                             </table>
                         </div>

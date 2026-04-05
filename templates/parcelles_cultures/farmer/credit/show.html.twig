@@ -102,7 +102,7 @@
                     <a href="{{ path('farmer_credit_export_pdf', {id: dossier.id}) }}" class="btn btn-danger">
                         <i class="fas fa-file-pdf"></i> Télécharger PDF
                     </a>
-                    <small class="text-muted ms-3">Créé le: {{ dossier.created_at|date('d/m/Y H:i') }}</small>
+                    <small class="text-muted ms-3">Créé le: {{ dossier.createdAt|date('d/m/Y H:i') }}</small>
                 </div>
             </div>
         </div>

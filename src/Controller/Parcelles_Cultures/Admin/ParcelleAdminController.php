@@ -15,7 +15,7 @@ use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/admin/parcelles', name: 'admin_parcelle_')]
 #[IsGranted('ROLE_ADMIN')]
-class ParceleAdminController extends AbstractController
+class ParcelleAdminController extends AbstractController
 {
     public function __construct(
         private ParcelleRepository $parcelleRepository,

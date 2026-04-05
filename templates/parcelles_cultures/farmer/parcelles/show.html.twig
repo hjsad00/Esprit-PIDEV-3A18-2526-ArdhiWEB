@@ -28,8 +28,8 @@
                             <table class="table table-sm">
                                 <tr><th>Surface:</th><td>{{ parcelle.surface }} ha</td></tr>
                                 <tr><th>Localisation:</th><td>{{ parcelle.localisation }}</td></tr>
-                                <tr><th>Type de Sol:</th><td>{{ parcelle.type_sol }}</td></tr>
-                                <tr><th>Système Irrigation:</th><td>{{ parcelle.systeme_irrigation }}</td></tr>
+                                <tr><th>Type de Sol:</th><td>{{ parcelle.typeSol }}</td></tr>
+                                <tr><th>Système Irrigation:</th><td>{{ parcelle.systemeIrrigation }}</td></tr>
                                 <tr><th>Statut:</th>
                                     <td>
                                         <span class="badge {% if parcelle.statut == 'actif' %}bg-success{% else %}bg-secondary{% endif %}">
@@ -44,8 +44,8 @@
                             <table class="table table-sm">
                                 <tr><th>Latitude:</th><td>{{ parcelle.latitude }}</td></tr>
                                 <tr><th>Longitude:</th><td>{{ parcelle.longitude }}</td></tr>
-                                <tr><th>Créé:</th><td>{{ parcelle.created_at|date('d/m/Y') }}</td></tr>
-                                <tr><th>Modifié:</th><td>{{ parcelle.updated_at|date('d/m/Y') }}</td></tr>
+                                <tr><th>Créé:</th><td>{{ parcelle.createdAt|date('d/m/Y') }}</td></tr>
+                                <tr><th>Modifié:</th><td>{{ parcelle.updatedAt|date('d/m/Y') }}</td></tr>
                             </table>
                         </div>
                     </div>
