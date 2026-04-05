@@ -6,7 +6,7 @@
 * License: https://bootstrapmade.com/license/
 */
 
-(function() {
+(function () {
   "use strict";
 
   /**
@@ -21,12 +21,13 @@
 
   document.addEventListener('scroll', toggleScrolled);
   window.addEventListener('load', toggleScrolled);
+  document.addEventListener('turbo:load', toggleScrolled);
 
   /**
    * Scroll up sticky header to headers with .scroll-up-sticky class
    */
   let lastScrollTop = 0;
-  window.addEventListener('scroll', function() {
+  window.addEventListener('scroll', function () {
     const selectHeader = document.querySelector('#header');
     if (!selectHeader.classList.contains('scroll-up-sticky')) return;
 
@@ -73,7 +74,7 @@
    * Toggle mobile nav dropdowns
    */
   document.querySelectorAll('.navmenu .toggle-dropdown').forEach(navmenu => {
-    navmenu.addEventListener('click', function(e) {
+    navmenu.addEventListener('click', function (e) {
       e.preventDefault();
       this.parentNode.classList.toggle('active');
       this.parentNode.nextElementSibling.classList.toggle('dropdown-active');
@@ -84,12 +85,14 @@
   /**
    * Preloader
    */
-  const preloader = document.querySelector('#preloader');
-  if (preloader) {
-    window.addEventListener('load', () => {
+  function removePreloader() {
+    const preloader = document.querySelector('#preloader');
+    if (preloader) {
       preloader.remove();
-    });
+    }
   }
+  window.addEventListener('load', removePreloader);
+  document.addEventListener('turbo:load', removePreloader);
 
   /**
    * Scroll top button
@@ -110,6 +113,7 @@
   });
 
   window.addEventListener('load', toggleScrollTop);
+  document.addEventListener('turbo:load', toggleScrollTop);
   document.addEventListener('scroll', toggleScrollTop);
 
   /**
@@ -124,6 +128,7 @@
     });
   }
   window.addEventListener('load', aosInit);
+  document.addEventListener('turbo:load', aosInit);
 
   /**
    * Auto generate the carousel indicators
@@ -142,7 +147,7 @@
    * Init swiper sliders
    */
   function initSwiper() {
-    document.querySelectorAll(".init-swiper").forEach(function(swiperElement) {
+    document.querySelectorAll(".init-swiper").forEach(function (swiperElement) {
       let config = JSON.parse(
         swiperElement.querySelector(".swiper-config").innerHTML.trim()
       );
@@ -156,6 +161,7 @@
   }
 
   window.addEventListener("load", initSwiper);
+  document.addEventListener("turbo:load", initSwiper);
 
   /**
    * Initiate glightbox
