@@ -52,6 +52,13 @@
             border-color: #116530;
             transform: translateY(-2px);
         }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 25px;
+        }
         .culture-card {
             background: white;
             border-radius: 20px;
@@ -170,6 +177,50 @@
                 </div>
             </div>
 
+            {# === Search & Filter Section === #}
+            <div class="premium-card mb-4" data-aos="fade-up">
+                <form id="filterForm" action="{{ path('farmer_culture_index') }}" method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="info-label mb-2">Rechercher</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="ID, Type, Saison, Parcelle..." value="{{ filters.q|default('') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-2">Type</label>
+                        <select name="typeCulture" class="form-select bg-light border-0">
+                            <option value="">Tous</option>
+                            <option value="Blé" {{ filters.typeCulture|default('') == 'Blé' ? 'selected' : '' }}>Blé</option>
+                            <option value="Orge" {{ filters.typeCulture|default('') == 'Orge' ? 'selected' : '' }}>Orge</option>
+                            <option value="Maïs" {{ filters.typeCulture|default('') == 'Maïs' ? 'selected' : '' }}>Maïs</option>
+                            <option value="Olive" {{ filters.typeCulture|default('') == 'Olive' ? 'selected' : '' }}>Olive</option>
+                            <option value="Tomate" {{ filters.typeCulture|default('') == 'Tomate' ? 'selected' : '' }}>Tomate</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-2">Saison</label>
+                        <select name="saison" class="form-select bg-light border-0">
+                            <option value="">Toutes</option>
+                            <option value="Printemps" {{ filters.saison|default('') == 'Printemps' ? 'selected' : '' }}>Printemps</option>
+                            <option value="Été" {{ filters.saison|default('') == 'Été' ? 'selected' : '' }}>Été</option>
+                            <option value="Automne" {{ filters.saison|default('') == 'Automne' ? 'selected' : '' }}>Automne</option>
+                            <option value="Hiver" {{ filters.saison|default('') == 'Hiver' ? 'selected' : '' }}>Hiver</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-premium-add flex-grow-1">
+                            <i class="bi bi-filter me-2"></i> Filtrer
+                        </button>
+                        {% if filters.q|default('') or filters.typeCulture|default('') or filters.saison|default('') %}
+                            <a href="{{ path('farmer_culture_index') }}" class="btn btn-premium-outline">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
             {# === Summary Stats Section === #}
             <div class="row g-4 mb-5" data-aos="fade-up">
                 <div class="col-6 col-md-4">
@@ -268,4 +319,40 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('filterForm');
+        if (!filterForm) return;
+
+        const inputs = filterForm.querySelectorAll('input, select');
+        let timeout = null;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            
+            input.addEventListener(eventType, function() {
+                clearTimeout(timeout);
+                const delay = input.tagName === 'SELECT' ? 0 : 600;
+                
+                timeout = setTimeout(() => {
+                    const searchIcon = filterForm.querySelector('.bi-search');
+                    if (searchIcon) {
+                        searchIcon.classList.remove('bi-search');
+                        searchIcon.classList.add('spinner-border', 'spinner-border-sm', 'text-success');
+                    }
+                    filterForm.submit();
+                }, delay);
+            });
+        });
+
+        const qInput = filterForm.querySelector('input[name="q"]');
+        if (qInput && qInput.value) {
+            qInput.focus();
+            const val = qInput.value;
+            qInput.value = '';
+            qInput.value = val;
+        }
+    });
+</script>
 {% endblock %}

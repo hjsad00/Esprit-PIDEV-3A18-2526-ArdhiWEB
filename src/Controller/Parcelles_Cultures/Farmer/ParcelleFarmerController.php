@@ -27,11 +27,11 @@ class ParcelleFarmerController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $query = $this->parcelleRepository->createQueryBuilder('p')
-            ->where('p.agriculteur = :user')
-            ->setParameter('user', $this->getUser())
-            ->orderBy('p.created_at', 'DESC')
-            ->getQuery();
+        $query = $this->parcelleRepository->searchAndFilter(
+            $this->getUser(),
+            $request->query->get('q'),
+            $request->query->get('typeSol')
+        );
 
         $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
         $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
@@ -39,6 +39,7 @@ class ParcelleFarmerController extends AbstractController
         return $this->render('parcelles_cultures/farmer/parcelles/index.html.twig', [
             'parcelles' => $parcelles,
             'stats' => $stats,
+            'filters' => $request->query->all(),
         ]);
     }
 

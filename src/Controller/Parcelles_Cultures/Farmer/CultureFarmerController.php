@@ -35,12 +35,12 @@ class CultureFarmerController extends AbstractController
     {
         $user = $this->getUser();
         
-        $query = $this->cultureRepository->createQueryBuilder('c')
-            ->join('c.parcelle', 'p')
-            ->where('p.agriculteur = :user')
-            ->setParameter('user', $user)
-            ->orderBy('c.created_at', 'DESC')
-            ->getQuery();
+        $query = $this->cultureRepository->searchAndFilter(
+            $user,
+            $request->query->get('q'),
+            $request->query->get('typeCulture'),
+            $request->query->get('saison')
+        );
 
         $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
 
@@ -56,6 +56,7 @@ class CultureFarmerController extends AbstractController
         return $this->render('parcelles_cultures/farmer/cultures/index.html.twig', [
             'cultures' => $cultures,
             'summary' => $stats,
+            'filters' => $request->query->all(),
         ]);
     }
 

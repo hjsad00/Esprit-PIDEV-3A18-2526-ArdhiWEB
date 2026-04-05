@@ -17,6 +17,12 @@
     .action-btn { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; text-decoration: none; }
     .btn-view { background: #e8f5e9; color: #116530; }
     .btn-view:hover { background: #116530; color: white; }
+    .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 25px; margin-bottom: 25px; }
+    .btn-premium-add { background: #116530; color: white; border-radius: 12px; padding: 10px 24px; font-weight: 700; border: none; transition: all 0.3s; box-shadow: 0 5px 15px rgba(17,101,48,0.15); font-size: 0.9rem; display: inline-flex; align-items: center; }
+    .btn-premium-add:hover { background: #1e8341; color: white; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(17,101,48,0.25); }
+    .btn-premium-outline { background: white; color: #116530; border: 2px solid #116530; border-radius: 12px; padding: 8px 22px; font-weight: 700; transition: all 0.3s; font-size: 0.9rem; display: inline-flex; align-items: center; }
+    .btn-premium-outline:hover { background: #f0f7ee; color: #116530; border-color: #116530; transform: translateY(-2px); }
+    .info-label { font-size: 11px; font-weight: 700; color: #b2bec3; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>
 {% endblock %}
 
@@ -36,6 +42,39 @@
                     <span class="admin-badge">Administration</span>
                 </h1>
                 <p class="text-muted lead mt-2">Vue d'ensemble de toutes les parcelles enregistrées sur la plateforme.</p>
+            </div>
+
+            {# === Search & Filter Section === #}
+            <div class="premium-card" data-aos="fade-up">
+                <form id="filterForm" action="{{ path('admin_parcelle_index') }}" method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="info-label mb-2">Rechercher</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="ID, Localisation, Agriculteur..." value="{{ filters.q|default('') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="info-label mb-2">Type de sol</label>
+                        <select name="typeSol" class="form-select bg-light border-0">
+                            <option value="">Tous les types</option>
+                            <option value="Argileux" {{ filters.typeSol|default('') == 'Argileux' ? 'selected' : '' }}>Argileux</option>
+                            <option value="Limoneux" {{ filters.typeSol|default('') == 'Limoneux' ? 'selected' : '' }}>Limoneux</option>
+                            <option value="Sableux" {{ filters.typeSol|default('') == 'Sableux' ? 'selected' : '' }}>Sableux</option>
+                            <option value="Humifère" {{ filters.typeSol|default('') == 'Humifère' ? 'selected' : '' }}>Humifère</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-premium-add flex-grow-1">
+                            <i class="bi bi-filter me-2"></i> Filtrer
+                        </button>
+                        {% if filters.q|default('') or filters.typeSol|default('') %}
+                            <a href="{{ path('admin_parcelle_index') }}" class="btn btn-premium-outline">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
 
             {% if parcelles.getTotalItemCount > 0 %}
@@ -98,4 +137,40 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('filterForm');
+        if (!filterForm) return;
+
+        const inputs = filterForm.querySelectorAll('input, select');
+        let timeout = null;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            
+            input.addEventListener(eventType, function() {
+                clearTimeout(timeout);
+                const delay = input.tagName === 'SELECT' ? 0 : 600;
+                
+                timeout = setTimeout(() => {
+                    const searchIcon = filterForm.querySelector('.bi-search');
+                    if (searchIcon) {
+                        searchIcon.classList.remove('bi-search');
+                        searchIcon.classList.add('spinner-border', 'spinner-border-sm', 'text-success');
+                    }
+                    filterForm.submit();
+                }, delay);
+            });
+        });
+
+        const qInput = filterForm.querySelector('input[name="q"]');
+        if (qInput && qInput.value) {
+            qInput.focus();
+            const val = qInput.value;
+            qInput.value = '';
+            qInput.value = val;
+        }
+    });
+</script>
 {% endblock %}

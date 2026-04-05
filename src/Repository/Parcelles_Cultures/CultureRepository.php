@@ -90,4 +90,43 @@ class CultureRepository extends ServiceEntityRepository
             'production_estimee_totale' => (float) ($productionTotalEstimee['total_production'] ?? 0),
         ];
     }
+
+    public function searchAndFilter(?User $user = null, ?string $query = null, ?string $typeCulture = null, ?string $saison = null)
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->join('c.parcelle', 'p');
+
+        if ($user) {
+            $qb->andWhere('p.agriculteur = :user')
+               ->setParameter('user', $user);
+        }
+
+        if ($query) {
+            $orX = $qb->expr()->orX(
+                $qb->expr()->like('c.type_culture', ':q'),
+                $qb->expr()->like('c.saison', ':q'),
+                $qb->expr()->like('p.localisation', ':q')
+            );
+
+            if (is_numeric($query)) {
+                $orX->add($qb->expr()->eq('c.id', ':id'));
+                $qb->setParameter('id', (int)$query);
+            }
+
+            $qb->andWhere($orX)
+               ->setParameter('q', '%' . $query . '%');
+        }
+
+        if ($typeCulture) {
+            $qb->andWhere('c.type_culture = :typeCulture')
+               ->setParameter('typeCulture', $typeCulture);
+        }
+
+        if ($saison) {
+            $qb->andWhere('c.saison = :saison')
+               ->setParameter('saison', $saison);
+        }
+
+        return $qb->orderBy('c.created_at', 'DESC')->getQuery();
+    }
 }

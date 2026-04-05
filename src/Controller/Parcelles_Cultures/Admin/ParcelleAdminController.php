@@ -27,9 +27,11 @@ class ParcelleAdminController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $query = $this->parcelleRepository->createQueryBuilder('p')
-            ->orderBy('p.created_at', 'DESC')
-            ->getQuery();
+        $query = $this->parcelleRepository->searchAndFilter(
+            null, // No user for admin
+            $request->query->get('q'),
+            $request->query->get('typeSol')
+        );
 
         $parcelles = $this->paginator->paginate(
             $query,
@@ -39,6 +41,7 @@ class ParcelleAdminController extends AbstractController
 
         return $this->render('parcelles_cultures/admin/parcelles/index.html.twig', [
             'parcelles' => $parcelles,
+            'filters' => $request->query->all()
         ]);
     }
 
