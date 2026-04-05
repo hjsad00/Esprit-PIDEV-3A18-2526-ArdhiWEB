@@ -63,8 +63,11 @@
     }
     .pricing-card.current { border-color: #4ade80 !important; box-shadow: 0 0 30px rgba(74,222,128,0.15) !important; }
 
-    .best-badge {
+    .badges-container {
         position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 8px; white-space: nowrap;
+    }
+    .best-badge {
         padding: 6px 20px; border-radius: 20px; font-size: 11px; font-weight: 800;
         color: #fff; letter-spacing: 1px;
     }
@@ -138,17 +141,19 @@
                 <div class="pricing-card {{ offre.estRecommandee ? 'recommended' : '' }} {{ isCurrent ? 'current' : '' }}" 
                      style="--card-color: {{ offre.couleurPrimaire }};">
 
-                    {% if offre.estRecommandee %}
-                        <div class="best-badge" style="background: linear-gradient(135deg, {{ offre.couleurPrimaire }}, {{ offre.couleurSecondaire }});">
-                            ⭐ OFFRE RECOMMANDÉE
-                        </div>
-                    {% endif %}
+                    <div class="badges-container">
+                        {% if offre.estRecommandee %}
+                            <div class="best-badge" style="background: linear-gradient(135deg, {{ offre.couleurPrimaire }}, {{ offre.couleurSecondaire }});">
+                                ⭐ OFFRE RECOMMANDÉE
+                            </div>
+                        {% endif %}
 
-                    {% if isCurrent %}
-                        <div class="best-badge" style="background: #166534;">
-                            ✓ PLAN ACTUEL
-                        </div>
-                    {% endif %}
+                        {% if isCurrent %}
+                            <div class="best-badge" style="background: #166534;">
+                                ✓ PLAN ACTUEL
+                            </div>
+                        {% endif %}
+                    </div>
 
                     <div class="plan-name" style="color: {{ offre.couleurPrimaire }}">{{ offre.nom }}</div>
 
