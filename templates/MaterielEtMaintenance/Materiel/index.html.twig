@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Matériel{% endblock %}
+
+{% block body_class %}materiel-theme{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="materiel-page-wrapper">
+    <div class="container">
+        
+        {# Glassmorphism Stats Header #}
+        <div class="mat-stats-header" data-aos="fade-down">
+            <h1 class="display-5 fw-bold mb-3"><i class="bi bi-truck-front me-3"></i>Ma Flotte de Matériel</h1>
+            <p class="fs-5 opacity-75 mb-0">Vue d'ensemble et gestion de vos équipements agricoles.</p>
+            
+            <div class="mat-stats-grid">
+                <div class="mat-stat-box">
+                    <div class="mat-stat-value">{{ stats.total }}</div>
+                    <div class="mat-stat-label">Équipements</div>
+                </div>
+                <div class="mat-stat-box" style="{% if stats.en_panne > 0 %}border-color: #ff6b6b; background: rgba(255, 107, 107, 0.2);{% endif %}">
+                    <div class="mat-stat-value">{{ stats.en_panne }}</div>
+                    <div class="mat-stat-label">En Panne</div>
+                </div>
+            </div>
+        </div>
+
+        {# Action Bar & Filters #}
+        <div class="mat-action-bar flex-wrap gap-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="mat-filters flex-grow-1">
+                <form method="get" class="w-100">
+                    <input type="text" name="search" class="mat-input flex-grow-1" placeholder="Rechercher..." value="{{ search }}">
+                    <select name="type" class="mat-input">
+                        <option value="">Tous les types</option>
+                        {% for t in types %}
+                            <option value="{{ t }}" {% if t == type %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="etat" class="mat-input">
+                        <option value="">Tous les états</option>
+                        {% for e in etats %}
+                            <option value="{{ e }}" {% if e == etat %}selected{% endif %}>{{ e }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-mat-action" style="padding: 12px 20px; flex:none;">Filtrer</button>
+                    <a href="{{ path('app_materiel_index') }}" class="btn-mat-outline" style="padding: 12px 20px; flex:none;">Effacer</a>
+                </form>
+            </div>
+            
+            {# NOTE: THIS IS THE BUTTON CAUSING PROBLEMS. WE EXPLICITLY MAKE IT VISIBLE #}
+            <div>
+                <a href="{{ path('app_materiel_new') }}" class="btn-mat-primary">
+                    <i class="bi bi-plus-circle-fill"></i> Ajouter Matériel
+                </a>
+            </div>
+        </div>
+
+        {# Grid #}
+        <div class="mat-grid">
+            {% for m in materiels %}
+                <div class="mat-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                    <div class="mat-card-img">
+                        {# Icon based on type #}
+                        {% if m.type == 'Tracteur' %}<i class="bi bi-truck-front"></i>
+                        {% elseif m.type == 'Outils' %}<i class="bi bi-tools"></i>
+                        {% else %}<i class="bi bi-box-seam"></i>{% endif %}
+                        
+                        {# Status Badge #}
+                        {% if m.etat == 'En panne' %}
+                            <span class="mat-badge badge-danger">En panne</span>
+                        {% elseif m.etat == 'Bon' or m.etat == 'Neuf' %}
+                            <span class="mat-badge badge-success">{{ m.etat }}</span>
+                        {% else %}
+                            <span class="mat-badge badge-warning">{{ m.etat }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mat-card-body">
+                        <h3 class="mat-card-title">{{ m.nom }}</h3>
+                        <p class="mat-card-subtitle">{{ m.type }}</p>
+                        
+                        <ul class="mat-details-list">
+                            <li>
+                                <i class="bi bi-calendar-event"></i>
+                                Proch. Maintenance: 
+                                <strong>{{ m.dateProchaineMaintenance ? m.dateProchaineMaintenance|date('d/m/Y') : 'Non planifiée' }}</strong>
+                            </li>
+                            <li>
+                                <i class="bi bi-clock-history"></i>
+                                Fréquence: <strong>{{ m.frequenceMaintenanceMois ? m.frequenceMaintenanceMois ~ ' mois' : 'Non précisée' }}</strong>
+                            </li>
+                        </ul>
+                        
+                        <div class="mat-card-footer">
+                            <a href="{{ path('app_materiel_show', {'id': m.id}) }}" class="btn-mat-action">Voir détails</a>
+                            <a href="{{ path('app_materiel_edit', {'id': m.id}) }}" class="btn-mat-outline"><i class="bi bi-pencil"></i></a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 py-5 text-center w-100" style="grid-column: 1 / -1;">
+                    <h3 class="text-muted"><i class="bi bi-inbox fs-1 d-block mb-3"></i>Aucun matériel trouvé.</h3>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

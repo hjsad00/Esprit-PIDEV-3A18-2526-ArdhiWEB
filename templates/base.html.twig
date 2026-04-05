@@ -37,11 +37,11 @@
         <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="max-height: 50px;">
       </a>
 
-      <nav id="navmenu" class="navmenu">
+      <nav id="navmenu" class="navmenu">       
         <ul>
           <li><a href="/">Diagnostic IA</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
-          <li><a href="#">Maintenance</a></li>
+          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
           <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
           <li><a href="#">Employés</a></li>

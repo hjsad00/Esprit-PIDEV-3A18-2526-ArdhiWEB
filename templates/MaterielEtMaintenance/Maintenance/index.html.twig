@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Maintenances{% endblock %}
+
+{% block body_class %}materiel-theme{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="materiel-page-wrapper">
+    <div class="container">
+        
+        {# Glassmorphism Stats Header #}
+        <div class="mat-stats-header" data-aos="fade-down" style="background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);">
+            <h1 class="display-5 fw-bold mb-3"><i class="bi bi-tools me-3"></i>Calendrier des Interventions</h1>
+            <p class="fs-5 opacity-75 mb-0">Suivez l'historique et planifiez les réparations.</p>
+            
+            <div class="mat-stats-grid">
+                <div class="mat-stat-box">
+                    <div class="mat-stat-value">{{ stats.total }}</div>
+                    <div class="mat-stat-label">Total</div>
+                </div>
+                <div class="mat-stat-box" style="{% if stats.en_cours > 0 %}border-color: #feca57; background: rgba(254, 202, 87, 0.2);{% endif %}">
+                    <div class="mat-stat-value">{{ stats.en_cours }}</div>
+                    <div class="mat-stat-label">En Cours</div>
+                </div>
+            </div>
+        </div>
+
+        {% if enRetard is defined and enRetard|length > 0 %}
+        <div class="alert alert-danger mb-4 shadow-sm" style="border-radius: 16px; border: none; background: #ffeaa7;" data-aos="zoom-in">
+            <h5 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Rappel Urgent : Matériel en retard de maintenance</h5>
+            <ul class="mb-0 mt-3 text-dark">
+                {% for mat in enRetard %}
+                <li class="py-1">
+                    <a href="{{ path('app_materiel_show', {id: mat.id}) }}" class="fw-bold text-danger text-decoration-none">{{ mat.nom }}</a> 
+                    - L'intervention était prévue le <strong>{{ mat.dateProchaineMaintenance|date('d/m/Y') }}</strong>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Action Bar & Filters #}
+        <div class="mat-action-bar flex-wrap gap-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="mat-filters flex-grow-1">
+                <form method="get" class="w-100 d-flex gap-3 align-items-center">
+                    <input type="text" name="search" class="mat-input flex-grow-1" placeholder="Rechercher (ex: Tracteur John Deere...)" value="{{ search }}">
+                    <select name="type" class="mat-input">
+                        <option value="">Types d'intervention</option>
+                        <option value="preventive" {% if type == 'preventive' %}selected{% endif %}>Préventive</option>
+                        <option value="corrective" {% if type == 'corrective' %}selected{% endif %}>Corrective</option>
+                        <option value="urgente" {% if type == 'urgente' %}selected{% endif %}>Urgente</option>
+                    </select>
+                    <select name="statut" class="mat-input">
+                        <option value="">Tous les statuts</option>
+                        <option value="planifiee" {% if statut == 'planifiee' %}selected{% endif %}>Planifiée</option>
+                        <option value="en_cours" {% if statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                        <option value="terminee" {% if statut == 'terminee' %}selected{% endif %}>Terminée</option>
+                        <option value="annulee" {% if statut == 'annulee' %}selected{% endif %}>Annulée</option>
+                    </select>
+                    <button type="submit" class="btn-mat-action" style="padding: 12px 25px; flex:none;">Filtrer</button>
+                    <a href="{{ path('app_maintenance_index') }}" class="btn-mat-outline" style="padding: 12px 25px; flex:none;">Effacer</a>
+                </form>
+            </div>
+            
+            <div class="text-end">
+                {% if not app.user.googleAccessToken %}
+                    <a href="{{ path('app_google_connect') }}" class="btn-mat-primary" style="background: #2a5298;">
+                        <i class="bi bi-calendar-plus-fill"></i> Planifier Intervention
+                    </a>
+                {% else %}
+                    <a href="{{ path('app_maintenance_new') }}" class="btn-mat-primary" style="background: #2a5298;">
+                        <i class="bi bi-calendar-plus-fill"></i> Planifier Intervention
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Grid #}
+        <div class="mat-grid">
+            {% for m in maintenances %}
+                <div class="mat-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="{% if m.statutMaintenance == 'urgente' %}border-top: 5px solid #ff6b6b;{% endif %}">
+                    <div class="mat-card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h3 class="mat-card-title m-0" style="font-size: 1.2rem;">{{ m.materiel.nom }}</h3>
+                            
+                            {% if m.statutMaintenance == 'terminee' %}
+                                <span class="mat-badge badge-success" style="position: static; font-size: 0.7rem;">Terminée</span>
+                            {% elseif m.statutMaintenance == 'en_cours' %}
+                                <span class="mat-badge badge-warning" style="position: static; font-size: 0.7rem;">En cours</span>
+                            {% elseif m.statutMaintenance == 'annulee' %}
+                                <span class="mat-badge bg-secondary text-white" style="position: static; font-size: 0.7rem;">Annulée</span>
+                            {% else %}
+                                <span class="mat-badge bg-primary text-white" style="position: static; font-size: 0.7rem;">Planifiée</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mat-card-subtitle mb-4">
+                            {% if m.typeMaintenance == 'urgente' %}
+                                <span class="text-danger fw-bold"><i class="bi bi-shield-exclamation"></i> Urgente</span>
+                            {% elseif m.typeMaintenance == 'preventive' %}
+                                <span class="text-info"><i class="bi bi-shield-check"></i> Préventive</span>
+                            {% else %}
+                                <span class="text-secondary"><i class="bi bi-wrench"></i> Corrective</span>
+                            {% endif %}
+                        </p>
+                        
+                        <ul class="mat-details-list">
+                            <li>
+                                <i class="bi bi-calendar-event" style="color: #2a5298;"></i>
+                                Date: 
+                                <strong class="fs-5">{{ m.dateMaintenance ? m.dateMaintenance|date('d/m/Y') : 'Non fixée' }}</strong>
+                            </li>
+                        </ul>
+                        
+                        <p class="text-muted small mb-4" style="height: 40px; overflow: hidden;">
+                            {{ m.description ?: 'Aucun détail fourni.' }}
+                        </p>
+                        
+                        <div class="mat-card-footer">
+                            <a href="{{ path('app_maintenance_show', {'id': m.idMaintenance}) }}" class="btn-mat-action" style="color: #2a5298; border-color: transparent;">Détails</a>
+                            <a href="{{ path('app_maintenance_edit', {'id': m.idMaintenance}) }}" class="btn-mat-outline"><i class="bi bi-pencil"></i></a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 py-5 text-center w-100" style="grid-column: 1 / -1;">
+                    <h3 class="text-muted"><i class="bi bi-clipboard-check fs-1 d-block mb-3"></i>Aucune intervention planifiée.</h3>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
