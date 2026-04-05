@@ -71,9 +71,10 @@ class CommandeController extends AbstractController
             return $this->json(['success' => false, 'message' => 'Commande introuvable.'], 404);
         }
 
-        // Vérifier que l'utilisateur est bien l'acheteur ou un vendeur concerné
+        // Vérifier que l'utilisateur est bien l'acheteur, un vendeur concerné, ou un ADMIN
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
         $isOwner = $commande->getUser()->getId() === $user->getId();
         $isSeller = false;
         foreach ($commande->getDetails() as $detail) {
@@ -82,8 +83,8 @@ class CommandeController extends AbstractController
                 break;
             }
         }
-
-        if (!$isOwner && !$isSeller) {
+ 
+        if (!$isOwner && !$isSeller && !$isAdmin) {
             return $this->json(['success' => false, 'message' => 'Accès refusé.'], 403);
         }
 
