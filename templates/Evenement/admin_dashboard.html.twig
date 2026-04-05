@@ -7,24 +7,60 @@
 .k-green{border-color:#8BC34A;} .k-green .kpi-val{color:#667A3F;}
 .k-blue{border-color:#3498DB;}  .k-blue .kpi-val{color:#2980b9;}
 .k-orange{border-color:#F39C12;} .k-orange .kpi-val{color:#e67e22;}
-.admin-hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:32px; flex-wrap:wrap; }
-.admin-hero-intro { flex:1 1 420px; min-width:280px; }
-.admin-hero-actions { display:flex; gap:12px; flex-wrap:nowrap; align-items:center; justify-content:flex-start; margin:18px 0 14px 0; }
+.admin-hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:40px; flex-wrap:wrap; }
+.admin-hero-intro { flex:1 1 620px; min-width:320px; max-width:860px; }
+.admin-hero-actions { display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:flex-start; margin:22px 0 18px 0; }
 .admin-hero-actions .hero-btn-primary,
 .admin-hero-actions .hero-btn-secondary {
   min-width:auto;
-  padding:12px 20px;
-  font-size:14px;
+  padding:14px 24px;
+  font-size:15px;
+  white-space:nowrap;
 }
-.admin-hero { min-height:540px !important; }
-.admin-hero .hero-content-wrapper { padding-top:92px; align-items:flex-start; }
-.admin-hero .hero-left { max-width:64%; padding-bottom:26px; }
-@media (max-width: 1200px) { .admin-hero-actions { flex-wrap:wrap; } }
-@media (max-width: 992px) { .admin-hero-top { flex-direction:column; } .admin-hero-actions { justify-content:flex-start; } }
+.admin-hero { min-height:920px !important; overflow:visible !important; }
+.admin-hero .hero-content-wrapper { min-height:920px; padding-top:118px; padding-bottom:140px; align-items:flex-start; gap:34px; overflow:visible; }
+.admin-hero .hero-left { flex:1 1 58%; max-width:none; padding-bottom:48px; }
+.admin-hero .hero-headline { max-width:12ch; }
+.admin-hero .hero-description { max-width:760px; font-size:1.2rem; line-height:1.8; }
+.admin-hero .hero-services-sidebar { flex:0 0 380px; max-width:380px; }
+.admin-hero .services-glass-panel {
+  padding:26px 22px;
+  min-height:680px;
+  background:linear-gradient(180deg,rgba(45,109,63,.44),rgba(63,145,74,.24)) !important;
+  border:1px solid rgba(179,235,173,.34);
+}
+.admin-hero .services-panel-title { color:#f3fff0; }
+.admin-hero .service-sidebar-item {
+  padding:22px 18px;
+  min-height:96px;
+  background:rgba(255,255,255,.06);
+}
+.admin-hero .service-sidebar-item.active {
+  background:rgba(113,196,86,.28);
+  border-color:rgba(182,255,171,.5);
+}
+.admin-hero .service-sidebar-icon {
+  width:58px;
+  height:58px;
+  background:linear-gradient(135deg,rgba(86,175,59,.95),rgba(124,200,78,.88)) !important;
+  color:#ffffff !important;
+}
+.admin-hero .service-sidebar-text h4 { font-size:1.1rem; margin-bottom:4px; }
+.admin-hero .service-sidebar-text span { font-size:.98rem; color:rgba(255,255,255,.86); }
+@media (max-width: 1200px) {
+  .admin-hero .hero-content-wrapper { gap:24px; }
+  .admin-hero .hero-services-sidebar { flex:1 1 100%; max-width:100%; }
+}
+@media (max-width: 992px) {
+  .admin-hero-top { flex-direction:column; }
+  .admin-hero-intro { min-width:0; max-width:none; }
+  .admin-hero-actions { justify-content:flex-start; }
+  .admin-hero .hero-headline { max-width:none; }
+}
 </style>{% endblock %}
 {% block body %}
 <section class="hero section dark-background admin-hero"
-  style="background-image:linear-gradient(135deg,rgba(48,38,142,.88),rgba(102,126,234,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
+  style="background-image:linear-gradient(135deg,rgba(24,80,35,.88),rgba(92,161,74,.72)),url('{{ asset('assets/img/hero_3.jpg') }}');
          background-size:cover;background-position:center;min-height:360px;margin-top:70px;">
   <div class="hero-content-wrapper">
     <div class="hero-left">

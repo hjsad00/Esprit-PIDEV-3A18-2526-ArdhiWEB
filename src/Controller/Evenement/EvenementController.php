@@ -10,9 +10,11 @@ use App\Form\Evenement\AvisType;
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\EvenementFavorisRepository;
 use App\Repository\Evenement\ParticipationRepository;
+use App\Service\EvenementParticipationMailer;
 use App\Service\EvenementStatusSyncService;
 use App\Service\StatisticsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +25,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class EvenementController extends AbstractController
 {
     public function __construct(
-        private EvenementStatusSyncService $eventStatusSync
+        private EvenementStatusSyncService $eventStatusSync,
+        private EvenementParticipationMailer $participationMailer,
+        private LoggerInterface $logger
     ) {}
 
     // ─── LIST ────────────────────────────────────────────────────────────────
@@ -186,6 +190,20 @@ class EvenementController extends AbstractController
         }
 
         $participation->setStatut($statut);
+
+        if (
+            $statut === 'PRESENT'
+            && $ev->getStatut() === 'TERMINE'
+            && !$participation->isAttestationEnvoyee()
+        ) {
+            try {
+                $this->participationMailer->sendPresenceCertificateAndReviewInvite($participation);
+                $participation->setAttestationEnvoyee(true);
+            } catch (\Throwable $e) {
+                $this->addFlash('warning', 'Statut mis a jour, mais envoi de l\'attestation impossible.');
+            }
+        }
+
         $em->flush();
         $this->addFlash('success', 'Statut mis à jour.');
         return $this->redirectToRoute('app_evenement_participations');
@@ -449,13 +467,28 @@ class EvenementController extends AbstractController
         if ($existing && $existing->getStatut() === 'ANNULE') {
             $existing->setStatut('CONFIRME');
             $existing->setDateInscription(new \DateTime());
+            $existing->setRappelJ3Envoye(false);
+            $existing->setRappelJ1Envoye(false);
         } else {
             $p = new Participation();
             $p->setEvenement($evenement)->setUtilisateur($this->getUser());
             $em->persist($p);
+            $existing = $p;
         }
 
         $em->flush();
+
+        try {
+            $this->participationMailer->sendInscriptionConfirmation($existing);
+        } catch (\Throwable $e) {
+            $this->logger->error('Confirmation email failed for participation #{id}: {message}', [
+                'id' => $existing->getId(),
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+            $this->addFlash('warning', 'Inscription validee, mais email de confirmation non envoye.');
+        }
+
         $this->addFlash('success', 'Inscription confirmée !');
         return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
     }

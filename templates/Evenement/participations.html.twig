@@ -10,29 +10,31 @@
       <div class="hero-label">TABLEAU DE BORD</div>
       <h1 class="hero-headline">Gestion des participations</h1>
       <div class="hero-actions-row">
-        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Retour aux événements</a>
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Retour aux evenements</a>
+        {% if not isAdmin %}
         <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary">Mes inscriptions</a>
+        {% endif %}
       </div>
       <p class="hero-description">
-        {% if isAdmin %}Toutes les participations de la plateforme.{% else %}Gérez les inscriptions à vos événements.{% endif %}
+        {% if isAdmin %}Toutes les participations de la plateforme.{% else %}Gerez les inscriptions a vos evenements.{% endif %}
       </p>
     </div>
   </div>
 </section>
 <section class="services section" style="padding-top:36px;">
   <div class="container section-title" data-aos="fade-up">
-    <h2>Participations</h2><p>Gérez les statuts d'inscription.</p>
+    <h2>Participations</h2><p>Gerez les statuts d'inscription.</p>
   </div>
   <div class="container pb-5">
     {% if participations is empty %}
-      <div class="alert alert-info">Aucune participation à gérer.</div>
+      <div class="alert alert-info">Aucune participation a gerer.</div>
     {% else %}
     <div class="card shadow-sm">
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
-              <tr><th>Événement</th><th>Participant</th><th>Date</th><th>Places</th><th>Statut</th><th class="text-end">Action</th></tr>
+              <tr><th>Evenement</th><th>Participant</th><th>Date</th><th>Places</th><th>Statut</th><th class="text-end">Action</th></tr>
             </thead>
             <tbody>
               {% for p in participations %}
@@ -49,7 +51,7 @@
                 <td class="text-end">
                   <form method="post" action="{{ path('app_evenement_participation_update', {id: p.id}) }}" class="d-flex gap-2 justify-content-end">
                     <select name="statut" class="form-select form-select-sm" style="width:160px;">
-                      {% for code, label in {'CONFIRME':'Confirmer','EN_ATTENTE':'En attente','PRESENT':'Présent','REFUSE':'Refuser','ANNULE':'Annuler'} %}
+                      {% for code, label in {'CONFIRME':'Confirmer','EN_ATTENTE':'En attente','PRESENT':'Present','REFUSE':'Refuser','ANNULE':'Annuler'} %}
                         <option value="{{ code }}" {% if p.statut == code %}selected{% endif %}>{{ label }}</option>
                       {% endfor %}
                     </select>

@@ -45,4 +45,37 @@ class ParticipationRepository extends ServiceEntityRepository
             ->orderBy('p.dateInscription', 'DESC')
             ->getQuery()->getResult();
     }
+
+    public function findReminderCandidates(int $daysBefore): array
+    {
+        $targetDate = new \DateTime((new \DateTimeImmutable('today'))->modify(sprintf('+%d day', $daysBefore))->format('Y-m-d'));
+        $reminderField = $daysBefore === 3 ? 'p.rappelJ3Envoye' : 'p.rappelJ1Envoye';
+
+        return $this->createQueryBuilder('p')
+            ->join('p.evenement', 'e')
+            ->join('p.utilisateur', 'u')
+            ->where('p.statut = :pStatut')
+            ->andWhere('e.statut = :eStatut')
+            ->andWhere('e.dateDebut = :targetDate')
+            ->andWhere(sprintf('%s = false', $reminderField))
+            ->setParameter('pStatut', 'CONFIRME')
+            ->setParameter('eStatut', 'A_VENIR')
+            ->setParameter('targetDate', $targetDate, \Doctrine\DBAL\Types\Types::DATE_MUTABLE)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findCertificateCandidates(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.evenement', 'e')
+            ->join('p.utilisateur', 'u')
+            ->where('p.statut = :pStatut')
+            ->andWhere('e.statut = :eStatut')
+            ->andWhere('p.attestationEnvoyee = false')
+            ->setParameter('pStatut', 'PRESENT')
+            ->setParameter('eStatut', 'TERMINE')
+            ->getQuery()
+            ->getResult();
+    }
 }

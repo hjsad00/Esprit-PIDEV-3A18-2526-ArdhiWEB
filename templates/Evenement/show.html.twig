@@ -330,6 +330,7 @@
           {% endif %}
 
           <!-- Favori -->
+          {% if app.user and app.user.role != 'ADMIN' %}
           <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}" class="mb-4">
             <input type="hidden" name="_token" value="{{ csrf_token('favori'~evenement.id) }}">
             <button type="submit" class="btn-fav-lg {{ isFavori ? 'on' : '' }}">
@@ -337,6 +338,7 @@
               {{ isFavori ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
             </button>
           </form>
+          {% endif %}
 
           <!-- Quick stats -->
           <div class="pt-3 border-top" style="font-size:.82rem;color:#9ca3af;text-align:center;">

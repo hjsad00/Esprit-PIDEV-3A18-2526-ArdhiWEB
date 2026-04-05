@@ -48,6 +48,12 @@ class Participation
     #[ORM\Column(type: Types::BOOLEAN)]
     private ?bool $attestationEnvoyee = false;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $rappelJ3Envoye = false;
+
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $rappelJ1Envoye = false;
+
     #[ORM\Column(type: Types::STRING, length: 64, nullable: true)]
     private ?string $qrCodeToken = null;
 
@@ -58,6 +64,8 @@ class Participation
         $this->nombrePersonnes = 1;
         $this->note = 0;
         $this->attestationEnvoyee = false;
+        $this->rappelJ3Envoye = false;
+        $this->rappelJ1Envoye = false;
         $this->qrCodeToken = bin2hex(random_bytes(16));
     }
 
@@ -89,6 +97,12 @@ class Participation
 
     public function isAttestationEnvoyee(): ?bool { return $this->attestationEnvoyee; }
     public function setAttestationEnvoyee(bool $attestationEnvoyee): static { $this->attestationEnvoyee = $attestationEnvoyee; return $this; }
+
+    public function isRappelJ3Envoye(): bool { return $this->rappelJ3Envoye; }
+    public function setRappelJ3Envoye(bool $rappelJ3Envoye): static { $this->rappelJ3Envoye = $rappelJ3Envoye; return $this; }
+
+    public function isRappelJ1Envoye(): bool { return $this->rappelJ1Envoye; }
+    public function setRappelJ1Envoye(bool $rappelJ1Envoye): static { $this->rappelJ1Envoye = $rappelJ1Envoye; return $this; }
 
     public function getQrCodeToken(): ?string { return $this->qrCodeToken; }
     public function setQrCodeToken(?string $qrCodeToken): static { $this->qrCodeToken = $qrCodeToken; return $this; }

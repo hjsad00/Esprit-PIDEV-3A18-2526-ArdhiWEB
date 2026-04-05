@@ -135,10 +135,12 @@
           <div class="service-sidebar-icon"><i class="bi bi-calendar-event-fill"></i></div>
           <div class="service-sidebar-text"><h4>Événements</h4><span>Retour à la liste</span></div>
         </a>
+        {% if role != 'ADMIN' %}
         <a href="{{ path('app_evenement_inscriptions') }}" class="service-sidebar-item">
           <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
           <div class="service-sidebar-text"><h4>Inscriptions</h4><span>Mes participations</span></div>
         </a>
+        {% endif %}
         <a href="{{ path('app_evenement_calendrier') }}" class="service-sidebar-item">
           <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
           <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attestation de presence</title>
+</head>
+<body style="margin:0;padding:0;background:#eef2f1;font-family:Arial,Helvetica,sans-serif;color:#18302a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef2f1;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(24,48,42,0.12);">
+          <tr>
+            <td style="padding:18px 28px;background:linear-gradient(135deg,#144f57 0%,#2d8a7c 100%);color:#ffffff;">
+              <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">Attestation Ardhi</div>
+              <div style="margin-top:10px;font-size:30px;line-height:1.2;font-weight:700;">Votre attestation est prete</div>
+              <div style="margin-top:8px;font-size:15px;line-height:1.6;max-width:540px;">
+                Merci pour votre participation a <strong>{{ evenement.titre }}</strong>. Votre document PDF est joint a ce message.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 28px 18px;">
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+                Bonjour {{ participation.utilisateur.prenom }} {{ participation.utilisateur.nom }},
+              </p>
+              <p style="margin:0 0 22px;font-size:15px;line-height:1.8;color:#466057;">
+                Nous vous remercions pour votre presence. Votre attestation est jointe en piece attachee et peut etre conservee pour vos archives.
+              </p>
+
+              <div style="padding:22px;border-radius:20px;background:#dfe9e4;border:1px solid #9fb7ab;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);">
+                <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#000000;font-weight:700;">Resume de participation</div>
+                <div style="margin-top:14px;font-size:15px;line-height:1.9;color:#000000;font-weight:500;">
+                  <strong>Evenement :</strong> {{ evenement.titre }}<br>
+                  <strong>Lieu :</strong> {{ evenement.lieu }}<br>
+                  <strong>Periode :</strong> du {{ evenement.dateDebut|date('d/m/Y') }} au {{ evenement.dateFin|date('d/m/Y') }}<br>
+                  <strong>Statut :</strong> {{ participation.statut }}
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 28px;">
+              <div style="padding:18px 20px;border-radius:18px;background:#f7f1e7;color:#6f5d42;font-size:14px;line-height:1.7;">
+                Votre retour nous aide a ameliorer les prochains evenements. Quelques lignes d'avis peuvent faire une vraie difference.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

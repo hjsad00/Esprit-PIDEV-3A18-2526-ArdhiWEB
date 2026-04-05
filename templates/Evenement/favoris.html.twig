@@ -61,7 +61,9 @@
       <div class="hero-cta-group">
         {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
         <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir tous les événements</a>
+        {% if app.user.role != 'ADMIN' %}
         <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary">Mes inscriptions</a>
+        {% endif %}
       </div>
     </div>
   </div>
