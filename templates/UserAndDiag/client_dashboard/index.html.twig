@@ -294,7 +294,20 @@
         .lb-score { color: #5db87a; font-weight: bold; font-size: 0.85rem;}
         .lb-row.is-me { border: 1px solid rgba(93,184,122,0.4); background: rgba(93,184,122,0.1); }
 
-    </style>
+        .intell-card .header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .toggle-icon {
+        font-size: 0.8rem;
+        transition: transform 0.3s ease;
+        display: inline-block;
+        opacity: 0.7;
+    }
+    .intell-card.is-collapsed {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+</style>
 {% endblock %}
 
 {% block body_class %}dashboard-page{% endblock %}
@@ -304,7 +317,11 @@
 <div class="dashboard-wrapper">
     <div class="dashboard-overlay"></div>
     
-    <div class="dashboard-content">
+    <div class="dashboard-content" 
+         data-controller="user-and-diag--dashboard-refresh" 
+         data-user-and-diag--dashboard-refresh-url-value="{{ path('app_client_dashboard_stats') }}"
+         data-user-and-diag--dashboard-refresh-interval-value="10000"
+         data-user-and-diag--dashboard-refresh-last-points-value="{{ gamification.points }}">
         
         <!-- Hero Section -->
         <div class="hero-panel fade-up">
@@ -318,20 +335,24 @@
             
             <div class="gamification-stats">
                 <div class="level-info">
-                    <div class="level-text">Niveau {{ gamification.level }}</div>
+                    <div class="level-text" data-user-and-diag--dashboard-refresh-target="level">Niveau {{ gamification.level }}</div>
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: {{ gamification.progress }}%" aria-valuenow="{{ gamification.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ gamification.progress }}%" 
+                             aria-valuenow="{{ gamification.progress }}" 
+                             aria-valuemin="0" aria-valuemax="100"
+                             data-user-and-diag--dashboard-refresh-target="progress"></div>
                     </div>
                 </div>
                 <div class="points-info">
-                    <div class="points-val">{{ gamification.points }} pts</div>
+                    <div class="points-val" data-user-and-diag--dashboard-refresh-target="points">{{ gamification.points }} pts</div>
                     <div class="points-lbl">points</div>
                 </div>
             </div>
             
             <div class="badges-container">
                 <div style="font-size: 0.6rem; color: rgba(180,210,190,0.5); font-weight: bold; margin-bottom: 4px; margin-left: 10px;">BADGES RÉCENTS</div>
-                <div class="badges-list">
+                <div class="badges-list" data-user-and-diag--dashboard-refresh-target="badges">
                     {% for badge in badges|slice(0, 3) %}
                     <div class="badge-item" title="{{ badge.description }}">
                         <div class="icon">{{ badge.icon }}</div>
@@ -345,59 +366,85 @@
         <!-- Intelligence Row -->
         <div class="intelligence-row">
             <!-- Weather Widget -->
-            <div class="intell-card weather-card fade-up" style="transition-delay: 100ms;">
-                <div class="header">
-                    <h3>MÉTÉO DIRECT</h3>
+            <div class="intell-card weather-card fade-up is-collapsed" style="transition-delay: 100ms;">
+                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                    <div class="d-flex align-items-center gap-2">
+                        <h3>MÉTÉO DIRECT</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
                     <p class="cond">{{ weather.condition }}</p>
                 </div>
-                <div class="weather-body">
+                <div class="weather-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="weatherBody">
                     <div class="weather-main">
-                        <div class="icon">{{ weather.icon }}</div>
-                        <div class="temp">{{ weather.temperature }}°</div>
-                        <div class="feels">Ressenti {{ weather.feels_like }}°</div>
+                        <div class="icon" data-user-and-diag--dashboard-refresh-target="weatherIcon">{{ weather.icon }}</div>
+                        <div class="temp" data-user-and-diag--dashboard-refresh-target="weatherTemp">{{ weather.temperature }}°</div>
+                        <div class="feels">Ressenti <span data-user-and-diag--dashboard-refresh-target="weatherApparent">{{ weather.apparentTemperature }}</span>°</div>
                     </div>
                     <div class="weather-details">
-                        <div class="lbl">💧 Humidité: </div><div class="val">{{ weather.humidity }}%</div>
-                        <div class="lbl">💨 Vent: </div><div class="val">{{ weather.wind }} km/h</div>
-                        <div class="advice">💡 {{ weather.advice }}</div>
+                        <div class="lbl">💧 Humidité: </div><div class="val" data-user-and-diag--dashboard-refresh-target="weatherHumidity">{{ weather.humidity }}%</div>
+                        <div class="lbl">💨 Vent: </div><div class="val" data-user-and-diag--dashboard-refresh-target="weatherWind">{{ weather.windSpeed }} km/h</div>
+                        <div class="advice">💡 <span data-user-and-diag--dashboard-refresh-target="weatherAdvice">{{ weather.advice }}</span></div>
                     </div>
                 </div>
             </div>
 
             <!-- Regional Alerts Widget -->
-            <div class="intell-card alerts-card fade-up" style="transition-delay: 200ms;">
-                <div class="header">
-                    <h3>🚨 ALERTES RÉGIONALES</h3>
+            <div class="intell-card alerts-card fade-up is-collapsed" style="transition-delay: 200ms;">
+                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                    <div class="d-flex align-items-center gap-2">
+                        <h3>🚨 ALERTES RÉGIONALES</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
                     <div style="font-size: 0.6rem; color: rgba(255,200,190,0.6);">Rayon: 25km</div>
                 </div>
-                <div class="alerts-body">
-                    {% for d in regional_diseases %}
-                    <div class="disease-row">
-                        <div class="d-name"><span>{{ d.icon }}</span> {{ d.name }}</div>
-                        <div class="d-sev {{ d.severity == 'Élevé' ? 'high' : 'mod' }}">{{ d.severity }}</div>
+                <div class="alerts-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="alertsBody">
+                    <div id="epidemic-stats-summary" style="font-size: 0.65rem; color: rgba(255,255,255,0.6); margin-bottom: 5px;">
+                        {% if epidemic_stats.reports > 0 %}
+                            📊 {{ epidemic_stats.diseases_detected }} maladies | {{ epidemic_stats.reports }} signalements (25km)
+                        {% endif %}
                     </div>
-                    {% endfor %}
-                    {% for msg in regional_alerts %}
-                    <p style="color: #f1c40f; font-size: 0.75rem; margin-top: 8px; margin-bottom: 0;">{{ msg.message }}</p>
-                    {% endfor %}
+                    <div data-user-and-diag--dashboard-refresh-target="alerts">
+                        {% for d in regional_diseases %}
+                        <div class="disease-row">
+                            <div class="d-name"><span>{{ d.icon }}</span> {{ d.diseaseName }}</div>
+                            <div class="d-sev {{ d.severityLevel in ['Élevé', 'CRITICAL'] ? 'high' : 'mod' }}">{{ d.severityLevel }}</div>
+                        </div>
+                        {% else %}
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Aucune alerte en cours dans votre zone.</p>
+                        {% endfor %}
+                    </div>
+                    <div id="regional-alerts-messages">
+                        {% for alert in regional_alerts %}
+                            <p style="color: #f1c40f; font-size: 0.7rem; margin: 5px 0 0 0; line-height: 1.2;">{{ alert.message }}</p>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
             <!-- Predictive Risks Widget -->
-            <div class="intell-card predictive-card fade-up" style="transition-delay: 300ms;">
-                <div class="header">
-                    <h3>🌡️ PRÉVISIONS & RISQUES</h3>
+            <div class="intell-card predictive-card fade-up is-collapsed" style="transition-delay: 300ms;">
+                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                    <div class="d-flex align-items-center gap-2">
+                        <h3>🌡️ PRÉVISIONS & RISQUES</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
                     <div style="font-size: 0.6rem; color: rgba(220,200,255,0.6);">Prochaines 72h</div>
                 </div>
-                <div class="predict-body">
-                    {% for r in predictive_risks %}
-                    <div class="risk-item">
-                        <div class="r-head"><span>{{ r.icon }}</span> {{ r.type }} — {{ r.level }}</div>
-                        <div class="r-desc">{{ r.reason }}</div>
-                        <div class="r-adv">💡 {{ r.advice }}</div>
+                <div class="predict-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="predictiveBody">
+                    <div data-user-and-diag--dashboard-refresh-target="predictiveRisks">
+                        {% for r in predictive_risks %}
+                        <div class="risk-item">
+                            <div class="r-head"><span>{{ r.icon }}</span> {{ r.diseaseType }} — {{ r.riskLevel }}</div>
+                            <div class="r-desc">{{ r.reason }}</div>
+                            <div class="r-adv">💡 {{ r.advice }}</div>
+                        </div>
+                        {% else %}
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Faible risque détecté pour les 72h à venir.</p>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.9); margin-top: 5px;">{{ treatment_timing }}</div>
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.9); margin-top: 5px;" data-user-and-diag--dashboard-refresh-target="treatmentTiming">
+                        {{ treatment_timing }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -468,9 +515,9 @@
                 <div>🏆</div>
                 <h3>Top Agriculteurs Ardhi</h3>
             </div>
-            <div class="leaderboard-body">
+            <div class="leaderboard-body" data-dashboard-refresh-target="leaderboard">
                 {% for player in leaderboard %}
-                <div class="lb-row {% if player.name == 'Vous' %}is-me{% endif %}">
+                <div class="lb-row {% if player.isMe %}is-me{% endif %}">
                     <div class="lb-rank">
                         {% if player.rank == 1 %}🥇
                         {% elseif player.rank == 2 %}🥈

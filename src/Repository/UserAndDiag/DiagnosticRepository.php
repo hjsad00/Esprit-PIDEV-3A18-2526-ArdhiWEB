@@ -40,13 +40,31 @@ class DiagnosticRepository extends ServiceEntityRepository
     }
 
     /**
+     * Finds diagnostics within a specific radius (approximate) of a location.
+     * Uses a bounding box for performance.
+     * 
      * @return Diagnostic[]
      */
-    public function findWithLocation(): array
+    public function findNearby(float $lat, float $lon, float $radiusKm = 25.0, int $days = 14): array
     {
+        // 1 degree of latitude is ~111km
+        // 1 degree of longitude at latitude L is ~111km * cos(L)
+        // Tunisia is around 36 degrees lat, so cos(36) is ~0.81
+        $latDelta = $radiusKm / 111.0;
+        $lonDelta = $radiusKm / (111.0 * cos(deg2rad($lat)));
+
+        $startDate = new \DateTime();
+        $startDate->modify('-' . $days . ' days');
+
         return $this->createQueryBuilder('d')
-            ->where('d.latitude IS NOT NULL')
-            ->andWhere('d.longitude IS NOT NULL')
+            ->where('d.latitude BETWEEN :latMin AND :latMax')
+            ->andWhere('d.longitude BETWEEN :lonMin AND :lonMax')
+            ->andWhere('d.date_scan >= :startDate')
+            ->setParameter('latMin', $lat - $latDelta)
+            ->setParameter('latMax', $lat + $latDelta)
+            ->setParameter('lonMin', $lon - $lonDelta)
+            ->setParameter('lonMax', $lon + $lonDelta)
+            ->setParameter('startDate', $startDate)
             ->orderBy('d.date_scan', 'DESC')
             ->getQuery()
             ->getResult();

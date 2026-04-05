@@ -45,8 +45,10 @@ class UserDiagnosticController extends AbstractController
         GroqService $groqService,
         \App\Service\UserAndDiag\LocationService $locationService,
         EntityManagerInterface $entityManager,
-        \App\Service\UserAndDiag\SubscriptionFeatureService $featureService
+        \App\Service\UserAndDiag\SubscriptionFeatureService $featureService,
+        \App\Service\UserAndDiag\GamificationService $gamificationService
     ): Response {
+        // ... (lines 50-156 are unchanged, but I must provide the exact identical content for the replacement to work!)
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
@@ -154,6 +156,15 @@ class UserDiagnosticController extends AbstractController
             $entityManager->persist($traitement);
             $entityManager->flush();
 
+            // 7. Award Points and Check Badges
+            $gamificationService->addPoints($user, 50); // 50 points for a diagnostic
+            $gamificationService->checkDiagnosticBadges($user);
+
+            // If result contains 'saine', check healthy badges
+            if (str_contains(strtolower($diagnostic->getResultatIa()), 'saine')) {
+                $gamificationService->checkHealthyBadges($user);
+            }
+
             // Check if user has access to treatment details
             $hasTreatmentAccess = $featureService->getFeatures($user)['accesTraitement'];
 
@@ -173,10 +184,14 @@ class UserDiagnosticController extends AbstractController
                 'severity' => $severity,
                 'traitement' => $traitementOutput,
                 'image_url' => $publicPath,
-                // Add real-time limits
+                // Add real-time limits and gamification
                 'usage' => [
                     'used' => $featureService->getDiagnosticUsageCount($user),
                     'limit' => $featureService->getFeatures($user)['diagnosticsParHeure']
+                ],
+                'gamification' => [
+                    'points' => $user->getPoints(),
+                    'level' => $user->getLevel()
                 ]
             ]);
 

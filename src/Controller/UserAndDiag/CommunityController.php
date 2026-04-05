@@ -58,7 +58,7 @@ class CommunityController extends AbstractController
     // ────────────────────── CREATE POST ───────────────────────
 
     #[Route('/new', name: 'app_user_and_diag_community_new', methods: ['GET', 'POST'])]
-    public function createPost(Request $request, EntityManagerInterface $em): Response
+    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService): Response
     {
         if ($request->isMethod('POST')) {
             $title = trim($request->request->get('title', ''));
@@ -87,6 +87,10 @@ class CommunityController extends AbstractController
 
             $em->persist($post);
             $em->flush();
+
+            // Award points for asking a question
+            $gamificationService->addPoints($user, 20);
+            $gamificationService->checkPointBadges($user);
 
             $this->addFlash('success', 'Question publiée avec succès !');
             return $this->redirectToRoute('app_user_and_diag_community');
@@ -211,7 +215,7 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/{id}/comment', name: 'app_user_and_diag_community_add_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em): JsonResponse
+    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -237,6 +241,11 @@ class CommunityController extends AbstractController
         $em->persist($comment);
         $em->flush();
 
+        // Award points for participating (commenting)
+        $gamificationService->addPoints($user, 10);
+        $gamificationService->checkPointBadges($user);
+        $gamificationService->checkSolutionBadges($user); // Counts total comments in the current logic
+
         return $this->json([
             'id' => $comment->getId(),
             'userName' => $user->getPrenom() . ' ' . $user->getNom(),
@@ -246,7 +255,7 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/{id}/solve/{commentId}', name: 'app_user_and_diag_community_mark_solution', methods: ['POST'], requirements: ['id' => '\d+', 'commentId' => '\d+'])]
-    public function markSolution(CommunityPost $post, int $commentId, EntityManagerInterface $em): JsonResponse
+    public function markSolution(CommunityPost $post, int $commentId, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -263,6 +272,14 @@ class CommunityController extends AbstractController
         $comment->setIsSolution(true);
         $post->setIsResolved(true);
         $post->setSolutionComment($comment);
+
+        // Award points and badges to the user who wrote the accepted solution
+        $commentAuthor = $comment->getUser();
+        if ($commentAuthor) {
+            $gamificationService->addPoints($commentAuthor, 100); // 100 points for a helpful solution
+            $gamificationService->checkSolutionBadges($commentAuthor);
+        }
+
         $em->flush();
 
         return $this->json(['success' => true]);
