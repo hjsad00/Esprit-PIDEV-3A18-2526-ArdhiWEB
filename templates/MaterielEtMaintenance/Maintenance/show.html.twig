@@ -29,19 +29,33 @@
                         {% set isAnnulee = status == 'annulee' %}
                         
                         <div class="maintenance-timeline mb-2">
-                            <div class="timeline-step {% if status in ['planifiee', 'en_cours', 'terminee'] and not isAnnulee %}active{% endif %}">
+                            <div class="timeline-step {% if status in ['planifiee', 'en_attente', 'en_cours', 'verifie', 'terminee'] and not isAnnulee %}active{% endif %}">
                                 <div class="step-icon"><i class="bi bi-calendar-check text-white"></i></div>
-                                <div class="step-label fw-bold mt-2">Planifiée</div>
+                                <div class="step-label fw-bold mt-2">Planifié</div>
                             </div>
-                            <div class="timeline-line {% if status in ['en_cours', 'terminee'] and not isAnnulee %}active{% endif %}"></div>
-                            <div class="timeline-step {% if status in ['en_cours', 'terminee'] and not isAnnulee %}active{% endif %}">
+                            <div class="timeline-line {% if status in ['en_attente', 'en_cours', 'verifie', 'terminee'] and not isAnnulee %}active{% endif %}"></div>
+                            
+                            <div class="timeline-step {% if status in ['en_attente', 'en_cours', 'verifie', 'terminee'] and not isAnnulee %}active{% endif %}" {% if status == 'en_attente' %}style="--mat-primary: #95a5a6;"{% endif %}>
+                                <div class="step-icon"><i class="bi bi-box-arrow-in-down text-white"></i></div>
+                                <div class="step-label fw-bold mt-2" style="white-space:nowrap;">En Attente</div>
+                            </div>
+                            <div class="timeline-line {% if status in ['en_cours', 'verifie', 'terminee'] and not isAnnulee %}active{% endif %}"></div>
+
+                            <div class="timeline-step {% if status in ['en_cours', 'verifie', 'terminee'] and not isAnnulee %}active{% endif %}" {% if status == 'en_cours' %}style="--mat-primary: #f39c12;"{% endif %}>
                                 <div class="step-icon"><i class="bi bi-gear-wide-connected text-white"></i></div>
-                                <div class="step-label fw-bold mt-2">En Cours</div>
+                                <div class="step-label fw-bold mt-2" style="white-space:nowrap;">En Cours</div>
+                            </div>
+                            <div class="timeline-line {% if status in ['verifie', 'terminee'] and not isAnnulee %}active{% endif %}"></div>
+
+                            <div class="timeline-step {% if status in ['verifie', 'terminee'] and not isAnnulee %}active{% endif %}" {% if status == 'verifie' %}style="--mat-primary: #3498db;"{% endif %}>
+                                <div class="step-icon"><i class="bi bi-clipboard2-check text-white"></i></div>
+                                <div class="step-label fw-bold mt-2">Vérifié</div>
                             </div>
                             <div class="timeline-line {% if status == 'terminee' and not isAnnulee %}active{% endif %}"></div>
-                            <div class="timeline-step {% if status == 'terminee' and not isAnnulee %}active{% endif %}">
+
+                            <div class="timeline-step {% if status == 'terminee' and not isAnnulee %}active{% endif %}" {% if status == 'terminee' %}style="--mat-primary: #27ae60;"{% endif %}>
                                 <div class="step-icon"><i class="bi bi-check-circle text-white"></i></div>
-                                <div class="step-label fw-bold mt-2">Terminée</div>
+                                <div class="step-label fw-bold mt-2">Terminé</div>
                             </div>
                         </div>
                         {% if isAnnulee %}
@@ -72,9 +86,6 @@
                             <div class="col-sm-4">
                                 <h6 class="text-muted mb-2"><strong><i class="bi bi-calendar px-1"></i> Date :</strong></h6>
                                 <p class="fs-5 fw-bold mb-0">{{ maintenance.dateMaintenance ? maintenance.dateMaintenance|date('d/m/Y') : 'Non renseignée' }}</p>
-                                {% if maintenance.googleCalendarEventId or maintenance.dateMaintenance %}
-                                    <a href="https://calendar.google.com/calendar/r/day/{{ maintenance.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2 shadow-sm rounded-pill"><i class="bi bi-google"></i> Ouvrir mon agenda</a>
-                                {% endif %}
                             </div>
                             <div class="col-sm-4 text-center">
                                 <h6 class="text-muted mb-2"><strong><i class="bi bi-tag px-1"></i> Type :</strong></h6>
@@ -84,13 +95,17 @@
                                 <h6 class="text-muted mb-2"><strong><i class="bi bi-activity px-1"></i> Statut :</strong></h6>
                                 <p class="mb-0">
                                     {% if maintenance.statutMaintenance == 'terminee' %}
-                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-success">Terminée</span>
+                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-success">Terminé</span>
+                                    {% elseif maintenance.statutMaintenance == 'verifie' %}
+                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-info text-dark">Vérifié</span>
                                     {% elseif maintenance.statutMaintenance == 'en_cours' %}
                                         <span class="badge rounded-pill px-3 py-2 fs-6 bg-warning text-dark">En cours</span>
+                                    {% elseif maintenance.statutMaintenance == 'en_attente' %}
+                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-secondary">En attente</span>
                                     {% elseif maintenance.statutMaintenance == 'annulee' %}
                                         <span class="badge rounded-pill px-3 py-2 fs-6 bg-dark">Annulée</span>
                                     {% else %}
-                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-primary">Planifiée</span>
+                                        <span class="badge rounded-pill px-3 py-2 fs-6 bg-primary">Planifié</span>
                                     {% endif %}
                                 </p>
                             </div>

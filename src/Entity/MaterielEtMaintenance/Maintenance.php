@@ -36,7 +36,7 @@ class Maintenance
 
     #[ORM\Column(name: 'statut_maintenance', type: 'string', length: 50, nullable: true, options: ['default' => 'planifiee'])]
     #[Assert\Choice(
-        choices: ['planifiee', 'en_cours', 'terminee', 'annulee'],
+        choices: ['planifiee', 'en_attente', 'en_cours', 'verifie', 'terminee', 'annulee'],
         message: 'Statut invalide.'
     )]
     private ?string $statut_maintenance = 'planifiee';

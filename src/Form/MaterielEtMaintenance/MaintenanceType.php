@@ -19,6 +19,11 @@ class MaintenanceType extends AbstractType
     {
         $userId = $options['user_id'] ?? null;
 
+        // On récupère l'entité attachée au formulaire pour savoir si c'est une création ou une modification
+        /** @var Maintenance|null $maintenance */
+        $maintenance = $options['data'] ?? null;
+        $isEdit = $maintenance && $maintenance->getIdMaintenance() !== null;
+
         $builder
             ->add('materiel', EntityType::class, [
                 'class' => Materiel::class,
@@ -42,15 +47,6 @@ class MaintenanceType extends AbstractType
                     'Urgente' => 'urgente',
                 ],
             ])
-            ->add('statut_maintenance', ChoiceType::class, [
-                'label' => 'Statut',
-                'choices' => [
-                    'Planifiée' => 'planifiee',
-                    'En cours' => 'en_cours',
-                    'Terminée' => 'terminee',
-                    'Annulée' => 'annulee',
-                ],
-            ])
             ->add('date_maintenance', DateType::class, [
                 'label' => 'Date de la maintenance',
                 'widget' => 'single_text',
@@ -59,6 +55,21 @@ class MaintenanceType extends AbstractType
                 'label' => 'Description / Rapport',
                 'required' => false,
             ]);
+
+        // Le statut ne doit être modifiable que par la société de maintenance, donc pas lors de l'ajout
+        if ($isEdit) {
+            $builder->add('statut_maintenance', ChoiceType::class, [
+                'label' => 'Statut',
+                'choices' => [
+                    'Planifiée (Rendez-vous)' => 'planifiee',
+                    'En attente (Matériel reçu)' => 'en_attente',
+                    'En cours (Réparation)' => 'en_cours',
+                    'Vérifié (Testé)' => 'verifie',
+                    'Terminée (Clôturé)' => 'terminee',
+                    'Annulée' => 'annulee',
+                ],
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
