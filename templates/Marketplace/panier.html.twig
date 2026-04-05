@@ -171,9 +171,10 @@
                     <i class="bi bi-tag-fill"></i> Code Promo
                   </div>
                   <div class="promo-input-group">
-                    <input type="text" placeholder="Entrez votre code...">
-                    <button type="button" class="btn-apply">Appliquer</button>
+                    <input type="text" id="coupon-code-input" placeholder="Entrez votre code...">
+                    <button type="button" class="btn-apply" onclick="applyCoupon()">Appliquer</button>
                   </div>
+                  <div id="coupon-msg" style="font-size: 0.8rem; margin-top: 8px; font-weight: 600;"></div>
                 </div>
 
                 {# Livraison #}
@@ -249,6 +250,10 @@
                     <span>Sous-total</span>
                     <span>{{ panier.totalMontant|number_format(2, '.', ' ') }} DT</span>
                   </div>
+                  <div class="summary-row" id="summary-discount-row" style="display: none; color: #116530;">
+                    <span><i class="bi bi-tag-fill"></i>&nbsp; Remise Promo</span>
+                    <strong id="summary-discount-amount">0.00 DT</strong>
+                  </div>
                   <div class="summary-row">
                     <span><i class="bi bi-truck"></i>&nbsp; Livraison</span>
                     <span id="summary-delivery-cost"
@@ -308,8 +313,66 @@
         costEl.textContent = fee === 0 ? 'Gratuit' : '+' + fee.toFixed(2) + ' DT';
         costEl.style.color  = fee === 0 ? '#6ee7b7' : '#fcd34d';
       }
-      if (totalEl) totalEl.textContent = (BASE_TOTAL + fee).toFixed(2) + ' DT';
+      updateTotal();
     }
+  }
+
+  let appliedCoupon = null;
+
+  async function applyCoupon() {
+    const code = document.getElementById('coupon-code-input').value.trim();
+    const msgEl = document.getElementById('coupon-msg');
+    
+    if(!code) {
+        msgEl.innerHTML = '<span class="text-danger">Veuillez saisir un code.</span>';
+        return;
+    }
+
+    try {
+        const res = await fetch('/marketplace/panier/coupon/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, panier_total: BASE_TOTAL })
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            appliedCoupon = data; 
+            msgEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> Code appliqué ! Remise est de ${data.remise_formatee}</span>`;
+            
+            const summaryRow = document.getElementById('summary-discount-row');
+            if(summaryRow) {
+                summaryRow.style.display = 'flex';
+                document.getElementById('summary-discount-amount').innerText = `-${data.remise_calculee.toFixed(2)} DT`;
+            }
+            updateTotal();
+        } else {
+            appliedCoupon = null;
+            msgEl.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${data.message}</span>`;
+            const summaryRow = document.getElementById('summary-discount-row');
+            if(summaryRow) summaryRow.style.display = 'none';
+            updateTotal();
+        }
+    } catch(err) {
+        msgEl.innerHTML = '<span class="text-danger">Erreur réseau.</span>';
+    }
+  }
+
+  function updateTotal() {
+      const deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+      const tile = deliveryRadio ? deliveryRadio.closest('.option-tile') : null;
+      const fee = tile ? parseFloat(tile.dataset.fee || 0) : 0;
+
+      let finalTotal = BASE_TOTAL;
+      
+      if (appliedCoupon && appliedCoupon.remise_calculee) {
+          finalTotal -= appliedCoupon.remise_calculee;
+      }
+      
+      // La remise ne peut pas descendre le sous-total en dessous de 0.
+      finalTotal = Math.max(0, finalTotal) + fee;
+      
+      document.getElementById('summary-total-amount').textContent = finalTotal.toFixed(2) + ' DT';
   }
 
   // ── Checkout ──
@@ -331,7 +394,10 @@
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ mode_livraison: modeLivraison })
+        body: JSON.stringify({ 
+            mode_livraison: modeLivraison,
+            coupon_code: appliedCoupon ? appliedCoupon.code : null
+        })
       });
       const data = await res.json();
 

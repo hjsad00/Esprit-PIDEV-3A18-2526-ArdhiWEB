@@ -338,6 +338,9 @@
             <div id="modal-delivery-row" style="display:none;font-size:13px;color:#636e72;">
               Frais de livraison : <span id="modal-delivery-cost">0,00</span> DT
             </div>
+            <div id="modal-discount-row" style="display:none;font-size:13px;color:#116530;margin-top:4px;font-weight:600;">
+              Coupon (<span id="modal-discount-code"></span>) : -<span id="modal-discount-amount">0,00</span> DT
+            </div>
           </div>
           <div style="text-align:right;">
             <span style="font-size:14px;color:#636e72;">Total : </span>
@@ -456,6 +459,19 @@ async function openDetails(id) {
       deliveryCost.textContent = cmd.fraisLivraison;
     } else {
       deliveryRow.style.display = 'none';
+    }
+
+    // Affichage de la remise (Coupon)
+    const discountRow = document.getElementById('modal-discount-row');
+    const discountCode = document.getElementById('modal-discount-code');
+    const discountAmount = document.getElementById('modal-discount-amount');
+    
+    if (cmd.montantRemise && cmd.codeCoupon) {
+      discountRow.style.display = 'block';
+      discountCode.textContent = cmd.codeCoupon;
+      discountAmount.textContent = cmd.montantRemise;
+    } else {
+      discountRow.style.display = 'none';
     }
 
     let html = '';

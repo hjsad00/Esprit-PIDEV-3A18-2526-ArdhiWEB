@@ -3,6 +3,7 @@
 namespace App\Entity\Marketplace;
 
 use App\Entity\UserAndDiag\User;
+use App\Entity\Marketplace\Coupon;
 use App\Repository\Marketplace\CommandeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -43,6 +44,13 @@ class Commande
     /** @var Collection<int, DetailsCommande> */
     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: DetailsCommande::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $details;
+
+    #[ORM\ManyToOne(targetEntity: Coupon::class)]
+    #[ORM\JoinColumn(name: 'idCoupon', referencedColumnName: 'idCoupon', nullable: true)]
+    private ?Coupon $coupon = null;
+
+    #[ORM\Column(name: 'montantRemise', type: Types::FLOAT, options: ['default' => 0])]
+    private float $montantRemise = 0;
 
     // ==================== CONSTRUCTOR ====================
 
@@ -160,6 +168,28 @@ class Commande
                 $detail->setCommande(null);
             }
         }
+        return $this;
+    }
+
+    public function getCoupon(): ?Coupon
+    {
+        return $this->coupon;
+    }
+
+    public function setCoupon(?Coupon $coupon): static
+    {
+        $this->coupon = $coupon;
+        return $this;
+    }
+
+    public function getMontantRemise(): float
+    {
+        return $this->montantRemise;
+    }
+
+    public function setMontantRemise(float $montantRemise): static
+    {
+        $this->montantRemise = $montantRemise;
         return $this;
     }
 

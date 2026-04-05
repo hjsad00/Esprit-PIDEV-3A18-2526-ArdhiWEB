@@ -30,6 +30,7 @@ class ProduitsRepository extends ServiceEntityRepository
             ->andWhere('p.categorie = :cat')
             ->andWhere('p.visible = :true')
             ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('cat', $categorie)
             ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
@@ -46,6 +47,7 @@ class ProduitsRepository extends ServiceEntityRepository
             ->andWhere('(p.nom LIKE :kw OR p.description LIKE :kw)')
             ->andWhere('p.visible = :true')
             ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('kw', '%' . $keyword . '%')
             ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
@@ -61,6 +63,7 @@ class ProduitsRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->andWhere('p.visible = :true')
             ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('true', true)
             ->orderBy('p.prix', $direction)
             ->getQuery()
@@ -75,6 +78,7 @@ class ProduitsRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p')
             ->andWhere('p.visible = :true')
             ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('true', true);
 
         if ($userId) {
