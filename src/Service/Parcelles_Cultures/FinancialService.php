@@ -90,10 +90,63 @@ class FinancialService
      */
     public function calculerScoreROI(float $margeBrute, float $coutTotal): float
     {
-        if ($coutTotal == 0) {
+        if ($coutTotal <= 0) {
             return 0;
         }
         return ($margeBrute / $coutTotal) * 100;
+    }
+
+    /**
+     * VolumeLitres = BesoinNet × SurfaceHa × 10000
+     */
+    public function calculerVolumeIrrigation(float $besoinNet, float $surfaceHa): float
+    {
+        return $besoinNet * $surfaceHa * 10000;
+    }
+
+    /**
+     * CapaciteRemboursement = MargeBrute × 0.60
+     */
+    public function calculerCapaciteRemboursement(float $margeBrute): float
+    {
+        return max(0, $margeBrute * 0.60);
+    }
+
+    /**
+     * MontantPretMax = CapaciteRemboursement × DureeAnnees
+     */
+    public function calculerMontantPretMax(float $capaciteRemboursement, int $dureeAnnees): float
+    {
+        return $capaciteRemboursement * $dureeAnnees;
+    }
+
+    /**
+     * ScoreRisque = 0.4×Rentabilite + 0.3×StabiliteClimat + 0.2×Diversification + 0.1×Historique
+     * NiveauRisque: Faible si >= 7, Modéré si >= 4, sinon Élevé
+     */
+    public function calculerScoreRisque(
+        float $scoreROI,
+        float $facteurClimatique,
+        float $diversification = 7,
+        float $historique = 8
+    ): array {
+        // Normalisation de la rentabilité (basée sur ROI score)
+        $rentabilite = min(10, max(0, $scoreROI / 10)); 
+        $stabiliteClimat = $facteurClimatique * 10;
+        
+        $score = (0.4 * $rentabilite) + (0.3 * $stabiliteClimat) + (0.2 * $diversification) + (0.1 * $historique);
+        
+        $niveau = 'Élevé';
+        if ($score >= 7) {
+            $niveau = 'Faible';
+        } elseif ($score >= 4) {
+            $niveau = 'Modéré';
+        }
+        
+        return [
+            'score' => $score,
+            'niveau' => $niveau
+        ];
     }
 
     /**

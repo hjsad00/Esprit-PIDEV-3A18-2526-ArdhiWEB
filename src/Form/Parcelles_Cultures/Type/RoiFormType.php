@@ -14,6 +14,20 @@ class RoiFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('parcelle', \Symfony\Bridge\Doctrine\Form\Type\EntityType::class, [
+                'class' => \App\Entity\Parcelles_Cultures\Parcelle::class,
+                'label' => 'Parcelle à analyser',
+                'choices' => $options['user_parcelles'],
+                'choice_label' => function (\App\Entity\Parcelles_Cultures\Parcelle $p) {
+                    return sprintf("#%d - %s (%s ha)", $p->getId(), $p->getLocalisation(), $p->getSurface());
+                },
+                'choice_attr' => function (\App\Entity\Parcelles_Cultures\Parcelle $p) {
+                    return ['data-surface' => $p->getSurface()];
+                },
+                'placeholder' => 'Choisir une parcelle',
+                'required' => true,
+                'attr' => ['class' => 'form-select']
+            ])
             ->add('surface_ha', NumberType::class, [
                 'label' => 'Surface exploitable (ha)',
                 'required' => true,
@@ -28,6 +42,11 @@ class RoiFormType extends AbstractType
                 'label' => 'Prix de vente estimé (DT)',
                 'required' => true,
                 'attr' => ['min' => 0.01, 'step' => 0.01]
+            ])
+            ->add('duree_pret', IntegerType::class, [
+                'label' => 'Durée du prêt souhaitée (années)',
+                'required' => true,
+                'attr' => ['min' => 1, 'max' => 25]
             ])
             ->add('jours_canicule', IntegerType::class, [
                 'label' => 'Jours de canicule',
@@ -76,6 +95,7 @@ class RoiFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => RoiDTO::class,
+            'user_parcelles' => [],
         ]);
     }
 }

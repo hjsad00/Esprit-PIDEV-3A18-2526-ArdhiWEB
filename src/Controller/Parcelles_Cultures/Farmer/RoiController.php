@@ -3,6 +3,7 @@
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Service\Parcelles_Cultures\FinancialService;
+use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,8 +13,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_AGRICULTEUR')]
 class RoiController extends AbstractController
 {
-    public function __construct(private FinancialService $financialService)
-    {
+    public function __construct(
+        private FinancialService $financialService,
+        private ParcelleRepository $parcelleRepository
+    ) {
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -25,8 +28,13 @@ class RoiController extends AbstractController
     #[Route('/calculator', name: 'calculator', methods: ['GET', 'POST'])]
     public function calculator(\Symfony\Component\HttpFoundation\Request $request): Response
     {
+        $user = $this->getUser();
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+
         $dto = new \App\DTO\Parcelles_Cultures\RoiDTO();
-        $form = $this->createForm(\App\Form\Parcelles_Cultures\Type\RoiFormType::class, $dto);
+        $form = $this->createForm(\App\Form\Parcelles_Cultures\Type\RoiFormType::class, $dto, [
+            'user_parcelles' => $parcelles
+        ]);
         $form->handleRequest($request);
 
         $result = null;
@@ -56,9 +64,12 @@ class RoiController extends AbstractController
             $margeBrute = $this->financialService->calculerMargeBrute($revenuBrut, $coutTotal);
             $prixSeuil = $this->financialService->calculerPrixSeuil($coutTotal, $productionReelle);
             $scoreROI = $this->financialService->calculerScoreROI($margeBrute, $coutTotal);
+            
+            $capaciteRemboursement = $this->financialService->calculerCapaciteRemboursement($margeBrute);
+            $montantPretMax = $this->financialService->calculerMontantPretMax($capaciteRemboursement, (int)$dto->duree_pret);
+            $analyseRisque = $this->financialService->calculerScoreRisque($scoreROI, $facteurClimatique);
 
             $result = [
-                'et0' => 0, // Placeholder
                 'facteur_climatique' => $facteurClimatique,
                 'production_reelle' => $productionReelle,
                 'cout_total' => $coutTotal,
@@ -66,6 +77,10 @@ class RoiController extends AbstractController
                 'marge_brute' => $margeBrute,
                 'prix_seuil' => $prixSeuil,
                 'score_roi' => $scoreROI,
+                'capacite_remboursement' => $capaciteRemboursement,
+                'montant_pret_max' => $montantPretMax,
+                'risque_score' => $analyseRisque['score'],
+                'risque_niveau' => $analyseRisque['niveau'],
             ];
         }
 

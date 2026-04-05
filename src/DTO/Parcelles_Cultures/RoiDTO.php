@@ -46,4 +46,11 @@ class RoiDTO
     #[Assert\NotBlank(message: 'Les autres coûts sont obligatoires')]
     #[Assert\GreaterThanOrEqual(value: 0)]
     public ?float $cout_autres = null;
+
+    #[Assert\NotBlank(message: 'La parcelle est obligatoire')]
+    public ?\App\Entity\Parcelles_Cultures\Parcelle $parcelle = null;
+
+    #[Assert\NotBlank(message: 'La durée du prêt est obligatoire')]
+    #[Assert\Range(min: 1, max: 25)]
+    public ?int $duree_pret = 5;
 }
