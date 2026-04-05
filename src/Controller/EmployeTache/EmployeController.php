@@ -13,6 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Service\EmployeTache\QrCodeService;
+use App\Service\EmployeTache\FicheEmployePdfService;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[Route('/employes')]
 class EmployeController extends AbstractController
@@ -387,6 +390,77 @@ class EmployeController extends AbstractController
             $this->addFlash('success', $employe->getNomComplet() . ' ' . $statut . '.');
         }
         return $this->redirectToRoute('employe_index');
+    }
+
+    // ── QR Code Image ─────────────────────────────────────────────────
+
+    #[Route('/{id<\d+>}/qr', name: 'employe_qr_image', methods: ['GET'])]
+    public function qrImage(int $id, EmployeRepository $repo, QrCodeService $qrService): Response
+    {
+        $result = $this->checkAccess();
+        if ($result instanceof Response) return $result;
+        $idAgriculteur = $result;
+
+        $employe = $repo->find($id);
+        if (!$employe || $employe->getIdAgriculteur() !== $idAgriculteur) {
+            throw $this->createNotFoundException('Employé introuvable.');
+        }
+
+        $qrUrl = $qrService->generateFicheUrl($employe->getId());
+        $qrSvg = $qrService->generateQrCodeSvg($qrUrl, 150);
+
+        return new Response($qrSvg, 200, ['Content-Type' => 'image/svg+xml']);
+    }
+
+    // ── Fiche Mobile (Standalone HTML) ────────────────────────────────
+
+    #[Route('/{id<\d+>}/fiche', name: 'employe_fiche', methods: ['GET'])]
+    public function ficheMobile(int $id, EmployeRepository $repo): Response
+    {
+        // Attention : Cette route est destinée à être accédée via téléphone.
+        // On ne fait pas de checkAccess strict de session si on veut permettre un scan depuis un wifi local sans login.
+        // Mais pour la sécurité, on peut garder l'accès restreint, ou créer une route allégée.
+        // 'Comme sur le desktop' : Le desktop démarrait un serveur sans authentification pour lire la fiche.
+        
+        $employe = $repo->find($id);
+        if (!$employe) {
+            throw $this->createNotFoundException('Employé introuvable.');
+        }
+
+        return $this->render('EmployeTache/employe/fiche_mobile.html.twig', [
+            'employe' => $employe,
+        ]);
+    }
+
+    // ── Fiche PDF Complet ─────────────────────────────────────────────
+
+    #[Route('/{id<\d+>}/fiche-pdf', name: 'employe_fiche_pdf', methods: ['GET'])]
+    public function exportFichePdf(
+        int $id, 
+        EmployeRepository $repo, 
+        FicheEmployePdfService $fichePdfService,
+        ParameterBagInterface $params
+    ): Response {
+        $result = $this->checkAccess();
+        if ($result instanceof Response) return $result;
+        $idAgriculteur = $result;
+
+        $employe = $repo->find($id);
+        if (!$employe || $employe->getIdAgriculteur() !== $idAgriculteur) {
+            throw $this->createNotFoundException('Employé introuvable.');
+        }
+
+        $publicDir = $params->get('kernel.project_dir') . '/public';
+        $pdfContent = $fichePdfService->genererFichePdf($employe, $publicDir);
+
+        return new Response(
+            $pdfContent,
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="fiche_' . $employe->getNom() . '_' . $employe->getPrenom() . '.pdf"'
+            ]
+        );
     }
 
     // ══════════════════════════════════════════════════════════════════

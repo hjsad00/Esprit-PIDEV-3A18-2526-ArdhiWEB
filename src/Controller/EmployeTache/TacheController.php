@@ -6,9 +6,11 @@ use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Service\EmployeTache\AgriculteurContextService;
+use App\Service\EmployeTache\GoogleCalendarService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -21,6 +23,7 @@ class TacheController extends AbstractController
 
     public function __construct(
         private AgriculteurContextService $ctx,
+        private GoogleCalendarService     $gcal,
     ) {}
 
     private function checkAccess(): int|Response
@@ -377,6 +380,122 @@ class TacheController extends AbstractController
             200,
             ['Content-Type' => 'application/pdf']
         );
+    }
+
+    // ── Calendrier ────────────────────────────────────────────────────
+
+    #[Route('/calendrier', name: 'tache_calendrier', methods: ['GET'])]
+    public function calendrier(TacheRepository $repo, EmployeRepository $empRepo): Response
+    {
+        $result = $this->checkAccess();
+        if ($result instanceof Response) return $result;
+        $idAgriculteur = $result;
+
+        $taches = $repo->findByAgriculteur($idAgriculteur);
+
+        $employes    = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        $mapEmployes = [];
+        foreach ($employes as $emp) {
+            $mapEmployes[$emp->getId()] = $emp->getNomComplet();
+        }
+
+        // Formater les tâches en JSON pour FullCalendar
+        $events = [];
+        $colorMap = [
+            4 => '#e74c3c', // Critique — rouge
+            3 => '#f39c12', // Haute    — orange
+            2 => '#3498db', // Moyenne  — bleu
+            1 => '#27ae60', // Basse    — vert
+        ];
+        $statutColorMap = [
+            'En attente' => '#856404',
+            'En cours'   => '#004085',
+            'Terminé'    => '#155724',
+            'Validé'     => '#0c5460',
+            'Annulé'     => '#721c24',
+        ];
+
+        foreach ($taches as $tache) {
+            $debut = $tache->getDateDebut() ?? new \DateTime('today');
+            $fin   = $tache->getDateFin()   ?? $debut;
+            // FullCalendar all-day : end exclusif → +1 jour
+            $finPlusUn = (clone \DateTime::createFromInterface($fin))->modify('+1 day');
+
+            $events[] = [
+                'id'              => $tache->getId(),
+                'title'           => $tache->getTitre(),
+                'start'           => $debut->format('Y-m-d'),
+                'end'             => $finPlusUn->format('Y-m-d'),
+                'backgroundColor' => $colorMap[$tache->getPriorite()] ?? '#4a7c59',
+                'borderColor'     => $colorMap[$tache->getPriorite()] ?? '#4a7c59',
+                'extendedProps'   => [
+                    'statut'    => $tache->getStatut(),
+                    'priorite'  => $tache->getPrioriteLabel(),
+                    'categorie' => $tache->getCategorie() ?? '—',
+                    'employe'   => $mapEmployes[$tache->getIdEmploye()] ?? '—',
+                    'retard'    => $tache->isEnRetard(),
+                    'editUrl'   => '/taches/' . $tache->getId() . '/edit',
+                ],
+            ];
+        }
+
+        return $this->render('EmployeTache/tache/calendrier.html.twig', [
+            'events'           => json_encode($events),
+            'taches'           => $taches,
+            'gcal_id'          => $this->gcal->getCalendarId(),
+            'supervision_mode' => $this->ctx->isSupervisionMode(),
+            'nom_supervise'    => $this->ctx->getNomAgriculteurSupervise(),
+        ]);
+    }
+
+    // ── Synchronisation Google Calendar ───────────────────────────────
+
+    #[Route('/calendrier/sync', name: 'tache_calendrier_sync', methods: ['POST'])]
+    public function syncGoogleCalendar(TacheRepository $repo): JsonResponse
+    {
+        $result = $this->checkAccess();
+        if ($result instanceof Response) {
+            return new JsonResponse(['success' => false, 'message' => 'Accès refusé.'], 403);
+        }
+        $idAgriculteur = $result;
+
+        // Connexion au Service Account Google
+        if (!$this->gcal->connecter()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => '❌ Connexion Google Calendar impossible : ' . $this->gcal->getLastError(),
+            ], 500);
+        }
+
+        $taches  = $repo->findByAgriculteur($idAgriculteur);
+        $created = 0;
+        $errors  = 0;
+        $details = [];
+
+        foreach ($taches as $tache) {
+            $eventId = $this->gcal->creerEvenement($tache);
+            if ($eventId) {
+                $created++;
+                $details[] = '✅ ' . $tache->getTitre();
+            } else {
+                $errors++;
+                $details[] = '❌ ' . $tache->getTitre() . ' — ' . $this->gcal->getLastError();
+            }
+        }
+
+        $calName = $this->gcal->getNomCalendrier() ?? $this->gcal->getCalendarId();
+
+        return new JsonResponse([
+            'success' => $errors === 0,
+            'message' => sprintf(
+                '📅 Synchronisation vers « %s » terminée : %d envoyée(s), %d erreur(s).',
+                $calName, $created, $errors
+            ),
+            'created'  => $created,
+            'errors'   => $errors,
+            'details'  => $details,
+            'calendar' => $calName,
+        ]);
     }
 
     // ── Statistiques ──────────────────────────────────────────────────

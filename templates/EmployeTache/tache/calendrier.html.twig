@@ -1,0 +1,283 @@
+{% extends 'base.html.twig' %}
+{% block title %}Calendrier des Tâches — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+<style>
+.cal-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
+
+.cal-header {
+    background: white; border-radius: 14px; padding: 14px 22px;
+    margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.cal-header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #1B5E20; display: flex; align-items: center; gap: 8px; }
+.cal-header-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: .8rem; font-weight: 600; color: #555; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+.cal-wrap {
+    background: white; border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    padding: 20px; margin-bottom: 16px;
+}
+
+.btn-retour {
+    background: white; color: #555; border: 1.5px solid #ccc;
+    border-radius: 8px; padding: 7px 14px; font-size: .84rem;
+    font-weight: 600; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 6px; text-decoration: none; transition: .15s;
+}
+.btn-retour:hover { border-color: #27ae60; color: #1B5E20; }
+
+.btn-add-cal {
+    background: #27ae60; color: white; border: none;
+    border-radius: 8px; padding: 7px 14px; font-size: .84rem;
+    font-weight: 700; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 6px; text-decoration: none; transition: .15s;
+}
+.btn-add-cal:hover { background: #219150; color: white; }
+
+/* Google Sync button */
+.btn-google-sync {
+    background: white; color: #333; border: 1.5px solid #dadce0;
+    border-radius: 8px; padding: 7px 14px; font-size: .84rem;
+    font-weight: 600; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 8px; transition: .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.btn-google-sync:hover:not(:disabled) { border-color: #4285f4; box-shadow: 0 2px 8px rgba(66,133,244,.2); color: #4285f4; }
+.btn-google-sync:disabled { opacity: .6; cursor: not-allowed; }
+.google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .8s linear infinite; display: inline-block; }
+
+/* Toast */
+.sync-toast {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    background: white; border-radius: 12px; padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18); min-width: 280px; max-width: 420px;
+    display: none; border-left: 4px solid #27ae60;
+}
+.sync-toast.error  { border-left-color: #e74c3c; }
+.sync-toast.show   { display: block; animation: slideUp .3s ease; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } }
+.toast-title  { font-weight: 700; font-size: .9rem; color: #1B5E20; margin-bottom: 4px; }
+.sync-toast.error .toast-title { color: #c0392b; }
+.toast-msg    { font-size: .82rem; color: #555; }
+.toast-details{ font-size: .78rem; color: #777; margin-top: 8px; max-height: 140px; overflow-y: auto; }
+.toast-details div { padding: 2px 0; border-bottom: 1px solid #f5f5f5; }
+.toast-close  { position: absolute; top: 8px; right: 12px; cursor: pointer; color: #aaa; font-size: 1rem; background: none; border: none; }
+.toast-close:hover { color: #555; }
+
+/* FullCalendar overrides */
+.fc .fc-toolbar-title { font-size: 1.1rem !important; font-weight: 700; color: #1B5E20; }
+.fc .fc-button-primary { background: #4a7c59 !important; border-color: #4a7c59 !important; font-size: .82rem !important; border-radius: 7px !important; }
+.fc .fc-button-primary:hover { background: #3d6b4b !important; border-color: #3d6b4b !important; }
+.fc .fc-button-primary:not(:disabled).fc-button-active { background: #1B5E20 !important; border-color: #1B5E20 !important; }
+.fc .fc-daygrid-day.fc-day-today { background: #e8f5e9 !important; }
+.fc .fc-col-header-cell { background: #4a7c59; }
+.fc .fc-col-header-cell-cushion { color: white !important; font-weight: 700; font-size: .82rem; text-decoration: none !important; }
+.fc-event { border-radius: 5px !important; font-size: .78rem !important; font-weight: 600 !important; cursor: pointer !important; }
+
+/* Popup */
+.tache-popup {
+    position: fixed; z-index: 9998; background: white; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18); padding: 16px 20px;
+    min-width: 240px; max-width: 320px; display: none; pointer-events: none;
+}
+.tache-popup.show { display: block; }
+.popup-title { font-size: .95rem; font-weight: 700; color: #1B5E20; margin-bottom: 8px; }
+.popup-row   { display: flex; gap: 8px; font-size: .8rem; margin-bottom: 4px; }
+.popup-label { color: #888; min-width: 70px; }
+.popup-val   { color: #333; font-weight: 600; }
+.popup-retard{ color: #e74c3c; font-weight: 700; font-size: .78rem; margin-top: 6px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="cal-page">
+<div class="container-fluid px-4">
+
+    <div class="cal-header">
+        <h2>📅 Calendrier des Tâches</h2>
+
+        <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#e74c3c"></span>Critique</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#f39c12"></span>Haute</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span>Moyenne</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#27ae60"></span>Basse</span>
+        </div>
+
+        <div class="cal-header-actions">
+            {# ── Bouton Google Calendar ── #}
+            <button class="btn-google-sync" id="btnGoogleSync" onclick="syncGoogleCalendar()"
+                    title="Exporter toutes les tâches vers Google Calendar ({{ gcal_id }})">
+                <svg class="google-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                </svg>
+                <span id="syncBtnText">Sync Google Calendar</span>
+            </button>
+
+            <a href="{{ path('tache_new') }}" class="btn-add-cal">
+                <i class="bi bi-plus-lg"></i> Nouvelle Tâche
+            </a>
+            <a href="{{ path('tache_index') }}" class="btn-retour">
+                <i class="bi bi-list-ul"></i> Vue Liste
+            </a>
+        </div>
+    </div>
+
+    <div class="cal-wrap">
+        <div id="calendar"></div>
+    </div>
+
+</div>
+</div>
+
+{# Popup survol #}
+<div class="tache-popup" id="tachePopup">
+    <div class="popup-title" id="popupTitle"></div>
+    <div class="popup-row"><span class="popup-label">Statut</span><span class="popup-val" id="popupStatut"></span></div>
+    <div class="popup-row"><span class="popup-label">Priorité</span><span class="popup-val" id="popupPriorite"></span></div>
+    <div class="popup-row"><span class="popup-label">Catégorie</span><span class="popup-val" id="popupCategorie"></span></div>
+    <div class="popup-row"><span class="popup-label">Employé</span><span class="popup-val" id="popupEmploye"></span></div>
+    <div class="popup-row"><span class="popup-label">Du</span><span class="popup-val" id="popupDates"></span></div>
+    <div class="popup-retard" id="popupRetard" style="display:none">⚠ En retard</div>
+</div>
+
+{# Toast résultat sync #}
+<div class="sync-toast" id="syncToast">
+    <button class="toast-close" onclick="closeToast()">✕</button>
+    <div class="toast-title"   id="toastTitle"></div>
+    <div class="toast-msg"     id="toastMsg"></div>
+    <div class="toast-details" id="toastDetails"></div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
+<script>
+const EVENTS   = {{ events|raw }};
+const SYNC_URL = '{{ path('tache_calendrier_sync') }}';
+
+// ── FullCalendar ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    const popup = document.getElementById('tachePopup');
+
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        locale: 'fr',
+        initialView: 'dayGridMonth',
+        headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,listWeek' },
+        buttonText: { today:"Aujourd'hui", month:'Mois', week:'Semaine', list:'Liste' },
+        events: EVENTS,
+        height: 'auto',
+        eventDisplay: 'block',
+
+        eventClick: function(info) {
+            const url = info.event.extendedProps.editUrl;
+            if (url) window.location.href = url;
+        },
+
+        eventMouseEnter: function(info) {
+            const p = info.event.extendedProps;
+            const s = info.event.start;
+            const eRaw = info.event.end;
+            const e = eRaw ? new Date(eRaw.getTime() - 86400000) : s;
+
+            document.getElementById('popupTitle').textContent     = info.event.title;
+            document.getElementById('popupStatut').textContent    = p.statut    ?? '—';
+            document.getElementById('popupPriorite').textContent  = p.priorite  ?? '—';
+            document.getElementById('popupCategorie').textContent = p.categorie ?? '—';
+            document.getElementById('popupEmploye').textContent   = p.employe   ?? '—';
+            document.getElementById('popupDates').textContent     =
+                fmt(s) + (e && e.toDateString() !== s.toDateString() ? ' → ' + fmt(e) : '');
+            document.getElementById('popupRetard').style.display  = p.retard ? 'block' : 'none';
+
+            posPopup(info.jsEvent);
+            popup.classList.add('show');
+        },
+
+        eventMouseLeave: () => popup.classList.remove('show'),
+
+        eventDidMount: function(info) {
+            if (info.event.extendedProps.retard) {
+                info.el.style.outline = '2px solid #e74c3c';
+                info.el.style.outlineOffset = '1px';
+            }
+        }
+    });
+
+    calendar.render();
+
+    document.addEventListener('mousemove', e => { if (popup.classList.contains('show')) posPopup(e); });
+
+    function posPopup(e) {
+        let x = e.clientX + 14, y = e.clientY + 14;
+        if (x + 330 > window.innerWidth)  x = e.clientX - 330 - 14;
+        if (y + 220 > window.innerHeight) y = e.clientY - 220 - 14;
+        popup.style.left = x + 'px'; popup.style.top = y + 'px';
+    }
+
+    function fmt(d) {
+        return d ? d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '—';
+    }
+});
+
+// ── Google Calendar Sync ──────────────────────────────────────────────
+async function syncGoogleCalendar() {
+    const btn     = document.getElementById('btnGoogleSync');
+    const btnText = document.getElementById('syncBtnText');
+
+    btn.disabled  = true;
+    btnText.innerHTML = '<span class="spin">↻</span> Synchronisation…';
+
+    try {
+        const resp = await fetch(SYNC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: '_token={{ csrf_token('sync_google') }}'
+        });
+
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        showToast(data);
+
+    } catch (err) {
+        showToast({ success: false, message: '❌ Erreur réseau : ' + err.message, details: [] });
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Sync Google Calendar';
+    }
+}
+
+function showToast(data) {
+    const toast = document.getElementById('syncToast');
+    toast.className = 'sync-toast' + (data.success ? '' : ' error');
+
+    document.getElementById('toastTitle').textContent = data.success ? '✅ Synchronisation réussie' : '❌ Synchronisation échouée';
+    document.getElementById('toastMsg').textContent   = data.message ?? '';
+
+    const det = document.getElementById('toastDetails');
+    det.innerHTML = '';
+    (data.details ?? []).forEach(d => {
+        const div = document.createElement('div');
+        div.textContent = d;
+        det.appendChild(div);
+    });
+
+    toast.classList.add('show');
+    if (data.success) setTimeout(closeToast, 9000);
+}
+
+function closeToast() {
+    document.getElementById('syncToast').classList.remove('show');
+}
+</script>
+{% endblock %}
