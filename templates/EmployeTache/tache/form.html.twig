@@ -1,0 +1,263 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ page_title }} — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+.form-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
+.form-card { background: white; border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09); overflow: hidden; max-width: 780px; margin: 0 auto; }
+.form-header { background: linear-gradient(135deg, #1B5E20, #4a7c59);
+    padding: 20px 28px; color: white; display: flex; align-items: center; gap: 12px; }
+.form-header h2 { font-size: 1.2rem; font-weight: 700; margin: 0; }
+.form-body { padding: 28px; }
+
+/* Sections — identiques aux sections du dialogue desktop */
+.section-header {
+    font-weight: 700; font-size: .75rem; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #2E7D32; margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #e8f5e9;
+    display: flex; align-items: center; gap: 8px;
+}
+
+.form-label { font-weight: 600; color: #333; font-size: .87rem; margin-bottom: 5px; }
+.req { color: #e74c3c; }
+
+.form-control, .form-select {
+    border: 1.5px solid #d0d0d0; border-radius: 9px; padding: 8px 12px;
+    font-size: .91rem; transition: all .2s; width: 100%;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,.13); outline: none; }
+.form-control.is-invalid { border-color: #dc3545 !important; }
+
+.field-error { color: #dc3545; font-size: .79rem; margin-top: 4px;
+    display: flex; align-items: center; gap: 4px; }
+
+.alert-errors { background: #fff5f5; border: 1.5px solid #f5c6cb;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+.alert-errors ul { margin: 4px 0 0; padding-left: 16px; }
+.alert-errors li { color: #721c24; font-size: .83rem; margin-bottom: 2px; }
+
+/* Bouton recommandation IA */
+.btn-recomm { background: #27ae60; color: white; border: none; border-radius: 8px;
+    padding: 8px 14px; font-size: .85rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: .2s; }
+.btn-recomm:hover { background: #219150; }
+
+/* Boutons principaux */
+.btn-save { background: #27ae60; color: white; border: none; border-radius: 10px;
+    padding: 10px 28px; font-weight: 700; font-size: .93rem; transition: all .2s; }
+.btn-save:hover { background: #219150; color: white; transform: translateY(-1px); }
+.btn-cancel { background: #f0f0f0; color: #555; border: none; border-radius: 10px;
+    padding: 10px 20px; font-weight: 600; font-size: .93rem;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-cancel:hover { background: #e0e0e0; color: #333; }
+
+/* Indicateur retard */
+.retard-warning { color: #e74c3c; font-size: .8rem; margin-top: 4px;
+    display: none; align-items: center; gap: 4px; }
+.retard-warning.visible { display: flex; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="form-page">
+<div class="container">
+<div class="form-card">
+
+    <div class="form-header">
+        <i class="bi bi-clipboard-check" style="font-size:1.4rem"></i>
+        <h2>{{ page_title }}</h2>
+    </div>
+
+    <div class="form-body">
+
+        {# ── Erreurs globales ──────────────────────────────────────── #}
+        {% if errors is defined and errors|length > 0 %}
+        <div class="alert-errors">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <strong class="text-danger">{{ errors|length }} erreur(s) à corriger :</strong>
+            </div>
+            <ul>{% for f, m in errors %}<li>{{ m }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+
+        <form method="POST"
+              action="{{ tache ? path('tache_edit', {id: tache.id}) : path('tache_new') }}"
+              novalidate>
+            <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+
+            {# ── SECTION 1 : Informations principales ─────────────── #}
+            <div class="section-header">📋 INFORMATIONS PRINCIPALES</div>
+
+            <div class="mb-3">
+                <label class="form-label">Titre <span class="req">*</span></label>
+                <input type="text" name="titre"
+                       class="form-control {{ errors.titre is defined ? 'is-invalid' : '' }}"
+                       value="{{ old.titre ?? (tache ? tache.titre : '') }}"
+                       placeholder="Ex : Arroser les plants de tomates"
+                       maxlength="200">
+                {% if errors.titre is defined %}
+                    <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.titre }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description <span class="req">*</span></label>
+                <textarea name="description" rows="3"
+                          class="form-control {{ errors.description is defined ? 'is-invalid' : '' }}"
+                          placeholder="Décrivez la tâche en détail...">{{ old.description ?? (tache ? tache.description : '') }}</textarea>
+                {% if errors.description is defined %}
+                    <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.description }}</div>
+                {% endif %}
+            </div>
+
+            {# ── SECTION 2 : Statut & Priorité ───────────────────── #}
+            <div class="section-header">🔖 STATUT & PRIORITÉ</div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select {{ errors.statut is defined ? 'is-invalid' : '' }}">
+                        {% for s in constant('App\\Entity\\EmployeTache\\Tache::STATUTS') %}
+                            <option value="{{ s }}"
+                                {{ (old.statut ?? (tache ? tache.statut : 'En attente')) == s ? 'selected' : '' }}>
+                                {{ s }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.statut is defined %}
+                        <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.statut }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Priorité</label>
+                    <select name="priorite" class="form-select {{ errors.priorite is defined ? 'is-invalid' : '' }}">
+                        {% set priorites = {1: 'Basse', 2: 'Moyenne', 3: 'Haute', 4: 'Critique'} %}
+                        {% for val, label in priorites %}
+                            <option value="{{ val }}"
+                                style="color: {{ {1:'#3498db', 2:'#f39c12', 3:'#e74c3c', 4:'#8e44ad'}[val] }}"
+                                {{ (old.priorite ?? (tache ? tache.priorite : 2)) == val ? 'selected' : '' }}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.priorite is defined %}
+                        <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.priorite }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Catégorie</label>
+                    <select name="categorie" class="form-select">
+                        {% for cat in constant('App\\Entity\\EmployeTache\\Tache::CATEGORIES') %}
+                            <option value="{{ cat }}"
+                                {{ (old.categorie ?? (tache ? tache.categorie : 'Plantation')) == cat ? 'selected' : '' }}>
+                                {{ cat }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {# ── SECTION 3 : Dates ────────────────────────────────── #}
+            <div class="section-header">📅 DATES</div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date de début <span class="req">*</span></label>
+                    <input type="date" name="dateDebut" id="dateDebut"
+                           class="form-control {{ errors.dateDebut is defined ? 'is-invalid' : '' }}"
+                           value="{{ old.dateDebut ?? (tache and tache.dateDebut ? tache.dateDebut|date('Y-m-d') : '') }}"
+                           onchange="checkDates()">
+                    {% if errors.dateDebut is defined %}
+                        <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.dateDebut }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Date de fin</label>
+                    <input type="date" name="dateFin" id="dateFin"
+                           class="form-control {{ errors.dateFin is defined ? 'is-invalid' : '' }}"
+                           value="{{ old.dateFin ?? (tache and tache.dateFin ? tache.dateFin|date('Y-m-d') : '') }}"
+                           onchange="checkDates()">
+                    {# Alerte visuelle date fin < date début — identique au desktop #}
+                    <div class="retard-warning" id="retardWarn">
+                        <i class="bi bi-exclamation-triangle"></i> Date fin &lt; date début
+                    </div>
+                    {% if errors.dateFin is defined %}
+                        <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.dateFin }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── SECTION 4 : Affectation ─────────────────────────── #}
+            <div class="section-header">👷 AFFECTATION</div>
+
+            <div class="mb-3">
+                <label class="form-label">Employé <span class="req">*</span></label>
+                <div class="d-flex gap-2">
+                    <select name="idEmploye"
+                            class="form-select {{ errors.idEmploye is defined ? 'is-invalid' : '' }}"
+                            id="selectEmploye">
+                        <option value="">Non assigné</option>
+                        {% for emp in employes %}
+                            <option value="{{ emp.id }}"
+                                {{ (old.idEmploye ?? (tache ? tache.idEmploye : null)) == emp.id ? 'selected' : '' }}>
+                                {{ emp.nomComplet }} — {{ emp.poste ?? 'N/A' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {# Bouton Recommandation IA (placeholder pour future intégration) #}
+                    <button type="button" class="btn-recomm" onclick="recommanderEmploye()" title="Recommandation IA">
+                        <i class="bi bi-cpu"></i> Recomm...
+                    </button>
+                </div>
+                {% if errors.idEmploye is defined %}
+                    <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.idEmploye }}</div>
+                {% endif %}
+            </div>
+
+            {# ── Boutons ──────────────────────────────────────────── #}
+            <div class="d-flex gap-3 mt-4 pt-3 border-top">
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-check-lg me-1"></i>
+                    {{ tache ? 'Enregistrer les modifications' : '+ Ajouter' }}
+                </button>
+                <a href="{{ path('tache_index') }}" class="btn-cancel">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Vérification dates — identique à la validation temps réel du desktop
+function checkDates() {
+    const debut = document.getElementById('dateDebut').value;
+    const fin   = document.getElementById('dateFin').value;
+    const warn  = document.getElementById('retardWarn');
+    if (debut && fin && fin < debut) {
+        warn.classList.add('visible');
+        document.getElementById('dateFin').classList.add('is-invalid');
+    } else {
+        warn.classList.remove('visible');
+        document.getElementById('dateFin').classList.remove('is-invalid');
+    }
+}
+
+// Recommandation IA (placeholder)
+function recommanderEmploye() {
+    alert('🤖 La recommandation IA sera disponible dans la prochaine version.\nElle analysera les compétences et la disponibilité de chaque employé.');
+}
+
+// Init au chargement
+document.addEventListener('DOMContentLoaded', checkDates);
+</script>
+{% endblock %}

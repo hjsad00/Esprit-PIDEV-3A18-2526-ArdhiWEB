@@ -10,9 +10,6 @@
 
 {% block body %}
 
-    {# ============================
-       HERO SECTION (comme Marketplace)
-       ============================ #}
     <section class="marketplace-hero">
       <div class="hero-bg">
         <img src="{{ asset('assets/img/emp.jpg') }}" alt="Gestion Employés">
@@ -21,7 +18,6 @@
       <div class="container">
         <div class="hero-inner">
 
-          {# LEFT CONTENT #}
           <div class="hero-left">
             <div class="hero-label">ARDHI GESTION RH</div>
             <h1 class="hero-headline">
@@ -37,7 +33,6 @@
             </a>
           </div>
 
-          {# RIGHT PANEL (comme Marketplace) #}
           <div class="hero-right">
             <div class="categories-glass-panel">
 
@@ -45,7 +40,7 @@
                 Services Employés
               </div>
 
-              {# EMPLOYES #}
+              {# EMPLOYES — connecté ✅ #}
               <a href="{{ path('employe_index') }}" class="category-item">
                 <div class="category-icon">
                   <i class="bi bi-people-fill"></i>
@@ -56,8 +51,8 @@
                 </div>
               </a>
 
-              {# TACHES (à connecter plus tard) #}
-              <a href="#" class="category-item">
+              {# TACHES — connecté ✅ #}
+              <a href="{{ path('tache_index') }}" class="category-item">
                 <div class="category-icon">
                   <i class="bi bi-list-check"></i>
                 </div>
