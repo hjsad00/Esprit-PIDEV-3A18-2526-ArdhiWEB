@@ -62,7 +62,11 @@
                 <div class="card shadow-sm h-100" style="border-radius: 20px; border: none;">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>Historique des maintenances</h5>
-                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Maintenance+de+{{ materiel.nom|url_encode }}" target="_blank" class="btn-mat-outline py-1 px-3" style="font-size: 0.85rem;"><i class="bi bi-calendar-plus"></i> Google Calendar</a>
+                        {% if not app.user.googleAccessToken %}
+                            <a href="{{ path('app_google_connect') }}" class="btn-mat-outline py-1 px-3" style="font-size: 0.85rem;"><i class="bi bi-google"></i> Lier & Planifier</a>
+                        {% else %}
+                            <a href="{{ path('app_maintenance_new', {'materiel': materiel.id}) }}" class="btn-mat-outline py-1 px-3" style="font-size: 0.85rem;"><i class="bi bi-calendar-plus"></i> Planifier</a>
+                        {% endif %}
                     </div>
                     <div class="card-body p-4">
                         {% if materiel.maintenances|length > 0 %}
@@ -84,8 +88,12 @@
                         {% else %}
                             <div class="p-5 text-center text-muted bg-light rounded">
                                 <i class="bi bi-clipboard fs-1 d-block mb-3 opacity-50"></i>
-                                <p>Aucun historique de maintenance statique enregistré.</p>
-                                <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Maintenance+de+{{ materiel.nom|url_encode }}" target="_blank" class="btn-mat-primary mt-2"><i class="bi bi-google"></i> Planifier via Google Calendar</a>
+                                <p>Aucun historique de maintenance enregistré.</p>
+                                {% if not app.user.googleAccessToken %}
+                                    <a href="{{ path('app_google_connect') }}" class="btn-mat-primary mt-2"><i class="bi bi-google"></i> Lier Google & Planifier</a>
+                                {% else %}
+                                    <a href="{{ path('app_maintenance_new', {'materiel': materiel.id}) }}" class="btn-mat-primary mt-2"><i class="bi bi-calendar-plus"></i> Planifier la première intervention</a>
+                                {% endif %}
                             </div>
                         {% endif %}
                     </div>
