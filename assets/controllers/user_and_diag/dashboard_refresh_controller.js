@@ -14,6 +14,9 @@ export default class extends Controller {
 
     connect() {
         this.interval = this.intervalValue || 10000; // Use 10s as default
+
+        // Fetch immediately on load, then start polling
+        this.fetchStats();
         this.startPolling();
     }
 
@@ -46,23 +49,6 @@ export default class extends Controller {
         }
     }
 
-    toggleCollapse(event) {
-        const header = event.currentTarget;
-        const card = header.closest('.intell-card');
-        const icon = header.querySelector('.toggle-icon');
-
-        // Find the body div - it's the next sibling or children of siblings
-        const body = card.querySelector('.weather-body, .alerts-body, .predict-body');
-
-        if (body) {
-            const isHidden = body.style.display === 'none';
-            body.style.display = isHidden ? '' : 'none';
-            icon.textContent = isHidden ? '▲' : '▼';
-
-            // Add a class for potential CSS transitions
-            card.classList.toggle('is-collapsed', !isHidden);
-        }
-    }
 
     updateUI(data) {
         // Gamification

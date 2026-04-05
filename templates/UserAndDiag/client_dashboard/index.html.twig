@@ -367,7 +367,7 @@
         <div class="intelligence-row">
             <!-- Weather Widget -->
             <div class="intell-card weather-card fade-up is-collapsed" style="transition-delay: 100ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>MÉTÉO DIRECT</h3>
                         <span class="toggle-icon">▼</span>
@@ -390,7 +390,7 @@
 
             <!-- Regional Alerts Widget -->
             <div class="intell-card alerts-card fade-up is-collapsed" style="transition-delay: 200ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>🚨 ALERTES RÉGIONALES</h3>
                         <span class="toggle-icon">▼</span>
@@ -423,7 +423,7 @@
 
             <!-- Predictive Risks Widget -->
             <div class="intell-card predictive-card fade-up is-collapsed" style="transition-delay: 300ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>🌡️ PRÉVISIONS & RISQUES</h3>
                         <span class="toggle-icon">▼</span>
@@ -533,4 +533,24 @@
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const headers = document.querySelectorAll('.intell-card .header');
+    headers.forEach(header => {
+        header.addEventListener('click', function(e) {
+            const card = this.closest('.intell-card');
+            const icon = this.querySelector('.toggle-icon');
+            const body = card.querySelector('.weather-body, .alerts-body, .predict-body');
+            
+            if (body) {
+                const isHidden = body.style.display === 'none';
+                body.style.display = isHidden ? '' : 'none';
+                if (icon) icon.textContent = isHidden ? '▲' : '▼';
+                card.classList.toggle('is-collapsed', !isHidden);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
