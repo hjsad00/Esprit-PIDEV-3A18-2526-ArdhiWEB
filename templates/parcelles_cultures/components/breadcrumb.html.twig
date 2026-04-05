@@ -2,7 +2,7 @@
 {% if breadcrumbs is defined and breadcrumbs %}
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ path('home') }}"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{{ path('app_home') }}"><i class="fas fa-home"></i> Accueil</a></li>
         {% for breadcrumb in breadcrumbs %}
             {% if loop.last %}
                 <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb.title }}</li>

@@ -24,7 +24,7 @@ class StatsController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        $agriculteurs = $this->userRepository->findByRole('ROLE_AGRICULTEUR');
+        $agriculteurs = $this->userRepository->findByRole('AGRICULTEUR');
         
         $stats = [
             'total_parcelles' => $this->parcelleRepository->createQueryBuilder('p')
@@ -40,7 +40,7 @@ class StatsController extends AbstractController
                 ->getQuery()
                 ->getSingleScalarResult(),
             'production_estimee' => $this->cultureRepository->createQueryBuilder('c')
-                ->select('SUM(CAST(c.surface_utilisee as decimal) * CAST(c.rendement_estime as decimal))')
+                ->select('SUM(c.production_estimee)')
                 ->getQuery()
                 ->getSingleScalarResult(),
         ];
