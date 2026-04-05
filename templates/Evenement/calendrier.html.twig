@@ -1,0 +1,280 @@
+{% extends 'base.html.twig' %}
+{% block title %}Calendrier des evenements - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+.cal-hero { min-height: 560px !important; }
+.cal-hero .hero-content-wrapper { align-items: flex-start; padding-top: 78px; }
+.cal-hero .hero-left { max-width: 66%; padding: 20px 54px 24px 76px; }
+.cal-toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin: 22px 0 0; position: relative; z-index: 3; }
+.cal-btn {
+  border: 1.5px solid rgba(255,255,255,.9);
+  background: rgba(255,255,255,.16);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 12px 22px;
+  min-width: 240px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.cal-btn:hover { background: rgba(255,255,255,.26); color: #fff; }
+.cal-layout-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.cal-head { border-bottom: 1px solid #f0f3f7; padding: 22px; }
+.cal-month { font-family: Marcellus, serif; font-size: 2rem; line-height: 1.1; color: #263238; margin: 0; }
+.cal-grid-wrap { padding: 18px 20px 20px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.cal-dow { text-align: center; font-weight: 700; font-size: .82rem; color: #5f6b74; padding: 7px 0; background: #f8f9fb; border-radius: 10px; }
+.cal-cell { min-height: 94px; border: 1px solid #e5e9ef; border-radius: 12px; padding: 8px 8px 6px; background: #fff; cursor: pointer; transition: .18s ease; }
+.cal-cell:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(17,24,39,.08); }
+.cal-cell.out { background: #fafbfc; opacity: .68; }
+.cal-cell.today { border-color: #4ea33d; }
+.cal-cell.active { border-color: #5f8f2f; box-shadow: 0 0 0 2px rgba(95,143,47,.18); background: #f7fbef; }
+.cal-day { font-weight: 700; font-size: .92rem; color: #2d3748; margin-bottom: 5px; }
+.cal-bars { display: grid; gap: 4px; }
+.cal-bar { height: 4px; border-radius: 999px; }
+.cal-more { font-size: .72rem; color: #64748b; font-weight: 700; }
+.cal-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 2px 0; }
+.cal-legend-item { display: flex; gap: 6px; align-items: center; font-size: .82rem; color: #5f6b74; }
+.cal-dot { width: 10px; height: 10px; border-radius: 3px; }
+.cal-side { padding: 22px; }
+.cal-side h5 { color: #667A3F; font-weight: 800; margin-bottom: 2px; }
+.cal-side small { color: #7c8791; }
+.cal-events { margin-top: 16px; max-height: 520px; overflow: auto; display: grid; gap: 10px; }
+.cal-event { border: 1px solid #e7ebf0; border-left: 4px solid #3498DB; border-radius: 10px; padding: 10px 12px; background: #fff; }
+.cal-event-title { font-weight: 700; color: #22313f; margin-bottom: 4px; }
+.cal-event-meta { font-size: .82rem; color: #617080; }
+.cal-chip { display: inline-block; margin-top: 6px; font-size: .7rem; font-weight: 700; border-radius: 999px; padding: 3px 9px; text-transform: uppercase; }
+.c-A_VENIR { background: #50C87822; color: #198754; }
+.c-EN_COURS { background: #F39C1222; color: #d97706; }
+.c-TERMINE { background: #95A5A622; color: #64748b; }
+.c-ANNULE { background: #E74C3C22; color: #dc2626; }
+.c-DEF { background: #8BC34A22; color: #4f7f20; }
+@media (max-width: 992px) {
+  .cal-hero { min-height: 620px !important; }
+  .cal-hero .hero-left { max-width: 100%; padding: 28px; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="hero section dark-background cal-hero"
+  style="background-image:linear-gradient(135deg,rgba(45,88,28,.86),rgba(102,122,63,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
+         background-size:cover;background-position:center;margin-top:70px;">
+  <div class="hero-content-wrapper">
+    <div class="hero-left">
+      <div class="hero-label">CALENDRIER</div>
+      <h1 class="hero-headline">Calendrier mensuel des evenements</h1>
+      <p class="hero-description">Consultez rapidement tous les evenements planifies et le detail jour par jour.</p>
+      <div class="cal-toolbar">
+        <a href="{{ path('app_evenement_index') }}" class="cal-btn">
+          <i class="bi bi-arrow-left me-2"></i>Retour aux evenements
+        </a>
+        <a href="{{ path('app_evenement_index') }}" class="cal-btn">
+          <i class="bi bi-calendar-event me-2"></i>Voir les evenements
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-services-sidebar">
+      <div class="services-glass-panel">
+        <div class="services-panel-title">Navigation</div>
+        <a href="{{ path('app_evenement_index') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar-event-fill"></i></div>
+          <div class="service-sidebar-text"><h4>Evenements</h4><span>Retour a la liste</span></div>
+        </a>
+        <a href="{{ path('app_evenement_inscriptions') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
+          <div class="service-sidebar-text"><h4>Inscriptions</h4><span>Mes participations</span></div>
+        </a>
+        <a href="{{ path('app_evenement_favoris') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-heart-fill"></i></div>
+          <div class="service-sidebar-text"><h4>Favoris</h4><span>Evenements sauvegardes</span></div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services section" style="padding-top: 34px;">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="cal-layout-card">
+          <div class="cal-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h2 id="calMonth" class="cal-month">-</h2>
+            <div class="d-flex gap-2">
+              <button id="calPrev" class="btn btn-sm btn-outline-success">◀ Precedent</button>
+              <button id="calToday" class="btn btn-sm btn-success">Aujourd'hui</button>
+              <button id="calNext" class="btn btn-sm btn-outline-success">Suivant ▶</button>
+            </div>
+          </div>
+          <div class="cal-grid-wrap">
+            <div id="calGrid" class="cal-grid"></div>
+            <div class="cal-legend mt-3">
+              <div class="cal-legend-item"><span class="cal-dot" style="background:#50C878;"></span>A venir</div>
+              <div class="cal-legend-item"><span class="cal-dot" style="background:#F39C12;"></span>En cours</div>
+              <div class="cal-legend-item"><span class="cal-dot" style="background:#95A5A6;"></span>Termine</div>
+              <div class="cal-legend-item"><span class="cal-dot" style="background:#E74C3C;"></span>Annule</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="cal-layout-card cal-side">
+          <h5>Evenements du jour</h5>
+          <small id="calSelectedDate">-</small>
+          <div id="calEventsList" class="cal-events"></div>
+          <a href="{{ path('app_evenement_calendrier') }}" class="btn btn-sm btn-outline-success mt-3">Actualiser</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+  (() => {
+    const rawEvents = {{ calendarEvents|json_encode|raw }};
+    const monthLabel = document.getElementById('calMonth');
+    const grid = document.getElementById('calGrid');
+    const list = document.getElementById('calEventsList');
+    const selectedDateLabel = document.getElementById('calSelectedDate');
+    if (!monthLabel || !grid || !list || !selectedDateLabel) return;
+
+    const statusColor = (s) => ({
+      A_VENIR: '#50C878',
+      EN_COURS: '#F39C12',
+      TERMINE: '#95A5A6',
+      ANNULE: '#E74C3C'
+    }[s] || '#3498DB');
+
+    const statusLabel = (s) => ({
+      A_VENIR: 'A venir',
+      EN_COURS: 'En cours',
+      TERMINE: 'Termine',
+      ANNULE: 'Annule'
+    }[s] || s);
+
+    const typeLabel = (t) => ({
+      FOIRE: 'Foire',
+      FORMATION: 'Formation',
+      CONFERENCE: 'Conference',
+      ATELIER: 'Atelier'
+    }[t] || t);
+
+    const eventsByDay = {};
+    rawEvents.forEach((ev) => {
+      if (!ev.dateDebut || !ev.dateFin) return;
+      const start = new Date(ev.dateDebut + 'T00:00:00');
+      const end = new Date(ev.dateFin + 'T00:00:00');
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        if (!eventsByDay[key]) eventsByDay[key] = [];
+        eventsByDay[key].push(ev);
+      }
+    });
+
+    const weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    let current = new Date();
+    let selected = new Date();
+
+    const fmtMonth = (date) => date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const fmtDay = (date) => {
+      const txt = date.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+      return txt.charAt(0).toUpperCase() + txt.slice(1);
+    };
+    const dayKey = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+
+    const renderEvents = (date) => {
+      const key = dayKey(date);
+      const dayEvents = eventsByDay[key] || [];
+      selectedDateLabel.textContent = fmtDay(date);
+      list.innerHTML = '';
+      if (!dayEvents.length) {
+        list.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-calendar-x fs-1 d-block mb-2"></i>Aucun evenement ce jour.</div>';
+        return;
+      }
+
+      dayEvents.forEach((ev) => {
+        const card = document.createElement('div');
+        card.className = 'cal-event';
+        card.style.borderLeftColor = statusColor(ev.statut);
+        card.innerHTML = `
+          <div class="cal-event-title">${ev.titre}</div>
+          <div class="cal-event-meta"><i class="bi bi-geo-alt-fill me-1"></i>${ev.lieu || '-'}</div>
+          <div class="cal-event-meta"><i class="bi bi-calendar3 me-1"></i>${ev.dateDebut} → ${ev.dateFin}</div>
+          <span class="cal-chip c-${ev.statut || 'DEF'}">${statusLabel(ev.statut)} · ${typeLabel(ev.type)}</span>
+        `;
+        list.appendChild(card);
+      });
+    };
+
+    const sameDate = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+    const draw = () => {
+      monthLabel.textContent = fmtMonth(current).toUpperCase();
+      grid.innerHTML = '';
+      weekdays.forEach((d) => {
+        const h = document.createElement('div');
+        h.className = 'cal-dow';
+        h.textContent = d;
+        grid.appendChild(h);
+      });
+
+      const first = new Date(current.getFullYear(), current.getMonth(), 1);
+      const offset = (first.getDay() + 6) % 7;
+      const start = new Date(first);
+      start.setDate(first.getDate() - offset);
+
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const key = dayKey(d);
+        const dayEvents = eventsByDay[key] || [];
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+        if (d.getMonth() !== current.getMonth()) cell.classList.add('out');
+        if (sameDate(d, new Date())) cell.classList.add('today');
+        if (sameDate(d, selected)) cell.classList.add('active');
+
+        const bars = dayEvents.slice(0, 3).map((ev) => `<div class="cal-bar" style="background:${statusColor(ev.statut)}"></div>`).join('');
+        const more = dayEvents.length > 3 ? `<div class="cal-more">+${dayEvents.length - 3}</div>` : '';
+
+        cell.innerHTML = `<div class="cal-day">${d.getDate()}</div><div class="cal-bars">${bars}${more}</div>`;
+        cell.addEventListener('click', () => {
+          selected = d;
+          draw();
+          renderEvents(d);
+        });
+        grid.appendChild(cell);
+      }
+    };
+
+    document.getElementById('calPrev')?.addEventListener('click', () => {
+      current = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+      draw();
+    });
+    document.getElementById('calNext')?.addEventListener('click', () => {
+      current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+      draw();
+    });
+    document.getElementById('calToday')?.addEventListener('click', () => {
+      current = new Date();
+      selected = new Date();
+      draw();
+      renderEvents(selected);
+    });
+
+    draw();
+    renderEvents(selected);
+  })();
+</script>
+{% endblock %}

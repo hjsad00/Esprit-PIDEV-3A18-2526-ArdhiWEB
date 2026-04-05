@@ -85,7 +85,7 @@
 {% block body %}
 
 <!-- HERO BANNER -->
-<div style="margin-top:70px;position:relative;min-height:300px;display:flex;align-items:flex-end;overflow:hidden;
+<div style="margin-top:0;position:relative;min-height:340px;display:flex;align-items:flex-end;overflow:hidden;
             background:linear-gradient(135deg,#667A3F,#3498DB);">
   {% if evenement.imageUrl %}
     <img src="{{ asset(evenement.imageUrl) }}" alt="{{ evenement.titre }}"
@@ -93,7 +93,7 @@
          onerror="this.style.display='none'">
   {% endif %}
   <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,.08));"></div>
-  <div class="container" style="position:relative;z-index:2;padding:36px 0;">
+  <div class="container" style="position:relative;z-index:2;padding:110px 0 36px 0;">
     <nav style="font-size:.84rem;color:rgba(255,255,255,.65);margin-bottom:12px;">
       <a href="{{ path('app_evenement_index') }}" style="color:rgba(255,255,255,.8);text-decoration:none;">Événements</a>
       <span style="margin:0 8px;color:rgba(255,255,255,.35)">›</span>
@@ -106,6 +106,9 @@
       </span>
     </div>
     <h1 style="font-size:2.2rem;font-weight:800;color:#fff;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.5);">{{ evenement.titre }}</h1>
+    <div class="hero-actions-row mt-3">
+      {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
+    </div>
   </div>
 </div>
 

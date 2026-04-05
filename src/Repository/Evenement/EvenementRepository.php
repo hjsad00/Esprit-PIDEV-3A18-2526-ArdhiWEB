@@ -24,4 +24,18 @@ class EvenementRepository extends ServiceEntityRepository
         }
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Events eligible for automatic status sync.
+     */
+    public function findForStatusSync(): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.statut != :annule')
+            ->andWhere('e.dateDebut IS NOT NULL')
+            ->andWhere('e.dateFin IS NOT NULL')
+            ->setParameter('annule', 'ANNULE')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -14,17 +14,49 @@
 .btn-voir:hover{background:#4a5c2a;color:#fff;}
 .btn-desinsc{background:none;border:1.5px solid #E74C3C;color:#E74C3C;border-radius:8px;padding:6px 14px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .btn-desinsc:hover{background:#E74C3C;color:#fff;}
+/* Filter bar: same style as liste des evenements */
+.filter-wrap {
+  background:#fff; border-radius:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+  padding:20px 24px; margin-top:-28px;
+  position:relative; z-index:10;
+}
+.filter-wrap .form-control,
+.filter-wrap .form-select {
+  border-radius:8px; border:1.5px solid #e2e8f0; font-size:.93rem;
+}
+.filter-wrap .form-control:focus,
+.filter-wrap .form-select:focus {
+  border-color:#667A3F; box-shadow:0 0 0 3px rgba(102,122,63,.15);
+}
+.btn-filtrer { background:#667A3F;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-weight:700; }
+.btn-filtrer:hover { background:#4a5c2a;color:#fff; }
+.btn-reset { border:1.5px solid #667A3F;color:#667A3F;background:transparent;border-radius:8px;padding:9px 14px;font-weight:600; transition:all .2s; }
+.btn-reset:hover { background:#667A3F;color:#fff; }
+.hero-insc { min-height:520px !important; overflow:visible; }
+.hero-insc .hero-left { padding:90px 40px 70px 40px !important; }
+.hero-insc .hero-cta-group { flex-wrap:nowrap; gap:12px; }
+.hero-insc .hero-cta-group .hero-btn-secondary,
+.hero-insc .hero-cta-group .hero-btn-primary {
+  min-width:auto;
+  padding:12px 20px;
+  font-size:14px;
+}
+@media (max-width: 1100px) {
+  .hero-insc .hero-cta-group { flex-wrap:wrap; }
+}
 </style>{% endblock %}
 {% block body %}
-<section class="hero section dark-background"
+<section class="hero section dark-background hero-insc"
   style="background-image:linear-gradient(180deg,rgba(10,15,8,.54),rgba(10,15,8,.14)),url('{{ asset('assets/img/hero_4.jpg') }}');
-         background-size:cover;background-position:center;min-height:320px;margin-top:70px;">
+         background-size:cover;background-position:center;margin-top:70px;">
   <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
-    <div class="hero-left" style="max-width:720px;padding:90px 40px;">
+    <div class="hero-left" style="max-width:760px;">
       <div class="hero-label">MES INSCRIPTIONS</div>
       <h1 class="hero-headline">Suivez vos participations</h1>
       <p class="hero-description">{{ inscriptions|length }} inscription(s) — consultez le statut de chacune.</p>
       <div class="hero-cta-group">
+        {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
         <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir les événements</a>
         <a href="{{ path('app_evenement_favoris') }}" class="hero-btn-primary">Mes favoris</a>
       </div>
@@ -41,9 +73,51 @@
         <a href="{{ path('app_evenement_index') }}" class="btn btn-success mt-2">Voir les événements</a>
       </div>
     {% else %}
-    <div class="row g-4 pb-5">
+    <div class="filter-wrap mt-0 mb-4" style="margin-top:0!important">
+      <form id="insc-filter-form">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small text-muted mb-1">Rechercher</label>
+            <input id="insc-search" type="text" class="form-control" placeholder="Événement, lieu, statut...">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small text-muted mb-1">Type</label>
+            <select id="insc-type" class="form-select">
+              <option value="">-- Tous les types --</option>
+              <option value="FOIRE">Foire</option>
+              <option value="FORMATION">Formation</option>
+              <option value="CONFERENCE">Conférence</option>
+              <option value="ATELIER">Atelier</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small text-muted mb-1">Statut</label>
+            <select id="insc-statut" class="form-select">
+              <option value="">-- Tous les statuts --</option>
+              <option value="CONFIRME">Confirmé</option>
+              <option value="PRESENT">Présent</option>
+              <option value="EN_ATTENTE">En attente</option>
+              <option value="ANNULE">Annulé</option>
+              <option value="REFUSE">Refusé</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex gap-2">
+            <button id="insc-apply" type="button" class="btn-filtrer flex-fill"><i class="bi bi-search me-1"></i>Filtrer</button>
+            <button id="insc-reset" type="button" class="btn-reset"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="row g-4 pb-5" id="inscriptions-list">
       {% for p in inscriptions %}
-      <div class="col-lg-6">
+      <div class="col-lg-6"
+           data-inscription-item
+           data-title="{{ p.evenement.titre|lower|e('html_attr') }}"
+           data-lieu="{{ p.evenement.lieu|lower|e('html_attr') }}"
+           data-statut="{{ p.statut|lower|e('html_attr') }}"
+           data-type="{{ p.evenement.type|default('')|lower|e('html_attr') }}"
+           data-event-date="{{ p.evenement.dateDebut ? p.evenement.dateDebut|date('Y-m-d') : '' }}"
+           data-insc-date="{{ p.dateInscription ? p.dateInscription|date('Y-m-d H:i:s') : '' }}">
         <div class="insc-card">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
@@ -74,7 +148,61 @@
       </div>
       {% endfor %}
     </div>
+    <p id="insc-empty-filter" class="text-center text-muted py-3 d-none">Aucun résultat pour ce filtre.</p>
     {% endif %}
   </div>
 </section>
+{% endblock %}
+{% block javascripts %}
+{{ parent() }}
+<script>
+  (() => {
+    const searchInput = document.getElementById('insc-search');
+    const typeSelect = document.getElementById('insc-type');
+    const statutSelect = document.getElementById('insc-statut');
+    const list = document.getElementById('inscriptions-list');
+    if (!searchInput || !typeSelect || !statutSelect || !list) return;
+
+    const emptyMsg = document.getElementById('insc-empty-filter');
+    const items = Array.from(list.querySelectorAll('[data-inscription-item]'));
+
+    const apply = () => {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const type = (typeSelect.value || '').toLowerCase();
+      const statut = (statutSelect.value || '').toLowerCase();
+
+      const filtered = items.filter((el) => {
+        const haystack = [el.dataset.title, el.dataset.lieu, el.dataset.statut, el.dataset.type].join(' ');
+        const textOk = !q || haystack.includes(q);
+        const typeOk = !type || (el.dataset.type || '') === type;
+        const statutOk = !statut || (el.dataset.statut || '') === statut;
+        const ok = textOk && typeOk && statutOk;
+        el.style.display = ok ? '' : 'none';
+        return ok;
+      });
+
+      if (emptyMsg) emptyMsg.classList.toggle('d-none', filtered.length > 0);
+    };
+
+    const applyBtn = document.getElementById('insc-apply');
+    const resetBtn = document.getElementById('insc-reset');
+    let timeoutId;
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(apply, 450);
+    });
+    typeSelect.addEventListener('change', apply);
+    statutSelect.addEventListener('change', apply);
+    if (applyBtn) applyBtn.addEventListener('click', apply);
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        typeSelect.value = '';
+        statutSelect.value = '';
+        apply();
+      });
+    }
+  })();
+</script>
 {% endblock %}

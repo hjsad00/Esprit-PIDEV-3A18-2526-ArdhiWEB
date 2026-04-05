@@ -15,8 +15,8 @@
 .stat-val  { font-size:2.6rem; font-weight:800; line-height:1; }
 .stat-lbl  { font-size:.82rem; color:#9ca3af; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
 .s-green   { border-color:#8BC34A; } .s-green .stat-val   { color:#667A3F; }
-.s-blue    { border-color:#3498DB; } .s-blue .stat-val    { color:#2980b9; }
-.s-teal    { border-color:#2ECC71; } .s-teal .stat-val    { color:#27ae60; }
+.s-blue    { border-color:#7CB342; } .s-blue .stat-val    { color:#5f8f2f; }
+.s-teal    { border-color:#66BB6A; } .s-teal .stat-val    { color:#388E3C; }
 .s-orange  { border-color:#F39C12; } .s-orange .stat-val  { color:#e67e22; }
 .s-red     { border-color:#E74C3C; } .s-red .stat-val     { color:#c0392b; }
 .s-purple  { border-color:#9B59B6; } .s-purple .stat-val  { color:#8e44ad; }
@@ -52,19 +52,67 @@
 .top-rank.r3 { background:linear-gradient(135deg,#cd7f32,#a0522d); }
 /* Badge */
 .b-type { font-size:.7rem; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
-.b-FOIRE{background:#3498DB22;color:#2980b9;} .b-FORMATION{background:#9B59B622;color:#8e44ad;}
-.b-CONFERENCE{background:#F39C1222;color:#e67e22;} .b-ATELIER{background:#2ECC7122;color:#27ae60;}
+.b-FOIRE{background:#8BC34A22;color:#5f8f2f;} .b-FORMATION{background:#7CB34222;color:#4e7d22;}
+.b-CONFERENCE{background:#A5D6A722;color:#2e7d32;} .b-ATELIER{background:#66BB6A22;color:#1b5e20;}
 .hero-actions-row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-top:24px; margin-bottom:20px; }
+.chart-card {
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  padding:20px;
+  height:100%;
+}
+.chart-title {
+  font-weight:700;
+  font-size:1rem;
+  color:#667A3F;
+  margin-bottom:12px;
+}
+.chart-wrap {
+  position:relative;
+  height:300px;
+}
+.stats-hero {
+  min-height:560px !important;
+  overflow: visible;
+}
+.stats-hero .hero-content-wrapper {
+  padding-top:96px;
+  align-items:flex-start;
+}
+.stats-hero .hero-left {
+  max-width:62%;
+  justify-content:flex-start;
+  padding:36px 60px 32px 80px;
+}
+.stats-hero .hero-description {
+  max-width:680px;
+  margin-bottom:18px;
+  line-height:1.75;
+  white-space:normal;
+}
+@media (max-width: 992px) {
+  .stats-hero { min-height:640px !important; }
+  .stats-hero .hero-content-wrapper { padding-top:72px; }
+  .stats-hero .hero-left {
+    max-width:100%;
+    padding:34px 30px 20px 30px;
+  }
+  .stats-hero .hero-description {
+    max-width:100%;
+    margin-bottom:14px;
+  }
+}
 </style>
 {% endblock %}
 {% block body %}
 {% set currentRoute = app.request.attributes.get('_route') %}
 
 <!-- HERO -->
-<section class="hero section dark-background"
-  style="background-image:linear-gradient(135deg,rgba(48,38,142,.88),rgba(102,126,234,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
+<section class="hero section dark-background stats-hero"
+  style="background-image:linear-gradient(135deg,rgba(45,88,28,.88),rgba(102,122,63,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
          background-size:cover;background-position:center;
-         min-height:380px;margin-top:70px;">
+         margin-top:70px;">
   <div class="hero-content-wrapper">
     <div class="hero-left">
       <div class="hero-label">STATISTIQUES ÉVÉNEMENTS</div>
@@ -90,6 +138,10 @@
         <a href="{{ path('app_evenement_inscriptions') }}" class="service-sidebar-item">
           <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
           <div class="service-sidebar-text"><h4>Inscriptions</h4><span>Mes participations</span></div>
+        </a>
+        <a href="{{ path('app_evenement_calendrier') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
+          <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
         </a>
         <a href="{{ path('app_evenement_statistics') }}" class="service-sidebar-item active">
           <div class="service-sidebar-icon"><i class="bi bi-graph-up"></i></div>
@@ -117,12 +169,33 @@
     </div>
 
     <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-pie-chart-fill me-2"></i>Répartition par type</div>
+          <div class="chart-wrap"><canvas id="adminTypeChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-fill me-2"></i>Participations par statut</div>
+          <div class="chart-wrap"><canvas id="adminParticipationChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-graph-up-arrow me-2"></i>Top événements (participants)</div>
+          <div class="chart-wrap"><canvas id="adminTopEventsChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
       {# Events by status - mirrors JavaFX progress bars #}
       <div class="col-md-4">
         <div class="section-card h-100">
           <h5><i class="bi bi-circle-fill text-success"></i>Par Statut</h5>
           {% set totalEv = gs.totalEvents > 0 ? gs.totalEvents : 1 %}
-          {% set statusColors = {'A_VENIR':'#8BC34A','EN_COURS':'#3498DB','TERMINE':'#95a5a6','ANNULE':'#E74C3C'} %}
+          {% set statusColors = {'A_VENIR':'#8BC34A','EN_COURS':'#66BB6A','TERMINE':'#95a5a6','ANNULE':'#E74C3C'} %}
           {% set statusLabels = {'A_VENIR':'À venir','EN_COURS':'En cours','TERMINE':'Terminé','ANNULE':'Annulé'} %}
           {% for row in gs.eventsByStatus %}
           <div class="stat-progress-row">
@@ -142,7 +215,7 @@
       <div class="col-md-4">
         <div class="section-card h-100">
           <h5><i class="bi bi-tag-fill text-success"></i>Par Type</h5>
-          {% set typeColors = {'FOIRE':'#3498DB','FORMATION':'#9B59B6','CONFERENCE':'#F39C12','ATELIER':'#2ECC71'} %}
+          {% set typeColors = {'FOIRE':'#8BC34A','FORMATION':'#7CB342','CONFERENCE':'#A5D6A7','ATELIER':'#66BB6A'} %}
           {% for row in gs.eventsByType %}
           <div class="stat-progress-row">
             <div class="stat-progress-label">
@@ -162,7 +235,7 @@
         <div class="section-card h-100">
           <h5><i class="bi bi-people-fill text-success"></i>Participations par statut</h5>
           {% set totalP = gs.totalParticipations > 0 ? gs.totalParticipations : 1 %}
-          {% set pstatColors = {'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+          {% set pstatColors = {'CONFIRME':'#8BC34A','EN_ATTENTE':'#A5D6A7','PRESENT':'#66BB6A','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
           {% set pstatLabels = {'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
           {% for row in gs.participationsByStatus %}
           <div class="stat-progress-row">
@@ -192,7 +265,7 @@
               <span class="b-type b-{{ ev.type }}">{{ ev.type }}</span>
             </div>
             <div style="text-align:right;">
-              <div style="font-weight:800;font-size:1.3rem;color:#3498DB;">{{ ev.participantCount }}</div>
+              <div style="font-weight:800;font-size:1.3rem;color:#5f8f2f;">{{ ev.participantCount }}</div>
               <div style="font-size:.72rem;color:#9ca3af;">participants</div>
             </div>
           </div>
@@ -236,12 +309,27 @@
       <div class="col-md-3"><div class="stat-card s-orange"><div class="stat-icon">🗓️</div><div class="stat-val">{{ userStats.createdEvents }}</div><div class="stat-lbl">Créés</div></div></div>
     </div>
 
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-pie-chart-fill me-2"></i>Mes inscriptions par statut</div>
+          <div class="chart-wrap"><canvas id="userInscriptionsChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-fill me-2"></i>Indicateurs personnels</div>
+          <div class="chart-wrap"><canvas id="userKpiChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       <div class="col-md-6">
         <div class="section-card">
           <h5><i class="bi bi-person-check-fill"></i>Mes inscriptions par statut</h5>
           {% set tot = userStats.totalInscriptions > 0 ? userStats.totalInscriptions : 1 %}
-          {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+          {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#A5D6A7','PRESENT':'#66BB6A','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
           {% set pstatLabels={'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
           {% for row in userStats.inscriptionsByStatus %}
           <div class="stat-progress-row">
@@ -263,7 +351,7 @@
           <h5><i class="bi bi-bar-chart-fill"></i>Vos événements — participants</h5>
           <div class="row text-center mb-4">
             <div class="col-4">
-              <div style="font-size:2rem;font-weight:800;color:#3498DB;">{{ creatorStats.totalParticipants }}</div>
+              <div style="font-size:2rem;font-weight:800;color:#5f8f2f;">{{ creatorStats.totalParticipants }}</div>
               <div style="font-size:.78rem;color:#9ca3af;">Participants</div>
             </div>
             <div class="col-4">
@@ -301,10 +389,25 @@
       <div class="col-md-4"><div class="stat-card s-red"><div class="stat-icon">❤️</div><div class="stat-val">{{ userStats.totalFavorites }}</div><div class="stat-lbl">Favoris</div></div></div>
     </div>
 
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-pie-chart-fill me-2"></i>Mes inscriptions par statut</div>
+          <div class="chart-wrap"><canvas id="userInscriptionsChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-fill me-2"></i>Indicateurs personnels</div>
+          <div class="chart-wrap"><canvas id="userKpiChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
     <div class="section-card">
       <h5><i class="bi bi-person-check-fill"></i>Mes inscriptions par statut</h5>
       {% set tot = userStats.totalInscriptions > 0 ? userStats.totalInscriptions : 1 %}
-      {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+      {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#A5D6A7','PRESENT':'#66BB6A','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
       {% set pstatLabels={'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
       {% for row in userStats.inscriptionsByStatus %}
       <div class="stat-progress-row">
@@ -322,4 +425,89 @@
 
   </div>
 </section>
+{% endblock %}
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  (() => {
+    if (typeof Chart === 'undefined') return;
+
+    const defaultOpts = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      plugins: { legend: { position: 'bottom' } }
+    };
+
+    {% if role == 'ADMIN' and globalStats is defined %}
+    const adminTypeLabels = [{% for row in globalStats.eventsByType %}'{{ row.type|e('js') }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const adminTypeValues = [{% for row in globalStats.eventsByType %}{{ row.count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    new Chart(document.getElementById('adminTypeChart'), {
+      type: 'doughnut',
+      data: {
+        labels: adminTypeLabels,
+        datasets: [{ data: adminTypeValues, backgroundColor: ['#8BC34A','#7CB342','#A5D6A7','#66BB6A','#95a5a6'] }]
+      },
+      options: defaultOpts
+    });
+
+    const partLabels = [{% for row in globalStats.participationsByStatus %}'{{ row.statut|e('js') }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const partValues = [{% for row in globalStats.participationsByStatus %}{{ row.count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    new Chart(document.getElementById('adminParticipationChart'), {
+      type: 'bar',
+      data: {
+        labels: partLabels,
+        datasets: [{ label: 'Participations', data: partValues, backgroundColor: '#667A3F' }]
+      },
+      options: {
+        ...defaultOpts,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    const topLabels = [{% for ev in globalStats.topEvents %}'{{ ev.titre|slice(0,20)|e('js') }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const topValues = [{% for ev in globalStats.topEvents %}{{ ev.participantCount }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    new Chart(document.getElementById('adminTopEventsChart'), {
+      type: 'bar',
+      data: {
+        labels: topLabels,
+        datasets: [{ label: 'Participants', data: topValues, backgroundColor: '#5f8f2f' }]
+      },
+      options: {
+        ...defaultOpts,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+    {% elseif userStats is defined %}
+    const statusLabels = [{% for row in userStats.inscriptionsByStatus %}'{{ row.statut|e('js') }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const statusValues = [{% for row in userStats.inscriptionsByStatus %}{{ row.count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    new Chart(document.getElementById('userInscriptionsChart'), {
+      type: 'doughnut',
+      data: {
+        labels: statusLabels,
+        datasets: [{ data: statusValues, backgroundColor: ['#8BC34A','#A5D6A7','#66BB6A','#E74C3C','#95a5a6'] }]
+      },
+      options: defaultOpts
+    });
+
+    const kpiLabels = ['Inscriptions','Confirmées','Favoris'{% if role == 'AGRICULTEUR' %},'Événements créés'{% endif %}];
+    const kpiValues = [{{ userStats.totalInscriptions }},{{ userStats.confirmations }},{{ userStats.totalFavorites }}{% if role == 'AGRICULTEUR' %},{{ userStats.createdEvents }}{% endif %}];
+    new Chart(document.getElementById('userKpiChart'), {
+      type: 'bar',
+      data: {
+        labels: kpiLabels,
+        datasets: [{ label: 'Total', data: kpiValues, backgroundColor: ['#667A3F','#66BB6A','#E74C3C','#A5D6A7'] }]
+      },
+      options: {
+        ...defaultOpts,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+    {% endif %}
+  })();
+</script>
 {% endblock %}

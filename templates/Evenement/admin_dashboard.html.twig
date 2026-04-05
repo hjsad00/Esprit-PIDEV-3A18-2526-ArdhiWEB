@@ -9,11 +9,21 @@
 .k-orange{border-color:#F39C12;} .k-orange .kpi-val{color:#e67e22;}
 .admin-hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:32px; flex-wrap:wrap; }
 .admin-hero-intro { flex:1 1 420px; min-width:280px; }
-.admin-hero-actions { display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:flex-start; margin:18px 0 14px 0; }
+.admin-hero-actions { display:flex; gap:12px; flex-wrap:nowrap; align-items:center; justify-content:flex-start; margin:18px 0 14px 0; }
+.admin-hero-actions .hero-btn-primary,
+.admin-hero-actions .hero-btn-secondary {
+  min-width:auto;
+  padding:12px 20px;
+  font-size:14px;
+}
+.admin-hero { min-height:540px !important; }
+.admin-hero .hero-content-wrapper { padding-top:92px; align-items:flex-start; }
+.admin-hero .hero-left { max-width:64%; padding-bottom:26px; }
+@media (max-width: 1200px) { .admin-hero-actions { flex-wrap:wrap; } }
 @media (max-width: 992px) { .admin-hero-top { flex-direction:column; } .admin-hero-actions { justify-content:flex-start; } }
 </style>{% endblock %}
 {% block body %}
-<section class="hero section dark-background"
+<section class="hero section dark-background admin-hero"
   style="background-image:linear-gradient(135deg,rgba(48,38,142,.88),rgba(102,126,234,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
          background-size:cover;background-position:center;min-height:360px;margin-top:70px;">
   <div class="hero-content-wrapper">
@@ -26,6 +36,7 @@
             <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
             <a href="{{ path('app_evenement_statistics') }}" class="hero-btn-secondary">Statistiques</a>
             <a href="{{ path('app_evenement_participations') }}" class="hero-btn-secondary">Participations</a>
+            {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
           </div>
           <p class="hero-description">Créez, gérez et analysez tous les événements de la plateforme.</p>
         </div>
@@ -45,6 +56,10 @@
         <a href="{{ path('app_evenement_participations') }}" class="service-sidebar-item">
           <div class="service-sidebar-icon"><i class="bi bi-people-fill"></i></div>
           <div class="service-sidebar-text"><h4>Participations</h4><span>Gérer inscriptions</span></div>
+        </a>
+        <a href="{{ path('app_evenement_calendrier') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
+          <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
         </a>
         <a href="{{ path('app_evenement_new') }}" class="service-sidebar-item">
           <div class="service-sidebar-icon"><i class="bi bi-plus-circle-fill"></i></div>
@@ -116,7 +131,11 @@
               {% for e in evenements %}
               <tr>
                 <td class="fw-semibold">{{ e.titre|slice(0,40) }}</td>
-                <td><span class="badge bg-{{ e.type=='FOIRE' ? 'primary' : e.type=='FORMATION' ? 'purple' : e.type=='CONFERENCE' ? 'warning text-dark' : 'success' }}">{{ e.type }}</span></td>
+                <td>
+                  <span class="badge {{ e.type=='FOIRE' ? 'bg-primary' : e.type=='FORMATION' ? 'bg-dark' : e.type=='CONFERENCE' ? 'bg-warning text-dark' : 'bg-success' }}">
+                    {{ e.type }}
+                  </span>
+                </td>
                 <td><span class="badge bg-{{ e.statut=='A_VENIR' ? 'success' : e.statut=='EN_COURS' ? 'info text-dark' : e.statut=='TERMINE' ? 'secondary' : 'danger' }}">{{ e.statut }}</span></td>
                 <td style="white-space:nowrap;font-size:.84rem;">{{ e.dateDebut|date('d/m/Y') }}</td>
                 <td style="font-size:.84rem;">{{ e.nombreParticipants }}/{{ e.nombrePlacesMax }}</td>

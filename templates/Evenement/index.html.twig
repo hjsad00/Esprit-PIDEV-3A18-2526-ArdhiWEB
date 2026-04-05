@@ -56,7 +56,7 @@
 .filter-wrap {
   background:#fff; border-radius:14px;
   box-shadow:0 4px 20px rgba(0,0,0,.08);
-  padding:20px 24px; margin-top:-28px;
+  padding:20px 24px; margin-top:18px;
   position:relative; z-index:10;
 }
 .filter-wrap .form-control,
@@ -71,13 +71,18 @@
 .btn-filtrer:hover { background:#4a5c2a;color:#fff; }
 .btn-reset { border:1.5px solid #667A3F;color:#667A3F;background:transparent;border-radius:8px;padding:9px 14px;font-weight:600; transition:all .2s; }
 .btn-reset:hover { background:#667A3F;color:#fff; }
+.events-hero {
+  background-size: cover !important;
+  background-position: center center !important;
+  transition: background-image .6s ease-in-out;
+}
 </style>
 {% endblock %}
 {% block body %}
 {% set currentRoute = app.request.attributes.get('_route') %}
 
 <!-- HERO -->
-<section class="hero section dark-background"
+<section id="events-hero" class="hero section dark-background events-hero"
   style="background-image:linear-gradient(180deg,rgba(10,15,8,.45),rgba(10,15,8,.15)),url('{{ asset('assets/img/hero_1.jpg') }}');
          background-size:cover;background-position:center;
          min-height:calc(100vh - 70px);margin-top:70px;">
@@ -117,10 +122,16 @@
           <div class="service-sidebar-icon"><i class="bi bi-heart-fill"></i></div>
           <div class="service-sidebar-text"><h4>Mes favoris</h4><span>Événements sauvegardés</span></div>
         </a>
+        <a href="{{ path('app_evenement_calendrier') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_calendrier' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
+          <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
+        </a>
+        {% if app.user.role in ['AGRICULTEUR','ADMIN'] %}
         <a href="{{ path('app_evenement_statistics') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_statistics' ? ' active' : '' }}">
           <div class="service-sidebar-icon"><i class="bi bi-graph-up"></i></div>
           <div class="service-sidebar-text"><h4>Statistiques</h4><span>Tableaux de bord</span></div>
         </a>
+        {% endif %}
         {% if app.user.role in ['AGRICULTEUR','ADMIN'] %}
         <a href="{{ path('app_evenement_participations') }}" class="service-sidebar-item{{ currentRoute == 'app_evenement_participations' ? ' active' : '' }}">
           <div class="service-sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
@@ -135,7 +146,7 @@
 
 <!-- FILTER BAR -->
 <div class="container" id="events">
-  <div class="filter-wrap mt-0" style="margin-top:-28px!important">
+  <div class="filter-wrap mt-0" style="margin-top:18px!important">
     <form method="get" action="{{ path('app_evenement_index') }}">
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
@@ -170,6 +181,21 @@
 
   <script>
     (() => {
+      const hero = document.getElementById('events-hero');
+      if (hero) {
+        const images = [
+          "{{ asset('assets/img/hero_1.jpg') }}",
+          "{{ asset('assets/img/hero_3.jpg') }}",
+          "{{ asset('assets/img/hero_4.jpg') }}"
+        ];
+        let idx = 0;
+        setInterval(() => {
+          idx = (idx + 1) % images.length;
+          hero.style.backgroundImage =
+            "linear-gradient(180deg,rgba(10,15,8,.45),rgba(10,15,8,.15)),url('" + images[idx] + "')";
+        }, 6000);
+      }
+
       const form = document.querySelector('#events form');
       if (!form) return;
       const searchInput = form.querySelector('input[name="search"]');

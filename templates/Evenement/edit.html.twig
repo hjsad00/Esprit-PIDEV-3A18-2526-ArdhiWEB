@@ -25,6 +25,9 @@
       <span class="hero-label">{{ isEdit ? 'MODIFIER UN ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT' }}</span>
       <h1 class="hero-headline">{{ isEdit ? evenement.titre : 'Publiez un événement agricole' }}</h1>
       <p class="hero-description">{{ isEdit ? 'Mettez à jour les informations et enregistrez vos modifications.' : 'Ajoutez un événement, invitez des participants et développez votre réseau.' }}</p>
+      <div class="hero-actions-row">
+        {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
+      </div>
     </div>
   </div>
 </section>

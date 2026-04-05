@@ -15,7 +15,28 @@
   {% block stylesheets %}{% endblock %}
 </head>
 {% set currentRoute = app.request.attributes.get('_route') %}
-<body class="index-page {{ currentRoute starts with('app_evenement') ? 'event-page' : '' }}">
+{% set isEvenementPath = app.request.pathInfo starts with('/evenement') %}
+<body class="index-page {{ (currentRoute starts with('app_evenement') or isEvenementPath) ? 'event-page' : '' }}">
+  <style>
+    /* Keep evenement pages visually consistent (including scrolled state) */
+    body.event-page .header,
+    body.event-page.scrolled .header,
+    .event-page .header,
+    .scrolled .event-page .header {
+      background: rgba(15, 20, 15, 0.65) !important;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    body.event-page .header .navmenu ul > li > a,
+    body.event-page .header .nav-user-circle,
+    body.event-page .header .mobile-nav-toggle {
+      color: #fff !important;
+    }
+    body.event-page .header .navmenu ul > li > a:hover {
+      background: rgba(255, 255, 255, 0.12) !important;
+      border-radius: 8px;
+    }
+  </style>
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
       <a href="/" class="logo d-flex align-items-center">
@@ -43,15 +64,17 @@
                 <li><hr class="dropdown-divider"></li>
                 <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Admin Dashboard</strong></li>
                 <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
+                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
               {% elseif app.user.role == 'AGRICULTEUR' %}
                 <li><hr class="dropdown-divider"></li>
                 <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Tableau de Bord</strong></li>
                 <li><a href="{{ path('app_evenement_participations') }}"><i class="bi bi-clipboard-check"></i> Mes Participations</a></li>
                 <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
+                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
               {% else %}
                 <li><hr class="dropdown-divider"></li>
                 <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Mon Espace</strong></li>
-                <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
+                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
               {% endif %}
               <li><hr class="dropdown-divider"></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>

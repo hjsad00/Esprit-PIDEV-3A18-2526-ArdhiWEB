@@ -10,6 +10,7 @@ use App\Form\Evenement\AvisType;
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\EvenementFavorisRepository;
 use App\Repository\Evenement\ParticipationRepository;
+use App\Service\EvenementStatusSyncService;
 use App\Service\StatisticsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,6 +22,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/evenement')]
 class EvenementController extends AbstractController
 {
+    public function __construct(
+        private EvenementStatusSyncService $eventStatusSync
+    ) {}
+
     // ─── LIST ────────────────────────────────────────────────────────────────
     #[Route('', name: 'app_evenement_index', methods: ['GET'])]
     public function index(
@@ -28,6 +33,8 @@ class EvenementController extends AbstractController
         EvenementRepository $evenementRepo,
         EvenementFavorisRepository $favorisRepo
     ): Response {
+        $this->eventStatusSync->syncAll();
+
         // Admin → redirect to admin dashboard
         if ($this->isGranted('ROLE_ADMIN')) {
             return $this->redirectToRoute('app_evenement_admin_dashboard');
@@ -61,6 +68,7 @@ class EvenementController extends AbstractController
         StatisticsService $statisticsService
     ): Response {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->eventStatusSync->syncAll();
         return $this->render('evenement/admin_dashboard.html.twig', [
             'globalStats' => $statisticsService->getGlobalStatistics(),
             'evenements'  => $evenementRepo->findWithFilters(null, null, null),
@@ -72,6 +80,7 @@ class EvenementController extends AbstractController
     public function statistics(StatisticsService $statisticsService): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
         $user = $this->getUser();
         $data = ['role' => 'CLIENT'];
 
@@ -90,11 +99,36 @@ class EvenementController extends AbstractController
         return $this->render('evenement/statistics.html.twig', $data);
     }
 
+    #[Route('/calendrier', name: 'app_evenement_calendrier', methods: ['GET'])]
+    public function calendrier(EvenementRepository $evenementRepo): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
+
+        $events = $evenementRepo->findWithFilters(null, null, null);
+        $calendarEvents = array_map(static function (Evenement $e): array {
+            return [
+                'id'        => $e->getId(),
+                'titre'     => $e->getTitre(),
+                'type'      => $e->getType(),
+                'statut'    => $e->getStatut(),
+                'lieu'      => $e->getLieu(),
+                'dateDebut' => $e->getDateDebut()?->format('Y-m-d'),
+                'dateFin'   => $e->getDateFin()?->format('Y-m-d'),
+            ];
+        }, $events);
+
+        return $this->render('Evenement/calendrier.html.twig', [
+            'calendarEvents' => $calendarEvents,
+        ]);
+    }
+
     // ─── MES FAVORIS ─────────────────────────────────────────────────────────
     #[Route('/mes-favoris', name: 'app_evenement_favoris', methods: ['GET'])]
     public function mesFavoris(EvenementFavorisRepository $favorisRepo): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
         return $this->render('evenement/favoris.html.twig', [
             'favoris' => $favorisRepo->findByUser($this->getUser()),
         ]);
@@ -105,6 +139,7 @@ class EvenementController extends AbstractController
     public function inscriptions(ParticipationRepository $participationRepo): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
         return $this->render('evenement/inscriptions.html.twig', [
             'inscriptions' => $participationRepo->findByUserOrdered($this->getUser()),
         ]);
@@ -115,6 +150,7 @@ class EvenementController extends AbstractController
     public function participations(ParticipationRepository $participationRepo): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
 
         if ($this->isGranted('ROLE_ADMIN')) {
             $participations = $participationRepo->findAllOrdered();
@@ -200,10 +236,19 @@ class EvenementController extends AbstractController
     // ─── SHOW ────────────────────────────────────────────────────────────────
     #[Route('/{id}', name: 'app_evenement_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(
-        Evenement $evenement,
+        int $id,
+        EvenementRepository $evenementRepo,
         EvenementFavorisRepository $favorisRepo,
         ParticipationRepository $participationRepo
     ): Response {
+        $evenement = $evenementRepo->find($id);
+
+        if (!$evenement) {
+            $this->addFlash('warning', "L'événement demandé est introuvable.");
+            return $this->redirectToRoute('app_evenement_index');
+        }
+        $this->eventStatusSync->syncOne($evenement);
+
         $isFavori = false;
         $userParticipation = null;
         $avisForm = null;
@@ -224,7 +269,8 @@ class EvenementController extends AbstractController
 
         // All reviews for this event
         $avis = $evenement->getParticipations()->filter(
-            fn($p) => $p->getNote() > 0 && $p->getAvis()
+            // Keep consistency with statistics: a review exists as soon as a rating is set.
+            fn($p) => $p->getNote() > 0
         );
 
         return $this->render('evenement/show.html.twig', [
@@ -245,6 +291,7 @@ class EvenementController extends AbstractController
         Request $request
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
 
         $participation = $participationRepo->findByUserAndEvenement($this->getUser(), $evenement);
 
@@ -344,6 +391,7 @@ class EvenementController extends AbstractController
         Request $request
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
 
         if (!$this->isCsrfTokenValid('favori' . $evenement->getId(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token invalide.');
@@ -374,6 +422,7 @@ class EvenementController extends AbstractController
         Request $request
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
 
         if (!$this->isCsrfTokenValid('inscrire' . $evenement->getId(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token invalide.');
@@ -420,6 +469,7 @@ class EvenementController extends AbstractController
         Request $request
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
 
         if (!$this->isCsrfTokenValid('desinscrire' . $evenement->getId(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token invalide.');
