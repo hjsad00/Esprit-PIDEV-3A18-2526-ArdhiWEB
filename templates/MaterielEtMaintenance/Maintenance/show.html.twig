@@ -21,6 +21,35 @@
 
         <div class="row g-4 justify-content-center">
             <div class="col-md-9">
+                <!-- Timeline status -->
+                <div class="card shadow-sm mb-4" style="border-radius: 20px; border: none;">
+                    <div class="card-body p-4 text-center">
+                        <h5 class="mb-4 fw-bold text-muted">Statut de l'intervention</h5>
+                        {% set status = maintenance.statutMaintenance %}
+                        {% set isAnnulee = status == 'annulee' %}
+                        
+                        <div class="maintenance-timeline mb-2">
+                            <div class="timeline-step {% if status in ['planifiee', 'en_cours', 'terminee'] and not isAnnulee %}active{% endif %}">
+                                <div class="step-icon"><i class="bi bi-calendar-check text-white"></i></div>
+                                <div class="step-label fw-bold mt-2">Planifiée</div>
+                            </div>
+                            <div class="timeline-line {% if status in ['en_cours', 'terminee'] and not isAnnulee %}active{% endif %}"></div>
+                            <div class="timeline-step {% if status in ['en_cours', 'terminee'] and not isAnnulee %}active{% endif %}">
+                                <div class="step-icon"><i class="bi bi-gear-wide-connected text-white"></i></div>
+                                <div class="step-label fw-bold mt-2">En Cours</div>
+                            </div>
+                            <div class="timeline-line {% if status == 'terminee' and not isAnnulee %}active{% endif %}"></div>
+                            <div class="timeline-step {% if status == 'terminee' and not isAnnulee %}active{% endif %}">
+                                <div class="step-icon"><i class="bi bi-check-circle text-white"></i></div>
+                                <div class="step-label fw-bold mt-2">Terminée</div>
+                            </div>
+                        </div>
+                        {% if isAnnulee %}
+                            <div class="alert alert-danger mb-0 mt-3 d-inline-block shadow-sm"><i class="bi bi-x-octagon-fill"></i> Intervention Annulée</div>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <div class="card shadow-sm h-100" style="border-radius: 20px; border: none;">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
                         <h5 class="mb-0 fw-bold"><i class="bi bi-clipboard2-data text-primary me-2"></i>Rapport de maintenance</h5>
@@ -43,6 +72,9 @@
                             <div class="col-sm-4">
                                 <h6 class="text-muted mb-2"><strong><i class="bi bi-calendar px-1"></i> Date :</strong></h6>
                                 <p class="fs-5 fw-bold mb-0">{{ maintenance.dateMaintenance ? maintenance.dateMaintenance|date('d/m/Y') : 'Non renseignée' }}</p>
+                                {% if maintenance.googleCalendarEventId or maintenance.dateMaintenance %}
+                                    <a href="https://calendar.google.com/calendar/r/day/{{ maintenance.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2 shadow-sm rounded-pill"><i class="bi bi-google"></i> Ouvrir mon agenda</a>
+                                {% endif %}
                             </div>
                             <div class="col-sm-4 text-center">
                                 <h6 class="text-muted mb-2"><strong><i class="bi bi-tag px-1"></i> Type :</strong></h6>

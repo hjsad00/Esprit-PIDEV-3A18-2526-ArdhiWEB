@@ -71,7 +71,7 @@ class GoogleCalendarService
         return $this->client;
     }
 
-    public function createMaintenanceEvent(User $user, string $title, string $description, \DateTimeInterface $date): ?string
+    public function createMaintenanceEvent(User $user, string $title, string $description, \DateTimeInterface $date): ?array
     {
         $client = $this->authenticateUserClient($user);
         if (!$client) {
@@ -104,7 +104,10 @@ class GoogleCalendarService
 
         try {
             $createdEvent = $calendarService->events->insert('primary', $event);
-            return $createdEvent->getId();
+            return [
+                'id' => $createdEvent->getId(),
+                'link' => $createdEvent->getHtmlLink()
+            ];
         } catch (\Exception $e) {
             return null;
         }

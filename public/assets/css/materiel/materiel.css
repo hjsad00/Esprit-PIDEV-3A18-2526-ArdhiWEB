@@ -316,3 +316,70 @@ body.materiel-theme {
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
 }
+
+/* ================================================================
+   TIMELINE COMPONENT
+   ================================================================ */
+.maintenance-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    width: 80px;
+}
+
+.timeline-step .step-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 0 5px white;
+    color: #a0a0a0;
+}
+
+.timeline-step.active .step-icon {
+    background: var(--mat-primary);
+    box-shadow: 0 0 0 5px rgba(19, 78, 59, 0.15);
+}
+
+.timeline-step .step-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.timeline-step.active .step-label {
+    color: var(--mat-primary);
+}
+
+.timeline-line {
+    flex-grow: 1;
+    height: 6px;
+    background: #e0e0e0;
+    margin: 0 -15px; /* Pull it slightly under the icons */
+    margin-bottom: 30px; /* Align with center of the icon roughly */
+    z-index: 1;
+    position: relative;
+    transition: background 0.4s ease;
+    border-radius: 10px;
+}
+
+.timeline-line.active {
+    background: var(--mat-primary);
+}

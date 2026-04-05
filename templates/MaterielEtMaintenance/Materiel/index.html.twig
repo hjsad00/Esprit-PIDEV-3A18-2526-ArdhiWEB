@@ -32,21 +32,21 @@
         {# Action Bar & Filters #}
         <div class="mat-action-bar flex-wrap gap-4" data-aos="fade-up" data-aos-delay="100">
             <div class="mat-filters flex-grow-1">
-                <form method="get" class="w-100">
-                    <input type="text" name="search" class="mat-input flex-grow-1" placeholder="Rechercher..." value="{{ search }}">
-                    <select name="type" class="mat-input">
+                <form id="filter-form" method="get" class="w-100">
+                    <input type="text" name="search" class="mat-input flex-grow-1" placeholder="Rechercher..." value="{{ search }}" oninput="clearTimeout(window.searchTimeout); window.searchTimeout = setTimeout(() => { document.getElementById('filter-form').submit(); }, 600);">
+                    <select name="type" class="mat-input" onchange="document.getElementById('filter-form').submit();">
                         <option value="">Tous les types</option>
                         {% for t in types %}
                             <option value="{{ t }}" {% if t == type %}selected{% endif %}>{{ t }}</option>
                         {% endfor %}
                     </select>
-                    <select name="etat" class="mat-input">
+                    <select name="etat" class="mat-input" onchange="document.getElementById('filter-form').submit();">
                         <option value="">Tous les états</option>
                         {% for e in etats %}
                             <option value="{{ e }}" {% if e == etat %}selected{% endif %}>{{ e }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn-mat-action" style="padding: 12px 20px; flex:none;">Filtrer</button>
+                    <button type="submit" class="btn-mat-action" style="display: none;">Filtrer</button>
                     <a href="{{ path('app_materiel_index') }}" class="btn-mat-outline" style="padding: 12px 20px; flex:none;">Effacer</a>
                 </form>
             </div>

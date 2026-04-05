@@ -65,16 +65,19 @@ class MaintenanceController extends AbstractController
 
             // Google Calendar Sync
             if ($maintenance->getDateMaintenance() && $this->getUser()->getGoogleAccessToken()) {
-                $eventId = $googleCalendar->createMaintenanceEvent(
+                $eventData = $googleCalendar->createMaintenanceEvent(
                     $this->getUser(),
                     $maintenance->getMateriel()->getNom(),
                     $maintenance->getDescription() ?? 'Intervention planifiée.',
                     $maintenance->getDateMaintenance()
                 );
                 
-                if ($eventId) {
-                    $maintenance->setGoogleCalendarEventId($eventId);
-                    $this->addFlash('success', 'Maintenance planifiée et ajoutée à Google Calendar !');
+                if ($eventData && isset($eventData['id'])) {
+                    $maintenance->setGoogleCalendarEventId($eventData['id']);
+                    $this->addFlash('success', sprintf(
+                        'Maintenance planifiée et ajoutée à Google Calendar ! <a href="%s" target="_blank" class="fw-bold text-decoration-none ms-2 px-3 py-1 bg-white text-success rounded-pill shadow-sm" style="display:inline-block;"><i class="bi bi-calendar-check"></i> Voir l\'événement</a>',
+                        $eventData['link']
+                    ));
                 } else {
                     $this->addFlash('warning', 'Maintenance planifiée, mais échec de la synchronisation avec Google Calendar (Token expiré ou erreur).');
                 }
@@ -83,7 +86,7 @@ class MaintenanceController extends AbstractController
             }
 
             $em->flush();
-            return $this->redirectToRoute('app_maintenance_index');
+            return $this->redirectToRoute('app_maintenance_show', ['id' => $maintenance->getIdMaintenance()]);
         }
 
         return $this->render('MaterielEtMaintenance/maintenance/new.html.twig', [
