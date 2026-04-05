@@ -8,36 +8,39 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\Writer\SvgWriter;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
 class QrCodeService
 {
     private RequestStack $requestStack;
+    private UrlGeneratorInterface $router;
 
-    public function __construct(RequestStack $requestStack)
+    public function __construct(RequestStack $requestStack, UrlGeneratorInterface $router)
     {
         $this->requestStack = $requestStack;
+        $this->router = $router;
     }
 
     /**
-     * Génère l'URL locale (LAN IP + port) pour le QR code
-     * "Comme le desktop Java" (qui utilisait un Server HTTP embarqué sur IP réseau).
+     * Génère l'URL locale (LAN IP + port + base path) pour le QR code
      */
     public function generateFicheUrl(int $employeId): string
     {
         // 1. Récupérer l'IP locale (LAN) de la machine serveur
         $ip = gethostbyname(gethostname());
-        if ($ip === '127.0.0.1' || $ip === '127.0.1.1' || $ip === false) {
-            // Dans certains cas sous Windows, gethostbyname(gethostname()) renvoie 127.0.0.1
-            // Symfony server tourne généralement sur toutes les IPs si lancé avec `symfony server:start`
-            // Essayons de récupérer l'IP via d'autres moyens si possible
+        
+        // 2. Générer l'URL absolue canonique via Symfony (gère le port et les sous-dossiers XAMPP)
+        $url = $this->router->generate('employe_fiche', ['id' => $employeId], UrlGeneratorInterface::ABSOLUTE_URL);
+        
+        // 3. Remplacer le domaine local (localhost, 127.0.0.1) par l'IP réseau.
+        $request = $this->requestStack->getCurrentRequest();
+        $host = $request ? $request->getHost() : 'localhost';
+        
+        if ($ip !== '127.0.0.1' && $ip !== false) {
+            $url = str_replace('://' . $host, '://' . $ip, $url);
         }
 
-        // 2. Récupérer le port actuel (généralement 8000 avec le CLI Symfony)
-        $request = $this->requestStack->getCurrentRequest();
-        $port = $request ? $request->getPort() : 8000;
-
-        // Si l'utilisateur a tapé localhost ou 127.0.0.1 pour accéder à l'app web,
-        // $request->getHost() sera "localhost". On utilise notre $ip LAN pour le téléphone.
-        return "http://" . $ip . ":" . $port . "/employes/" . $employeId . "/fiche";
+        return $url;
     }
 
     /**
