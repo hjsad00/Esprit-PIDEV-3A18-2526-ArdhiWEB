@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 #[Route('/materiel-et-maintenance/materiel', name: 'app_materiel_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -39,13 +41,30 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/ajouter', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
     {
         $materiel = new Materiel();
         $form = $this->createForm(MaterielType::class, $materiel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir').'/public/uploads/materiel',
+                        $newFilename
+                    );
+                    $materiel->setImage($newFilename);
+                } catch (FileException $e) {
+                    // Gérer l'erreur si nécessaire
+                }
+            }
+
             $materiel->setUserId($this->getUser()->getId());
 
             // Calcul date prochaine maintenance si date achat + fréquence fournis
@@ -79,13 +98,39 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, MaterielRepository $repo, EntityManagerInterface $em): Response
+    public function edit(int $id, Request $request, MaterielRepository $repo, EntityManagerInterface $em, SluggerInterface $slugger): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
         $form = $this->createForm(MaterielType::class, $materiel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir').'/public/uploads/materiel',
+                        $newFilename
+                    );
+                    
+                    // Optionnel : supprimer l'ancienne image si elle existe
+                    if ($materiel->getImage()) {
+                        $oldImagePath = $this->getParameter('kernel.project_dir').'/public/uploads/materiel/'.$materiel->getImage();
+                        if (file_exists($oldImagePath)) {
+                            unlink($oldImagePath);
+                        }
+                    }
+
+                    $materiel->setImage($newFilename);
+                } catch (FileException $e) {
+                    // Gérer l'erreur si nécessaire
+                }
+            }
+
             // Recalcul date prochaine maintenance
             if ($materiel->getDateAchat() && $materiel->getFrequenceMaintenanceMois()) {
                 $base = $materiel->getDerniereMaintenance() ?? $materiel->getDateAchat();

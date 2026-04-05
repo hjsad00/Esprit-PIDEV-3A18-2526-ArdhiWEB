@@ -63,11 +63,13 @@
         <div class="mat-grid">
             {% for m in materiels %}
                 <div class="mat-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                    <div class="mat-card-img">
-                        {# Icon based on type #}
-                        {% if m.type == 'Tracteur' %}<i class="bi bi-truck-front"></i>
-                        {% elseif m.type == 'Outils' %}<i class="bi bi-tools"></i>
-                        {% else %}<i class="bi bi-box-seam"></i>{% endif %}
+                    <div class="mat-card-img" {% if m.image %}style="background-image: url('{{ asset('uploads/materiel/' ~ m.image) }}'); background-size: cover; background-position: center;"{% endif %}>
+                        {% if not m.image %}
+                            {# Icon based on type #}
+                            {% if m.type == 'Tracteur' %}<i class="bi bi-truck-front"></i>
+                            {% elseif m.type == 'Outils' %}<i class="bi bi-tools"></i>
+                            {% else %}<i class="bi bi-box-seam"></i>{% endif %}
+                        {% endif %}
                         
                         {# Status Badge #}
                         {% if m.etat == 'En panne' %}

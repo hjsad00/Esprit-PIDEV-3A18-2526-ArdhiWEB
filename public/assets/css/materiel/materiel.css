@@ -5,12 +5,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --mat-primary: #388e3c;
-    --mat-accent: #66bb6a;
+    --mat-primary: #134e3b; /* Vert émeraude foncé */
+    --mat-accent: #197b5a; /* Émeraude vif */
     --mat-glass: rgba(255, 255, 255, 0.85);
     --mat-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-    --mat-border: rgba(56, 142, 60, 0.1);
-    --mat-bg: #f4f9f3;
+    --mat-border: rgba(19, 78, 59, 0.1);
+    --mat-bg: #f2f7f5; /* Blanc cassé légèrement bleuté/vert froid */
 }
 
 body.materiel-theme {
@@ -90,10 +90,10 @@ body.materiel-theme {
     justify-content: space-between;
     align-items: center;
     background: white;
-    padding: 20px 30px;
-    border-radius: 16px;
+    padding: 12px 20px;
+    border-radius: 12px;
     box-shadow: var(--mat-shadow);
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 /* Buttons */
@@ -101,7 +101,7 @@ body.materiel-theme {
     background: var(--mat-primary);
     color: white !important;
     font-weight: 600;
-    padding: 12px 28px;
+    padding: 10px 24px;
     border-radius: 50px;
     border: none;
     transition: all 0.3s ease;
@@ -281,7 +281,7 @@ body.materiel-theme {
    TRANSPARENT NAVBAR (MARKETPLACE / MATERIEL PAGE)
    ================================================================ */
 .materiel-theme .header {
-    background: transparent !important;
+    background: #ffffff !important;
     position: fixed !important;
     top: 0;
     left: 0;
@@ -289,17 +289,20 @@ body.materiel-theme {
     z-index: 9999;
     padding: 12px 0;
     transition: all 0.4s ease;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .materiel-theme .header .navmenu ul>li>a {
-    color: #fff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: #333333 !important;
+    text-shadow: none;
+    font-weight: 500;
 }
 
 .materiel-theme .header .navmenu ul>li>a:hover,
 .materiel-theme .header .navmenu ul>li>a.active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(19, 78, 59, 0.08); /* fond accent avec vert émeraude */
+    color: var(--mat-primary) !important;
     text-shadow: none;
     border-radius: 8px;
 }
@@ -307,9 +310,9 @@ body.materiel-theme {
 /* Scrolled state */
 .scrolled.materiel-theme .header,
 .materiel-theme.scrolled .header {
-    background: rgba(45, 90, 39, 0.9) !important;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+    background: #ffffff !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
 }
