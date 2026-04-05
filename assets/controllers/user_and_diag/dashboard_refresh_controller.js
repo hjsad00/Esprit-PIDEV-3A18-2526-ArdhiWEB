@@ -49,6 +49,25 @@ export default class extends Controller {
         }
     }
 
+    toggleCollapse(event) {
+        const header = event.currentTarget;
+        const card = header.closest('.intell-card');
+        const icon = header.querySelector('.toggle-icon');
+
+        // Find the body div - it's the next sibling or children of siblings
+        const body = card.querySelector('.weather-body, .alerts-body, .predict-body');
+
+        if (body) {
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? '' : 'none';
+            if (icon) icon.textContent = isHidden ? '▲' : '▼';
+
+            // Add a class for potential CSS transitions
+            card.classList.toggle('is-collapsed', !isHidden);
+        }
+    }
+
+
 
     updateUI(data) {
         // Gamification
