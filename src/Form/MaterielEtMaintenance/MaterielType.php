@@ -50,10 +50,7 @@ class MaterielType extends AbstractType
                 'widget' => 'single_text',
                 'required' => false,
             ])
-            ->add('frequenceMaintenanceMois', IntegerType::class, [
-                'label' => 'Fréquence de maintenance (en mois)',
-                'required' => false,
-            ])
+
             ->add('image', FileType::class, [
                 'label' => 'Image du matériel (JPG, PNG)',
                 'mapped' => false,

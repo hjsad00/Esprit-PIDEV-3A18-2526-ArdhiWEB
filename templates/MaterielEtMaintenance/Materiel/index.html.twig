@@ -87,13 +87,28 @@
                         
                         <ul class="mat-details-list">
                             <li>
-                                <i class="bi bi-calendar-event"></i>
-                                Proch. Maintenance: 
-                                <strong>{{ m.dateProchaineMaintenance ? m.dateProchaineMaintenance|date('d/m/Y') : 'Non planifiée' }}</strong>
+                                <i class="bi bi-tag" style="color: var(--mat-primary);"></i>
+                                Type: <strong class="fs-5">{{ m.type ?: 'Non spécifié' }}</strong>
                             </li>
-                            <li>
-                                <i class="bi bi-clock-history"></i>
-                                Fréquence: <strong>{{ m.frequenceMaintenanceMois ? m.frequenceMaintenanceMois ~ ' mois' : 'Non précisée' }}</strong>
+                            <li class="mt-2">
+                                <i class="bi bi-clock-history" style="color: var(--mat-primary);"></i>
+                                Prochain Entretien: 
+                                {% set mProchaine = m.dateProchaineMaintenance %}
+                                {% if mProchaine %}
+                                    {% set today = date('today') %}
+                                    {% set dateProchaine = date(mProchaine|date('Y-m-d')) %}
+                                    {% set nowDiff = dateProchaine.diff(today) %}
+                                    {% set isEnRetard = dateProchaine < today %}
+                                    
+                                    <strong class="fs-6 d-block">{{ mProchaine|date('d/m/Y') }}</strong>
+                                    {% if isEnRetard %}
+                                        <div class="mt-1"><span class="badge bg-danger shadow-sm py-2 px-3 w-100 text-start"><i class="bi bi-exclamation-triangle-fill"></i> EN RETARD DE {{ nowDiff.days }} JOUR(S) !</span></div>
+                                    {% else %}
+                                        <div class="mt-1"><span class="badge bg-success shadow-sm py-1 px-3" style="background:#27ae60 !important;"><i class="bi bi-calendar-check"></i> {{ nowDiff.days }} jour(s) restant(s) pour planifier</span></div>
+                                    {% endif %}
+                                {% else %}
+                                    <strong class="fs-6 d-block text-muted">Non définie</strong>
+                                {% endif %}
                             </li>
                         </ul>
                         

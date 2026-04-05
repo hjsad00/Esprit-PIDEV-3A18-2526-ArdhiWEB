@@ -67,12 +67,13 @@ class MaterielController extends AbstractController
 
             $materiel->setUserId($this->getUser()->getId());
 
-            // Calcul date prochaine maintenance si date achat + fréquence fournis
-            if ($materiel->getDateAchat() && $materiel->getFrequenceMaintenanceMois()) {
-                $prochaine = clone $materiel->getDateAchat();
-                $prochaine->modify('+' . $materiel->getFrequenceMaintenanceMois() . ' months');
-                $materiel->setDateProchaineMaintenance($prochaine);
-            }
+            // Fréquence par défaut fixe à 6 mois
+            $materiel->setFrequenceMaintenanceMois(6);
+
+            // Calcul date prochaine maintenance: Achat + 6 mois, sinon Aujourd'hui + 6 mois
+            $baseDate = $materiel->getDateAchat() ? clone $materiel->getDateAchat() : new \DateTime();
+            $baseDate->modify('+6 months');
+            $materiel->setDateProchaineMaintenance($baseDate);
 
             $em->persist($materiel);
             $em->flush();
@@ -131,12 +132,20 @@ class MaterielController extends AbstractController
                 }
             }
 
-            // Recalcul date prochaine maintenance
-            if ($materiel->getDateAchat() && $materiel->getFrequenceMaintenanceMois()) {
-                $base = $materiel->getDerniereMaintenance() ?? $materiel->getDateAchat();
-                $prochaine = clone $base;
-                $prochaine->modify('+' . $materiel->getFrequenceMaintenanceMois() . ' months');
+            // Fréquence fixe de 6 mois
+            if (!$materiel->getFrequenceMaintenanceMois()) {
+                $materiel->setFrequenceMaintenanceMois(6);
+            }
+
+            // Recalcul date prochaine maintenance s'il n'y a pas encore eu de maintenance et qu'on a modifié la date d'achat
+            if (!$materiel->getDerniereMaintenance() && $materiel->getDateAchat()) {
+                $prochaine = clone $materiel->getDateAchat();
+                $prochaine->modify('+6 months');
                 $materiel->setDateProchaineMaintenance($prochaine);
+            } else if (!$materiel->getDateProchaineMaintenance()) {
+                $baseDate = new \DateTime();
+                $baseDate->modify('+6 months');
+                $materiel->setDateProchaineMaintenance($baseDate);
             }
 
             $em->flush();
