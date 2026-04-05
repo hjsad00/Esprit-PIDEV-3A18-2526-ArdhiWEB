@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calcul d'Irrigation{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <h1 class="mb-4"><i class="fas fa-tint"></i> Outil de Calcul d'Irrigation</h1>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">À propos</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                Cet outil vous permet de calculer le besoin en irrigation pour vos parcelles basé sur:
+                            </p>
+                            <ul>
+                                <li><strong>ET0 (Evapotranspiration):</strong> Basée sur les températures</li>
+                                <li><strong>Kc (Coefficient cultural):</strong> Spécifique à votre culture</li>
+                                <li><strong>Précipitations:</strong> Réduisent le besoin en irrigation</li>
+                                <li><strong>Humidité du sol:</strong> Calcul du besoin net</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Formules utilisées</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>ET0</strong> = 0.0023 × (T + 17.8) × √(Tmax − Tmin)
+                            </div>
+                            <div class="mb-3">
+                                <strong>Besoin Brut</strong> = Kc × ET0
+                            </div>
+                            <div class="mb-3">
+                                <strong>Besoin Net</strong> = max(0, Besoin Brut − Précipitations)
+                            </div>
+                            <div>
+                                <strong>Volume (litres)</strong> = Besoin Net × Surface × 10000
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ path('farmer_irrigation_calculator') }}" class="btn btn-lg btn-primary">
+                    <i class="fas fa-calculator"></i> Lancer le calculateur
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

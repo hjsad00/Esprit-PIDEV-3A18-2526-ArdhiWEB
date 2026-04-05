@@ -7,74 +7,70 @@ use App\Repository\Parcelles_Cultures\CultureRepository;
 
 class CultureService
 {
-    private $cultureRepository;
-
-    public function __construct(CultureRepository $cultureRepository)
+    public function __construct(private CultureRepository $cultureRepository)
     {
-        $this->cultureRepository = $cultureRepository;
     }
 
     /**
-     * Vérifie que date_plantation < date_recolte_prevue
+     * Valide que date_plantation < date_recolte_prevue
      */
-    public function isValidDates(\DateTime $plantDate, \DateTime $harvestDate): bool
+    public function isValidDates(Culture $culture): bool
     {
-        return $plantDate < $harvestDate;
+        return $culture->getDatePlantation() < $culture->getDateRecolteProvue();
     }
 
     /**
-     * Vérifie que somme(surface_utilisee) <= surface de la parcelle
+     * Vérifie que la surface utilisée est compatible avec la parcelle
+     * Règle: somme(surface_utilisee) par parcelle <= parcelle.surface
      */
-    public function verifierContrainteSurface(Culture $culture): bool
+    public function verifierContrainteSurface(int $parcelleId, float $nouvelleSurface, ?int $excludeCultureId = null): bool
     {
-        $totalSurface = $this->cultureRepository->getSurfaceUtiliseeTotalByParcelle(
-            $culture->getParcelle()->getId()
-        );
+        $totalSurfaceOthers = $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId, $excludeCultureId);
+        $parcelle = $this->cultureRepository->findOneBySql("SELECT p FROM Parcelle p WHERE p.id = ?", [$parcelleId]);
 
-        if ($culture->getId()) {
-            $totalSurface -= $culture->getSurfaceUtilisee();
+        if (!$parcelle) {
+            return false;
         }
 
-        return ($totalSurface + $culture->getSurfaceUtilisee()) <= $culture->getParcelle()->getSurface();
+        $parcelleMaxSurface = (float) $parcelle->getSurface();
+        return ($totalSurfaceOthers + $nouvelleSurface) <= $parcelleMaxSurface;
     }
 
     /**
-     * Récupère la surface utilisée totale par parcelle
+     * Obtient la surface utilisée totale pour une parcelle
      */
-    public function getSurfaceUtiliseeParParcelle($parcelleId): float
+    public function getSurfaceUtiliseeParParcelle(int $parcelleId): float
     {
-        return $this->cultureRepository->getSurfaceUtiliseeTotalByParcelle($parcelleId);
+        return $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId);
     }
 
     /**
-     * Récupère les cultures prêtes à récolter
+     * Récupère les cultures prêtes à récolter pour un agriculteur
      */
-    public function getCulturesPretesARecolter($agriculteurId)
+    public function getCulturesPretesARecolter($agriculteur)
     {
-        return $this->cultureRepository->getCulturesPretesARecolter($agriculteurId);
+        return $this->cultureRepository->getCulturesPretesARecolter($agriculteur);
     }
 
     /**
-     * Calcule la production estimée (surface * rendement)
+     * Calcule la production estimée
+     * Formule: ProductionEstimee = SurfaceUtilisee × RendementEstime
      */
     public function calculerProductionEstimee(Culture $culture): float
     {
-        return $culture->getSurfaceUtilisee() * $culture->getRendementEstime();
+        $surface = (float) $culture->getSurfaceUtilisee();
+        $rendement = (float) $culture->getRendementEstime();
+
+        return $surface * $rendement;
     }
 
     /**
-     * Récupère le nombre de jours de végétation selon le type et la saison
+     * Met à jour la production estimée d'une culture
      */
-    public function getJoursVegetation(Culture $culture): int
+    public function mettreAJourProductionEstimee(Culture $culture): Culture
     {
-        $joursParType = [
-            'Légume' => 90,
-            'Céréale' => 120,
-            'Fruit' => 180,
-            'Fourrage' => 60,
-            'Légumineuse' => 110
-        ];
-
-        return $joursParType[$culture->getTypeCulture()] ?? 100;
+        $production = $this->calculerProductionEstimee($culture);
+        $culture->setProductionEstimee((string) $production);
+        return $culture;
     }
 }

@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}ROI et Finances{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <h1 class="mb-4"><i class="fas fa-chart-line"></i> Analyse Financière & ROI</h1>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">À propos</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                Calculez la rentabilité de vos cultures avec une analyse financière complète:
+                            </p>
+                            <ul>
+                                <li><strong>Production Réelle:</strong> Basée sur le rendement et les conditions</li>
+                                <li><strong>Coûts de Production:</strong> Semences, engrais, main d'œuvre, etc.</li>
+                                <li><strong>Revenu Brut:</strong> Production × Prix de vente</li>
+                                <li><strong>Marge Brute:</strong> Revenu - Coûts</li>
+                                <li><strong>Score ROI:</strong> (Marge / Coûts) × 100</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Paramètres de Calcul</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>ET0:</strong> 0.0023 × (T + 17.8) × √(Tmax − Tmin)
+                            </div>
+                            <div class="mb-3">
+                                <strong>Facteur Climatique:</strong> max(0.5, 1 − 0.01×Canicule − 0.005×Pluie − 0.02×Gel)
+                            </div>
+                            <div class="mb-3">
+                                <strong>Production Réelle:</strong> (Surface × Rendement) × Facteur
+                            </div>
+                            <div>
+                                <strong>Prix Seuil:</strong> Coût Total ÷ Production
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ path('farmer_roi_calculator') }}" class="btn btn-lg btn-primary">
+                    <i class="fas fa-calculator"></i> Lancer l'analyseur
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

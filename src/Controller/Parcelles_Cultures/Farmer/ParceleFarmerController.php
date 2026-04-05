@@ -3,98 +3,95 @@
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
-use App\Form\Parcelles_Cultures\ParceleType;
-use App\Repository\Parcelles_Cultures\ParceleRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface;
+use App\Form\Parcelles_Cultures\Type\ParcelleFormType;
+use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/farmer/parcelles', name: 'farmer_parcelle_')]
-#[IsGranted('ROLE_FARMER')]
+#[IsGranted('ROLE_AGRICULTEUR')]
 class ParceleFarmerController extends AbstractController
 {
-    #[Route('', name: 'index', methods: ['GET'])]
-    public function index(
-        ParceleRepository $repository,
-        PaginatorInterface $paginator,
-        Request $request
-    ): Response {
-        $user = $this->getUser();
-        $query = $repository->createQueryBuilder('p')
-            ->where('p.agriculteur = :user')
-            ->setParameter('user', $user)
-            ->getQuery();
-        
-        $pagination = $paginator->paginate(
-            $query,
-            $request->query->getInt('page', 1),
-            10
-        );
+    public function __construct(
+        private ParcelleRepository $parcelleRepository,
+        private EntityManagerInterface $em
+    ) {
+    }
 
-        return $this->render('parcelles_cultures/farmer/parcelle/index.html.twig', [
-            'pagination' => $pagination
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(): Response
+    {
+        $parcelles = $this->parcelleRepository->findByAgriculteur($this->getUser());
+        $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
+
+        return $this->render('parcelles_cultures/farmer/parcelles/index.html.twig', [
+            'parcelles' => $parcelles,
+            'stats' => $stats,
         ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $em
-    ): Response {
+    public function new(Request $request): Response
+    {
         $parcelle = new Parcelle();
-        $parcelle->setAgriculteur($this->getUser());
-
-        $form = $this->createForm(ParceleType::class, $parcelle);
+        $form = $this->createForm(ParcelleFormType::class, $parcelle);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($parcelle);
-            $em->flush();
+            $parcelle->setAgriculteur($this->getUser());
+            $this->em->persist($parcelle);
+            $this->em->flush();
 
-            return $this->redirectToRoute('farmer_parcelle_show', [
-                'id' => $parcelle->getId()
-            ]);
-        }
-
-        return $this->render('parcelles_cultures/farmer/parcelle/form.html.twig', [
-            'form' => $form,
-            'parcelle' => $parcelle
-        ]);
-    }
-
-    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(
-        Parcelle $parcelle,
-        Request $request,
-        EntityManagerInterface $em
-    ): Response {
-        $this->denyAccessUnlessGranted('EDIT', $parcelle);
-
-        $form = $this->createForm(ParceleType::class, $parcelle);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
+            $this->addFlash('success', 'Parcelle créée avec succès.');
             return $this->redirectToRoute('farmer_parcelle_show', ['id' => $parcelle->getId()]);
         }
 
-        return $this->render('parcelles_cultures/farmer/parcelle/form.html.twig', [
-            'form' => $form,
-            'parcelle' => $parcelle
-        ]);
+        return $this->render('parcelles_cultures/farmer/parcelles/new.html.twig', ['form' => $form]);
     }
 
     #[Route('/{id}/show', name: 'show', methods: ['GET'])]
     public function show(Parcelle $parcelle): Response
     {
-        $this->denyAccessUnlessGranted('EDIT', $parcelle);
+        $this->denyAccessUnlessGranted('view', $parcelle);
+        return $this->render('parcelles_cultures/farmer/parcelles/show.html.twig', ['parcelle' => $parcelle]);
+    }
 
-        return $this->render('parcelles_cultures/farmer/parcelle/show.html.twig', [
-            'parcelle' => $parcelle
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Parcelle $parcelle): Response
+    {
+        $this->denyAccessUnlessGranted('edit', $parcelle);
+        
+        $form = $this->createForm(ParcelleFormType::class, $parcelle);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $parcelle->setUpdatedAt(new \DateTimeImmutable());
+            $this->em->flush();
+            $this->addFlash('success', 'Parcelle modifiée avec succès.');
+            return $this->redirectToRoute('farmer_parcelle_show', ['id' => $parcelle->getId()]);
+        }
+
+        return $this->render('parcelles_cultures/farmer/parcelles/edit.html.twig', [
+            'form' => $form,
+            'parcelle' => $parcelle,
         ]);
+    }
+
+    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(Request $request, Parcelle $parcelle): Response
+    {
+        $this->denyAccessUnlessGranted('delete', $parcelle);
+
+        if ($this->isCsrfTokenValid('delete' . $parcelle->getId(), $request->request->get('_token'))) {
+            $this->em->remove($parcelle);
+            $this->em->flush();
+            $this->addFlash('success', 'Parcelle supprimée.');
+        }
+
+        return $this->redirectToRoute('farmer_parcelle_index');
     }
 }

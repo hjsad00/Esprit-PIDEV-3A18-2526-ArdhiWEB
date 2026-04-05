@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques - Administration Agriculture{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <h1 class="mb-4"><i class="fas fa-chart-bar"></i> Tableaux de bord - Statistiques Agricoles</h1>
+
+            {# Stats Cards #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-th-large fa-2x"></i>
+                            </h5>
+                            <p class="card-text text-muted">Parcelles Total</p>
+                            <h3 class="text-primary fw-bold">{{ stats.total_parcelles }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="fas fa-leaf fa-2x"></i>
+                            </h5>
+                            <p class="card-text text-muted">Cultures Total</p>
+                            <h3 class="text-success fw-bold">{{ stats.total_cultures }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-info">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">
+                                <i class="fas fa-ruler-horizontal fa-2x"></i>
+                            </h5>
+                            <p class="card-text text-muted">Surface Totale</p>
+                            <h3 class="text-info fw-bold">{{ (stats.surface_totale|round(2)) ?? 0 }} ha</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                            </h5>
+                            <p class="card-text text-muted">Production Est.</p>
+                            <h3 class="text-warning fw-bold">{{ (stats.production_estimee|round(2)) ?? 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            {# Agriculteurs List #}
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-users"></i> Agriculteurs Enregistrés</h5>
+                </div>
+                <div class="card-body">
+                    {% if agriculteurs|length > 0 %}
+                        <div class="list-group">
+                            {% for agriculteur in agriculteurs %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ agriculteur.email }}</h6>
+                                        <small class="text-muted">ID: {{ agriculteur.id }}</small>
+                                    </div>
+                                    <p class="mb-1 text-muted">
+                                        Inscrit le: {{ agriculteur.created_at|date('d/m/Y H:i') }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">Aucun agriculteur enregistré</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

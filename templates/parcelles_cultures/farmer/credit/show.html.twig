@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dossier de Crédit #{{ dossier.id }}{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="mb-3">
+                <a href="{{ path('farmer_credit_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0"><i class="fas fa-file-contract"></i> Dossier de Crédit #{{ dossier.id }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informations Générales</h5>
+                            <table class="table table-sm">
+                                <tr><th>Parcelle:</th><td><a href="{{ path('farmer_parcelle_show', {id: dossier.parcelle.id}) }}">#{{ dossier.parcelle.id }}</a></td></tr>
+                                <tr><th>Montant Demandé:</th><td class="fw-bold">{{ dossier.montant_pret_max|round(2) }} DT</td></tr>
+                                <tr><th>Durée:</th><td>{{ dossier.duree_annees }} ans</td></tr>
+                                <tr><th>Capacité Remboursement:</th><td>{{ dossier.capacite_remboursement|round(2) }} DT/an</td></tr>
+                                <tr><th>Statut:</th><td><span class="badge bg-info">{{ dossier.statut }}</span></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Analyse de Risque</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Score Risque:</th>
+                                    <td class="fw-bold">{{ dossier.score_risque|round(2) }}/10</td>
+                                </tr>
+                                <tr>
+                                    <th>Niveau Risque:</th>
+                                    <td>
+                                        {% if dossier.niveau_risque == 'faible' %}
+                                            <span class="badge bg-success">Faible</span>
+                                        {% elseif dossier.niveau_risque == 'modere' %}
+                                            <span class="badge bg-warning">Modéré</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Élevé</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Détails des Scores</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h6 class="text-muted">Rentabilité</h6>
+                                <h4 class="text-primary">{{ dossier.score_rentabilite|round(2) }}/10</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h6 class="text-muted">Climat</h6>
+                                <h4 class="text-info">{{ dossier.score_climat|round(2) }}/10</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h6 class="text-muted">Diversification</h6>
+                                <h4 class="text-warning">{{ dossier.score_diversification|round(2) }}/10</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h6 class="text-muted">Historique</h6>
+                                <h4 class="text-success">{{ dossier.score_historique|round(2) }}/10</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Recommandations</h5>
+                    <div class="alert alert-info">
+                        {# Format multiline recommendations #}
+                        {% for line in dossier.recommandations|split('\n') %}
+                            {% if line %}
+                                <div>{{ line }}</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ path('farmer_credit_export_pdf', {id: dossier.id}) }}" class="btn btn-danger">
+                        <i class="fas fa-file-pdf"></i> Télécharger PDF
+                    </a>
+                    <small class="text-muted ms-3">Créé le: {{ dossier.created_at|date('d/m/Y H:i') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

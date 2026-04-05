@@ -16,83 +16,44 @@ class CreditDossierRepository extends ServiceEntityRepository
         parent::__construct($registry, CreditDossier::class);
     }
 
-    /**
-     * Récupère les dossiers crédit d'une parcelle
-     */
     public function findByParcelle($parcelleId)
     {
         return $this->createQueryBuilder('cd')
-            ->andWhere('cd.parcelle = :parcelle')
-            ->setParameter('parcelle', $parcelleId)
-            ->orderBy('cd.date_creation', 'DESC')
+            ->andWhere('cd.parcelle = :parcelle_id')
+            ->setParameter('parcelle_id', $parcelleId)
+            ->orderBy('cd.created_at', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    /**
-     * Récupère les dossiers crédit d'un utilisateur
-     */
-    public function findByUser($userId)
+    public function findLatestByParcelle($parcelleId)
     {
         return $this->createQueryBuilder('cd')
-            ->andWhere('cd.user = :user')
-            ->setParameter('user', $userId)
-            ->orderBy('cd.date_creation', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * Récupère les dossiers crédit d'une parcelle pour un utilisateur donné
-     */
-    public function findByParcelleAndUser($parcelleId, $userId)
-    {
-        return $this->createQueryBuilder('cd')
-            ->andWhere('cd.parcelle = :parcelle')
-            ->andWhere('cd.user = :user')
-            ->setParameter('parcelle', $parcelleId)
-            ->setParameter('user', $userId)
-            ->orderBy('cd.date_creation', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * Récupère le dossier crédit le plus récent pour une parcelle
-     */
-    public function findLatestByParcelle($parcelleId): ?CreditDossier
-    {
-        return $this->createQueryBuilder('cd')
-            ->andWhere('cd.parcelle = :parcelle')
-            ->setParameter('parcelle', $parcelleId)
-            ->orderBy('cd.date_creation', 'DESC')
+            ->andWhere('cd.parcelle = :parcelle_id')
+            ->setParameter('parcelle_id', $parcelleId)
+            ->orderBy('cd.created_at', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
-    /**
-     * Récupère les dossiers par niveau de risque
-     */
-    public function findByNiveauRisque(string $niveau)
+    public function countByNiveauRisque($niveauRisque): int
     {
         return $this->createQueryBuilder('cd')
+            ->select('COUNT(cd.id)')
             ->andWhere('cd.niveau_risque = :niveau')
-            ->setParameter('niveau', $niveau)
-            ->orderBy('cd.score_risque', 'DESC')
+            ->setParameter('niveau', $niveauRisque)
             ->getQuery()
-            ->getResult();
+            ->getSingleScalarResult();
     }
 
-    /**
-     * Récupère les dossiers exportés
-     */
-    public function findExported()
+    public function getAverageScoreRisque(): float
     {
-        return $this->createQueryBuilder('cd')
-            ->andWhere('cd.date_export IS NOT NULL')
-            ->orderBy('cd.date_export', 'DESC')
+        $result = $this->createQueryBuilder('cd')
+            ->select('AVG(cd.score_risque) as avg_score')
             ->getQuery()
-            ->getResult();
+            ->getOneOrNullResult();
+
+        return (float) ($result['avg_score'] ?? 0);
     }
 }

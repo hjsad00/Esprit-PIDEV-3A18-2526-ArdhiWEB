@@ -1,0 +1,46 @@
+{# Sidebar navigation for detailed module navigation #}
+<div class="bg-light border-end" style="min-height: 100vh;">
+    <div class="list-group list-group-flush">
+        {% if is_granted('ROLE_AGRICULTEUR') %}
+            <h6 class="list-group-item bg-primary text-white">Mes Parcelles</h6>
+            <a href="{{ path('farmer_parcelle_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-list"></i> Liste des parcelles
+            </a>
+            <a href="{{ path('farmer_parcelle_new') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-plus"></i> Nouvelle parcelle
+            </a>
+            
+            <h6 class="list-group-item bg-success text-white mt-3">Cultures</h6>
+            <a href="{{ path('farmer_culture_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-leaf"></i> Mes cultures
+            </a>
+            <a href="{{ path('farmer_culture_new') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-plus"></i> Nouvelle culture
+            </a>
+            
+            <h6 class="list-group-item bg-info text-white mt-3">Outils</h6>
+            <a href="{{ path('farmer_irrigation_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-tint"></i> Irrigation
+            </a>
+            <a href="{{ path('farmer_roi_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-chart-line"></i> ROI/Finances
+            </a>
+            <a href="{{ path('farmer_credit_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-file-contract"></i> Crédit Agricole
+            </a>
+        {% endif %}
+        
+        {% if is_granted('ROLE_ADMIN') %}
+            <h6 class="list-group-item bg-danger text-white">Administration</h6>
+            <a href="{{ path('admin_parcelle_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-th-large"></i> Parcelles globales
+            </a>
+            <a href="{{ path('admin_culture_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-leaf"></i> Cultures globales
+            </a>
+            <a href="{{ path('admin_stats_index') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-chart-bar"></i> Statistiques
+            </a>
+        {% endif %}
+    </div>
+</div>

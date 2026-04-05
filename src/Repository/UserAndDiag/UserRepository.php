@@ -32,4 +32,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * Find users by role (for admin stats and filtering)
+     */
+    public function findByRole(string $role): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.roles LIKE :roles')
+            ->setParameter('roles', '%"' . $role . '"%')
+            ->orderBy('u.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

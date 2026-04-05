@@ -1,62 +1,126 @@
-{# Farmer: Irrigation Calculator #}
-{% extends 'parcelles_cultures/base.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Calculateur Irrigation{% endblock %}
+{% block title %}Calculateur d'Irrigation{% endblock %}
 
-{% block content %}
-<h1>Calculateur d'Irrigation</h1>
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="row">
-    <div class="col-md-6">
-        <form method="POST" class="card p-4">
-            <h5>Données météorologiques</h5>
-            <div class="mb-3">
-                <label>Température moyenne (°C)</label>
-                <input type="number" name="temp_moyenne" class="form-control" required step="0.1">
-            </div>
-            <div class="mb-3">
-                <label>Température max (°C)</label>
-                <input type="number" name="temp_max" class="form-control" required step="0.1">
-            </div>
-            <div class="mb-3">
-                <label>Température min (°C)</label>
-                <input type="number" name="temp_min" class="form-control" required step="0.1">
-            </div>
-            <div class="mb-3">
-                <label>Précipitations (mm)</label>
-                <input type="number" name="precipitations" class="form-control" required step="0.1">
-            </div>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <a href="{{ path('farmer_irrigation_index') }}" class="btn btn-secondary mb-3">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
 
-            <h5 class="mt-4">Paramètres culture</h5>
-            <div class="mb-3">
-                <label>Surface (ha)</label>
-                <input type="number" name="surface" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Coefficient cultural Kc</label>
-                <input type="number" name="kc" class="form-control" value="1.0" step="0.01">
-            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title mb-0"><i class="fas fa-calculator"></i> Calcul d'Irrigation</h3>
+                        </div>
+                        <div class="card-body">
+                            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-            <button type="submit" class="btn btn-primary w-100">Calculer</button>
-        </form>
-    </div>
+                            <div class="mb-3">
+                                {{ form_label(form.date) }}
+                                {{ form_widget(form.date, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
+                            </div>
 
-    <div class="col-md-6">
-        {% if result %}
-            <div class="card p-4 bg-light">
-                <h5>Résultats d'irrigation</h5>
-                <p><strong>ET0 (mm/jour):</strong> {{ result.et0|number_format(3) }}</p>
-                <p><strong>Besoin brut (mm/jour):</strong> {{ result.besoin_brut|number_format(3) }}</p>
-                <p><strong>Besoin net (mm/jour):</strong> {{ result.besoin_net|number_format(3) }}</p>
-                <hr>
-                <p><strong>Volume d'eau (litres):</strong> {{ result.volume_litres|number_format(0) }}</p>
-                <p><strong>Volume d'eau (m³):</strong> {{ result.volume_cubique|number_format(2) }}</p>
+                            <div class="mb-3">
+                                <label class="form-label">Températures (°C)</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form_label(form.temperature_min) }}
+                                        {{ form_widget(form.temperature_min, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.temperature_moyenne) }}
+                                        {{ form_widget(form.temperature_moyenne, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        {{ form_label(form.temperature_max) }}
+                                        {{ form_widget(form.temperature_max, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.precipitations) }}
+                                {{ form_widget(form.precipitations, {'attr': {'class': 'form-control'}}) }}
+                                <small class="text-muted">En mm</small>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.humidite) }}
+                                {{ form_widget(form.humidite, {'attr': {'class': 'form-control'}}) }}
+                                <small class="text-muted">Humidité du sol (0-100%)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.kc) }}
+                                {{ form_widget(form.kc, {'attr': {'class': 'form-control'}}) }}
+                                <small class="text-muted">Coefficient cultural (ex: 0.3-1.2)</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-calculator"></i> Calculer
+                            </button>
+
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if calculation_result is defined %}
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">Résultats du Calcul</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <h6>ET0 (Evapotranspiration)</h6>
+                                    <h4 class="text-primary">{{ calculation_result.et0|round(3) }} mm/jour</h4>
+                                    <small class="text-muted">Évaporation estimée du terrain</small>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <h6>Besoin Brut</h6>
+                                    <h4 class="text-info">{{ calculation_result.besoin_brut|round(3) }} mm/jour</h4>
+                                    <small class="text-muted">Kc × ET0</small>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <h6>Besoin Net</h6>
+                                    <h4 class="text-warning">{{ calculation_result.besoin_net|round(3) }} mm/jour</h4>
+                                    <small class="text-muted">Besoin après soustraction des précipitations</small>
+                                </div>
+
+                                <div class="p-3 bg-success bg-opacity-10 rounded">
+                                    <h6>Volume d'Irrigation</h6>
+                                    <h4 class="text-success">{{ (calculation_result.volume_litres)|round(0)|number_format(0, '.', ' ') }} L</h4>
+                                    <small>= {{ (calculation_result.volume_m3)|round(2) }} m³</small>
+                                </div>
+
+                                <div class="mt-3 p-2 bg-info bg-opacity-10 rounded">
+                                    <small>
+                                        <strong>Conditions:</strong><br>
+                                        Température moy: {{ calculation_result.temp }}°C<br>
+                                        Précipitations: {{ calculation_result.precip }} mm<br>
+                                        Humidité: {{ calculation_result.humidite }}%
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-        {% else %}
-            <div class="card p-4 bg-light text-center text-muted">
-                Remplissez le formulaire pour calculer
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

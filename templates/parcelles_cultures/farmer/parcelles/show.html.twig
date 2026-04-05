@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Parcelle #{{ parcelle.id }}{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="mb-3">
+                <a href="{{ path('farmer_parcelle_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0"><i class="fas fa-map"></i> Parcelle #{{ parcelle.id }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informations Générales</h5>
+                            <table class="table table-sm">
+                                <tr><th>Surface:</th><td>{{ parcelle.surface }} ha</td></tr>
+                                <tr><th>Localisation:</th><td>{{ parcelle.localisation }}</td></tr>
+                                <tr><th>Type de Sol:</th><td>{{ parcelle.type_sol }}</td></tr>
+                                <tr><th>Système Irrigation:</th><td>{{ parcelle.systeme_irrigation }}</td></tr>
+                                <tr><th>Statut:</th>
+                                    <td>
+                                        <span class="badge {% if parcelle.statut == 'actif' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ parcelle.statut|upper }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Localisation GPS</h5>
+                            <table class="table table-sm">
+                                <tr><th>Latitude:</th><td>{{ parcelle.latitude }}</td></tr>
+                                <tr><th>Longitude:</th><td>{{ parcelle.longitude }}</td></tr>
+                                <tr><th>Créé:</th><td>{{ parcelle.created_at|date('d/m/Y') }}</td></tr>
+                                <tr><th>Modifié:</th><td>{{ parcelle.updated_at|date('d/m/Y') }}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Cultures associées</h5>
+                    {% if parcelle.cultures|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Surface</th>
+                                        <th>Rendement</th>
+                                        <th>Production</th>
+                                        <th>État</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for culture in parcelle.cultures %}
+                                        <tr>
+                                            <td>{{ culture.nom_culture }}</td>
+                                            <td>{{ culture.type_culture }}</td>
+                                            <td>{{ culture.surface_utilisee }} ha</td>
+                                            <td>{{ culture.rendement_estime }}</td>
+                                            <td>{{ culture.production_estimee|round(2) }}</td>
+                                            <td><span class="badge bg-info">{{ culture.etat_culture }}</span></td>
+                                            <td>
+                                                <a href="{{ path('farmer_culture_show', {id: culture.id}) }}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Aucune culture. <a href="{{ path('farmer_culture_new') }}">Créer une nouvelle culture</a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" style="display:inline;" 
+                          onsubmit="return confirm('Confirmer la suppression de cette parcelle?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

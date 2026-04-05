@@ -6,186 +6,176 @@ use App\Entity\Parcelles_Cultures\CreditDossier;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-/**
- * Service pour l'export PDF des dossiers crédit
- */
 class PdfCreditExportService
 {
-    private $projectDir;
-
-    public function __construct(string $projectDir)
-    {
-        $this->projectDir = $projectDir;
-    }
-
     /**
-     * Exporte un dossier crédit en PDF
+     * Exporte un dossier de crédit en PDF
      */
-    public function exporterDossierCreditPdf(CreditDossier $dossier): string
+    public function exporterDossierCreditPdf(CreditDossier $dossier, string $outputPath = null): string
     {
-        $html = $this->genererHtml($dossier);
-        $filename = $this->sauvegarderDossierPdf($dossier, $html);
-        return $filename;
-    }
-
-    /**
-     * Exporte un dossier crédit en PDF (retourne le contenu en stream)
-     */
-    public function exporterDossierCreditPdfStream(CreditDossier $dossier): string
-    {
-        $html = $this->genererHtml($dossier);
-        
         $options = new Options();
-        $options->set('isRemoteEnabled', false);
-        $options->set('isPhpEnabled', true);
-        
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('chroot', realpath('.'));
+
         $dompdf = new Dompdf($options);
+
+        $html = $this->genererHtmlDossier($dossier);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
+
+        $filename = sprintf(
+            'credit_dossier_%d_%s.pdf',
+            $dossier->getId() ?? time(),
+            date('YmdHis')
+        );
+
+        if ($outputPath) {
+            $dompdf->stream($filename, ['Attachment' => false]);
+        }
 
         return $dompdf->output();
     }
 
     /**
-     * Génère le HTML du dossier credit
+     * Génère le HTML du dossier de crédit
      */
-    public function genererHtml(CreditDossier $dossier): string
+    private function genererHtmlDossier(CreditDossier $dossier): string
     {
         $parcelle = $dossier->getParcelle();
+        $agriculteur = $parcelle->getAgriculteur();
+
+        $niveauRisqueColor = match ($dossier->getNiveauRisque()) {
+            'faible' => '#28a745',
+            'modere' => '#ffc107',
+            'eleve' => '#dc3545',
+            default => '#6c757d'
+        };
+
         $html = <<<HTML
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Dossier Crédit Agricole</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        h2 { color: #34495e; margin-top: 20px; border-left: 5px solid #3498db; padding-left: 10px; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th { background-color: #3498db; color: white; padding: 10px; text-align: left; }
-        td { border: 1px solid #bdc3c7; padding: 10px; }
-        tr:nth-child(even) { background-color: #ecf0f1; }
-        .score-badge { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
-        .score-good { background-color: #27ae60; color: white; }
-        .score-medium { background-color: #f39c12; color: white; }
-        .score-bad { background-color: #e74c3c; color: white; }
-        .footer { margin-top: 30px; font-size: 10px; color: #7f8c8d; border-top: 1px solid #bdc3c7; padding-top: 10px; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; border-bottom: 3px solid #116530; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #116530; }
+        .header p { margin: 5px 0; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section h2 { background: #116530; color: white; padding: 10px; margin-top: 0; }
+        .info-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; }
+        .info-label { font-weight: bold; width: 40%; }
+        .info-value { width: 60%; }
+        .score-box { 
+            background: $niveauRisqueColor; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 5px; 
+            text-align: center; 
+            margin: 10px 0;
+        }
+        .score-box .label { font-size: 12px; }
+        .score-box .value { font-size: 28px; font-weight: bold; }
+        .table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .table th { background: #f5f5f5; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; }
+        .table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .recommendations { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 10px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>DOSSIER CRÉDIT AGRICOLE</h1>
-    <p><strong>Date:</strong> {$dossier->getDateCreation()->format('d/m/Y')}</p>
-    <p><strong>Référence:</strong> CREDIT-{$dossier->getId()}</p>
+    <div class="header">
+        <h1>Dossier de Crédit Agricole</h1>
+        <p>Analyse de Rentabilité et Évaluation du Risque</p>
+        <p>Généré le: " . date('d/m/Y H:i') . "</p>
+    </div>
 
-    <h2>1. INFORMATIONS PARCELLE</h2>
-    <table>
-        <tr><td><strong>Surface:</strong></td><td>{$parcelle->getSurface()} ha</td></tr>
-        <tr><td><strong>Localisation:</strong></td><td>{$parcelle->getLocalisation()}</td></tr>
-        <tr><td><strong>Type de Sol:</strong></td><td>{$parcelle->getTypeSol()}</td></tr>
-        <tr><td><strong>Système d'irrigation:</strong></td><td>{$parcelle->getSystemeIrrigation()}</td></tr>
-        <tr><td><strong>Statut:</strong></td><td>{$parcelle->getStatut()}</td></tr>
-    </table>
+    <div class="section">
+        <h2>Informations Générales</h2>
+        <div class="info-row">
+            <div class="info-label">Agriculteur:</div>
+            <div class="info-value">{$agriculteur->getPrenom()} {$agriculteur->getNom()}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value">{$agriculteur->getEmail()}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Parcelle:</div>
+            <div class="info-value">{$parcelle->getLocalisation()} ({$parcelle->getSurface()} ha)</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Durée du Crédit:</div>
+            <div class="info-value">{$dossier->getDureeAnnees()} ans</div>
+        </div>
+    </div>
 
-    <h2>2. SCORES D'ANALYSE</h2>
-    <table>
-        <tr>
-            <th>Critère</th>
-            <th>Score</th>
-            <th>Classement</th>
-        </tr>
-        <tr>
-            <td>Rentabilité</td>
-            <td>{$dossier->getScoreRentabilite()}/100</td>
-            <td>{$this->getBadgeScore($dossier->getScoreRentabilite())}</td>
-        </tr>
-        <tr>
-            <td>Stabilité Climatique</td>
-            <td>{$dossier->getScoreStabiliteClimat()}/100</td>
-            <td>{$this->getBadgeScore($dossier->getScoreStabiliteClimat())}</td>
-        </tr>
-        <tr>
-            <td>Diversification</td>
-            <td>{$dossier->getScoreDiversification()}/100</td>
-            <td>{$this->getBadgeScore($dossier->getScoreDiversification())}</td>
-        </tr>
-        <tr>
-            <td>Historique</td>
-            <td>{$dossier->getScoreHistorique()}/100</td>
-            <td>{$this->getBadgeScore($dossier->getScoreHistorique())}</td>
-        </tr>
-    </table>
+    <div class="section">
+        <h2>Évaluation du Risque</h2>
+        <div class="score-box">
+            <div class="label">Score de Risque Global</div>
+            <div class="value">{$dossier->getScoreRisque()}/10</div>
+            <div class="label" style="margin-top: 10px;">Niveau: " . strtoupper($dossier->getNiveauRisque()) . "</div>
+        </div>
 
-    <h2>3. ÉVALUATION DE RISQUE</h2>
-    <table>
-        <tr><td><strong>Score de Risque:</strong></td><td>{$dossier->getScoreRisque()}/100</td></tr>
-        <tr><td><strong>Niveau de Risque:</strong></td><td>{$dossier->getNiveauRisque()}</td></tr>
-        <tr><td><strong>Durée du Crédit:</strong></td><td>{$dossier->getDureeAnnees()} ans</td></tr>
-    </table>
+        <table class="table">
+            <tr>
+                <th>Critère</th>
+                <th>Score</th>
+                <th>Poids</th>
+            </tr>
+            <tr>
+                <td>Rentabilité</td>
+                <td>{$dossier->getScoreRentabilite()}/10</td>
+                <td>40%</td>
+            </tr>
+            <tr>
+                <td>Stabilité Climatique</td>
+                <td>{$dossier->getScoreStabiliteClimat()}/10</td>
+                <td>30%</td>
+            </tr>
+            <tr>
+                <td>Diversification</td>
+                <td>{$dossier->getScoreDiversification()}/10</td>
+                <td>20%</td>
+            </tr>
+            <tr>
+                <td>Historique</td>
+                <td>{$dossier->getScoreHistorique()}/10</td>
+                <td>10%</td>
+            </tr>
+        </table>
+    </div>
 
-    <h2>4. CAPACITÉ FINANCIÈRE</h2>
-    <table>
-        <tr><td><strong>Capacité de Remboursement Annuelle:</strong></td><td>{$dossier->getCapaciteRemboursement()} €</td></tr>
-        <tr><td><strong>Montant Prêt Maximum Autorisé:</strong></td><td>{$dossier->getMontantPretMax()} €</td></tr>
-    </table>
+    <div class="section">
+        <h2>Capacité de Remboursement</h2>
+        <div class="info-row">
+            <div class="info-label">Capacité Annuelle:</div>
+            <div class="info-value">{$dossier->getCapaciteRemboursement()} €</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Montant Maximum du Prêt:</div>
+            <div class="info-value">{$dossier->getMontantPretMax()} €</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Recommandations</h2>
+        <div class="recommendations">
+            " . nl2br(htmlspecialchars($dossier->getRecommandations())) . "
+        </div>
+    </div>
 
     <div class="footer">
-        <p>Ce dossier a été généré automatiquement par le système d'analyse de crédit agricole.</p>
-        <p>Il est confidentiel et réservé à un usage recommandé.</p>
+        <p>Ce document est généré automatiquement par le système Ardhi.</p>
+        <p>Date de création: " . $dossier->getCreatedAt()->format('d/m/Y H:i') . "</p>
     </div>
 </body>
 </html>
 HTML;
 
         return $html;
-    }
-
-    /**
-     * Sauvegarde le PDF généré
-     */
-    public function sauvegarderDossierPdf(CreditDossier $dossier, string $html): string
-    {
-        $pdfDir = $this->projectDir . '/public/pdf_credits';
-        if (!is_dir($pdfDir)) {
-            mkdir($pdfDir, 0755, true);
-        }
-
-        $filename = 'credit_' . $dossier->getId() . '_' . uniqid() . '.pdf';
-        $filepath = $pdfDir . '/' . $filename;
-
-        $options = new Options();
-        $options->set('isRemoteEnabled', false);
-        $options->set('isPhpEnabled', true);
-
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        file_put_contents($filepath, $dompdf->output());
-
-        $dossier->setDateExport(new \DateTime());
-
-        return $filename;
-    }
-
-    /**
-     * Retourne le badge HTML pour un score
-     */
-    private function getBadgeScore(float $score): string
-    {
-        if ($score >= 70) {
-            $class = 'score-good';
-            $label = 'Bon';
-        } elseif ($score >= 40) {
-            $class = 'score-medium';
-            $label = 'Moyen';
-        } else {
-            $class = 'score-bad';
-            $label = 'Faible';
-        }
-
-        return "<span class=\"score-badge $class\">$label</span>";
     }
 }

@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Culture: {{ culture.nom_culture }}{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="mb-3">
+                <a href="{{ path('farmer_culture_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0"><i class="fas fa-leaf"></i> {{ culture.nom_culture }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informations Générales</h5>
+                            <table class="table table-sm">
+                                <tr><th>Type:</th><td>{{ culture.type_culture }}</td></tr>
+                                <tr><th>Saison:</th><td>{{ culture.saison }}</td></tr>
+                                <tr><th>Surface utilisée:</th><td>{{ culture.surface_utilisee }} ha</td></tr>
+                                <tr><th>Rendement estimé:</th><td>{{ culture.rendement_estime }}</td></tr>
+                                <tr><th>État:</th><td><span class="badge bg-info">{{ culture.etat_culture }}</span></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Production & Dates</h5>
+                            <table class="table table-sm">
+                                <tr><th>Production estimée:</th><td class="fw-bold text-success">{{ culture.production_estimee|round(2) }}</td></tr>
+                                <tr><th>Plantation:</th><td>{{ culture.date_plantation|date('d/m/Y') }}</td></tr>
+                                <tr><th>Récolte prévue:</th><td>{{ culture.date_recolte_prevue|date('d/m/Y') }}</td></tr>
+                                <tr><th>Parcelle:</th><td><a href="{{ path('farmer_parcelle_show', {id: culture.parcelle.id}) }}">#{{ culture.parcelle.id }}</a></td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Production = Surface × Rendement</strong><br>
+                        {{ culture.surface_utilisee }} ha × {{ culture.rendement_estime }} = <strong>{{ culture.production_estimee|round(2) }}</strong>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ path('farmer_culture_edit', {id: culture.id}) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action="{{ path('farmer_culture_delete', {id: culture.id}) }}" style="display:inline;" 
+                          onsubmit="return confirm('Confirmer la suppression?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ culture.id) }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

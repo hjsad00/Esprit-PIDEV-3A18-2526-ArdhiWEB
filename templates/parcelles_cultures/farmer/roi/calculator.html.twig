@@ -1,83 +1,165 @@
-{# Farmer: ROI Calculator #}
-{% extends 'parcelles_cultures/base.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Calculateur ROI{% endblock %}
+{% block title %}Calculateur ROI/Finances{% endblock %}
 
-{% block content %}
-<h1>Calculateur ROI</h1>
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="row">
-    <div class="col-md-6">
-        <form method="POST" class="card p-4">
-            <h5>Paramètres de la culture</h5>
-            <div class="mb-3">
-                <label>Surface (ha)</label>
-                <input type="number" name="surface" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Rendement estimé</label>
-                <input type="number" name="rendement" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Prix de vente (TND/unité)</label>
-                <input type="number" name="prix_vente" class="form-control" required step="0.01">
-            </div>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <a href="{{ path('farmer_roi_index') }}" class="btn btn-secondary mb-3">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
 
-            <h5 class="mt-4">Coûts de production</h5>
-            <div class="mb-3">
-                <label>Coût semences (TND)</label>
-                <input type="number" name="cout_semences" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Coût engrais (TND)</label>
-                <input type="number" name="cout_engrais" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Coût main-d'œuvre (TND)</label>
-                <input type="number" name="cout_main_oeuvre" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Coût irrigation (TND)</label>
-                <input type="number" name="cout_irrigation" class="form-control" required step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Coût autres (TND)</label>
-                <input type="number" name="cout_autres" class="form-control" step="0.01">
-            </div>
-            <div class="mb-3">
-                <label>Facteur climatique (0.5-1.0)</label>
-                <input type="number" name="facteur_climatique" class="form-control" value="1.0" min="0.5" max="1.0" step="0.01">
-            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title mb-0"><i class="fas fa-calculator"></i> Analyse Financière</h3>
+                        </div>
+                        <div class="card-body">
+                            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-            <button type="submit" class="btn btn-primary w-100">Calculer</button>
-        </form>
-    </div>
+                            <h6 class="mb-3 text-info">Production</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form_label(form.surface_ha) }}
+                                        {{ form_widget(form.surface_ha, {'attr': {'class': 'form-control', 'placeholder': '5'}}) }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form_label(form.rendement) }}
+                                        {{ form_widget(form.rendement, {'attr': {'class': 'form-control', 'placeholder': '50'}}) }}
+                                    </div>
+                                </div>
+                            </div>
 
-    <div class="col-md-6">
-        {% if result %}
-            <div class="card p-4 bg-light">
-                <h5>Résultats</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Production théorique:</strong> {{ result.production_theorique|number_format(2) }}</p>
-                        <p><strong>Production réelle:</strong> {{ result.production_reelle|number_format(2) }}</p>
-                        <p><strong>Coût total:</strong> {{ result.cout_total|number_format(2) }} TND</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Revenu brut:</strong> {{ result.revenu_brut|number_format(2) }} TND</p>
-                        <p><strong>Marge brute:</strong> {{ result.marge_brute|number_format(2) }} TND</p>
-                        <p><strong>Prix seuil:</strong> {% if result.prix_seuil %}{{ result.prix_seuil|number_format(2) }}{% else %}N/A{% endif %}</p>
+                            <h6 class="mb-3 text-info">Conditions Climatiques</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form_label(form.jours_canicule) }}
+                                        {{ form_widget(form.jours_canicule, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form_label(form.jours_excespluie) }}
+                                        {{ form_widget(form.jours_excespluie, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form_label(form.jours_gel) }}
+                                        {{ form_widget(form.jours_gel, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="mb-3 text-info">Coûts de Production</h6>
+                            <div class="mb-3">
+                                {{ form_label(form.cout_semences) }}
+                                {{ form_widget(form.cout_semences, {'attr': {'class': 'form-control', 'placeholder': '1000'}}) }}
+                                <small class="text-muted">En DT</small>
+                            </div>
+                            <div class="mb-3">
+                                {{ form_label(form.cout_engrais) }}
+                                {{ form_widget(form.cout_engrais, {'attr': {'class': 'form-control', 'placeholder': '2000'}}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form_label(form.cout_main_oeuvre) }}
+                                {{ form_widget(form.cout_main_oeuvre, {'attr': {'class': 'form-control', 'placeholder': '1500'}}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form_label(form.cout_irrigation) }}
+                                {{ form_widget(form.cout_irrigation, {'attr': {'class': 'form-control', 'placeholder': '500'}}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form_label(form.cout_autres) }}
+                                {{ form_widget(form.cout_autres, {'attr': {'class': 'form-control', 'placeholder': '300'}}) }}
+                            </div>
+
+                            <h6 class="mb-3 text-info">Vente</h6>
+                            <div class="mb-3">
+                                {{ form_label(form.prix_vente) }}
+                                {{ form_widget(form.prix_vente, {'attr': {'class': 'form-control', 'placeholder': '5'}}) }}
+                                <small class="text-muted">Prix par unité de production (DT)</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-calculator"></i> Analyser
+                            </button>
+
+                            {{ form_end(form) }}
+                        </div>
                     </div>
                 </div>
-                <div class="alert alert-info mt-3">
-                    <strong>Score ROI: {% if result.score_roi %}{{ result.score_roi|number_format(2) }}%{% else %}N/A{% endif %}</strong>
-                </div>
+
+                {% if roi_result is defined %}
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">Résultats de l'Analyse</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2 p-2 bg-light rounded">
+                                    <small class="text-muted">ET0</small><br>
+                                    <strong>{{ roi_result.et0|round(3) }}</strong>
+                                </div>
+
+                                <div class="mb-2 p-2 bg-light rounded">
+                                    <small class="text-muted">Facteur Climatique</small><br>
+                                    <strong>{{ roi_result.facteur_climatique|round(3) }}</strong>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-info bg-opacity-10 rounded">
+                                    <h6>Production Réelle</h6>
+                                    <h4 class="text-info">{{ roi_result.production_reelle|round(2) }} unités</h4>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-warning bg-opacity-10 rounded">
+                                    <h6>Coût Total</h6>
+                                    <h4 class="text-warning">{{ roi_result.cout_total|round(2) }} DT</h4>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-primary bg-opacity-10 rounded">
+                                    <h6>Revenu Brut</h6>
+                                    <h4 class="text-primary">{{ roi_result.revenu_brut|round(2) }} DT</h4>
+                                </div>
+
+                                <div class="mb-3 p-3 {% if roi_result.marge_brute > 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 rounded">
+                                    <h6>Marge Brute</h6>
+                                    <h4 class="{% if roi_result.marge_brute > 0 %}text-success{% else %}text-danger{% endif %}">{{ roi_result.marge_brute|round(2) }} DT</h4>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <small>Prix Seuil:</small><br>
+                                    <strong>{{ roi_result.prix_seuil|round(2) }} DT/unité</strong>
+                                </div>
+
+                                <div class="p-3 {% if roi_result.score_roi > 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-20 rounded">
+                                    <h6>Score ROI</h6>
+                                    <h3 class="{% if roi_result.score_roi > 0 %}text-success{% else %}text-danger{% endif %}">{{ roi_result.score_roi|round(2) }}%</h3>
+                                    {% if roi_result.score_roi > 100 %}
+                                        <small class="text-success"><i class="fas fa-check-circle"></i> Très rentable!</small>
+                                    {% elseif roi_result.score_roi > 0 %}
+                                        <small class="text-info"><i class="fas fa-info-circle"></i> Rentable</small>
+                                    {% else %}
+                                        <small class="text-danger"><i class="fas fa-exclamation-circle"></i> Non rentable</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-        {% else %}
-            <div class="card p-4 bg-light text-center text-muted">
-                Remplissez le formulaire pour calculer
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

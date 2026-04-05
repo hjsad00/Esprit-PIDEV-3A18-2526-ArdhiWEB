@@ -3,101 +3,140 @@
 namespace App\Service\Parcelles_Cultures;
 
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\Parcelles_Cultures\Parcelle;
 
-/**
- * Service pour les calculs de financement et ROI
- */
 class FinancialService
 {
     /**
-     * Calcule le facteur climatique según la saison
-     * (0.8 saison sèche, 0.95 autres)
+     * ET0 = 0.0023 × (T + 17.8) × sqrt(Tmax − Tmin)
+     * Evapotranspiration de référence
      */
-    public function calculerFacteurClimatique(Culture $culture): float
+    public function calculerET0(float $temperatureMoyenne, float $temperatureMax, float $temperatureMin): float
     {
-        return $culture->getSaison() === 'Saison sèche' ? 0.8 : 0.95;
+        if ($temperatureMax <= $temperatureMin) {
+            return 0;
+        }
+        return 0.0023 * ($temperatureMoyenne + 17.8) * sqrt($temperatureMax - $temperatureMin);
     }
 
     /**
-     * Calcule la production réelle selon les conditions
+     * FacteurClimatique = max(0.5, 1 − 0.01×JoursCanicule − 0.005×JoursExcesPluie − 0.02×JoursGel)
      */
-    public function calculerProductionReelle(Culture $culture): float
+    public function calculerFacteurClimatique(int $joursCanicule, int $joursExcesPluie, int $joursGel): float
     {
-        $productionEstimee = $culture->getSurfaceUtilisee() * $culture->getRendementEstime();
-        $facteurClimatique = $this->calculerFacteurClimatique($culture);
-        return $productionEstimee * $facteurClimatique;
+        $facteur = 1
+            - (0.01 * $joursCanicule)
+            - (0.005 * $joursExcesPluie)
+            - (0.02 * $joursGel);
+
+        return max(0.5, $facteur);
     }
 
     /**
-     * Calcule le coût total de production
-     * Coûts fixes: 150€/ha, coûts variables: 0.5€/kg
+     * ProductionTheorique = Surface × RendementTheorique
+     * ProductionReelle = ProductionTheorique × FacteurClimatique
      */
-    public function calculerCoutTotal(Culture $culture): float
-    {
-        $coutFixe = $culture->getSurfaceUtilisee() * 150;
-        $productionReelle = $this->calculerProductionReelle($culture);
-        $coutVariable = $productionReelle * 0.5;
-        return $coutFixe + $coutVariable;
+    public function calculerProductionReelle(
+        float $surface,
+        float $rendementTheorique,
+        float $facteurClimatique
+    ): float {
+        $productionTheorique = $surface * $rendementTheorique;
+        return $productionTheorique * $facteurClimatique;
     }
 
     /**
-     * Calcule le revenu brut (production * prix de marché)
-     * Supposition: 0.8€/kg
+     * CoutTotal = Semences + Engrais + MainOeuvre + Irrigation + Autres
      */
-    public function calculerRevenuBrut(Culture $culture): float
-    {
-        $productionReelle = $this->calculerProductionReelle($culture);
-        return $productionReelle * 0.8;
+    public function calculerCoutTotal(
+        float $coutSemences,
+        float $coutEngrais,
+        float $coutMainOeuvre,
+        float $coutIrrigation,
+        float $coutAutres
+    ): float {
+        return $coutSemences + $coutEngrais + $coutMainOeuvre + $coutIrrigation + $coutAutres;
     }
 
     /**
-     * Calcule la marge brute (revenu brut - coûts)
+     * RevenuBrut = ProductionReelle × PrixVente
      */
-    public function calculerMargeBrute(Culture $culture): float
+    public function calculerRevenuBrut(float $productionReelle, float $prixVente): float
     {
-        return max(0, $this->calculerRevenuBrut($culture) - $this->calculerCoutTotal($culture));
+        return $productionReelle * $prixVente;
     }
 
     /**
-     * Calcule le prix seuil de rentabilité
+     * MargeBrute = RevenuBrut − CoutTotal
      */
-    public function calculerPrixSeuil(Culture $culture): float
+    public function calculerMargeBrute(float $revenuBrut, float $coutTotal): float
     {
-        $productionReelle = $this->calculerProductionReelle($culture);
-        if ($productionReelle == 0) return 0;
-
-        return $this->calculerCoutTotal($culture) / $productionReelle;
+        return $revenuBrut - $coutTotal;
     }
 
     /**
-     * Calcule le score ROI (0-100)
-     * Basé sur la marge brute / coûts totaux
+     * PrixSeuil = CoutTotal / ProductionReelle
      */
-    public function calculerScoreRoi(Culture $culture): float
+    public function calculerPrixSeuil(float $coutTotal, float $productionReelle): float
     {
-        $coutTotal = $this->calculerCoutTotal($culture);
+        if ($productionReelle == 0) {
+            return 0;
+        }
+        return $coutTotal / $productionReelle;
+    }
+
+    /**
+     * ScoreROI = (MargeBrute / CoutTotal) × 100
+     */
+    public function calculerScoreROI(float $margeBrute, float $coutTotal): float
+    {
         if ($coutTotal == 0) {
             return 0;
         }
-
-        $margeBrute = $this->calculerMargeBrute($culture);
-        $roiRatio = $margeBrute / $coutTotal;
-        $score = min(100, $roiRatio * 100);
-
-        return max(0, $score);
-    }
-
-    /**
-     * Calcule le ROI en pourcentage
-     */
-    public function calculerRoi(Culture $culture): float
-    {
-        $coutTotal = $this->calculerCoutTotal($culture);
-        if ($coutTotal == 0) {
-            return 0;
-        }
-
-        $margeBrute = $this->calculerMargeBrute($culture);
         return ($margeBrute / $coutTotal) * 100;
+    }
+
+    /**
+     * Calculer ROI complet
+     */
+    public function calculerRoi(
+        Culture $culture,
+        Parcelle $parcelle,
+        float $prixVente,
+        float $coutSemences,
+        float $coutEngrais,
+        float $coutMainOeuvre,
+        float $coutIrrigation,
+        float $coutAutres,
+        float $joursCanicule = 0,
+        float $joursExcesPluie = 0,
+        float $joursGel = 0
+    ): array {
+        $surface = (float) $culture->getSurfaceUtilisee();
+        $rendement = (float) $culture->getRendementEstime();
+
+        $facteurClimatique = $this->calculerFacteurClimatique(
+            (int) $joursCanicule,
+            (int) $joursExcesPluie,
+            (int) $joursGel
+        );
+
+        $productionReelle = $this->calculerProductionReelle($surface, $rendement, $facteurClimatique);
+        $coutTotal = $this->calculerCoutTotal($coutSemences, $coutEngrais, $coutMainOeuvre, $coutIrrigation, $coutAutres);
+        $revenuBrut = $this->calculerRevenuBrut($productionReelle, $prixVente);
+        $margeBrute = $this->calculerMargeBrute($revenuBrut, $coutTotal);
+        $prixSeuil = $this->calculerPrixSeuil($coutTotal, $productionReelle);
+        $scoreROI = $this->calculerScoreROI($margeBrute, $coutTotal);
+
+        return [
+            'production_theorique' => $surface * $rendement,
+            'facteur_climatique' => $facteurClimatique,
+            'production_reelle' => $productionReelle,
+            'cout_total' => $coutTotal,
+            'revenu_brut' => $revenuBrut,
+            'marge_brute' => $margeBrute,
+            'prix_seuil' => $prixSeuil,
+            'score_roi' => $scoreROI,
+        ];
     }
 }

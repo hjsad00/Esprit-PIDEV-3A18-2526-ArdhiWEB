@@ -2,116 +2,158 @@
 
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
+use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\Parcelles_Cultures\Culture;
-use App\Form\Parcelles_Cultures\CultureType;
+use App\DTO\Parcelles_Cultures\CultureDTO;
+use App\Form\Parcelles_Cultures\Type\CultureFormType;
 use App\Repository\Parcelles_Cultures\CultureRepository;
-use App\Repository\Parcelles_Cultures\ParceleRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface;
+use App\Repository\Parcelles_Cultures\ParcelleRepository;
+use App\Service\Parcelles_Cultures\CultureService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/farmer/cultures', name: 'farmer_culture_')]
-#[IsGranted('ROLE_FARMER')]
+#[IsGranted('ROLE_AGRICULTEUR')]
 class CultureFarmerController extends AbstractController
 {
+    public function __construct(
+        private CultureRepository $cultureRepository,
+        private ParcelleRepository $parcelleRepository,
+        private CultureService $cultureService,
+        private EntityManagerInterface $em
+    ) {
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(
-        CultureRepository $repository,
-        ParceleRepository $parceleRepository,
-        PaginatorInterface $paginator,
-        Request $request
-    ): Response {
+    public function index(): Response
+    {
         $user = $this->getUser();
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+        $cultures = [];
 
-        // Récupère les parcelles de l'agriculteur
-        $parcelles = $parceleRepository->findByAgriculteur($user->getId());
-        $parcelleIds = array_map(fn($p) => $p->getId(), $parcelles);
+        foreach ($parcelles as $parcelle) {
+            $cultures = array_merge($cultures, $this->cultureRepository->findByParcelle($parcelle->getId()));
+        }
 
-        $query = $repository->createQueryBuilder('c')
-            ->where('c.parcelle IN (:parcelleIds)')
-            ->setParameter('parcelleIds', $parcelleIds)
-            ->getQuery();
-        
-        $pagination = $paginator->paginate(
-            $query,
-            $request->query->getInt('page', 1),
-            10
-        );
-
-        return $this->render('parcelles_cultures/farmer/culture/index.html.twig', [
-            'pagination' => $pagination
+        return $this->render('parcelles_cultures/farmer/cultures/index.html.twig', [
+            'cultures' => $cultures,
+            'parcelles' => $parcelles,
         ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $em,
-        ParceleRepository $parceleRepository
-    ): Response {
-        $culture = new Culture();
-        $form = $this->createForm(CultureType::class, $culture);
+    public function new(Request $request): Response
+    {
+        $user = $this->getUser();
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+
+        if (empty($parcelles)) {
+            $this->addFlash('warning', 'Vous devez créer une parcelle avant d\'ajouter une culture.');
+            return $this->redirectToRoute('farmer_parcelle_new');
+        }
+
+        $dto = new CultureDTO();
+        $form = $this->createForm(CultureFormType::class, $dto);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Vérifie que la parcelle appartient à l'utilisateur
-            $parcelle = $form->getData()->getParcelle();
-            if ($parcelle->getAgriculteur() !== $this->getUser()) {
+            $parcelleId = $request->request->get('parcelle_id');
+            $parcelle = $this->parcelleRepository->find($parcelleId);
+
+            if (!$parcelle || $parcelle->getAgriculteur() !== $user) {
                 throw $this->createAccessDeniedException();
             }
 
-            $em->persist($culture);
-            $em->flush();
+            $culture = new Culture();
+            $culture->setNomCulture($dto->nom_culture);
+            $culture->setTypeCulture($dto->type_culture);
+            $culture->setSaison($dto->saison);
+            $culture->setDatePlantation($dto->date_plantation);
+            $culture->setDateRecolteProvue($dto->date_recolte_prevue);
+            $culture->setSurfaceUtilisee($dto->surface_utilisee);
+            $culture->setRendementEstime($dto->rendement_estime);
+            $culture->setParcelle($parcelle);
 
-            return $this->redirectToRoute('farmer_culture_show', [
-                'id' => $culture->getId()
-            ]);
-        }
+            $this->cultureService->mettreAJourProductionEstimee($culture);
 
-        return $this->render('parcelles_cultures/farmer/culture/form.html.twig', [
-            'form' => $form,
-            'culture' => $culture
-        ]);
-    }
+            $this->em->persist($culture);
+            $this->em->flush();
 
-    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(
-        Culture $culture,
-        Request $request,
-        EntityManagerInterface $em
-    ): Response {
-        // Vérifie la propriété
-        if ($culture->getParcelle()->getAgriculteur() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
-        }
-
-        $form = $this->createForm(CultureType::class, $culture);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
+            $this->addFlash('success', 'Culture créée avec succès.');
             return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
         }
 
-        return $this->render('parcelles_cultures/farmer/culture/form.html.twig', [
+        return $this->render('parcelles_cultures/farmer/cultures/new.html.twig', [
             'form' => $form,
-            'culture' => $culture
+            'parcelles' => $parcelles,
         ]);
     }
 
     #[Route('/{id}/show', name: 'show', methods: ['GET'])]
     public function show(Culture $culture): Response
     {
-        if ($culture->getParcelle()->getAgriculteur() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
+        $this->denyAccessUnlessGranted('view', $culture, 'Accès refusé.');
+
+        return $this->render('parcelles_cultures/farmer/cultures/show.html.twig', [
+            'culture' => $culture,
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Culture $culture): Response
+    {
+        $this->denyAccessUnlessGranted('edit', $culture, 'Accès refusé.');
+
+        $dto = new CultureDTO();
+        $dto->nom_culture = $culture->getNomCulture();
+        $dto->type_culture = $culture->getTypeCulture();
+        $dto->saison = $culture->getSaison();
+        $dto->date_plantation = $culture->getDatePlantation();
+        $dto->date_recolte_prevue = $culture->getDateRecolteProvue();
+        $dto->surface_utilisee = $culture->getSurfaceUtilisee();
+        $dto->rendement_estime = $culture->getRendementEstime();
+
+        $form = $this->createForm(CultureFormType::class, $dto);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $culture->setNomCulture($dto->nom_culture);
+            $culture->setTypeCulture($dto->type_culture);
+            $culture->setSaison($dto->saison);
+            $culture->setDatePlantation($dto->date_plantation);
+            $culture->setDateRecolteProvue($dto->date_recolte_prevue);
+            $culture->setSurfaceUtilisee($dto->surface_utilisee);
+            $culture->setRendementEstime($dto->rendement_estime);
+            $culture->setUpdatedAt(new \DateTimeImmutable());
+
+            $this->cultureService->mettreAJourProductionEstimee($culture);
+
+            $this->em->flush();
+            $this->addFlash('success', 'Culture modifiée avec succès.');
+            return $this->redirectToRoute('farmer_culture_show', ['id' => $culture->getId()]);
         }
 
-        return $this->render('parcelles_cultures/farmer/culture/show.html.twig', [
-            'culture' => $culture
+        return $this->render('parcelles_cultures/farmer/cultures/edit.html.twig', [
+            'form' => $form,
+            'culture' => $culture,
         ]);
+    }
+
+    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(Request $request, Culture $culture): Response
+    {
+        $this->denyAccessUnlessGranted('delete', $culture, 'Accès refusé.');
+
+        if ($this->isCsrfTokenValid('delete' . $culture->getId(), $request->request->get('_token'))) {
+            $this->em->remove($culture);
+            $this->em->flush();
+            $this->addFlash('success', 'Culture supprimée avec succès.');
+        }
+
+        return $this->redirectToRoute('farmer_culture_index');
     }
 }

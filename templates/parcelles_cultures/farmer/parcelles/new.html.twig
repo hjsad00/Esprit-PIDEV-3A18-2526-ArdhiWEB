@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Parcelle{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0"><i class="fas fa-plus"></i> Créer une Nouvelle Parcelle</h3>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.surface) }}
+                                {{ form_widget(form.surface, {'attr': {'class': 'form-control', 'placeholder': 'Surface en hectares'}}) }}
+                                {% if form.surface.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.surface) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.localisation) }}
+                                {{ form_widget(form.localisation, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Région de Kairouan'}}) }}
+                                {% if form.localisation.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.localisation) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.type_sol) }}
+                                {{ form_widget(form.type_sol, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.type_sol.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.type_sol) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.systeme_irrigation) }}
+                                {{ form_widget(form.systeme_irrigation, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.systeme_irrigation.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.systeme_irrigation) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.latitude) }}
+                                {{ form_widget(form.latitude, {'attr': {'class': 'form-control', 'placeholder': 'Latitude'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.longitude) }}
+                                {{ form_widget(form.longitude, {'attr': {'class': 'form-control', 'placeholder': 'Longitude'}}) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ path('farmer_parcelle_index') }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Créer
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,15 +3,15 @@
 namespace App\Entity\Parcelles_Cultures;
 
 use App\Repository\Parcelles_Cultures\CultureRepository;
-use App\Validator\Parcelles_Cultures\ValidateCultureDates;
-use App\Validator\Parcelles_Cultures\ValidateSurfaceConstraint;
+use App\Validator\Parcelles_Cultures\ValidCultureDates;
+use App\Validator\Parcelles_Cultures\ValidSurfaceConstraint;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CultureRepository::class)]
 #[ORM\Table(name: 'culture')]
-#[ValidateCultureDates]
-#[ValidateSurfaceConstraint]
+#[ValidCultureDates]
+#[ValidSurfaceConstraint]
 class Culture
 {
     #[ORM\Id]
@@ -20,55 +20,54 @@ class Culture
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank]
-    private string $nom_culture;
+    #[Assert\NotBlank(message: 'Le nom de la culture est obligatoire')]
+    private ?string $nom_culture = null;
 
     #[ORM\Column(type: 'string', length: 100)]
-    #[Assert\Choice(choices: ['Céréale', 'Légume', 'Fruit', 'Fourrage', 'Oléagineux', 'Protéagineux', 'Autre'])]
-    private string $type_culture;
+    #[Assert\NotBlank(message: 'Le type de culture est obligatoire')]
+    private ?string $type_culture = null;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Assert\Choice(choices: ['Printemps', 'Été', 'Automne', 'Hiver'])]
-    private string $saison;
+    #[Assert\NotBlank(message: 'La saison est obligatoire')]
+    private ?string $saison = null;
 
     #[ORM\Column(type: 'date')]
-    #[Assert\NotNull]
-    private \DateTimeInterface $date_plantation;
+    #[Assert\NotBlank(message: 'La date de plantation est obligatoire')]
+    private ?\DateTimeInterface $date_plantation = null;
 
     #[ORM\Column(type: 'date')]
-    #[Assert\NotNull]
-    #[Assert\GreaterThan(propertyPath: 'date_plantation', message: 'La date de récolte doit être après plantation')]
-    private \DateTimeInterface $date_recolte_prevue;
+    #[Assert\NotBlank(message: 'La date de récolte prévue est obligatoire')]
+    private ?\DateTimeInterface $date_recolte_prevue = null;
 
-    #[ORM\Column(type: 'string', length: 50)]
-    #[Assert\Choice(choices: ['Semée', 'Levée', 'Croissance', 'Floraison', 'Grain', 'Prête', 'Récoltée', 'Arrêtée'])]
-    private string $etat_culture = 'Semée';
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'active'])]
+    private string $etat_culture = 'active';
 
-    #[ORM\Column(type: 'float')]
-    #[Assert\GreaterThanOrEqual(0, message: 'Superficie utilisée >= 0')]
-    #[Assert\LessThanOrEqual(propertyPath: 'parcelle', 
-        message: 'Superficie utilisée dépasse la parcelle', 
-        groups: ['create', 'edit'])]
-    private float $surface_utilisee;
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[Assert\NotBlank(message: 'La surface utilisée est obligatoire')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'La surface utilisée doit être >= 0')]
+    private ?string $surface_utilisee = null;
 
-    #[ORM\Column(type: 'float')]
-    #[Assert\GreaterThanOrEqual(0, message: 'Rendement estimé >= 0')]
-    private float $rendement_estime;
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[Assert\NotBlank(message: 'Le rendement estimé est obligatoire')]
+    #[Assert\GreaterThan(value: 0, message: 'Le rendement estimé doit être > 0')]
+    private ?string $rendement_estime = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    private ?string $production_estimee = null;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private ?\DateTimeImmutable $created_at = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(targetEntity: Parcelle::class, inversedBy: 'cultures')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private Parcelle $parcelle;
-
-    #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $created_at;
-
-    #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $updated_at;
+    private ?Parcelle $parcelle = null;
 
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
-        $this->updated_at = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -76,56 +75,56 @@ class Culture
         return $this->id;
     }
 
-    public function getNomCulture(): string
+    public function getNomCulture(): ?string
     {
         return $this->nom_culture;
     }
 
-    public function setNomCulture(string $nom_culture): self
+    public function setNomCulture(string $nom_culture): static
     {
         $this->nom_culture = $nom_culture;
         return $this;
     }
 
-    public function getTypeCulture(): string
+    public function getTypeCulture(): ?string
     {
         return $this->type_culture;
     }
 
-    public function setTypeCulture(string $type_culture): self
+    public function setTypeCulture(string $type_culture): static
     {
         $this->type_culture = $type_culture;
         return $this;
     }
 
-    public function getSaison(): string
+    public function getSaison(): ?string
     {
         return $this->saison;
     }
 
-    public function setSaison(string $saison): self
+    public function setSaison(string $saison): static
     {
         $this->saison = $saison;
         return $this;
     }
 
-    public function getDatePlantation(): \DateTimeInterface
+    public function getDatePlantation(): ?\DateTimeInterface
     {
         return $this->date_plantation;
     }
 
-    public function setDatePlantation(\DateTimeInterface $date_plantation): self
+    public function setDatePlantation(\DateTimeInterface $date_plantation): static
     {
         $this->date_plantation = $date_plantation;
         return $this;
     }
 
-    public function getDateRecolteProvue(): \DateTimeInterface
+    public function getDateRecolteProvue(): ?\DateTimeInterface
     {
         return $this->date_recolte_prevue;
     }
 
-    public function setDateRecolteProvue(\DateTimeInterface $date_recolte_prevue): self
+    public function setDateRecolteProvue(\DateTimeInterface $date_recolte_prevue): static
     {
         $this->date_recolte_prevue = $date_recolte_prevue;
         return $this;
@@ -136,74 +135,75 @@ class Culture
         return $this->etat_culture;
     }
 
-    public function setEtatCulture(string $etat_culture): self
+    public function setEtatCulture(string $etat_culture): static
     {
         $this->etat_culture = $etat_culture;
         return $this;
     }
 
-    public function getSurfaceUtilisee(): float
+    public function getSurfaceUtilisee(): ?string
     {
         return $this->surface_utilisee;
     }
 
-    public function setSurfaceUtilisee(float $surface_utilisee): self
+    public function setSurfaceUtilisee(string $surface_utilisee): static
     {
         $this->surface_utilisee = $surface_utilisee;
         return $this;
     }
 
-    public function getRendementEstime(): float
+    public function getRendementEstime(): ?string
     {
         return $this->rendement_estime;
     }
 
-    public function setRendementEstime(float $rendement_estime): self
+    public function setRendementEstime(string $rendement_estime): static
     {
         $this->rendement_estime = $rendement_estime;
         return $this;
     }
 
-    public function getParcelle(): Parcelle
+    public function getProductionEstimee(): ?string
     {
-        return $this->parcelle;
+        return $this->production_estimee;
     }
 
-    public function setParcelle(Parcelle $parcelle): self
+    public function setProductionEstimee(?string $production_estimee): static
     {
-        $this->parcelle = $parcelle;
+        $this->production_estimee = $production_estimee;
         return $this;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->created_at;
     }
 
-    public function getUpdatedAt(): \DateTimeImmutable
+    public function setCreatedAt(\DateTimeImmutable $created_at): static
+    {
+        $this->created_at = $created_at;
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updated_at;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updated_at): self
+    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
         return $this;
     }
 
-    /**
-     * Production estimée = surface_utilisee × rendement_estime
-     */
-    public function getProductionEstimee(): float
+    public function getParcelle(): ?Parcelle
     {
-        return $this->surface_utilisee * $this->rendement_estime;
+        return $this->parcelle;
     }
 
-    /**
-     * Nombre de jours entre plantation et récolte prévue
-     */
-    public function getJoursVegetation(): int
+    public function setParcelle(?Parcelle $parcelle): static
     {
-        return $this->date_recolte_prevue->diff($this->date_plantation)->days;
+        $this->parcelle = $parcelle;
+        return $this;
     }
 }

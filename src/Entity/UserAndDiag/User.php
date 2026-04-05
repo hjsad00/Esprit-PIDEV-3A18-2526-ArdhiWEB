@@ -3,6 +3,9 @@
 namespace App\Entity\UserAndDiag;
 
 use App\Repository\UserAndDiag\UserRepository;
+use App\Entity\Parcelles_Cultures\Parcelle;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -68,6 +71,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $location = null;
+
+    /**
+     * @var Collection<int, Parcelle>
+     */
+    #[ORM\OneToMany(targetEntity: Parcelle::class, mappedBy: 'agriculteur', cascade: ['remove'])]
+    private Collection $parcelles;
+
+    public function __construct()
+    {
+        $this->parcelles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -281,5 +295,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    /**
+     * @return Collection<int, Parcelle>
+     */
+    public function getParcelles(): Collection
+    {
+        return $this->parcelles;
+    }
+
+    public function addParcelle(Parcelle $parcelle): static
+    {
+        if (!$this->parcelles->contains($parcelle)) {
+            $this->parcelles->add($parcelle);
+            $parcelle->setAgriculteur($this);
+        }
+        return $this;
+    }
+
+    public function removeParcelle(Parcelle $parcelle): static
+    {
+        if ($this->parcelles->removeElement($parcelle)) {
+            if ($parcelle->getAgriculteur() === $this) {
+                $parcelle->setAgriculteur(null);
+            }
+        }
+        return $this;
     }
 }

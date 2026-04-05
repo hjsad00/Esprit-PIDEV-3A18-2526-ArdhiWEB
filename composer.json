@@ -4,7 +4,7 @@
   "minimum-stability": "stable",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.1",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "doctrine/doctrine-bundle": "^2.18",
@@ -43,8 +43,8 @@
     "symfony/yaml": "6.4.*",
     "twig/extra-bundle": "^2.12|^3.0",
     "twig/twig": "^2.12|^3.0",
-    "knplabs/knp-paginator-bundle": "^6.4",
-    "dompdf/dompdf": "^2.0"
+    "dompdf/dompdf": "^3.0",
+    "knplabs/knp-paginator-bundle": "^6.0"
   },
   "config": {
     "allow-plugins": {

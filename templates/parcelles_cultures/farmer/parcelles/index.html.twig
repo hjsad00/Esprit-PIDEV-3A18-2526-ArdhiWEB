@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Parcelles{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-map"></i> Mes Parcelles</h1>
+                <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle Parcelle
+                </a>
+            </div>
+
+            {% if parcelles.getTotalItemCount > 0 %}
+                <div class="row">
+                    {% for parcelle in parcelles %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">Parcelle #{{ parcelle.id }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Surface:</th>
+                                            <td>{{ parcelle.surface }} ha</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Localisation:</th>
+                                            <td>{{ parcelle.localisation }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Type Sol:</th>
+                                            <td>{{ parcelle.type_sol }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Irrigation:</th>
+                                            <td>{{ parcelle.systeme_irrigation }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Cultures:</th>
+                                            <td><span class="badge bg-success">{{ parcelle.cultures|length }}</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="card-footer bg-light">
+                                    <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" style="display:inline;" 
+                                          onsubmit="return confirm('Confirmer la suppression?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {# Pagination #}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if parcelles.hasPreviousPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('farmer_parcelle_index', {'page': parcelles.previousPage}) }}">Précédent</a>
+                            </li>
+                        {% endif %}
+
+                        {% for page in parcelles.paginationData.pages %}
+                            {% if page == parcelles.currentPage %}
+                                <li class="page-item active"><span class="page-link">{{ page }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ path('farmer_parcelle_index', {'page': page}) }}">{{ page }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if parcelles.hasNextPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('farmer_parcelle_index', {'page': parcelles.nextPage}) }}">Suivant</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i> Vous n'avez pas encore créé de parcelle. 
+                    <a href="{{ path('farmer_parcelle_new') }}">Cliquez ici pour en créer une</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
