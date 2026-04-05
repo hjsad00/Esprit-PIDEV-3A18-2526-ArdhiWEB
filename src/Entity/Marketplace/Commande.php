@@ -27,6 +27,15 @@ class Commande
     #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
     private float $total = 0;
 
+    #[ORM\Column(name: 'frais_livraison', type: Types::FLOAT, options: ['default' => 0])]
+    private float $fraisLivraison = 0;
+
+    #[ORM\Column(name: 'mode_livraison', length: 50, nullable: true)]
+    private ?string $modeLivraison = null;
+
+    #[ORM\Column(name: 'payee_par_points', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $payeeParPoints = false;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
@@ -91,6 +100,39 @@ class Commande
     public function setUser(?User $user): static
     {
         $this->user = $user;
+        return $this;
+    }
+
+    public function getFraisLivraison(): float
+    {
+        return $this->fraisLivraison;
+    }
+
+    public function setFraisLivraison(float $fraisLivraison): static
+    {
+        $this->fraisLivraison = $fraisLivraison;
+        return $this;
+    }
+
+    public function getModeLivraison(): ?string
+    {
+        return $this->modeLivraison;
+    }
+
+    public function setModeLivraison(?string $modeLivraison): static
+    {
+        $this->modeLivraison = $modeLivraison;
+        return $this;
+    }
+
+    public function isPayeeParPoints(): bool
+    {
+        return $this->payeeParPoints;
+    }
+
+    public function setPayeeParPoints(bool $payeeParPoints): static
+    {
+        $this->payeeParPoints = $payeeParPoints;
         return $this;
     }
 

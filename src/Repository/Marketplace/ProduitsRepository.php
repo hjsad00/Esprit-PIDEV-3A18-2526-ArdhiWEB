@@ -28,7 +28,10 @@ class ProduitsRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.categorie = :cat')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
             ->setParameter('cat', $categorie)
+            ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
             ->getQuery()
             ->getResult();
@@ -40,8 +43,11 @@ class ProduitsRepository extends ServiceEntityRepository
     public function searchByKeyword(string $keyword): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.nom LIKE :kw OR p.description LIKE :kw')
+            ->andWhere('(p.nom LIKE :kw OR p.description LIKE :kw)')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
             ->setParameter('kw', '%' . $keyword . '%')
+            ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
             ->getQuery()
             ->getResult();
@@ -53,6 +59,9 @@ class ProduitsRepository extends ServiceEntityRepository
     public function findAllOrderedByPrice(string $direction = 'ASC'): array
     {
         return $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true)
             ->orderBy('p.prix', $direction)
             ->getQuery()
             ->getResult();
@@ -63,7 +72,10 @@ class ProduitsRepository extends ServiceEntityRepository
      */
     public function findAllExceptUser(?int $userId): array
     {
-        $qb = $this->createQueryBuilder('p');
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true);
 
         if ($userId) {
             $qb->andWhere('p.user != :uid')

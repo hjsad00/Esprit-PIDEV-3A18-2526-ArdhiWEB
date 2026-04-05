@@ -66,6 +66,12 @@ class Produits
     #[ORM\Column(name: 'typeRemise', length: 20, nullable: true)]
     private ?string $typeRemise = null;
 
+    #[ORM\Column(type: Types::BOOLEAN, options: ["default" => true])]
+    private bool $visible = true;
+
+    #[ORM\Column(name: 'visible_admin', type: Types::BOOLEAN, options: ["default" => true])]
+    private bool $visibleAdmin = true;
+
     // ==================== GETTERS & SETTERS ====================
 
     public function getId(): ?int
@@ -180,6 +186,28 @@ class Produits
     public function setTypeRemise(?string $typeRemise): static
     {
         $this->typeRemise = $typeRemise;
+        return $this;
+    }
+
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    public function setVisible(bool $visible): static
+    {
+        $this->visible = $visible;
+        return $this;
+    }
+
+    public function isVisibleAdmin(): bool
+    {
+        return $this->visibleAdmin;
+    }
+
+    public function setVisibleAdmin(bool $visibleAdmin): static
+    {
+        $this->visibleAdmin = $visibleAdmin;
         return $this;
     }
 

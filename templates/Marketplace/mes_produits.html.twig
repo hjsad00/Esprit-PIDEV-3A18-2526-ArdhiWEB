@@ -192,6 +192,8 @@
                 <th>Prix (DT)</th>
                 <th>Stock</th>
                 <th>Remise</th>
+                <th>Visible</th>
+                <th>État Admin</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -207,7 +209,8 @@
                     data-unite="{{ produit.uniteMesure }}"
                     data-remise="{{ produit.remise }}"
                     data-type-remise="{{ produit.typeRemise }}"
-                    data-image="{{ produit.image }}">
+                    data-image="{{ produit.image }}"
+                    data-visible="{{ produit.visible ? '1' : '0' }}">
                   <td>
                     <div class="mp-table-img">
                       {% if produit.image %}
@@ -251,6 +254,28 @@
                       {% endif %}
                     {% else %}
                       <span style="color:#b2bec3;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if produit.visible %}
+                      <span class="mp-table-badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;">
+                        <i class="bi bi-eye-fill"></i> Oui
+                      </span>
+                    {% else %}
+                      <span class="mp-table-badge" style="background:#fff3e0;color:#ef6c00;border:1px solid #ffe0b2;">
+                        <i class="bi bi-eye-slash-fill"></i> Caché
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if produit.visibleAdmin %}
+                      <span class="mp-table-badge" style="background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;">
+                        <i class="bi bi-shield-check"></i> Autorisé
+                      </span>
+                    {% else %}
+                      <span class="mp-table-badge" style="background:#ffebee;color:#c62828;border:1px solid #ffcdd2;">
+                        <i class="bi bi-shield-slash"></i> Bloqué
+                      </span>
                     {% endif %}
                   </td>
                   <td onclick="event.stopPropagation();">
@@ -469,6 +494,17 @@
                   </button>
                 </div>
 
+                {# Champ Visibilité #}
+                <div class="mp-form-group" style="margin-top:20px; padding:15px; background:#f8faf7; border-radius:12px; border:1px dashed #d5e8d0;">
+                  <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
+                    <input type="checkbox" name="visible" id="form-visible" value="1" checked style="width:20px; height:20px; cursor:pointer;">
+                    <div style="flex:1;">
+                      <strong style="display:block; color:#2d3436; font-size:14px;">Afficher sur le Marketplace</strong>
+                      <small style="color:#636e72; font-weight:400;">Si coché, le produit sera visible par tous les clients.</small>
+                    </div>
+                  </label>
+                </div>
+
               </div>
             </div>
 
@@ -510,6 +546,7 @@ function resetForm() {
   document.getElementById('form-type-remise').value = 'AUCUNE';
   document.getElementById('form-remise').value = '';
   document.getElementById('remise-value-group').style.display = 'none';
+    document.getElementById('form-visible').checked = true;
   document.getElementById('form-image').value = '';
   document.getElementById('upload-preview').innerHTML =
     '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
@@ -540,6 +577,8 @@ function editProduit(row) {
     document.getElementById('form-remise').value = '';
     document.getElementById('remise-value-group').style.display = 'none';
   }
+
+  document.getElementById('form-visible').checked = (data.visible === '1');
 
   const preview = document.getElementById('upload-preview');
   preview.innerHTML = data.image
@@ -730,12 +769,20 @@ window.addEventListener('load', function () {
             ? `<span class="mp-table-remise">-${p.typeRemise === 'POURCENTAGE' ? parseFloat(p.remise).toFixed(0)+'%' : parseFloat(p.remise).toFixed(2)+' DT'}</span>`
             : `<span style="color:#b2bec3;">—</span>`;
 
+          const visibleHtml = p.visible
+            ? `<span class="mp-table-badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;"><i class="bi bi-eye-fill"></i> Oui</span>`
+            : `<span class="mp-table-badge" style="background:#fff3e0;color:#ef6c00;border:1px solid #ffe0b2;"><i class="bi bi-eye-slash-fill"></i> Caché</span>`;
+
+          const visibleAdminHtml = p.visibleAdmin
+            ? `<span class="mp-table-badge" style="background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;"><i class="bi bi-shield-check"></i> Autorisé</span>`
+            : `<span class="mp-table-badge" style="background:#ffebee;color:#c62828;border:1px solid #ffcdd2;"><i class="bi bi-shield-slash"></i> Bloqué</span>`;
+
           const rowHtml = `
             <tr class="mp-table-row" onclick="editProduit(this)" style="cursor:pointer;"
                 data-id="${p.id}" data-nom="${p.nom}" data-description="${p.description}"
                 data-prix="${p.prix}" data-stock="${p.stock}" data-categorie="${p.categorie}"
                 data-unite="${p.unite}" data-remise="${p.remise}" data-type-remise="${p.typeRemise}"
-                data-image="${p.image}">
+                data-image="${p.image}" data-visible="${p.visible ? '1' : '0'}">
               <td><div class="mp-table-img">${imgHtml}</div></td>
               <td><span class="mp-table-id">#${p.id}</span></td>
               <td><strong>${p.nom}</strong></td>
@@ -743,6 +790,8 @@ window.addEventListener('load', function () {
               <td>${prixHtml}</td>
               <td><span class="mp-table-stock ${p.stock > 0 ? 'in-stock' : 'out-stock'}">${p.stock}</span></td>
               <td>${remiseHtml}</td>
+              <td>${visibleHtml}</td>
+              <td>${visibleAdminHtml}</td>
               <td onclick="event.stopPropagation();">
                 <div class="mp-table-actions">
                   <button type="button" class="mp-action-edit" onclick="editProduit(this.closest('tr'))">

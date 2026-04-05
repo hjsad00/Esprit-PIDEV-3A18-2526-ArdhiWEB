@@ -175,10 +175,12 @@
       <div class="container">
         <div class="mp-header-inner">
           <div class="mp-header-left">
-            <a href="{{ path('app_marketplace') }}" class="mp-back-link">
-              <i class="bi bi-arrow-left-circle-fill"></i> Marketplace
-            </a>
             <h1 class="mp-header-title">Commandes Reçues</h1>
+          </div>
+          <div class="mp-header-right">
+            <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
+              <i class="bi bi-arrow-left"></i>
+            </a>
           </div>
         </div>
       </div>
@@ -332,8 +334,15 @@
           <p style="text-align:center;color:#b2bec3;">Chargement...</p>
         </div>
         <div class="cmd-modal-footer">
-          <span>Total :</span>
-          <span class="cmd-modal-total" id="modal-total">—</span>
+          <div style="flex:1;">
+            <div id="modal-delivery-row" style="display:none;font-size:13px;color:#636e72;">
+              Frais de livraison : <span id="modal-delivery-cost">0,00</span> DT
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:14px;color:#636e72;">Total : </span>
+            <span class="cmd-modal-total" id="modal-total">—</span>
+          </div>
         </div>
       </div>
     </div>
@@ -438,6 +447,16 @@ async function openDetails(id) {
     const cmd = data.commande;
     title.textContent = `Commande #${cmd.id} — ${cmd.date}`;
     total.textContent = `${cmd.total} DT`;
+
+    // Affichage des frais de livraison
+    const deliveryRow = document.getElementById('modal-delivery-row');
+    const deliveryCost = document.getElementById('modal-delivery-cost');
+    if (cmd.fraisLivraison && cmd.fraisLivraison !== "0,00") {
+      deliveryRow.style.display = 'block';
+      deliveryCost.textContent = cmd.fraisLivraison;
+    } else {
+      deliveryRow.style.display = 'none';
+    }
 
     let html = '';
     cmd.items.forEach(item => {

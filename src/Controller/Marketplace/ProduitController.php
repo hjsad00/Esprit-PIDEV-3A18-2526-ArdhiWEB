@@ -23,6 +23,7 @@ class ProduitController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
         $produits = $produitsRepository->findByUser($user->getId());
         $categories = $produitsRepository->findDistinctCategories();
@@ -45,6 +46,7 @@ public function saveProduit(
 ): Response {
     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+    /** @var \App\Entity\UserAndDiag\User $user */
     $user    = $this->getUser();
     $id      = $request->request->get('id');
     $isAjax  = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
@@ -72,6 +74,10 @@ public function saveProduit(
     $produit->setQuantiteStock((int) $request->request->get('quantiteStock'));
     $produit->setCategorie($request->request->get('categorie'));
     $produit->setUniteMesure((string) $request->request->get('uniteMesure'));
+
+    // Visibilité
+    $visible = $request->request->get('visible') !== null;
+    $produit->setVisible($visible);
 
     $typeRemise = $request->request->get('typeRemise');
     if ($typeRemise && $typeRemise !== 'AUCUNE') {
@@ -140,6 +146,8 @@ public function saveProduit(
                 'typeRemise'  => $produit->getTypeRemise() ?? '',
                 'image'       => $produit->getImage() ?? '',
                 'description' => $produit->getDescription() ?? '',
+                'visible'     => $produit->isVisible(),
+                'visibleAdmin' => $produit->isVisibleAdmin(),
             ],
         ]);
     }
@@ -157,6 +165,7 @@ public function deleteProduit(
 ): Response {
     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+    /** @var \App\Entity\UserAndDiag\User $user */
     $user    = $this->getUser();
     $isAjax  = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
     $produit = $produitsRepository->find($id);

@@ -263,7 +263,7 @@
                   </div>
                 </div>
                 <div class="cart-summary-actions">
-                  <button type="button" class="btn-checkout-final">
+                  <button type="button" class="btn-checkout-final" onclick="checkout()">
                     <i class="bi bi-shield-check"></i> Confirmer la commande
                   </button>
                   <form action="{{ path('app_marketplace_panier_clear') }}" method="POST"
@@ -309,6 +309,44 @@
         costEl.style.color  = fee === 0 ? '#6ee7b7' : '#fcd34d';
       }
       if (totalEl) totalEl.textContent = (BASE_TOTAL + fee).toFixed(2) + ' DT';
+    }
+  }
+
+  // ── Checkout ──
+  async function checkout() {
+    if (!confirm('Confirmer votre commande ?')) return;
+
+    const btn = document.querySelector('.btn-checkout-final');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement en cours...';
+
+    // Déterminer le mode de livraison sélectionné
+    const deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+    const modeLivraison = (deliveryRadio && deliveryRadio.value === 'home') ? 'LIVRAISON' : 'RECUPERATION';
+
+    try {
+      const res = await fetch('/marketplace/panier/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ mode_livraison: modeLivraison })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert(data.message);
+        window.location.href = '{{ path('app_marketplace_mes_commandes') }}';
+      } else {
+        alert(data.message || 'Erreur lors de la commande.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-shield-check"></i> Confirmer la commande';
+      }
+    } catch (err) {
+      alert('Erreur réseau. Veuillez réessayer.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-shield-check"></i> Confirmer la commande';
     }
   }
 </script>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Marketplace Admin - Sous-section</title>
+
+  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+</head>
+<body style="background-color: #f7f9fc;">
+
+<header style="background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 38px;">
+        <span style="font-weight: 700; font-size: 1.1rem; color: #116530; display: block;">MARKETPLACE ADMIN</span>
+    </div>
+    <a href="{{ path('admin_marketplace_accueil') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+        <i class="bi bi-arrow-left me-1"></i> Retour au Dashboard
+    </a>
+</header>
+
+<div class="container py-5 text-center">
+    <div class="py-5 bg-white rounded-5 shadow-sm border mx-auto" style="max-width: 700px;">
+        <div class="mb-4">
+            <div style="width:100px; height:100px; background:#e8f5e9; color:#116530; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:48px;">
+                <i class="bi bi-gear-wide-connected"></i>
+            </div>
+        </div>
+        <h1 class="fw-bold mb-3" style="color: #116530;">Section en construction</h1>
+        <p class="text-muted fs-5 px-4">
+            Cette interface de gestion administrative est actuellement en cours de développement. 
+            Elle permettra bientôt de visualiser et d'interagir avec les données réelles du Marketplace.
+        </p>
+        <div class="mt-4 pt-4 border-top">
+            <span class="badge bg-success bg-opacity-10 text-success px-4 py-2 rounded-pill fw-bold">
+                <i class="bi bi-clock me-1"></i> DISPONIBLE PROCHAINEMENT
+            </span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

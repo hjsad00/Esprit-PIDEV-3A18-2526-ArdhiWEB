@@ -2,9 +2,13 @@
 
 namespace App\Controller\Marketplace;
 
+use App\Entity\Marketplace\Commande;
+use App\Entity\Marketplace\DetailsCommande;
 use App\Repository\Marketplace\CommandeRepository;
+use App\Repository\Marketplace\PanierRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -103,6 +107,8 @@ class CommandeController extends AbstractController
                 'date'  => $commande->getDateCommande()->format('d/m/Y'),
                 'etat'  => $commande->getEtat(),
                 'total' => number_format($commande->getTotal(), 2, ',', ' '),
+                'fraisLivraison' => number_format($commande->getFraisLivraison(), 2, ',', ' '),
+                'modeLivraison'  => $commande->getModeLivraison() ?? 'RECUPERATION',
                 'items' => $items,
             ],
         ]);
@@ -148,6 +154,88 @@ class CommandeController extends AbstractController
             'success' => true,
             'message' => 'État mis à jour avec succès.',
             'etat'    => $status,
+        ]);
+    }
+
+    /**
+     * Passage de commande : transforme le panier en commande(s).
+     * Crée une commande par vendeur.
+     */
+    #[Route('/marketplace/panier/checkout', name: 'app_marketplace_checkout', methods: ['POST'])]
+    public function checkout(Request $request, PanierRepository $panierRepo, EntityManagerInterface $em): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // 1. Récupérer le panier de l'utilisateur
+        $panier = $panierRepo->findOneBy(['user' => $user]);
+        if (!$panier || $panier->getPanierProduits()->isEmpty()) {
+            return $this->json(['success' => false, 'message' => 'Votre panier est vide.'], 400);
+        }
+
+        // 2. Récupérer le mode de livraison depuis la requête
+        $data = json_decode($request->getContent(), true);
+        $modeLivraison = $data['mode_livraison'] ?? 'RECUPERATION';
+        $fraisParVendeur = ($modeLivraison === 'LIVRAISON') ? 7.0 : 0.0;
+
+        // 3. Grouper les articles par vendeur
+        $groupesParVendeur = [];
+        foreach ($panier->getPanierProduits() as $ligne) {
+            $produit = $ligne->getProduit();
+            $vendeur = $produit->getUser();
+            if ($vendeur === null) {
+                continue;
+            }
+            $vendeurId = $vendeur->getId();
+            if (!isset($groupesParVendeur[$vendeurId])) {
+                $groupesParVendeur[$vendeurId] = [];
+            }
+            $groupesParVendeur[$vendeurId][] = $ligne;
+        }
+
+        // 4. Créer une commande par vendeur
+        $nbCommandes = 0;
+        foreach ($groupesParVendeur as $vendeurId => $lignes) {
+            $commande = new Commande();
+            $commande->setUser($user);
+            $commande->setDateCommande(new \DateTime());
+            $commande->setEtat('en_attente');
+            $commande->setModeLivraison($modeLivraison);
+            $commande->setFraisLivraison($fraisParVendeur);
+
+            $sousTotal = 0.0;
+            foreach ($lignes as $ligne) {
+                $detail = new DetailsCommande();
+                $detail->setProduit($ligne->getProduit());
+                $detail->setQuantite($ligne->getQuantite());
+                $detail->setPrixUnitaire($ligne->getProduit()->getPrixFinal());
+                $commande->addDetail($detail);
+
+                $sousTotal += $ligne->getProduit()->getPrixFinal() * $ligne->getQuantite();
+            }
+
+            $commande->setTotal(round($sousTotal + $fraisParVendeur, 2));
+            $em->persist($commande);
+            $nbCommandes++;
+        }
+
+        // 5. Vider le panier
+        foreach ($panier->getPanierProduits()->toArray() as $ligne) {
+            $em->remove($ligne);
+        }
+        $panier->setTotalMontant(0);
+        $panier->setTotalProduits(0);
+
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => $nbCommandes > 1
+                ? "$nbCommandes commandes créées avec succès !"
+                : 'Commande créée avec succès !',
+            'nbCommandes' => $nbCommandes,
         ]);
     }
 }
