@@ -2,165 +2,17 @@
 
 {% block title %}Agriculture - Gestion Parcelles & Cultures{% endblock %}
 
+{% block body_class %}marketplace-page{% endblock %}
+
 {% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
     <style>
+        /* Specific tweaks if needed for Agriculture context */
         .agriculture-hero {
-            position: relative;
-            height: 600px;
-            display: flex;
-            align-items: center;
-            color: white;
-            overflow: hidden;
-            background: linear-gradient(135deg, #1e5631 0%, #2d8659 100%);
+            background: #0f140f; /* Fallback */
         }
-
-        .hero-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            opacity: 0.3;
-            z-index: 0;
-        }
-
-        .hero-bg img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .agriculture-hero .container {
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-inner {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-
-        .hero-left h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-left p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
-            line-height: 1.6;
-        }
-
-        .hero-label {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .hero-btn-primary {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: white;
-            color: #1e5631;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .hero-btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-            color: #1e5631;
-            text-decoration: none;
-        }
-
-        .categories-glass-panel {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .categories-panel-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-        }
-
-        .category-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            margin-bottom: 0.5rem;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .category-item:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateX(10px);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
-        .category-icon {
-            font-size: 2rem;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            flex-shrink: 0;
-        }
-
-        .category-text h4 {
-            margin: 0;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-
-        .category-text span {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .hero-inner {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-left h1 {
-                font-size: 2.5rem;
-            }
+        .category-item h4 {
+            margin-bottom: 0px !important;
         }
     </style>
 {% endblock %}
@@ -168,77 +20,79 @@
 {% block body %}
 
     {# ============================
-       HERO SECTION
+       HERO SECTION — AGRI DASHBOARD
        ============================ #}
-    <section class="agriculture-hero">
-        <div class="hero-bg">
-            <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Agriculture">
-        </div>
+    <section class="marketplace-hero agriculture-hero">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Gestion Agricole Ardhi">
+      </div>
 
-        <div class="container">
-            <div class="hero-inner">
+      <div class="container">
+        <div class="hero-inner">
 
-                {# --- Left Content --- #}
-                <div class="hero-left">
-                    <div class="hero-label">GESTION AGRICOLE</div>
-                    <h1>Gérez vos<br>parcelles et<br>cultures.</h1>
-                    <p>
-                        Suivi complet de vos parcelles, calcul d'irrigation, analyse financière et gestion du crédit agricole.
-                    </p>
-                    <a href="{{ path('farmer_parcelle_index') }}" class="hero-btn-primary">
-                        <i class="fas fa-arrow-right"></i> Commencer
-                    </a>
+          {# --- Left Content --- #}
+          <div class="hero-left" data-aos="fade-up">
+            <div class="hero-label">GESTION AGRICOLE</div>
+            <h1 class="hero-headline">Gérez vos<br>parcelles et<br>cultures.</h1>
+            <p class="hero-description">
+              Suivi complet de vos parcelles, calcul d'irrigation, analyse financière 
+              et gestion du crédit agricole pour une productivité maximale.
+            </p>
+            <a href="{{ path('farmer_parcelle_index') }}" class="hero-btn-primary">
+              Commencer
+            </a>
+          </div>
+
+          {# --- Right: Agri Services Panel --- #}
+          <div class="hero-right" data-aos="fade-left">
+            <div class="categories-glass-panel">
+              <div class="categories-panel-title">Services Agricoles</div>
+
+              <a href="{{ path('farmer_parcelle_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Parcelles</h4>
+                  <span>Gestion des parcelles</span>
                 </div>
+              </a>
 
-                {# --- Right: Navigation Panel --- #}
-                <div>
-                    <div class="categories-glass-panel">
-                        <div class="categories-panel-title">Services Agricoles</div>
-
-                        <a href="{{ path('farmer_parcelle_index') }}" class="category-item">
-                            <div class="category-icon"><i class="fas fa-map"></i></div>
-                            <div class="category-text">
-                                <h4>Mes Parcelles</h4>
-                                <span>Gestion des parcelles</span>
-                            </div>
-                        </a>
-
-                        <a href="{{ path('farmer_culture_index') }}" class="category-item">
-                            <div class="category-icon"><i class="fas fa-leaf"></i></div>
-                            <div class="category-text">
-                                <h4>Mes Cultures</h4>
-                                <span>Suivi des cultures</span>
-                            </div>
-                        </a>
-
-                        <a href="{{ path('farmer_irrigation_index') }}" class="category-item">
-                            <div class="category-icon"><i class="fas fa-tint"></i></div>
-                            <div class="category-text">
-                                <h4>Irrigation</h4>
-                                <span>Calcul d'irrigation</span>
-                            </div>
-                        </a>
-
-                        <a href="{{ path('farmer_roi_index') }}" class="category-item">
-                            <div class="category-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="category-text">
-                                <h4>ROI & Finances</h4>
-                                <span>Analyse financière</span>
-                            </div>
-                        </a>
-
-                        <a href="{{ path('farmer_credit_index') }}" class="category-item">
-                            <div class="category-icon"><i class="fas fa-file-contract"></i></div>
-                            <div class="category-text">
-                                <h4>Crédit Agricole</h4>
-                                <span>Dossiers de crédit</span>
-                            </div>
-                        </a>
-                    </div>
+              <a href="{{ path('farmer_culture_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-flower1"></i></div>
+                <div class="category-text">
+                  <h4>Mes Cultures</h4>
+                  <span>Suivi des cultures</span>
                 </div>
+              </a>
+
+              <a href="{{ path('farmer_irrigation_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-droplet-fill"></i></div>
+                <div class="category-text">
+                  <h4>Irrigation</h4>
+                  <span>Calcul d'irrigation</span>
+                </div>
+              </a>
+
+              <a href="{{ path('farmer_roi_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <div class="category-text">
+                  <h4>ROI & Finances</h4>
+                  <span>Analyse financière</span>
+                </div>
+              </a>
+
+              <a href="{{ path('farmer_credit_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-file-earmark-diff-fill"></i></div>
+                <div class="category-text">
+                  <h4>Crédit Agricole</h4>
+                  <span>Dossiers de crédit</span>
+                </div>
+              </a>
 
             </div>
+          </div>
+
         </div>
+      </div>
     </section>
 
 {% endblock %}

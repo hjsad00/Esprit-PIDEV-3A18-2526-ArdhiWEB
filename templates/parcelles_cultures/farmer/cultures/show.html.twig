@@ -1,65 +1,206 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Culture: {{ culture.nomCulture }}{% endblock %}
+{% block title %}Culture - {{ culture.typeCulture|capitalize }} - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 30px;
+            margin-bottom: 2rem;
+        }
+        .card-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #116530;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .info-label {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 600;
+        }
+        .info-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-value i { color: #116530; }
+        
+        .status-badge {
+            font-weight: 600;
+            font-size: 0.7rem;
+            padding: 5px 12px;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+        .btn-premium-back {
+            color: #116530;
+            background: #e8f5e9;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .btn-premium-back:hover {
+            background: #116530;
+            color: white;
+        }
+        .btn-action {
+            border-radius: 50px !important;
+            padding: 10px 25px !important;
+            font-weight: 600 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .formula-box {
+            background: #f8faf7;
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            color: #2d3436;
+            border-left: 4px solid #116530;
+            display: inline-block;
+            width: 100%;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
 {% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-5 px-lg-5">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3 col-xl-2">
             {% include 'parcelles_cultures/components/sidebar.html.twig' %}
         </div>
-        <div class="col-md-10">
-            <div class="mb-3">
-                <a href="{{ path('farmer_culture_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour
+        
+        <div class="col-md-9 col-xl-10">
+            <div data-aos="fade-right">
+                <a href="{{ path('farmer_culture_index') }}" class="btn-premium-back">
+                    <i class="bi bi-arrow-left"></i> Retour aux cultures
                 </a>
             </div>
 
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h3 class="card-title mb-0"><i class="fas fa-leaf"></i> {{ culture.nomCulture }}</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5>Informations Générales</h5>
-                            <table class="table table-sm">
-                                <tr><th>Type:</th><td>{{ culture.typeCulture }}</td></tr>
-                                <tr><th>Saison:</th><td>{{ culture.saison }}</td></tr>
-                                <tr><th>Surface utilisée:</th><td>{{ culture.surfaceUtilisee }} ha</td></tr>
-                                <tr><th>Rendement estimé:</th><td>{{ culture.rendementEstime }}</td></tr>
-                                <tr><th>État:</th><td><span class="badge bg-info">{{ culture.etatCulture }}</span></td></tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Production & Dates</h5>
-                            <table class="table table-sm">
-                                <tr><th>Production estimée:</th><td class="fw-bold text-success">{{ culture.productionEstimee|round(2) }}</td></tr>
-                                <tr><th>Plantation:</th><td>{{ culture.datePlantation|date('d/m/Y') }}</td></tr>
-                                <tr><th>Récolte prévue:</th><td>{{ culture.dateRecoltePrevue|date('d/m/Y') }}</td></tr>
-                                <tr><th>Parcelle:</th><td><a href="{{ path('farmer_parcelle_show', {id: culture.parcelle.id}) }}">#{{ culture.parcelle.id }}</a></td></tr>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <strong>Production = Surface × Rendement</strong><br>
-                        {{ culture.surfaceUtilisee }} ha × {{ culture.rendementEstime }} = <strong>{{ culture.productionEstimee|round(2) }}</strong>
-                    </div>
-                </div>
-                <div class="card-footer bg-light">
-                    <a href="{{ path('farmer_culture_edit', {id: culture.id}) }}" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Modifier
+            <div class="page-header d-flex justify-content-between align-items-center" data-aos="fade-down">
+                <h1 class="page-title">{{ culture.typeCulture|capitalize }}</h1>
+                <div class="d-flex gap-2">
+                    <a href="{{ path('farmer_culture_edit', {id: culture.id}) }}" class="btn btn-warning btn-action">
+                        <i class="bi bi-pencil-square"></i> Modifier
                     </a>
-                    <form method="POST" action="{{ path('farmer_culture_delete', {id: culture.id}) }}" style="display:inline;" 
-                          onsubmit="return confirm('Confirmer la suppression?');">
+                    <form method="POST" action="{{ path('farmer_culture_delete', {id: culture.id}) }}" 
+                          onsubmit="return confirm('Confirmer la suppression ?');">
                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ culture.id) }}">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Supprimer
+                        <button type="submit" class="btn btn-danger btn-action">
+                            <i class="bi bi-trash"></i> Supprimer
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <div class="premium-card" data-aos="fade-up">
+                <span class="card-label"><i class="bi bi-info-circle-fill"></i> Présentation Culture</span>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Variété</span>
+                        <span class="info-value"><i class="bi bi-flower1"></i> {{ culture.typeCulture|capitalize }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Saison</span>
+                        <span class="info-value"><i class="bi bi-calendar-event"></i> {{ culture.saison|capitalize }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Surface Utilisée</span>
+                        <span class="info-value"><i class="bi bi-aspect-ratio"></i> {{ culture.surfaceUtilisee }} ha</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Parcelle Associée</span>
+                        <span class="info-value">
+                            <i class="bi bi-geo-alt"></i> 
+                            <a href="{{ path('farmer_parcelle_show', {id: culture.parcelle.id}) }}" class="link-success text-decoration-none">
+                                #{{ culture.parcelle.id }} - {{ culture.parcelle.localisation }}
+                            </a>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Statut</span>
+                        <span>
+                            <span class="status-badge bg-success text-white">
+                                {{ culture.etatCulture }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="premium-card" data-aos="fade-right" data-aos-delay="100">
+                        <span class="card-label"><i class="bi bi-speedometer2"></i> Prévisions de Récolte</span>
+                        <div class="info-item mb-4">
+                            <span class="info-label">Rendement Estimé</span>
+                            <span class="info-value" style="font-size: 1.5rem;">{{ culture.rendementEstime }} <span class="text-muted small">kg/ha</span></span>
+                        </div>
+                        <div class="formula-box">
+                            <i class="bi bi-calculator me-2"></i> <strong>Production Totale :</strong><br>
+                            {{ culture.surfaceUtilisee }} ha × {{ culture.rendementEstime }} kg/ha = 
+                            <span class="text-success fw-bold">{{ culture.productionEstimee|round(2) }} kg</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="premium-card" data-aos="fade-left" data-aos-delay="200">
+                        <span class="card-label"><i class="bi bi-calendar-check"></i> Calendrier Agricole</span>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Date de Plantation</span>
+                                <span class="info-value"><i class="bi bi-calendar-plus"></i> {{ culture.datePlantation|date('d/m/Y') }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Récolte Prévue</span>
+                                <span class="info-value"><i class="bi bi-calendar-check"></i> {{ culture.dateRecoltePrevue|date('d/m/Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

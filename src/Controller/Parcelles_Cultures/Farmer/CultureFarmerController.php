@@ -89,7 +89,7 @@ class CultureFarmerController extends AbstractController
 
             if ($form->isValid()) {
                 $culture = new Culture();
-                $culture->setNomCulture($dto->nom_culture);
+                $culture->setNomCulture($dto->type_culture);
                 $culture->setTypeCulture($dto->type_culture);
                 $culture->setSaison($dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);
@@ -129,7 +129,6 @@ class CultureFarmerController extends AbstractController
         $this->denyAccessUnlessGranted('edit', $culture, 'Accès refusé.');
 
         $dto = new CultureDTO();
-        $dto->nom_culture = $culture->getNomCulture();
         $dto->type_culture = $culture->getTypeCulture();
         $dto->saison = $culture->getSaison();
         $dto->date_plantation = $culture->getDatePlantation();
@@ -166,7 +165,7 @@ class CultureFarmerController extends AbstractController
             }
 
             if ($form->isValid()) {
-                $culture->setNomCulture($dto->nom_culture);
+                $culture->setNomCulture($dto->type_culture);
                 $culture->setTypeCulture($dto->type_culture);
                 $culture->setSaison($dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);

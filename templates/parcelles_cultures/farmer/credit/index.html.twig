@@ -1,65 +1,189 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dossiers de Crédit{% endblock %}
+{% block title %}Mes Dossiers de Crédit - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .premium-table-container {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            overflow: hidden;
+            padding: 0;
+        }
+        .premium-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0;
+        }
+        .premium-table thead th {
+            background: #f8faf7;
+            color: #116530;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 20px;
+            border: none;
+        }
+        .premium-table tbody td {
+            padding: 20px;
+            vertical-align: middle;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #4a4a4a;
+        }
+        .premium-table tbody tr:hover {
+            background-color: #fcfdfe;
+        }
+        .btn-add {
+            background: #116530;
+            color: white;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 700;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(17, 101, 48, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .btn-add:hover {
+            background: #1e8341;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(17, 101, 48, 0.25);
+        }
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin: 0 2px;
+        }
+        .btn-view { background: #e8f5e9; color: #116530; }
+        .btn-view:hover { background: #116530; color: white; }
+        .btn-pdf { background: #fff1f0; color: #ff4d4f; }
+        .btn-pdf:hover { background: #ff4d4f; color: white; }
+        
+        .status-badge {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            border-radius: 50px;
+            text-transform: capitalize;
+        }
+        .risk-badge {
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
 {% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-5 px-lg-5">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3 col-xl-2">
             {% include 'parcelles_cultures/components/sidebar.html.twig' %}
         </div>
-        <div class="col-md-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i class="fas fa-file-contract"></i> Mes Dossiers de Crédit</h1>
-                <a href="{{ path('farmer_credit_new') }}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Nouveau Dossier
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center gap-3" data-aos="fade-down">
+                <div>
+                    <h1 class="page-title">Mes Dossiers de Crédit</h1>
+                    <p class="text-muted lead mt-2 mb-0">Analysez et gérez vos demandes de financement agricole.</p>
+                </div>
+                <a href="{{ path('farmer_credit_new') }}" class="btn-add">
+                    <i class="bi bi-plus-lg"></i> Nouveau Dossier
                 </a>
             </div>
 
             {% if dossiers.getTotalItemCount > 0 %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                <div class="premium-table-container" data-aos="fade-up" data-aos-delay="100">
+                    <table class="premium-table">
+                        <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Parcelle</th>
+                                <th># ID</th>
+                                <th>Localisation Parcelle</th>
                                 <th>Montant (DT)</th>
-                                <th>Durée (ans)</th>
+                                <th>Durée</th>
                                 <th>Score Risque</th>
                                 <th>Niveau Risque</th>
                                 <th>Statut</th>
-                                <th>Actions</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for dossier in dossiers %}
                                 <tr>
-                                    <td>#{{ dossier.id }}</td>
-                                    <td><a href="{{ path('farmer_parcelle_show', {id: dossier.parcelle.id}) }}">#{{ dossier.parcelle.id }}</a></td>
-                                    <td>{{ dossier.montantPretMax|round(2) }} DT</td>
-                                    <td>{{ dossier.dureeAnnees }}</td>
+                                    <td class="fw-bold text-success">C-{{ dossier.id }}</td>
                                     <td>
-                                        <strong>{{ dossier.scoreRisque|round(2) }}/10</strong>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-geo-alt text-muted"></i>
+                                            <a href="{{ path('farmer_parcelle_show', {id: dossier.parcelle.id}) }}" class="link-dark text-decoration-none fw-medium">
+                                                {{ dossier.parcelle.localisation }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">{{ dossier.montantPretMax|number_format(2, '.', ' ') }} <span class="text-muted small">DT</span></td>
+                                    <td>{{ dossier.dureeAnnees }} ans</td>
+                                    <td>
+                                        <span class="fw-bold text-dark">{{ dossier.scoreRisque|round(1) }}</span><span class="text-muted">/10</span>
                                     </td>
                                     <td>
                                         {% if dossier.niveauRisque == 'faible' %}
-                                            <span class="badge bg-success">Faible</span>
+                                            <div class="risk-badge text-success"><span class="risk-dot bg-success"></span> Faible</div>
                                         {% elseif dossier.niveauRisque == 'modere' %}
-                                            <span class="badge bg-warning">Modéré</span>
+                                            <div class="risk-badge text-warning"><span class="risk-dot bg-warning"></span> Modéré</div>
                                         {% else %}
-                                            <span class="badge bg-danger">Élevé</span>
+                                            <div class="risk-badge text-danger"><span class="risk-dot bg-danger"></span> Élevé</div>
                                         {% endif %}
                                     </td>
-                                    <td><span class="badge bg-info">{{ dossier.statut }}</span></td>
                                     <td>
-                                        <a href="{{ path('farmer_credit_show', {id: dossier.id}) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ path('farmer_credit_export_pdf', {id: dossier.id}) }}" class="btn btn-sm btn-danger" title="Télécharger PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </a>
+                                        <span class="status-badge 
+                                            {{ dossier.statut == 'draft' ? 'bg-light text-muted' : 
+                                               dossier.statut == 'pending' ? 'bg-info-light text-info' : 'bg-success-light text-success' }}">
+                                            {{ dossier.statut|replace({'draft': 'Brouillon', 'pending': 'En attente'}) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end">
+                                            <a href="{{ path('farmer_credit_show', {id: dossier.id}) }}" class="action-btn btn-view" title="Voir les détails">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ path('farmer_credit_export_pdf', {id: dossier.id}) }}" class="action-btn btn-pdf" title="Exporter en PDF">
+                                                <i class="bi bi-file-pdf"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -67,33 +191,15 @@
                     </table>
                 </div>
 
-                {# Pagination #}
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% if dossiers.paginationData.previous is defined %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.paginationData.previous}) }}">Précédent</a>
-                            </li>
-                        {% endif %}
-
-                        {% for page in dossiers.paginationData.pagesInRange %}
-                            {% if page == dossiers.currentPageNumber %}
-                                <li class="page-item active"><span class="page-link">{{ page }}</span></li>
-                            {% else %}
-                                <li class="page-item"><a class="page-link" href="{{ path('farmer_credit_index', {'page': page}) }}">{{ page }}</a></li>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if dossiers.paginationData.next is defined %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_credit_index', {'page': dossiers.paginationData.next}) }}">Suivant</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                <div class="mt-4" data-aos="fade-up">
+                    {{ knp_pagination_render(dossiers) }}
+                </div>
             {% else %}
-                <div class="alert alert-info" role="alert">
-                    <i class="fas fa-info-circle"></i> Vous n'avez pas encore créé de dossier de crédit.
+                <div class="premium-card text-center py-5" data-aos="zoom-in">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" alt="Empty" style="width: 80px; opacity: 0.5; margin-bottom: 20px;">
+                    <h3 class="text-dark">Aucun dossier trouvé</h3>
+                    <p class="text-muted">Vous n'avez pas encore créé de demande de crédit agricole.</p>
+                    <a href="{{ path('farmer_credit_new') }}" class="btn-add mt-3">Créer mon premier dossier</a>
                 </div>
             {% endif %}
         </div>

@@ -21,18 +21,7 @@
 
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.nom_culture) }}
-                                {{ form_widget(form.nom_culture, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Bélé'}}) }}
-                                {% if form.nom_culture.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.nom_culture) }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="mb-3">
                                 {{ form_label(form.type_culture) }}
                                 {{ form_widget(form.type_culture, {'attr': {'class': 'form-control'}}) }}

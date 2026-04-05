@@ -6,10 +6,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CultureDTO
 {
-    #[Assert\NotBlank(message: 'Le nom de la culture est obligatoire')]
-    #[Assert\Length(min: 2, max: 255)]
-    public ?string $nom_culture = null;
-
     #[Assert\NotBlank(message: 'Le type de culture est obligatoire')]
     public ?string $type_culture = null;
 

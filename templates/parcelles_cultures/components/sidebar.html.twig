@@ -1,46 +1,121 @@
-{# Sidebar navigation for detailed module navigation #}
-<div class="bg-light border-end" style="min-height: 100vh;">
-    <div class="list-group list-group-flush">
+{# Sidebar navigation for professional module navigation #}
+<div class="sidebar-wrapper">
+    <div class="sidebar-nav">
         {% if is_granted('ROLE_AGRICULTEUR') %}
-            <h6 class="list-group-item bg-primary text-white">Mes Parcelles</h6>
-            <a href="{{ path('farmer_parcelle_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-list"></i> Liste des parcelles
-            </a>
-            <a href="{{ path('farmer_parcelle_new') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-plus"></i> Nouvelle parcelle
-            </a>
+            <div class="sidebar-section">
+                <span class="sidebar-label">GESTION</span>
+                <a href="{{ path('farmer_parcelle_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'farmer_parcelle' ? 'active' : '' }}">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Mes Parcelles</span>
+                </a>
+                <a href="{{ path('farmer_parcelle_new') }}" class="sidebar-link {{ app.request.get('_route') == 'farmer_parcelle_new' ? 'active' : '' }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Nouvelle parcelle</span>
+                </a>
+            </div>
             
-            <h6 class="list-group-item bg-success text-white mt-3">Cultures</h6>
-            <a href="{{ path('farmer_culture_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-leaf"></i> Mes cultures
-            </a>
-            <a href="{{ path('farmer_culture_new') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-plus"></i> Nouvelle culture
-            </a>
+            <div class="sidebar-section">
+                <span class="sidebar-label">CULTURES</span>
+                <a href="{{ path('farmer_culture_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'farmer_culture' ? 'active' : '' }}">
+                    <i class="bi bi-flower1"></i>
+                    <span>Mes cultures</span>
+                </a>
+                <a href="{{ path('farmer_culture_new') }}" class="sidebar-link {{ app.request.get('_route') == 'farmer_culture_new' ? 'active' : '' }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Nouvelle culture</span>
+                </a>
+            </div>
             
-            <h6 class="list-group-item bg-info text-white mt-3">Outils</h6>
-            <a href="{{ path('farmer_irrigation_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-tint"></i> Irrigation
-            </a>
-            <a href="{{ path('farmer_roi_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-chart-line"></i> ROI/Finances
-            </a>
-            <a href="{{ path('farmer_credit_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-file-contract"></i> Crédit Agricole
-            </a>
+            <div class="sidebar-section">
+                <span class="sidebar-label">OUTILS</span>
+                <a href="{{ path('farmer_irrigation_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'farmer_irrigation' ? 'active' : '' }}">
+                    <i class="bi bi-droplet"></i>
+                    <span>Irrigation</span>
+                </a>
+                <a href="{{ path('farmer_roi_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'farmer_roi' ? 'active' : '' }}">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>ROI / Finances</span>
+                </a>
+                <a href="{{ path('farmer_credit_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'farmer_credit' ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Crédit Agricole</span>
+                </a>
+            </div>
         {% endif %}
         
         {% if is_granted('ROLE_ADMIN') %}
-            <h6 class="list-group-item bg-danger text-white">Administration</h6>
-            <a href="{{ path('admin_parcelle_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-th-large"></i> Parcelles globales
-            </a>
-            <a href="{{ path('admin_culture_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-leaf"></i> Cultures globales
-            </a>
-            <a href="{{ path('admin_stats_index') }}" class="list-group-item list-group-item-action">
-                <i class="fas fa-chart-bar"></i> Statistiques
-            </a>
+            <div class="sidebar-section">
+                <span class="sidebar-label">ADMINISTRATION</span>
+                <a href="{{ path('admin_parcelle_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'admin_parcelle' ? 'active' : '' }}">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <span>Parcelles globales</span>
+                </a>
+                <a href="{{ path('admin_culture_index') }}" class="sidebar-link {{ app.request.get('_route') starts with 'admin_culture' ? 'active' : '' }}">
+                    <i class="bi bi-flower3"></i>
+                    <span>Cultures globales</span>
+                </a>
+                <a href="{{ path('admin_stats_index') }}" class="sidebar-link {{ app.request.get('_route') == 'admin_stats_index' ? 'active' : '' }}">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>Statistiques</span>
+                </a>
+            </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+    .sidebar-wrapper {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        padding: 25px 15px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    .sidebar-section {
+        margin-bottom: 30px;
+    }
+    .sidebar-section:last-child {
+        margin-bottom: 0;
+    }
+    .sidebar-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: #b2bec3;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        padding-left: 15px;
+    }
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        color: #2d3436;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        margin-bottom: 4px;
+    }
+    .sidebar-link i {
+        font-size: 18px;
+        opacity: 0.7;
+    }
+    .sidebar-link:hover {
+        background: #f0f7ee;
+        color: #116530;
+        transform: translateX(5px);
+    }
+    .sidebar-link.active {
+        background: #116530;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(17, 101, 48, 0.25);
+    }
+    .sidebar-link.active i {
+        opacity: 1;
+    }
+</style>

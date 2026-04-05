@@ -16,10 +16,6 @@ class CultureFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('nom_culture', TextType::class, [
-                'label' => 'Nom de la culture',
-                'required' => true
-            ])
             ->add('type_culture', ChoiceType::class, [
                 'label' => 'Type de culture',
                 'choices' => [

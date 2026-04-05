@@ -1,67 +1,184 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mes Parcelles{% endblock %}
+{% block title %}Mes Parcelles - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.2rem;
+            margin: 0;
+        }
+        .btn-add {
+            background: #116530;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17, 101, 48, 0.2);
+        }
+        .btn-add:hover {
+            background: #1e8341;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 101, 48, 0.3);
+        }
+        .parcel-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            height: 100%;
+        }
+        .parcel-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border-color: rgba(17, 101, 48, 0.1);
+        }
+        .parcel-header {
+            padding: 20px;
+            background: #f8faf7;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .parcel-id {
+            font-weight: 800;
+            color: #116530;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .parcel-body {
+            padding: 25px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .info-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #b2bec3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-value i {
+            color: #116530;
+            font-size: 1.1rem;
+        }
+        .parcel-footer {
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #f8faf7;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-view { background: #f0f7ee; color: #116530; }
+        .btn-view:hover { background: #116530; color: white; }
+        .btn-edit { background: #fffcf0; color: #d4a017; }
+        .btn-edit:hover { background: #d4a017; color: white; }
+        .btn-delete { background: #fff5f5; color: #e74c3c; border: none; }
+        .btn-delete:hover { background: #e74c3c; color: white; }
+    </style>
+{% endblock %}
 
 {% block body %}
 {% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-5 px-lg-5">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3 col-xl-2">
             {% include 'parcelles_cultures/components/sidebar.html.twig' %}
         </div>
-        <div class="col-md-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i class="fas fa-map"></i> Mes Parcelles</h1>
-                <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nouvelle Parcelle
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" data-aos="fade-down">
+                <div>
+                    <h1 class="page-title">Mes Parcelles</h1>
+                    <p class="text-muted mb-0">Visualisez et gérez l'ensemble de vos terrains agricoles.</p>
+                </div>
+                <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-add">
+                    <i class="bi bi-plus-lg me-2"></i> Nouvelle Parcelle
                 </a>
             </div>
 
             {% if parcelles.getTotalItemCount > 0 %}
-                <div class="row">
+                <div class="row g-4">
                     {% for parcelle in parcelles %}
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 shadow-sm">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="card-title mb-0">Parcelle #{{ parcelle.id }}</h5>
+                        <div class="col-md-6 col-lg-6 col-xl-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                            <div class="parcel-card">
+                                <div class="parcel-header">
+                                    <span class="parcel-id">Parcelle #{{ parcelle.id }}</span>
+                                    <span class="badge rounded-pill bg-success">{{ parcelle.cultures|length }} cultures</span>
                                 </div>
-                                <div class="card-body">
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <th>Surface:</th>
-                                            <td>{{ parcelle.surface }} ha</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Localisation:</th>
-                                            <td>{{ parcelle.localisation }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Type Sol:</th>
-                                            <td>{{ parcelle.typeSol }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Irrigation:</th>
-                                            <td>{{ parcelle.systemeIrrigation }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Cultures:</th>
-                                            <td><span class="badge bg-success">{{ parcelle.cultures|length }}</span></td>
-                                        </tr>
-                                    </table>
+                                <div class="parcel-body">
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <span class="info-label">Surface</span>
+                                            <span class="info-value"><i class="bi bi-aspect-ratio"></i> {{ parcelle.surface }} ha</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Type de sol</span>
+                                            <span class="info-value"><i class="bi bi-layers"></i> {{ parcelle.typeSol }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Localisation</span>
+                                            <span class="info-value"><i class="bi bi-geo-alt"></i> {{ parcelle.localisation }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Irrigation</span>
+                                            <span class="info-value"><i class="bi bi-droplet"></i> {{ parcelle.systemeIrrigation|replace({'_': ' '})|capitalize }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-footer bg-light">
-                                    <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i> Voir
+                                <div class="parcel-footer">
+                                    <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-action btn-view">
+                                        <i class="bi bi-eye"></i> Voir
                                     </a>
-                                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i> Modifier
+                                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn-action btn-edit">
+                                        <i class="bi bi-pencil"></i> Modif.
                                     </a>
-                                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" style="display:inline;" 
-                                          onsubmit="return confirm('Confirmer la suppression?');">
+                                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" class="flex-grow-1" 
+                                          onsubmit="return confirm('Confirmer la suppression ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i> Supprimer
+                                        <button type="submit" class="btn-action btn-delete w-100">
+                                            <i class="bi bi-trash"></i> Suppr.
                                         </button>
                                     </form>
                                 </div>
@@ -71,33 +188,15 @@
                 </div>
 
                 {# Pagination #}
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% if parcelles.paginationData.previous is defined %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_parcelle_index', {'page': parcelles.paginationData.previous}) }}">Précédent</a>
-                            </li>
-                        {% endif %}
-
-                        {% for page in parcelles.paginationData.pagesInRange %}
-                            {% if page == parcelles.currentPageNumber %}
-                                <li class="page-item active"><span class="page-link">{{ page }}</span></li>
-                            {% else %}
-                                <li class="page-item"><a class="page-link" href="{{ path('farmer_parcelle_index', {'page': page}) }}">{{ page }}</a></li>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if parcelles.paginationData.next is defined %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('farmer_parcelle_index', {'page': parcelles.paginationData.next}) }}">Suivant</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                <div class="mt-5 d-flex justify-content-center" data-aos="fade-up">
+                    {{ knp_pagination_render(parcelles) }}
+                </div>
             {% else %}
-                <div class="alert alert-info" role="alert">
-                    <i class="fas fa-info-circle"></i> Vous n'avez pas encore créé de parcelle. 
-                    <a href="{{ path('farmer_parcelle_new') }}">Cliquez ici pour en créer une</a>
+                <div class="text-center py-5 bg-white rounded-4 shadow-sm" data-aos="zoom-in">
+                    <i class="bi bi-map text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <h3 class="mt-3">Aucune parcelle trouvée</h3>
+                    <p class="text-muted">Commencez par ajouter votre première parcelle de terrain.</p>
+                    <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-add mt-2">Créer ma première parcelle</a>
                 </div>
             {% endif %}
         </div>
