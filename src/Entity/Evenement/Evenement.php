@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: EvenementRepository::class)]
 #[ORM\Table(name: 'evenement')]
@@ -20,30 +21,43 @@ class Evenement
     private ?int $id = null;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $titre = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 1000, maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Assert\NotBlank(message: 'Le lieu est obligatoire.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le lieu ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $lieu = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull(message: 'La date de début est obligatoire.')]
     private ?\DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull(message: 'La date de fin est obligatoire.')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
+    #[Assert\NotBlank(message: 'Le type est obligatoire.')]
     private ?string $type = null;
 
     #[ORM\Column(type: Types::INTEGER)]
+    #[Assert\NotNull(message: 'Le nombre de places est obligatoire.')]
+    #[Assert\Positive(message: 'Le nombre de places doit être supérieur à zéro.')]
     private ?int $nombrePlacesMax = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Assert\NotBlank(message: 'L’organisateur est obligatoire.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le nom de l’organisateur ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $organisateur = null;
 
     #[ORM\Column(type: Types::STRING, length: 500, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Le chemin de l’image ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $imageUrl = null;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
@@ -103,6 +117,16 @@ class Evenement
         return $this->participations->filter(
             fn($p) => in_array($p->getStatut(), ['CONFIRME', 'PRESENT'])
         )->count();
+    }
+
+    #[Assert\Callback]
+    public function validateDates(ExecutionContextInterface $context): void
+    {
+        if ($this->dateDebut && $this->dateFin && $this->dateFin < $this->dateDebut) {
+            $context->buildViolation('La date de fin doit être postérieure à la date de début.')
+                ->atPath('dateFin')
+                ->addViolation();
+        }
     }
 
     public function getPlacesRestantes(): int

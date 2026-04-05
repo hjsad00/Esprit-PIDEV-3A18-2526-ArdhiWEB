@@ -1,15 +1,29 @@
 {% extends 'base.html.twig' %}
-{% block title %}Mes inscriptions - Ardhi{% endblock %}
-{% block stylesheets %}
-    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
-{% endblock %}
+{% block title %}Mes Inscriptions - Ardhi{% endblock %}
+{% block stylesheets %}<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+.insc-card{background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.07);padding:22px 24px;height:100%;transition:transform .2s,box-shadow .2s;}
+.insc-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.1);}
+.insc-title{font-weight:700;font-size:1rem;color:#1a2e05;margin-bottom:8px;}
+.insc-meta{font-size:.84rem;color:#6b7280;display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.insc-meta i{color:#667A3F;}
+.b-insc{font-size:.71rem;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;}
+.b-CONFIRME{background:#8BC34A;color:#fff;} .b-PRESENT{background:#3498DB;color:#fff;}
+.b-EN_ATTENTE{background:#F39C12;color:#fff;} .b-ANNULE{background:#95a5a6;color:#fff;} .b-REFUSE{background:#E74C3C;color:#fff;}
+.btn-voir{background:#667A3F;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:.87rem;font-weight:600;text-decoration:none;transition:background .2s;}
+.btn-voir:hover{background:#4a5c2a;color:#fff;}
+.btn-desinsc{background:none;border:1.5px solid #E74C3C;color:#E74C3C;border-radius:8px;padding:6px 14px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-desinsc:hover{background:#E74C3C;color:#fff;}
+</style>{% endblock %}
 {% block body %}
-<section class="hero section dark-background" style="background-image: linear-gradient(180deg, rgba(10, 15, 8, 0.54), rgba(10, 15, 8, 0.14)), url('{{ asset('assets/img/hero_4.jpg') }}'); background-size: cover; background-position: center; min-height: 340px; margin-top: 70px;">
-  <div class="hero-content-wrapper" style="align-items: center; justify-content: center;">
-    <div class="hero-left" style="max-width: 720px; padding: 90px 40px;">
+<section class="hero section dark-background"
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.54),rgba(10,15,8,.14)),url('{{ asset('assets/img/hero_4.jpg') }}');
+         background-size:cover;background-position:center;min-height:320px;margin-top:70px;">
+  <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
+    <div class="hero-left" style="max-width:720px;padding:90px 40px;">
       <div class="hero-label">MES INSCRIPTIONS</div>
-      <h1 class="hero-headline">Suivez vos inscriptions aux événements</h1>
-      <p class="hero-description">Consultez le statut de chaque inscription et retrouvez facilement vos événements réservés.</p>
+      <h1 class="hero-headline">Suivez vos participations</h1>
+      <p class="hero-description">{{ inscriptions|length }} inscription(s) — consultez le statut de chacune.</p>
       <div class="hero-cta-group">
         <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir les événements</a>
         <a href="{{ path('app_evenement_favoris') }}" class="hero-btn-primary">Mes favoris</a>
@@ -17,49 +31,49 @@
     </div>
   </div>
 </section>
-<section class="services section">
-  <div class="container section-title" data-aos="fade-up">
-    <h2>Liste des inscriptions</h2>
-    <p>Toutes vos inscriptions récentes et leur statut.</p>
-  </div>
+<section class="services section" style="padding-top:36px;">
   <div class="container">
     {% if inscriptions is empty %}
-      <div class="alert alert-warning">Vous n'avez pas encore d'inscriptions.</div>
+      <div class="text-center py-5" style="color:#9ca3af;">
+        <i class="bi bi-journal-x" style="font-size:4rem;color:#d1d5db;display:block;margin-bottom:16px;"></i>
+        <h5 class="fw-bold">Aucune inscription pour l'instant</h5>
+        <p>Inscrivez-vous à un événement pour le voir ici.</p>
+        <a href="{{ path('app_evenement_index') }}" class="btn btn-success mt-2">Voir les événements</a>
+      </div>
     {% else %}
-      <div class="row g-4">
-        {% for participation in inscriptions %}
-          <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <h5 class="card-title mb-1">{{ participation.evenement.titre }}</h5>
-                    <p class="text-muted mb-0"><i class="bi bi-geo-alt-fill"></i> {{ participation.evenement.lieu }}</p>
-                  </div>
-                  <span class="badge bg-{{ participation.statut == 'CONFIRME' ? 'success' : participation.statut == 'EN_ATTENTE' ? 'warning text-dark' : participation.statut == 'REFUSE' ? 'danger' : 'secondary' }}">
-                    {{ participation.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}
-                  </span>
-                </div>
-                <p class="mb-2"><strong>Date :</strong> {{ participation.evenement.dateDebut|date('d/m/Y') }}</p>
-                <p class="mb-2"><strong>Inscrit le :</strong> {{ participation.dateInscription|date('d/m/Y') }}</p>
-                <p class="mb-2"><strong>Nombre :</strong> {{ participation.nombrePersonnes }} place(s)</p>
-                {% if participation.commentaire %}
-                  <p class="text-muted mb-2"><strong>Commentaire :</strong> {{ participation.commentaire }}</p>
-                {% endif %}
-              </div>
-              <div class="card-footer d-flex justify-content-between align-items-center">
-                <a href="{{ path('app_evenement_show', {id: participation.evenement.id}) }}" class="btn btn-sm btn-outline-success">Voir</a>
-                {% if participation.statut != 'ANNULE' %}
-                  <form method="post" action="{{ path('app_evenement_desinscrire', {id: participation.evenement.id}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('desinscrire' ~ participation.evenement.id) }}">
-                    <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
-                  </form>
-                {% endif %}
-              </div>
+    <div class="row g-4 pb-5">
+      {% for p in inscriptions %}
+      <div class="col-lg-6">
+        <div class="insc-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <div class="insc-title">{{ p.evenement.titre }}</div>
+              <span class="b-insc b-{{ p.statut }}">{{ p.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}</span>
             </div>
           </div>
-        {% endfor %}
+          <div class="insc-meta"><i class="bi bi-geo-alt-fill"></i>{{ p.evenement.lieu }}</div>
+          <div class="insc-meta"><i class="bi bi-calendar3"></i>{{ p.evenement.dateDebut|date('d/m/Y') }}</div>
+          <div class="insc-meta"><i class="bi bi-clock"></i>Inscrit le {{ p.dateInscription|date('d/m/Y') }}</div>
+          <div class="insc-meta"><i class="bi bi-people-fill"></i>{{ p.nombrePersonnes }} personne(s)</div>
+          {% if p.note > 0 %}
+          <div class="insc-meta">
+            <i class="bi bi-star-fill" style="color:#F39C12;"></i>
+            Votre note : {% for i in 1..5 %}<i class="bi bi-star-fill" style="color:{{ i<=p.note ? '#F39C12' : '#d1d5db' }};font-size:.8rem;"></i>{% endfor %}
+          </div>
+          {% endif %}
+          <div class="d-flex gap-2 mt-3">
+            <a href="{{ path('app_evenement_show', {id: p.evenement.id}) }}" class="btn-voir">Voir l'événement</a>
+            {% if p.statut != 'ANNULE' and p.evenement.statut not in ['TERMINE','ANNULE'] %}
+            <form method="post" action="{{ path('app_evenement_desinscrire', {id: p.evenement.id}) }}" class="m-0">
+              <input type="hidden" name="_token" value="{{ csrf_token('desinscrire'~p.evenement.id) }}">
+              <button type="submit" class="btn-desinsc" onclick="return confirm('Se désinscrire ?')">Se désinscrire</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
       </div>
+      {% endfor %}
+    </div>
     {% endif %}
   </div>
 </section>

@@ -16,9 +16,12 @@ class EvenementRepository extends ServiceEntityRepository
     public function findWithFilters(?string $type, ?string $statut, ?string $search): array
     {
         $qb = $this->createQueryBuilder('e')->orderBy('e.dateDebut', 'ASC');
-        if ($type) { $qb->andWhere('e.type = :type')->setParameter('type', $type); }
+        if ($type)   { $qb->andWhere('e.type = :type')->setParameter('type', $type); }
         if ($statut) { $qb->andWhere('e.statut = :statut')->setParameter('statut', $statut); }
-        if ($search) { $qb->andWhere('e.titre LIKE :search OR e.lieu LIKE :search OR e.organisateur LIKE :search')->setParameter('search', '%' . $search . '%'); }
+        if ($search) {
+            $qb->andWhere('e.titre LIKE :s OR e.lieu LIKE :s OR e.organisateur LIKE :s')
+               ->setParameter('s', '%'.$search.'%');
+        }
         return $qb->getQuery()->getResult();
     }
 }

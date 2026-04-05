@@ -1,361 +1,325 @@
-﻿{% extends "base.html.twig" %}
-
-{% block title %}Statistiques - Évènements{% endblock %}
-
+﻿{% extends 'base.html.twig' %}
+{% block title %}Statistiques - Ardhi{% endblock %}
 {% block stylesheets %}
-    <link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
-{% endblock %}
-
-{% block body %}
-<div class="hero-section" style="background-image: linear-gradient(135deg, rgba(36, 49, 88, 0.95), rgba(74, 37, 153, 0.86)), url('{{ asset('assets/img/hero-bg.jpg') }}'); background-size: cover; background-position: center; padding: 4rem 0; margin-bottom: 2.5rem; border-radius: 28px; overflow: hidden;">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <span class="badge bg-white text-dark mb-3" style="letter-spacing: 0.08em;">STATISTIQUES ÉVÈNEMENTS</span>
-                <h1 class="text-white fw-bold mb-3">Vue d'ensemble du module événementiel</h1>
-                <p class="text-white-50 mb-4">Consultez les chiffres clés, suivez les statuts et optimisez vos événements avec des indicateurs clairs.</p>
-                <div class="d-flex flex-wrap gap-3">
-                    <span class="badge bg-light text-dark">Rôle : {{ role }}</span>
-                    {% if role == 'ADMIN' %}
-                        <span class="badge bg-warning text-dark">Vue administrateur</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="container py-4">
-    {% if role == 'ADMIN' %}
-        <div class="row gy-4 mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100 border-0" style="background: #2d365f; color: white;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-white-50 small mb-2">Total événements</p>
-                        <h2 class="fw-bold mb-0">{{ globalStats.totalEvents }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100 border-0" style="background: #4b2b7f; color: white;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-white-50 small mb-2">Total participations</p>
-                        <h2 class="fw-bold mb-0">{{ globalStats.totalParticipations }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100 border-0" style="background: #1864ab; color: white;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-white-50 small mb-2">Statuts d'événements</p>
-                        <h2 class="fw-bold mb-0">{{ globalStats.eventsByStatus|length }}</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row gy-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Événements par statut</h5>
-                        <div class="list-group list-group-flush">
-                            {% for status in globalStats.eventsByStatus %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
-                                    <span>
-                                        {% if status.statut == 'A_VENIR' %}
-                                            <span class="badge bg-info me-2">À VENIR</span>
-                                        {% elseif status.statut == 'EN_COURS' %}
-                                            <span class="badge bg-warning text-dark me-2">EN COURS</span>
-                                        {% elseif status.statut == 'TERMINE' %}
-                                            <span class="badge bg-success me-2">TERMINÉ</span>
-                                        {% else %}
-                                            <span class="badge bg-danger me-2">ANNULÉ</span>
-                                        {% endif %}
-                                        Statut
-                                    </span>
-                                    <span class="fw-semibold">{{ status.count }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Événements par type</h5>
-                        <div class="list-group list-group-flush">
-                            {% for type in globalStats.eventsByType %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
-                                    <span>{{ type.type }}</span>
-                                    <span class="fw-semibold">{{ type.count }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row gy-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Participations par statut</h5>
-                        <div class="table-responsive">
-                            <table class="table table-borderless mb-0">
-                                <tbody>
-                                    {% for status in globalStats.participationsByStatus %}
-                                        <tr>
-                                            <td>
-                                                {% if status.statut == 'CONFIRME' %}
-                                                    <span class="badge bg-success">CONFIRMÉ</span>
-                                                {% elseif status.statut == 'EN_ATTENTE' %}
-                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
-                                                {% elseif status.statut == 'REFUSE' %}
-                                                    <span class="badge bg-danger">REFUSÉ</span>
-                                                {% elseif status.statut == 'PRESENT' %}
-                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">ANNULÉ</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end fw-semibold">{{ status.count }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Top événements</h5>
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <tbody>
-                                    {% for event in topRatedEvents %}
-                                        <tr>
-                                            <td>{{ event.titre|slice(0, 25) }}{% if event.titre|length > 25 %}...{% endif %}</td>
-                                            <td class="text-end"><span class="badge bg-warning">★ {{ event.avgRating|number_format(1) }}</span></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    {% elseif role == 'AGRICULTEUR' %}
-        <div class="row gy-4 mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #667eea;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Inscriptions</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.totalInscriptions }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #f093fb;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Confirmées</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.confirmations }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #4facfe;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Favoris</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.totalFavorites }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #fd7e14;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Événements créés</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.createdEvents }}</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row gy-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Aperçu organisateur</h5>
-                        <div class="row text-center">
-                            <div class="col-6 border-end">
-                                <p class="text-muted small mb-1">Participants</p>
-                                <h3 class="fw-bold mb-0">{{ creatorStats.totalParticipants }}</h3>
-                            </div>
-                            <div class="col-6">
-                                <p class="text-muted small mb-1">Note Moyenne</p>
-                                <h3 class="fw-bold mb-0">{{ creatorStats.avgRating }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Participants par statut</h5>
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <tbody>
-                                    {% for status in creatorStats.participantsByStatus %}
-                                        <tr>
-                                            <td>
-                                                {% if status.statut == 'CONFIRME' %}
-                                                    <span class="badge bg-success">CONFIRMÉ</span>
-                                                {% elseif status.statut == 'EN_ATTENTE' %}
-                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
-                                                {% elseif status.statut == 'REFUSE' %}
-                                                    <span class="badge bg-danger">REFUSÉ</span>
-                                                {% elseif status.statut == 'PRESENT' %}
-                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">ANNULÉ</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end fw-semibold">{{ status.count }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Mes inscriptions par statut</h5>
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <tbody>
-                                    {% for status in userStats.inscriptionsByStatus %}
-                                        <tr>
-                                            <td>
-                                                {% if status.statut == 'CONFIRME' %}
-                                                    <span class="badge bg-success">CONFIRMÉ</span>
-                                                {% elseif status.statut == 'EN_ATTENTE' %}
-                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
-                                                {% elseif status.statut == 'REFUSE' %}
-                                                    <span class="badge bg-danger">REFUSÉ</span>
-                                                {% elseif status.statut == 'PRESENT' %}
-                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">ANNULÉ</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end fw-semibold">{{ status.count }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="row gy-4 mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #667eea;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Total inscriptions</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.totalInscriptions }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #f093fb;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Confirmées</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.confirmations }}</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100" style="border-left: 4px solid #4facfe;">
-                    <div class="card-body">
-                        <p class="text-uppercase text-muted small mb-2">Favoris</p>
-                        <h2 class="fw-bold mb-0">{{ userStats.totalFavorites }}</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Mes inscriptions par statut</h5>
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <tbody>
-                                    {% for status in userStats.inscriptionsByStatus %}
-                                        <tr>
-                                            <td>
-                                                {% if status.statut == 'CONFIRME' %}
-                                                    <span class="badge bg-success">CONFIRMÉ</span>
-                                                {% elseif status.statut == 'EN_ATTENTE' %}
-                                                    <span class="badge bg-warning text-dark">EN ATTENTE</span>
-                                                {% elseif status.statut == 'REFUSE' %}
-                                                    <span class="badge bg-danger">REFUSÉ</span>
-                                                {% elseif status.statut == 'PRESENT' %}
-                                                    <span class="badge bg-info text-dark">PRÉSENT</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">ANNULÉ</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end fw-semibold">{{ status.count }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-</div>
-
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
 <style>
-    .hero-section {
-        position: relative;
-        display: flex;
-        align-items: center;
-        border-radius: 28px;
-    }
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(18, 30, 70, 0.42);
-        border-radius: 28px;
-    }
-    .hero-section h1,
-    .hero-section p,
-    .hero-section .badge {
-        position: relative;
-        z-index: 1;
-    }
+.stat-card {
+  background:#fff; border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  padding:28px; text-align:center;
+  border-top:4px solid transparent;
+  transition:transform .2s;
+}
+.stat-card:hover { transform:translateY(-4px); }
+.stat-icon { font-size:2.2rem; margin-bottom:10px; }
+.stat-val  { font-size:2.6rem; font-weight:800; line-height:1; }
+.stat-lbl  { font-size:.82rem; color:#9ca3af; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+.s-green   { border-color:#8BC34A; } .s-green .stat-val   { color:#667A3F; }
+.s-blue    { border-color:#3498DB; } .s-blue .stat-val    { color:#2980b9; }
+.s-teal    { border-color:#2ECC71; } .s-teal .stat-val    { color:#27ae60; }
+.s-orange  { border-color:#F39C12; } .s-orange .stat-val  { color:#e67e22; }
+.s-red     { border-color:#E74C3C; } .s-red .stat-val     { color:#c0392b; }
+.s-purple  { border-color:#9B59B6; } .s-purple .stat-val  { color:#8e44ad; }
+
+.section-card {
+  background:#fff; border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  padding:28px; margin-bottom:24px;
+}
+.section-card h5 {
+  font-weight:700; font-size:1rem; color:#667A3F;
+  border-bottom:2px solid #f0f4e8; padding-bottom:10px; margin-bottom:18px;
+  display:flex; align-items:center; gap:8px;
+}
+/* Progress bars */
+.stat-progress-row { margin-bottom:16px; }
+.stat-progress-label { display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:4px; font-weight:600; }
+.stat-bar { height:10px; border-radius:10px; background:#f1f5f9; overflow:hidden; }
+.stat-bar-fill { height:100%; border-radius:10px; transition:width .5s; }
+/* Top events */
+.top-ev-row {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 0; border-bottom:1px solid #f1f5f9;
+}
+.top-ev-row:last-child { border-bottom:none; }
+.top-rank {
+  width:36px; height:36px; border-radius:50%;
+  background:#667A3F; color:#fff; font-weight:800;
+  display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;
+}
+.top-rank.r1 { background:linear-gradient(135deg,#F39C12,#e67e22); }
+.top-rank.r2 { background:linear-gradient(135deg,#95a5a6,#7f8c8d); }
+.top-rank.r3 { background:linear-gradient(135deg,#cd7f32,#a0522d); }
+/* Badge */
+.b-type { font-size:.7rem; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+.b-FOIRE{background:#3498DB22;color:#2980b9;} .b-FORMATION{background:#9B59B622;color:#8e44ad;}
+.b-CONFERENCE{background:#F39C1222;color:#e67e22;} .b-ATELIER{background:#2ECC7122;color:#27ae60;}
+.hero-actions-row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-top:24px; margin-bottom:20px; }
 </style>
+{% endblock %}
+{% block body %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+
+<!-- HERO -->
+<section class="hero section dark-background"
+  style="background-image:linear-gradient(135deg,rgba(48,38,142,.88),rgba(102,126,234,.8)),url('{{ asset('assets/img/hero_3.jpg') }}');
+         background-size:cover;background-position:center;
+         min-height:380px;margin-top:70px;">
+  <div class="hero-content-wrapper">
+    <div class="hero-left">
+      <div class="hero-label">STATISTIQUES ÉVÉNEMENTS</div>
+      <h1 class="hero-headline">Tableau de bord analytique</h1>
+      <div class="hero-actions-row">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir les événements</a>
+        {% if role == 'ADMIN' %}<a href="{{ path('app_evenement_admin_dashboard') }}" class="hero-btn-primary">Dashboard admin</a>{% endif %}
+      </div>
+      <p class="hero-description">
+        {% if role == 'ADMIN' %}Vue globale : tous les événements, participants et performances de la plateforme.
+        {% elseif role == 'AGRICULTEUR' %}Vos événements, vos participants et vos inscriptions personnelles.
+        {% else %}Vos inscriptions et favoris en un coup d'œil.{% endif %}
+      </p>
+    </div>
+
+    <div class="hero-services-sidebar">
+      <div class="services-glass-panel">
+        <div class="services-panel-title">Navigation</div>
+        <a href="{{ path('app_evenement_index') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar-event-fill"></i></div>
+          <div class="service-sidebar-text"><h4>Événements</h4><span>Retour à la liste</span></div>
+        </a>
+        <a href="{{ path('app_evenement_inscriptions') }}" class="service-sidebar-item">
+          <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
+          <div class="service-sidebar-text"><h4>Inscriptions</h4><span>Mes participations</span></div>
+        </a>
+        <a href="{{ path('app_evenement_statistics') }}" class="service-sidebar-item active">
+          <div class="service-sidebar-icon"><i class="bi bi-graph-up"></i></div>
+          <div class="service-sidebar-text"><h4>Statistiques</h4><span>Page actuelle</span></div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services section" style="padding-top:40px;">
+  <div class="container">
+
+    <!-- ═══════════════════════════════ ADMIN VIEW ═══════════════════════════ -->
+    {% if role == 'ADMIN' and globalStats is defined %}
+    {% set gs = globalStats %}
+
+    {# KPI Cards - mirrors JavaFX 5 metric cards #}
+    <div class="row g-4 mb-4">
+      <div class="col-lg col-md-4"><div class="stat-card s-green"><div class="stat-icon">📅</div><div class="stat-val">{{ gs.totalEvents }}</div><div class="stat-lbl">Total Événements</div></div></div>
+      <div class="col-lg col-md-4"><div class="stat-card s-blue"><div class="stat-icon">👥</div><div class="stat-val">{{ gs.totalParticipations }}</div><div class="stat-lbl">Participations</div></div></div>
+      <div class="col-lg col-md-4"><div class="stat-card s-teal"><div class="stat-icon">✅</div><div class="stat-val">{{ gs.tauxPresence }}%</div><div class="stat-lbl">Taux présence</div></div></div>
+      <div class="col-lg col-md-4"><div class="stat-card s-orange"><div class="stat-icon">⭐</div><div class="stat-val">{{ gs.avgRating }}</div><div class="stat-lbl">Note moyenne</div></div></div>
+      <div class="col-lg col-md-4"><div class="stat-card s-red"><div class="stat-icon">❌</div><div class="stat-val">{{ gs.tauxAnnulation }}%</div><div class="stat-lbl">Taux annulation</div></div></div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      {# Events by status - mirrors JavaFX progress bars #}
+      <div class="col-md-4">
+        <div class="section-card h-100">
+          <h5><i class="bi bi-circle-fill text-success"></i>Par Statut</h5>
+          {% set totalEv = gs.totalEvents > 0 ? gs.totalEvents : 1 %}
+          {% set statusColors = {'A_VENIR':'#8BC34A','EN_COURS':'#3498DB','TERMINE':'#95a5a6','ANNULE':'#E74C3C'} %}
+          {% set statusLabels = {'A_VENIR':'À venir','EN_COURS':'En cours','TERMINE':'Terminé','ANNULE':'Annulé'} %}
+          {% for row in gs.eventsByStatus %}
+          <div class="stat-progress-row">
+            <div class="stat-progress-label">
+              <span>{{ statusLabels[row.statut] ?? row.statut }}</span>
+              <span>{{ row.count }}</span>
+            </div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width:{{ ((row.count/totalEv)*100)|round }}%;background:{{ statusColors[row.statut] ?? '#667A3F' }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Events by type #}
+      <div class="col-md-4">
+        <div class="section-card h-100">
+          <h5><i class="bi bi-tag-fill text-success"></i>Par Type</h5>
+          {% set typeColors = {'FOIRE':'#3498DB','FORMATION':'#9B59B6','CONFERENCE':'#F39C12','ATELIER':'#2ECC71'} %}
+          {% for row in gs.eventsByType %}
+          <div class="stat-progress-row">
+            <div class="stat-progress-label">
+              <span><span class="b-type b-{{ row.type }}">{{ row.type }}</span></span>
+              <span>{{ row.count }}</span>
+            </div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width:{{ ((row.count/totalEv)*100)|round }}%;background:{{ typeColors[row.type] ?? '#667A3F' }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Participations by status #}
+      <div class="col-md-4">
+        <div class="section-card h-100">
+          <h5><i class="bi bi-people-fill text-success"></i>Participations par statut</h5>
+          {% set totalP = gs.totalParticipations > 0 ? gs.totalParticipations : 1 %}
+          {% set pstatColors = {'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+          {% set pstatLabels = {'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
+          {% for row in gs.participationsByStatus %}
+          <div class="stat-progress-row">
+            <div class="stat-progress-label">
+              <span>{{ pstatLabels[row.statut] ?? row.statut }}</span>
+              <span>{{ row.count }} ({{ ((row.count/totalP)*100)|round }}%)</span>
+            </div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width:{{ ((row.count/totalP)*100)|round }}%;background:{{ pstatColors[row.statut] ?? '#667A3F' }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      {# Top 5 events by participants - mirrors JavaFX top events section #}
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5><i class="bi bi-trophy-fill"></i>Top 5 Événements par participants</h5>
+          {% for ev in gs.topEvents %}
+          <div class="top-ev-row">
+            <div class="top-rank {{ loop.index == 1 ? 'r1' : (loop.index == 2 ? 'r2' : (loop.index == 3 ? 'r3' : '')) }}">{{ loop.index }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ev.titre }}</div>
+              <span class="b-type b-{{ ev.type }}">{{ ev.type }}</span>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:800;font-size:1.3rem;color:#3498DB;">{{ ev.participantCount }}</div>
+              <div style="font-size:.72rem;color:#9ca3af;">participants</div>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-muted">Aucune donnée.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Top rated events - mirrors JavaFX getEvenementsMieuxNotes #}
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5><i class="bi bi-star-fill" style="color:#F39C12;"></i>Événements les mieux notés</h5>
+          {% for ev in gs.topRatedEvents %}
+          <div class="top-ev-row">
+            <div class="top-rank {{ loop.index == 1 ? 'r1' : (loop.index == 2 ? 'r2' : (loop.index == 3 ? 'r3' : '')) }}">{{ loop.index }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ev.titre }}</div>
+              <span class="b-type b-{{ ev.type }}">{{ ev.type }}</span>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:800;font-size:1.3rem;color:#F39C12;">{{ ev.avgRating }} ⭐</div>
+              <div style="font-size:.72rem;color:#9ca3af;">{{ ev.count }} avis</div>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-muted">Aucun avis encore.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════ AGRICULTEUR VIEW ═══════════════════════ -->
+    {% elseif role == 'AGRICULTEUR' and userStats is defined %}
+
+    {# User KPIs #}
+    <div class="row g-4 mb-4">
+      <div class="col-md-3"><div class="stat-card s-green"><div class="stat-icon">📋</div><div class="stat-val">{{ userStats.totalInscriptions }}</div><div class="stat-lbl">Inscriptions</div></div></div>
+      <div class="col-md-3"><div class="stat-card s-teal"><div class="stat-icon">✅</div><div class="stat-val">{{ userStats.confirmations }}</div><div class="stat-lbl">Confirmées</div></div></div>
+      <div class="col-md-3"><div class="stat-card s-red"><div class="stat-icon">❤️</div><div class="stat-val">{{ userStats.totalFavorites }}</div><div class="stat-lbl">Favoris</div></div></div>
+      <div class="col-md-3"><div class="stat-card s-orange"><div class="stat-icon">🗓️</div><div class="stat-val">{{ userStats.createdEvents }}</div><div class="stat-lbl">Créés</div></div></div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5><i class="bi bi-person-check-fill"></i>Mes inscriptions par statut</h5>
+          {% set tot = userStats.totalInscriptions > 0 ? userStats.totalInscriptions : 1 %}
+          {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+          {% set pstatLabels={'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
+          {% for row in userStats.inscriptionsByStatus %}
+          <div class="stat-progress-row">
+            <div class="stat-progress-label">
+              <span>{{ pstatLabels[row.statut] ?? row.statut }}</span>
+              <span>{{ row.count }}</span>
+            </div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width:{{ ((row.count/tot)*100)|round }}%;background:{{ pstatColors[row.statut] ?? '#667A3F' }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if creatorStats is defined %}
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5><i class="bi bi-bar-chart-fill"></i>Vos événements — participants</h5>
+          <div class="row text-center mb-4">
+            <div class="col-4">
+              <div style="font-size:2rem;font-weight:800;color:#3498DB;">{{ creatorStats.totalParticipants }}</div>
+              <div style="font-size:.78rem;color:#9ca3af;">Participants</div>
+            </div>
+            <div class="col-4">
+              <div style="font-size:2rem;font-weight:800;color:#8BC34A;">{{ creatorStats.presents }}</div>
+              <div style="font-size:.78rem;color:#9ca3af;">Présents</div>
+            </div>
+            <div class="col-4">
+              <div style="font-size:2rem;font-weight:800;color:#F39C12;">{{ creatorStats.avgRating }} ⭐</div>
+              <div style="font-size:.78rem;color:#9ca3af;">Note moy.</div>
+            </div>
+          </div>
+          {% set totC = creatorStats.totalParticipants > 0 ? creatorStats.totalParticipants : 1 %}
+          {% for row in creatorStats.participantsByStatus %}
+          <div class="stat-progress-row">
+            <div class="stat-progress-label">
+              <span>{{ pstatLabels[row.statut] ?? row.statut }}</span>
+              <span>{{ row.count }}</span>
+            </div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width:{{ ((row.count/totC)*100)|round }}%;background:{{ pstatColors[row.statut] ?? '#667A3F' }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ═══════════════════════════ CLIENT VIEW ════════════════════════════ -->
+    {% elseif userStats is defined %}
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-4"><div class="stat-card s-green"><div class="stat-icon">📋</div><div class="stat-val">{{ userStats.totalInscriptions }}</div><div class="stat-lbl">Inscriptions</div></div></div>
+      <div class="col-md-4"><div class="stat-card s-teal"><div class="stat-icon">✅</div><div class="stat-val">{{ userStats.confirmations }}</div><div class="stat-lbl">Confirmées</div></div></div>
+      <div class="col-md-4"><div class="stat-card s-red"><div class="stat-icon">❤️</div><div class="stat-val">{{ userStats.totalFavorites }}</div><div class="stat-lbl">Favoris</div></div></div>
+    </div>
+
+    <div class="section-card">
+      <h5><i class="bi bi-person-check-fill"></i>Mes inscriptions par statut</h5>
+      {% set tot = userStats.totalInscriptions > 0 ? userStats.totalInscriptions : 1 %}
+      {% set pstatColors={'CONFIRME':'#8BC34A','EN_ATTENTE':'#F39C12','PRESENT':'#3498DB','REFUSE':'#E74C3C','ANNULE':'#95a5a6'} %}
+      {% set pstatLabels={'CONFIRME':'Confirmés','EN_ATTENTE':'En attente','PRESENT':'Présents','REFUSE':'Refusés','ANNULE':'Annulés'} %}
+      {% for row in userStats.inscriptionsByStatus %}
+      <div class="stat-progress-row">
+        <div class="stat-progress-label">
+          <span>{{ pstatLabels[row.statut] ?? row.statut }}</span>
+          <span>{{ row.count }} ({{ ((row.count/tot)*100)|round }}%)</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-bar-fill" style="width:{{ ((row.count/tot)*100)|round }}%;background:{{ pstatColors[row.statut] ?? '#667A3F' }}"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
 {% endblock %}

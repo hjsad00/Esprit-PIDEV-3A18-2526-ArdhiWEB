@@ -35,11 +35,11 @@ class Participation
     private ?string $commentaire = null;
 
     #[ORM\Column(type: Types::INTEGER)]
-    #[Assert\Range(min: 1, max: 10, notInRangeMessage: 'Le nombre de personnes doit être entre {{ min }} et {{ max }}.')]
+    #[Assert\Range(min: 1, max: 10, notInRangeMessage: 'Le nombre de personnes doit ï¿½tre entre {{ min }} et {{ max }}.')]
     private ?int $nombrePersonnes = 1;
 
     #[ORM\Column(type: Types::INTEGER)]
-    #[Assert\Range(min: 0, max: 5, notInRangeMessage: 'La note doit être entre {{ min }} et {{ max }}.')]
+    #[Assert\Range(min: 0, max: 5, notInRangeMessage: 'La note doit ï¿½tre entre {{ min }} et {{ max }}.')]
     private ?int $note = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

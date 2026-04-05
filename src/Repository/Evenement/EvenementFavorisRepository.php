@@ -26,7 +26,6 @@ class EvenementFavorisRepository extends ServiceEntityRepository
             ->where('f.utilisateur = :user')
             ->setParameter('user', $user)
             ->orderBy('f.dateAjout', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->getQuery()->getResult();
     }
 }
