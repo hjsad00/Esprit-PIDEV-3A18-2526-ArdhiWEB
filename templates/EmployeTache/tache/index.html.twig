@@ -380,7 +380,7 @@
         {% endif %}
     </div>
 
-    {# ── Barre du bas — identique au desktop ──────────────────────── #}
+    {# ── Barre du bas — identique au desktop + PDF & Stats ────────── #}
     <div class="tache-bottombar">
         <a href="{{ path('tache_new') }}" class="btn-add">
             <i class="bi bi-plus-lg"></i> Ajouter une Tâche
@@ -391,9 +391,12 @@
         <button class="btn-red" id="btnSupprimer" onclick="supprimerSelectionne()" disabled>
             <i class="bi bi-trash3"></i> Supprimer
         </button>
-        <button class="btn-purple" id="btnAnalyse" onclick="return false" disabled>
-            <i class="bi bi-cpu"></i> Analyse IA
-        </button>
+        <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-add" style="background:#1B5E20;">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Export PDF
+        </a>
+        <a href="{{ path('tache_statistiques') }}" class="btn-add" style="background:#2E7D32;">
+            <i class="bi bi-bar-chart-line-fill"></i> Statistiques
+        </a>
         <span class="bottom-info" id="selectionInfo">Aucune tâche sélectionnée</span>
     </div>
 

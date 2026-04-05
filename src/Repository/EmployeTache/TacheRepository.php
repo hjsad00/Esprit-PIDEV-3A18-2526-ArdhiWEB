@@ -129,4 +129,147 @@ class TacheRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Toutes les tâches d'un agriculteur (pour PDF)
+     */
+    public function findByAgriculteur(int $idAgriculteur): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.idAgriculteur = :agri')
+            ->setParameter('agri', $idAgriculteur)
+            ->orderBy('t.dateDebut', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Compte les tâches par priorité — pour les statistiques
+     */
+    public function countByPriorite(int $idAgriculteur): array
+    {
+        $results = $this->createQueryBuilder('t')
+            ->select('t.priorite, COUNT(t.id) as total')
+            ->where('t.idAgriculteur = :agri')
+            ->setParameter('agri', $idAgriculteur)
+            ->groupBy('t.priorite')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+        foreach ($results as $r) {
+            $counts[(int)$r['priorite']] = (int)$r['total'];
+        }
+        return $counts;
+    }
+
+    /**
+     * Compte les tâches par employé — pour les statistiques
+     */
+    public function countByEmploye(int $idAgriculteur): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t.idEmploye, COUNT(t.id) as total')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.idEmploye IS NOT NULL')
+            ->setParameter('agri', $idAgriculteur)
+            ->groupBy('t.idEmploye')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Compte les tâches par date de création (dateDebut) — pour l'évolution
+     */
+    public function countByDate(int $idAgriculteur): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select("t.dateDebut, COUNT(t.id) as total")
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.dateDebut IS NOT NULL')
+            ->setParameter('agri', $idAgriculteur)
+            ->groupBy('t.dateDebut')
+            ->orderBy('t.dateDebut', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Compte les tâches par catégorie — pour les statistiques
+     */
+    public function countByCategorie(int $idAgriculteur): array
+    {
+        $results = $this->createQueryBuilder('t')
+            ->select('t.categorie, COUNT(t.id) as total')
+            ->where('t.idAgriculteur = :agri')
+            ->setParameter('agri', $idAgriculteur)
+            ->groupBy('t.categorie')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($results as $r) {
+            $counts[$r['categorie'] ?? 'Autre'] = (int)$r['total'];
+        }
+        return $counts;
+    }
+
+    /**
+     * Compte les tâches en retard
+     */
+    public function countEnRetard(int $idAgriculteur): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.dateFin < :today')
+            ->andWhere('t.statut NOT IN (:finished)')
+            ->setParameter('agri', $idAgriculteur)
+            ->setParameter('today', new \DateTime('today'))
+            ->setParameter('finished', ['Terminé', 'Validé', 'Annulé'])
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Compte les tâches non assignées
+     */
+    public function countNonAssignees(int $idAgriculteur): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.idEmploye IS NULL')
+            ->setParameter('agri', $idAgriculteur)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Détail des statuts avec comptage individuel — pour les statistiques
+     */
+    public function countDetailStatut(int $idAgriculteur): array
+    {
+        $results = $this->createQueryBuilder('t')
+            ->select('t.statut, COUNT(t.id) as total')
+            ->where('t.idAgriculteur = :agri')
+            ->setParameter('agri', $idAgriculteur)
+            ->groupBy('t.statut')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [
+            'En attente' => 0,
+            'En cours'   => 0,
+            'Terminé'    => 0,
+            'Validé'     => 0,
+            'Annulé'     => 0,
+        ];
+        foreach ($results as $r) {
+            if (isset($counts[$r['statut']])) {
+                $counts[$r['statut']] = (int)$r['total'];
+            }
+        }
+        return $counts;
+    }
 }

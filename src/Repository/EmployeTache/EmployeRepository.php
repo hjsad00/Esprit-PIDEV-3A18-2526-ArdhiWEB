@@ -133,4 +133,49 @@ class EmployeRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['qrCodeUnique' => $qrCode]);
     }
+
+    /**
+     * Compte les employés par poste — pour les statistiques
+     */
+    public function countByPoste(int $idAgriculteur): array
+    {
+        $results = $this->createQueryBuilder('e')
+            ->select('e.poste, COUNT(e.id) as total')
+            ->where('e.idAgriculteur = :id')
+            ->setParameter('id', $idAgriculteur)
+            ->groupBy('e.poste')
+            ->orderBy('total', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($results as $r) {
+            $counts[$r['poste'] ?? 'Non défini'] = (int)$r['total'];
+        }
+        return $counts;
+    }
+
+    /**
+     * Compte les employés actifs/inactifs — pour les statistiques
+     */
+    public function countByActif(int $idAgriculteur): array
+    {
+        $results = $this->createQueryBuilder('e')
+            ->select('e.actif, COUNT(e.id) as total')
+            ->where('e.idAgriculteur = :id')
+            ->setParameter('id', $idAgriculteur)
+            ->groupBy('e.actif')
+            ->getQuery()
+            ->getResult();
+
+        $counts = ['actifs' => 0, 'inactifs' => 0];
+        foreach ($results as $r) {
+            if ($r['actif']) {
+                $counts['actifs'] = (int)$r['total'];
+            } else {
+                $counts['inactifs'] = (int)$r['total'];
+            }
+        }
+        return $counts;
+    }
 }

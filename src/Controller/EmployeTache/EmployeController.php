@@ -240,6 +240,25 @@ public function exportPdf(EmployeRepository $repo): Response
             ['Content-Type' => 'application/pdf']
         );
     }
+
+    // ── Statistiques des employés ─────────────────────────────────────────
+
+    #[Route('/statistiques', name: 'employe_statistiques', methods: ['GET'])]
+    public function statistiques(EmployeRepository $repo): Response
+    {
+        $idAgriculteur = $this->getUser()->getId();
+
+        $employes = $repo->findByAgriculteur($idAgriculteur);
+        $total = count($employes);
+        $actifData = $repo->countByActif($idAgriculteur);
+        $posteData = $repo->countByPoste($idAgriculteur);
+
+        return $this->render('EmployeTache/employe/statistiques.html.twig', [
+            'total'      => $total,
+            'actifData'  => $actifData,
+            'posteData'  => $posteData,
+        ]);
+    }
     // ── Fiche détail ──────────────────────────────────────────────────────
 
     #[Route('/{id}', name: 'employe_show', methods: ['GET'])]
