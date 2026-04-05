@@ -58,7 +58,7 @@ class CommunityController extends AbstractController
     // ────────────────────── CREATE POST ───────────────────────
 
     #[Route('/new', name: 'app_user_and_diag_community_new', methods: ['GET', 'POST'])]
-    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService): Response
+    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService): Response
     {
         if ($request->isMethod('POST')) {
             $title = trim($request->request->get('title', ''));
@@ -77,12 +77,13 @@ class CommunityController extends AbstractController
             $post->setTitle($title);
             $post->setDescription($description);
 
-            // Handle image upload
+            // Handle image upload via ImgBB
             $imageFile = $request->files->get('image');
             if ($imageFile) {
-                $filename = uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move($this->getParameter('kernel.project_dir') . '/public/uploads/community', $filename);
-                $post->setImageUrl('/uploads/community/' . $filename);
+                $imgUrl = $imgBBService->uploadImage($imageFile);
+                if ($imgUrl) {
+                    $post->setImageUrl($imgUrl);
+                }
             }
 
             $em->persist($post);

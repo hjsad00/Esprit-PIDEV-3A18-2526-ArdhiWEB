@@ -46,7 +46,8 @@ class UserDiagnosticController extends AbstractController
         \App\Service\UserAndDiag\LocationService $locationService,
         EntityManagerInterface $entityManager,
         \App\Service\UserAndDiag\SubscriptionFeatureService $featureService,
-        \App\Service\UserAndDiag\GamificationService $gamificationService
+        \App\Service\UserAndDiag\GamificationService $gamificationService,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService
     ): Response {
         // ... (lines 50-156 are unchanged, but I must provide the exact identical content for the replacement to work!)
         /** @var \App\Entity\UserAndDiag\User $user */
@@ -109,14 +110,11 @@ class UserDiagnosticController extends AbstractController
                 $severity = $confiance >= 80 ? 'CRITICAL' : ($confiance >= 50 ? 'MEDIUM' : 'LOW');
             }
 
-            // 4. Save image locally
-            $publicUploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/diagnostics';
-            if (!file_exists($publicUploadsDir)) {
-                mkdir($publicUploadsDir, 0777, true);
+            // 4. Upload image to ImgBB
+            $publicPath = $imgBBService->uploadImage($file);
+            if (!$publicPath) {
+                return $this->json(['error' => 'Échec de l\'upload de l\'image. Veuillez réessayer.'], 500);
             }
-            $newFilename = uniqid('diag_') . '.' . $file->guessExtension();
-            $file->move($publicUploadsDir, $newFilename);
-            $publicPath = '/uploads/diagnostics/' . $newFilename;
 
             // 5. Persist Diagnostic
             $diagnostic = new Diagnostic();
