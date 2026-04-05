@@ -2,6 +2,7 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\Badge;
+use App\Form\UserAndDiag\Admin\AdminBadgeType;
 use App\Repository\UserAndDiag\BadgeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,27 +37,46 @@ class AdminBadgeController extends AbstractController
     #[Route('/new', name: 'admin_badge_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $item = new Badge();
-            $this->handle($request, $item, $em);
+        $item = new Badge();
+        $form = $this->createForm(AdminBadgeType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($item);
+            $em->flush();
             $this->addFlash('success', 'Badge créé.');
             return $this->redirectToRoute('admin_badge_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Nouveau Badge', 'fields' => $this->getFields(), 'cancel_route' => 'admin_badge_index', 'csrf_token_id' => 'badge_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Nouveau Badge',
+            'form' => $form,
+            'cancel_route' => 'admin_badge_index',
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'admin_badge_edit', methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request, EntityManagerInterface $em, BadgeRepository $repo): Response
     {
         $item = $repo->find($id);
-        if (!$item)
+        if (!$item) {
             throw $this->createNotFoundException();
-        if ($request->isMethod('POST')) {
-            $this->handle($request, $item, $em);
+        }
+
+        $form = $this->createForm(AdminBadgeType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
             $this->addFlash('success', 'Badge modifié.');
             return $this->redirectToRoute('admin_badge_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Modifier Badge #' . $item->getId(), 'fields' => $this->getFields(), 'item' => $item, 'cancel_route' => 'admin_badge_index', 'csrf_token_id' => 'badge_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Modifier Badge #' . $item->getId(),
+            'form' => $form,
+            'cancel_route' => 'admin_badge_index',
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'admin_badge_delete', methods: ['POST'])]
@@ -69,38 +89,5 @@ class AdminBadgeController extends AbstractController
             $this->addFlash('success', 'Badge supprimé.');
         }
         return $this->redirectToRoute('admin_badge_index');
-    }
-
-    private function handle(Request $r, Badge $item, EntityManagerInterface $em): void
-    {
-        $item->setName($r->request->get('name', ''));
-        $item->setDescription($r->request->get('description') ?: null);
-        $item->setIcon($r->request->get('icon') ?: null);
-        $item->setConditionType($r->request->get('condition_type') ?: 'DIAGNOSTIC');
-        $item->setThreshold($r->request->get('threshold') ? (int) $r->request->get('threshold') : null);
-        $em->persist($item);
-        $em->flush();
-    }
-
-    private function getFields(): array
-    {
-        return [
-            ['name' => 'name', 'label' => 'Nom', 'getter' => 'name', 'required' => true],
-            ['name' => 'description', 'label' => 'Description', 'getter' => 'description', 'type' => 'textarea'],
-            ['name' => 'icon', 'label' => 'Icône', 'getter' => 'icon'],
-            [
-                'name' => 'condition_type',
-                'label' => 'Type Condition',
-                'getter' => 'conditionType',
-                'type' => 'select',
-                'options' => [
-                    ['value' => 'DIAGNOSTIC', 'label' => 'Diagnostic'],
-                    ['value' => 'POINTS', 'label' => 'Points'],
-                    ['value' => 'HEALTHY_PLANTS', 'label' => 'Healthy Plants'],
-                    ['value' => 'SOLUTION', 'label' => 'Solution'],
-                ]
-            ],
-            ['name' => 'threshold', 'label' => 'Seuil', 'getter' => 'threshold', 'type' => 'number'],
-        ];
     }
 }

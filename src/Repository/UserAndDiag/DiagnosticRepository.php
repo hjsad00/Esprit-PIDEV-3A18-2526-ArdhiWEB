@@ -20,4 +20,35 @@ class DiagnosticRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Diagnostic::class);
     }
+
+    /**
+     * @return Diagnostic[]
+     */
+    public function findByUserAndKeyword(int $userId, ?string $keyword = null): array
+    {
+        $qb = $this->createQueryBuilder('d')
+            ->where('d.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('d.date_scan', 'DESC');
+
+        if ($keyword) {
+            $qb->andWhere('d.resultat_ia LIKE :keyword')
+                ->setParameter('keyword', '%' . $keyword . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return Diagnostic[]
+     */
+    public function findWithLocation(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.latitude IS NOT NULL')
+            ->andWhere('d.longitude IS NOT NULL')
+            ->orderBy('d.date_scan', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

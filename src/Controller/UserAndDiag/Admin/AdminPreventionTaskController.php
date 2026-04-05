@@ -2,8 +2,8 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\PreventionTask;
+use App\Form\UserAndDiag\Admin\AdminPreventionTaskType;
 use App\Repository\UserAndDiag\PreventionTaskRepository;
-use App\Repository\UserAndDiag\PreventionPlanRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +26,6 @@ class AdminPreventionTaskController extends AbstractController
                 ['label' => 'Jour', 'field' => 'dayOffset'],
                 ['label' => 'Description', 'field' => 'taskDescription', 'type' => 'truncate'],
                 ['label' => 'Statut', 'field' => 'status', 'type' => 'badge', 'color' => '#1abc9c'],
-                ['label' => 'Complété le', 'field' => 'completedAt', 'type' => 'date'],
             ],
             'new_route' => 'admin_prevention_task_new',
             'edit_route' => 'admin_prevention_task_edit',
@@ -35,29 +34,48 @@ class AdminPreventionTaskController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_prevention_task_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, PreventionPlanRepository $planRepo): Response
+    public function new(Request $request, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $item = new PreventionTask();
-            $this->handle($request, $item, $em, $planRepo);
+        $item = new PreventionTask();
+        $form = $this->createForm(AdminPreventionTaskType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($item);
+            $em->flush();
             $this->addFlash('success', 'Tâche créée.');
             return $this->redirectToRoute('admin_prevention_task_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Nouvelle Tâche Prévention', 'fields' => $this->getFields($planRepo), 'cancel_route' => 'admin_prevention_task_index', 'csrf_token_id' => 'pt_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Nouvelle Tâche Prévention',
+            'form' => $form,
+            'cancel_route' => 'admin_prevention_task_index',
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'admin_prevention_task_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, PreventionTaskRepository $repo, PreventionPlanRepository $planRepo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, PreventionTaskRepository $repo): Response
     {
         $item = $repo->find($id);
-        if (!$item)
+        if (!$item) {
             throw $this->createNotFoundException();
-        if ($request->isMethod('POST')) {
-            $this->handle($request, $item, $em, $planRepo);
+        }
+
+        $form = $this->createForm(AdminPreventionTaskType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
             $this->addFlash('success', 'Tâche modifiée.');
             return $this->redirectToRoute('admin_prevention_task_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Modifier Tâche #' . $item->getId(), 'fields' => $this->getFields($planRepo), 'item' => $item, 'cancel_route' => 'admin_prevention_task_index', 'csrf_token_id' => 'pt_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Modifier Tâche #' . $item->getId(),
+            'form' => $form,
+            'cancel_route' => 'admin_prevention_task_index',
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'admin_prevention_task_delete', methods: ['POST'])]
@@ -70,28 +88,5 @@ class AdminPreventionTaskController extends AbstractController
             $this->addFlash('success', 'Tâche supprimée.');
         }
         return $this->redirectToRoute('admin_prevention_task_index');
-    }
-
-    private function handle(Request $r, PreventionTask $item, EntityManagerInterface $em, PreventionPlanRepository $planRepo): void
-    {
-        $item->setDayOffset((int) $r->request->get('day_offset', 0));
-        $item->setTaskDescription($r->request->get('task_description', ''));
-        $item->setStatus($r->request->get('status') ?: 'PENDING');
-        $item->setProofPhotoUrl($r->request->get('proof_photo_url') ?: null);
-        $item->setPreventionPlan($r->request->get('prevention_plan_id') ? $planRepo->find($r->request->get('prevention_plan_id')) : null);
-        $em->persist($item);
-        $em->flush();
-    }
-
-    private function getFields(PreventionPlanRepository $planRepo): array
-    {
-        $plans = array_map(fn($p) => ['id' => $p->getId(), 'label' => '#' . $p->getId() . ' - ' . $p->getTitle()], $planRepo->findAll());
-        return [
-            ['name' => 'prevention_plan_id', 'label' => 'Plan', 'getter' => 'preventionPlan', 'type' => 'relation_select', 'options' => $plans, 'required' => true],
-            ['name' => 'day_offset', 'label' => 'Jour (offset)', 'getter' => 'dayOffset', 'type' => 'number', 'required' => true],
-            ['name' => 'task_description', 'label' => 'Description', 'getter' => 'taskDescription', 'required' => true],
-            ['name' => 'status', 'label' => 'Statut', 'getter' => 'status', 'type' => 'select', 'options' => [['value' => 'PENDING', 'label' => 'Pending'], ['value' => 'COMPLETED', 'label' => 'Completed'], ['value' => 'MISSED', 'label' => 'Missed']]],
-            ['name' => 'proof_photo_url', 'label' => 'Photo Preuve URL', 'getter' => 'proofPhotoUrl'],
-        ];
     }
 }

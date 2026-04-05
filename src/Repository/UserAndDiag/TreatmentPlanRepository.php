@@ -20,4 +20,18 @@ class TreatmentPlanRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, TreatmentPlan::class);
     }
+
+    /**
+     * @return TreatmentPlan[]
+     */
+    public function findByUser(int $userId): array
+    {
+        return $this->createQueryBuilder('tp')
+            ->join('tp.diagnostic', 'd')
+            ->where('d.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('tp.start_date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

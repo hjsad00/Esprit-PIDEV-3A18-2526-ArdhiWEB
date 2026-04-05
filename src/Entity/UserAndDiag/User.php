@@ -40,16 +40,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le nom ne peut pas dépasser 255 caractères.')]
+    #[Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes.')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le prénom ne peut pas dépasser 255 caractères.')]
+    #[Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le prénom ne peut contenir que des lettres, espaces, tirets et apostrophes.')]
     private ?string $prenom = null;
 
     #[ORM\Column(options: ["default" => 0])]
+    #[Assert\PositiveOrZero(message: 'Les points doivent être positifs ou nuls.')]
     private ?int $points = 0;
 
     #[ORM\Column(options: ["default" => 1])]
+    #[Assert\Positive(message: 'Le niveau doit être d\'au moins 1.')]
     private ?int $level = 1;
 
     #[ORM\Column(options: ["default" => false])]
@@ -69,6 +75,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     private ?string $face_signature = null;
 
     #[ORM\Column(type: Types::FLOAT, options: ["default" => 0])]
+    #[Assert\PositiveOrZero(message: 'Les points de fidélité ne peuvent pas être négatifs.')]
     private ?float $points_fidelite = 0;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -78,9 +85,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     private ?\DateTimeInterface $reset_password_expires_at = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Regex(pattern: '/^\+?[0-9\s\-\(\)]{8,20}$/', message: 'Veuillez entrer un numéro de téléphone valide.')]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: 'La localisation ne peut pas dépasser 255 caractères.')]
     private ?string $location = null;
 
     public function getId(): ?int

@@ -1,0 +1,300 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Cartographie des Maladies{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    body {
+        margin: 0; padding: 0; overflow: hidden; height: 100vh;
+        background: #0b140f; font-family: 'Inter', sans-serif;
+    }
+    
+    #map {
+        height: 100vh; width: 100%; z-index: 1;
+    }
+
+    .map-overlay {
+        position: absolute; top: 100px; left: 30px; z-index: 1000;
+        pointer-events: none; width: calc(100% - 60px); height: calc(100% - 130px);
+        display: flex; gap: 30px;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 24px;
+        pointer-events: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Left Controls */
+    .map-controls {
+        width: 320px; display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .btn-map-action {
+        background: linear-gradient(135deg, #2980b9, #1a5276);
+        color: white; border: none; padding: 12px 20px; border-radius: 30px;
+        font-weight: 700; cursor: pointer; transition: 0.3s;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-map-action:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn-map-action.active { background: #c0392b; }
+
+    /* Right Sidebar */
+    .map-sidebar {
+        margin-left: auto; width: 280px; display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .regional-card {
+        background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 12px;
+        display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .severity-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Leaflet Overrides */
+    .leaflet-popup-content-wrapper {
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+        border-radius: 12px; padding: 0; overflow: hidden;
+    }
+    .popup-img { width: 100%; height: 100px; object-fit: cover; }
+    .popup-content { padding: 12px; }
+
+    .status-badge {
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,0.7); color: white; padding: 8px 24px;
+        border-radius: 30px; font-size: 14px; z-index: 1000;
+        backdrop-filter: blur(5px); display: none;
+    }
+
+    /* NDVI Legend */
+    .ndvi-legend {
+        position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; display: none;
+        background: rgba(10, 20, 15, 0.85); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
+        padding: 16px 24px; pointer-events: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .ndvi-legend h6 { color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+    .ndvi-gradient {
+        display: flex; border-radius: 6px; overflow: hidden; height: 14px;
+    }
+    .ndvi-gradient span { flex: 1; }
+    .ndvi-labels {
+        display: flex; justify-content: space-between; margin-top: 6px;
+        font-size: 9px; color: rgba(255,255,255,0.7); font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="map"></div>
+
+<div class="map-overlay">
+    <div class="map-controls">
+        <div class="glass-panel">
+            <h4 class="text-white mb-3">🛰️ Intelligence Géo</h4>
+            <button id="btnNDVI" class="btn-map-action w-100 mb-3">
+                <i class="bi bi-satellite"></i> NDVI Satellite
+            </button>
+            <p class="text-white-50 small">Visualisez l'indice de végétation pour détecter les zones de stress avant les symptômes visibles.</p>
+        </div>
+
+        <div class="glass-panel text-white">
+            <h5 class="mb-3">📡 SporeCast Radar</h5>
+            <p class="small text-white-50">Cliquez sur un marqueur critique pour analyser la propagation probable par le vent.</p>
+            <div id="sporeLog" class="small text-warning" style="display: none;">
+                ⚠️ Radar actif : Risque de contagion détecté.
+            </div>
+        </div>
+    </div>
+
+    <div class="map-sidebar">
+        <div class="glass-panel overflow-auto" style="max-height: 500px;">
+            <h5 class="text-white mb-3">🌍 État Régional</h5>
+            {% for d in regionalDiseases %}
+                <div class="regional-card">
+                    <span>{{ d.icon }}</span>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small">{{ d.name }}</div>
+                        <div class="text-muted small" style="font-size: 10px;">{{ d.distance|round(1) }} km - {{ d.count }} cas</div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-white-50 small">Aucune menace signalée.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="ndviLegend" class="ndvi-legend">
+    <h6>🛰️ INDICE DE VÉGÉTATION (NDVI)</h6>
+    <div class="ndvi-gradient">
+        <span style="background:#8B4513" title="Sol nu"></span>
+        <span style="background:#D2691E" title="Très clairsemé"></span>
+        <span style="background:#FFA500" title="Clairsemé"></span>
+        <span style="background:#FFD700" title="Léger"></span>
+        <span style="background:#ADFF2F" title="Modéré"></span>
+        <span style="background:#7CFC00" title="Bon"></span>
+        <span style="background:#32CD32" title="Sain"></span>
+        <span style="background:#228B22" title="Très sain"></span>
+        <span style="background:#006400" title="Dense"></span>
+    </div>
+    <div class="ndvi-labels">
+        <span>Sol nu</span>
+        <span>Clairsemé</span>
+        <span>Modéré</span>
+        <span>Sain</span>
+        <span>Dense</span>
+    </div>
+</div>
+
+<div id="statusBadge" class="status-badge">Chargement...</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([{{ centerLat }}, {{ centerLon }}], 10);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    const markers = L.layerGroup().addTo(map);
+    const ndviLayer = L.layerGroup().addTo(map);
+    let ndviActive = false;
+
+    // Load GeoJSON Markers
+    fetch("{{ path('app_user_and_diag_map_data') }}")
+        .then(res => res.json())
+        .then(data => {
+            L.geoJSON(data, {
+                pointToLayer: (feature, latlng) => {
+                    const color = feature.properties.severity === 'CRITICAL' ? '#e74c3c' : (feature.properties.severity === 'MEDIUM' ? '#f39c12' : '#2ecc71');
+                    return L.circleMarker(latlng, {
+                        radius: 8,
+                        fillColor: color,
+                        color: "#fff",
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: (feature, layer) => {
+                    const p = feature.properties;
+                    layer.bindPopup(`
+                        <div class="leaflet-popup-custom">
+                            <img src="${p.image}" class="popup-img">
+                            <div class="popup-content">
+                                <h6 class="mb-1">${p.title}</h6>
+                                <p class="text-muted small mb-1">${p.date} • ${p.location}</p>
+                                <div class="badge bg-${p.severity === 'CRITICAL' ? 'danger' : (p.severity === 'MEDIUM' ? 'warning' : 'success')} mb-2">
+                                    Fiabilité: ${p.confiance}%
+                                </div>
+                                <button class="btn btn-sm btn-outline-success w-100" onclick="runSporeCast(${p.id}, ${feature.geometry.coordinates[1]}, ${feature.geometry.coordinates[0]}, '${p.resultat}')">
+                                    Radar SporeCast
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }
+            }).addTo(markers);
+            
+            if (data.features.length > 0) {
+                const group = L.featureGroup(markers.getLayers());
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        });
+
+    // NDVI Logic
+    const btnNDVI = document.getElementById('btnNDVI');
+    btnNDVI.addEventListener('click', () => {
+        if (ndviActive) {
+            ndviLayer.clearLayers();
+            btnNDVI.innerHTML = '<i class="bi bi-satellite"></i> NDVI Satellite';
+            btnNDVI.classList.remove('active');
+            ndviActive = false;
+            document.getElementById('ndviLegend').style.display = 'none';
+            return;
+        }
+
+        showStatus("Fétchage des données satellite...");
+        fetch("{{ path('app_user_and_diag_map_ndvi', {lat: centerLat, lon: centerLon}) }}")
+            .then(res => res.json())
+            .then(cells => {
+                cells.forEach(cell => {
+                    const bounds = [
+                        [cell.lat - cell.size/2, cell.lon - cell.size/2],
+                        [cell.lat + cell.size/2, cell.lon + cell.size/2]
+                    ];
+                    L.rectangle(bounds, {
+                        color: cell.color,
+                        weight: 0,
+                        fillOpacity: 0.5,
+                        interactive: true
+                    }).bindTooltip(cell.label).addTo(ndviLayer);
+                });
+                btnNDVI.innerHTML = '<i class="bi bi-x-circle"></i> Masquer NDVI';
+                btnNDVI.classList.add('active');
+                ndviActive = true;
+                document.getElementById('ndviLegend').style.display = 'block';
+                hideStatus();
+            });
+    });
+
+    // SporeCast Radar Logic
+    const sporeLog = document.getElementById('sporeLog');
+    let sporeGraphic = null;
+
+    function runSporeCast(id, lat, lon, disease) {
+        if (sporeGraphic) map.removeLayer(sporeGraphic);
+        
+        showStatus("Analyse SporeCast en cours...");
+        fetch(`{{ path('app_user_and_diag_map_sporecast') }}?lat=${lat}&lon=${lon}&disease=${encodeURIComponent(disease)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.isContagious) {
+                    drawSporeCone(lat, lon, data.travelAngle, data.blastRadiusKm);
+                    sporeLog.innerHTML = `⚠️ Radar : Propagation vers le ${data.windDirectionLabel}`;
+                    sporeLog.style.display = 'block';
+                    showStatus(`Alerte : Propagation suspectée (${data.windDirectionLabel})`, 3000);
+                } else {
+                    showStatus("Maladie non-contagieuse par l'air.", 3000);
+                    sporeLog.style.display = 'none';
+                }
+            });
+    }
+
+    function drawSporeCone(lat, lon, angle, radiusKm) {
+        // Simple visualization with a circle and a segment for now
+        // A real cone would require more complex coordinate math
+        const radiusPoints = radiusKm * 1000;
+        sporeGraphic = L.layerGroup([
+            L.circle([lat, lon], { radius: radiusPoints, color: '#e74c3c', weight: 1, fillOpacity: 0.1 }),
+            L.circleMarker([lat, lon], { radius: 15, color: '#e74c3c', fillOpacity: 0.4 })
+        ]).addTo(map);
+    }
+
+    function showStatus(text, duration = 0) {
+        const badge = document.getElementById('statusBadge');
+        badge.innerText = text;
+        badge.style.display = 'block';
+        if (duration > 0) setTimeout(hideStatus, duration);
+    }
+
+    function hideStatus() {
+        document.getElementById('statusBadge').style.display = 'none';
+    }
+</script>
+{% endblock %}

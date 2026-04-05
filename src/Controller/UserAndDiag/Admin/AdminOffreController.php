@@ -2,6 +2,7 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\Offre;
+use App\Form\UserAndDiag\Admin\AdminOffreType;
 use App\Repository\UserAndDiag\OffreRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,27 +37,46 @@ class AdminOffreController extends AbstractController
     #[Route('/new', name: 'admin_offre_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $item = new Offre();
-            $this->handle($request, $item, $em);
+        $item = new Offre();
+        $form = $this->createForm(AdminOffreType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($item);
+            $em->flush();
             $this->addFlash('success', 'Offre créée.');
             return $this->redirectToRoute('admin_offre_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Nouvelle Offre', 'fields' => $this->getFields(), 'cancel_route' => 'admin_offre_index', 'csrf_token_id' => 'offre_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Nouvelle Offre',
+            'form' => $form,
+            'cancel_route' => 'admin_offre_index',
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'admin_offre_edit', methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request, EntityManagerInterface $em, OffreRepository $repo): Response
     {
         $item = $repo->find($id);
-        if (!$item)
+        if (!$item) {
             throw $this->createNotFoundException();
-        if ($request->isMethod('POST')) {
-            $this->handle($request, $item, $em);
+        }
+
+        $form = $this->createForm(AdminOffreType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
             $this->addFlash('success', 'Offre modifiée.');
             return $this->redirectToRoute('admin_offre_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Modifier Offre #' . $item->getId(), 'fields' => $this->getFields(), 'item' => $item, 'cancel_route' => 'admin_offre_index', 'csrf_token_id' => 'offre_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Modifier Offre #' . $item->getId(),
+            'form' => $form,
+            'cancel_route' => 'admin_offre_index',
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'admin_offre_delete', methods: ['POST'])]
@@ -69,39 +89,5 @@ class AdminOffreController extends AbstractController
             $this->addFlash('success', 'Offre supprimée.');
         }
         return $this->redirectToRoute('admin_offre_index');
-    }
-
-    private function handle(Request $r, Offre $item, EntityManagerInterface $em): void
-    {
-        $item->setNom($r->request->get('nom', ''));
-        $item->setDescription($r->request->get('description') ?: null);
-        $item->setPrixMensuel((float) $r->request->get('prix_mensuel', 0));
-        $item->setAvantages($r->request->get('avantages') ?: null);
-        $item->setCouleurPrimaire($r->request->get('couleur_primaire') ?: '#6B7F3F');
-        $item->setCouleurSecondaire($r->request->get('couleur_secondaire') ?: '#4A5A2B');
-        $item->setEstActive($r->request->has('est_active'));
-        $item->setEstRecommandee($r->request->has('est_recommandee'));
-        $item->setDiagnosticsParHeure((int) $r->request->get('diagnostics_par_heure', 3));
-        $item->setAccesTraitement($r->request->has('acces_traitement'));
-        $item->setAccesPlanTraitement($r->request->has('acces_plan_traitement'));
-        $em->persist($item);
-        $em->flush();
-    }
-
-    private function getFields(): array
-    {
-        return [
-            ['name' => 'nom', 'label' => 'Nom', 'getter' => 'nom', 'required' => true],
-            ['name' => 'description', 'label' => 'Description', 'getter' => 'description'],
-            ['name' => 'prix_mensuel', 'label' => 'Prix Mensuel', 'getter' => 'prixMensuel', 'type' => 'number', 'step' => '0.01', 'required' => true],
-            ['name' => 'avantages', 'label' => 'Avantages', 'getter' => 'avantages', 'type' => 'textarea'],
-            ['name' => 'couleur_primaire', 'label' => 'Couleur Primaire', 'getter' => 'couleurPrimaire', 'default' => '#6B7F3F'],
-            ['name' => 'couleur_secondaire', 'label' => 'Couleur Secondaire', 'getter' => 'couleurSecondaire', 'default' => '#4A5A2B'],
-            ['name' => 'diagnostics_par_heure', 'label' => 'Diagnostics/heure', 'getter' => 'diagnosticsParHeure', 'type' => 'number', 'default' => '3'],
-            ['name' => 'est_active', 'label' => 'Active', 'getter' => 'estActive', 'type' => 'checkbox'],
-            ['name' => 'est_recommandee', 'label' => 'Recommandée', 'getter' => 'estRecommandee', 'type' => 'checkbox'],
-            ['name' => 'acces_traitement', 'label' => 'Accès Traitement', 'getter' => 'accesTraitement', 'type' => 'checkbox'],
-            ['name' => 'acces_plan_traitement', 'label' => 'Accès Plan Traitement', 'getter' => 'accesPlanTraitement', 'type' => 'checkbox'],
-        ];
     }
 }

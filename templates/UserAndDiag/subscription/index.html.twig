@@ -1,0 +1,248 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Abonnement - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .sub-hero {
+        padding: 120px 0 60px;
+        background: linear-gradient(135deg, #0b140f 0%, #1a2e1a 50%, #0b140f 100%);
+        min-height: 100vh;
+    }
+    .sub-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+    /* Status Banner */
+    .status-banner {
+        background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 16px;
+        padding: 20px 28px; margin-bottom: 40px;
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;
+    }
+    .status-left { display: flex; align-items: center; gap: 14px; }
+    .status-left .label { color: rgba(255,255,255,0.6); font-size: 15px; }
+    .status-left .value { font-weight: 800; font-size: 22px; }
+    .status-left .value.free { color: #9ca3af; }
+    .status-left .value.active { color: #4ade80; }
+    .status-actions { display: flex; gap: 10px; }
+    .btn-cancel {
+        background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+        color: #f87171; padding: 10px 20px; border-radius: 12px; font-weight: 700;
+        cursor: pointer; transition: 0.2s; font-size: 13px;
+    }
+    .btn-cancel:hover { background: rgba(239,68,68,0.25); }
+    .btn-invoice {
+        background: rgba(91,153,163,0.2); border: 1px solid rgba(91,153,163,0.4);
+        color: #7dd3fc; padding: 10px 20px; border-radius: 12px; font-weight: 700;
+        cursor: pointer; transition: 0.2s; font-size: 13px; text-decoration: none;
+    }
+    .btn-invoice:hover { background: rgba(91,153,163,0.35); color: #fff; }
+
+    /* Section Title */
+    .section-title {
+        text-align: center; margin-bottom: 40px;
+    }
+    .section-title h1 { color: #fff; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .section-title p { color: rgba(255,255,255,0.5); font-size: 15px; }
+
+    /* Pricing Grid */
+    .pricing-grid {
+        display: flex; gap: 28px; justify-content: center; align-items: stretch; flex-wrap: wrap;
+    }
+
+    .pricing-card {
+        background: rgba(255,255,255,0.06); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+        padding: 36px 30px; width: 320px; text-align: center; position: relative;
+        transition: 0.3s; display: flex; flex-direction: column;
+    }
+    .pricing-card:hover { transform: translateY(-6px); border-color: var(--card-color, rgba(255,255,255,0.2)); box-shadow: 0 0 20px var(--card-color, rgba(255,255,255,0))20; }
+    .pricing-card.recommended {
+        border-width: 2px;
+        border-color: var(--card-color);
+        box-shadow: 0 0 40px var(--card-color)30;
+    }
+    .pricing-card.current { border-color: #4ade80 !important; box-shadow: 0 0 30px rgba(74,222,128,0.15) !important; }
+
+    .best-badge {
+        position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+        padding: 6px 20px; border-radius: 20px; font-size: 11px; font-weight: 800;
+        color: #fff; letter-spacing: 1px;
+    }
+
+    .plan-name { font-size: 20px; font-weight: 700; margin-bottom: 8px; margin-top: 8px; }
+    .plan-price { font-size: 44px; font-weight: 800; color: #fff; margin-bottom: 0; }
+    .plan-period { color: rgba(255,255,255,0.4); font-size: 14px; margin-bottom: 24px; }
+
+    .plan-features { flex: 1; text-align: left; margin-bottom: 24px; }
+    .plan-features li {
+        list-style: none; padding: 8px 0; color: rgba(255,255,255,0.7); font-size: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .plan-features li::before { content: '✓ '; color: #4ade80; font-weight: 700; }
+
+    .btn-subscribe {
+        width: 100%; padding: 14px; border: none; border-radius: 14px;
+        font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;
+        color: #fff;
+    }
+    .btn-subscribe:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-subscribe:disabled {
+        opacity: 0.4; cursor: not-allowed; transform: none;
+    }
+    .btn-subscribe.current-btn {
+        background: rgba(74,222,128,0.15) !important; color: #4ade80 !important;
+        border: 1px solid rgba(74,222,128,0.3); cursor: default;
+    }
+
+    .empty-state { text-align: center; color: rgba(255,255,255,0.5); padding: 60px; font-size: 16px; }
+
+    .duration-select { margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 10px; }
+    .duration-select label { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; }
+    .duration-select select { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 8px; border-radius: 6px; outline: none; }
+    .duration-select select option { color: #000; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="sub-hero">
+    <div class="sub-container">
+
+        {# ─── Status Banner ─── #}
+        <div class="status-banner">
+            <div class="status-left">
+                <span class="label">Statut actuel :</span>
+                {% if activeAbo %}
+                    <span class="value active">{{ activeAbo.type }} (Actif)</span>
+                {% else %}
+                    <span class="value free">GRATUIT</span>
+                {% endif %}
+            </div>
+            {% if activeAbo %}
+                <div class="status-actions">
+                    <a href="{{ path('app_user_and_diag_subscription_invoice') }}" class="btn-invoice">📄 Télécharger Facture</a>
+                    <button class="btn-cancel" onclick="cancelSubscription()">Annuler l'abonnement</button>
+                </div>
+            {% endif %}
+        </div>
+
+        {# ─── Title ─── #}
+        <div class="section-title">
+            <h1>💎 Choisissez votre plan</h1>
+            <p>Débloquez toutes les fonctionnalités d'Ardhi pour votre exploitation.</p>
+        </div>
+
+        {# ─── Pricing Cards ─── #}
+        <div class="pricing-grid">
+            {% for offre in offres %}
+                {% set isCurrent = activeAbo and activeAbo.offre and activeAbo.offre.id == offre.id %}
+                <div class="pricing-card {{ offre.estRecommandee ? 'recommended' : '' }} {{ isCurrent ? 'current' : '' }}" 
+                     style="--card-color: {{ offre.couleurPrimaire }};">
+
+                    {% if offre.estRecommandee %}
+                        <div class="best-badge" style="background: linear-gradient(135deg, {{ offre.couleurPrimaire }}, {{ offre.couleurSecondaire }});">
+                            ⭐ OFFRE RECOMMANDÉE
+                        </div>
+                    {% endif %}
+
+                    {% if isCurrent %}
+                        <div class="best-badge" style="background: #166534;">
+                            ✓ PLAN ACTUEL
+                        </div>
+                    {% endif %}
+
+                    <div class="plan-name" style="color: {{ offre.couleurPrimaire }}">{{ offre.nom }}</div>
+
+                    <div class="plan-price">{{ offre.prixMensuel|number_format(2, ',', ' ') }} <span style="font-size: 18px; color: rgba(255,255,255,0.5);">DT</span></div>
+                    <div class="plan-period">/ mois</div>
+                    
+                    {% if offre.description %}
+                        <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 20px;">{{ offre.description }}</p>
+                    {% endif %}
+
+                    <ul class="plan-features">
+                        {% if offre.avantages %}
+                            {% for avantage in offre.avantages|split('|') %}
+                                {% if avantage|trim %}
+                                    <li>{{ avantage|trim }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        {% if offre.diagnosticsParHeure == -1 %}
+                            <li>Diagnostics illimités</li>
+                        {% else %}
+                            <li>{{ offre.diagnosticsParHeure }} diagnostics / heure</li>
+                        {% endif %}
+                        {% if offre.accesTraitement %}<li>Accès aux traitements</li>{% endif %}
+                        {% if offre.accesPlanTraitement %}<li>Plans de traitement avancés</li>{% endif %}
+                    </ul>
+
+                    {% if isCurrent %}
+                        <button class="btn-subscribe current-btn" disabled>✓ Plan actuel</button>
+                    {% else %}
+                        <div class="duration-select">
+                            <label for="duration_{{ offre.id }}">Durée :</label>
+                            <select id="duration_{{ offre.id }}">
+                                <option value="1">1 Mois</option>
+                                <option value="3">3 Mois (-5%)</option>
+                                <option value="6">6 Mois (-10%)</option>
+                                <option value="12">1 An (-20%)</option>
+                            </select>
+                        </div>
+                        <button class="btn-subscribe" style="background: linear-gradient(135deg, {{ offre.couleurPrimaire }}, {{ offre.couleurSecondaire }})" onclick="checkout({{ offre.id }}, '{{ offre.nom }}')">
+                            Payer via Stripe
+                        </button>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p style="font-size: 40px; margin-bottom: 12px;">📦</p>
+                    <p>Aucune offre disponible pour le moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    function checkout(offreId, offreName) {
+        const durationSelect = document.getElementById(`duration_${offreId}`);
+        const duration = durationSelect ? durationSelect.value : 1;
+
+        if (!confirm(`Confirmer la souscription au pack "${offreName}" pour ${duration} mois ? Vous allez être redirigé vers le paiement.`)) return;
+
+        fetch(`/user-and-diag/subscription/checkout/${offreId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `duration=${duration}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.checkoutUrl) {
+                window.location.href = d.checkoutUrl;
+            } else if (d.error) {
+                alert(d.error);
+            }
+        })
+        .catch(e => {
+            alert("Erreur de connexion détaillée.");
+        });
+    }
+
+    function cancelSubscription() {
+        if (!confirm('Annuler votre abonnement ? Vous perdrez vos avantages immédiatement.')) return;
+
+        fetch('/user-and-diag/subscription/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                location.reload();
+            }
+        });
+    }
+</script>
+{% endblock %}

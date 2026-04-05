@@ -4,6 +4,10 @@ namespace App\Form\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\Badge;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -12,11 +16,20 @@ class AdminBadgeType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('name')
-            ->add('description')
-            ->add('icon')
-            ->add('condition_type')
-            ->add('threshold')
+            ->add('name', TextType::class, ['label' => 'Nom'])
+            ->add('description', TextareaType::class, ['label' => 'Description', 'required' => false])
+            ->add('icon', TextType::class, ['label' => 'Icône', 'required' => false])
+            ->add('condition_type', ChoiceType::class, [
+                'label' => 'Type Condition',
+                'choices' => [
+                    'Diagnostic' => 'DIAGNOSTIC',
+                    'Points' => 'POINTS',
+                    'Healthy Plants' => 'HEALTHY_PLANTS',
+                    'Solution' => 'SOLUTION',
+                ],
+                'required' => false,
+            ])
+            ->add('threshold', IntegerType::class, ['label' => 'Seuil', 'required' => false])
         ;
     }
 

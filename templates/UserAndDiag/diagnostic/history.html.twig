@@ -1,0 +1,262 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Historique des Diagnostics{% endblock %}
+
+{% block stylesheets %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: url('{{ asset('assets/img/hero_3.jpg') }}') no-repeat center center fixed;
+        background-size: cover;
+    }
+    
+    .dashboard-background {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0, 0.4);
+        z-index: -1;
+    }
+
+    .container-history {
+        padding: 100px 40px 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+
+    /* Header & Search */
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        padding: 5px 20px;
+        flex-grow: 1;
+        max-width: 600px;
+    }
+
+    .search-input {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 10px;
+        width: 100%;
+        outline: none;
+        font-size: 16px;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.6); }
+
+    .btn-mic {
+        background: #e67e22;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-mic:hover { transform: scale(1.1); }
+    .btn-mic.active { background: #e74c3c; animation: pulse 1.5s infinite; }
+
+    /* History Table */
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .history-card {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 15px 25px;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .history-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #6B7F3F;
+    }
+
+    .diag-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 20px;
+        border: 2px solid #6B7F3F;
+    }
+
+    .diag-info { flex-grow: 1; }
+    .diag-title { font-weight: 700; color: #333; margin-bottom: 4px; font-size: 16px; }
+    .diag-meta { color: #666; font-size: 13px; display: flex; gap: 15px; }
+
+    .confidence-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 12px;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .modal-header { border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .modal-body { color: #333; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container-history">
+    <div class="glass-panel">
+        <div class="header-actions">
+            <div>
+                <a href="{{ path('app_client_dashboard') }}" class="btn btn-outline-light rounded-pill px-4 mb-2">← Retour</a>
+                <h1 class="text-white m-0">Historique des Diagnostics</h1>
+                <p class="text-white-50 m-0">Retrouvez vos analyses passées et traitements recommandés.</p>
+            </div>
+            
+            <form action="{{ path('app_user_and_diag_history') }}" method="GET" class="search-box">
+                <i class="bi bi-search text-white-50"></i>
+                <input type="text" name="q" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." value="{{ keyword }}">
+                <button type="button" class="btn-mic" id="btnMic" title="Recherche vocale">
+                    <i class="bi bi-mic"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="history-list">
+            {% for diagnostic in diagnostics %}
+                <div class="history-card" onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
+                    <img src="{{ diagnostic.imageScannee }}" alt="Thumb" class="diag-thumb">
+                    <div class="diag-info">
+                        <div class="diag-title">{{ diagnostic.resultatIa }}</div>
+                        <div class="diag-meta">
+                            <span><i class="bi bi-calendar3"></i> {{ diagnostic.dateScan|date('d/m/Y H:i') }}</span>
+                            <span><i class="bi bi-geo-alt"></i> {{ diagnostic.locationLabel }}</span>
+                        </div>
+                    </div>
+                    <div class="confidence-badge" style="background: {{ diagnostic.confiance >= 80 ? '#d4edda' : '#fff3cd' }}; color: {{ diagnostic.confiance >= 80 ? '#155724' : '#856404' }};">
+                        {{ diagnostic.confiance|round }}% Fiabilité
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-white">
+                    <i class="bi bi-clipboard-x display-1 opacity-25"></i>
+                    <p class="mt-3">Aucun diagnostic trouvé.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Treatment Modal -->
+<div class="modal fade" id="treatmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Traitement Recommandé</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="text-center p-4">
+                    <div class="spinner-border text-success" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success rounded-pill px-4" data-bs-dismiss="modal">Compris</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    const modal = new bootstrap.Modal(document.getElementById('treatmentModal'));
+    const modalBody = document.getElementById('modalBody');
+    const modalTitle = document.getElementById('modalTitle');
+
+    function showTreatment(id, resultName) {
+        modalTitle.innerText = "Traitement : " + resultName;
+        modalBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-success"></div></div>';
+        modal.show();
+
+        fetch("{{ path('app_user_and_diag_history_treatment', {id: 0}) }}".replace('/0/', '/' + id + '/'))
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    modalBody.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+                } else {
+                    modalBody.innerHTML = `
+                        <h6 class="fw-bold text-success"><i class="bi bi-capsule"></i> ${data.solutionNom}</h6>
+                        <span class="badge bg-secondary mb-3">${data.typeTraitement}</span>
+                        <p>${data.descriptionDetaillee.replace(/\n/g, '<br>')}</p>
+                    `;
+                }
+            })
+            .catch(err => {
+                modalBody.innerHTML = `<div class="alert alert-danger">Erreur de connexion.</div>`;
+            });
+    }
+
+    // Voice Search
+    const btnMic = document.getElementById('btnMic');
+    const searchInput = document.getElementById('searchInput');
+
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'fr-FR';
+        
+        btnMic.addEventListener('click', (e) => {
+            e.preventDefault();
+            recognition.start();
+            btnMic.classList.add('active');
+        });
+
+        recognition.onresult = (event) => {
+            searchInput.value = event.results[0][0].transcript;
+            btnMic.classList.remove('active');
+            searchInput.form.submit();
+        };
+
+        recognition.onerror = () => btnMic.classList.remove('active');
+        recognition.onend = () => btnMic.classList.remove('active');
+    } else {
+        btnMic.style.display = 'none';
+    }
+</script>
+{% endblock %}

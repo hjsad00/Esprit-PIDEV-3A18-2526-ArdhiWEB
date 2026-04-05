@@ -5,64 +5,25 @@
 
 {% block body %}
 <div class="admin-form-card">
-  <form method="post" novalidate>
-    {% for field in fields %}
-      <div class="mb-3">
-        <label for="field_{{ field.name }}" class="form-label">
-          {{ field.label }}
-          {% if field.required|default(false) %}<span class="text-danger">*</span>{% endif %}
-        </label>
+  {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-        {% if field.type|default('text') == 'select' %}
-          <select name="{{ field.name }}" id="field_{{ field.name }}" class="form-select" {{ field.required|default(false) ? 'required' : '' }}>
-            <option value="">-- Choisir --</option>
-            {% for opt in field.options %}
-              <option value="{{ opt.value }}" {{ (item is defined and attribute(item, field.getter)|default('') == opt.value) ? 'selected' : '' }}>{{ opt.label }}</option>
-            {% endfor %}
-          </select>
-
-        {% elseif field.type|default('text') == 'textarea' %}
-          <textarea name="{{ field.name }}" id="field_{{ field.name }}" class="form-control" rows="4" {{ field.required|default(false) ? 'required' : '' }}>{{ item is defined ? attribute(item, field.getter)|default('') : '' }}</textarea>
-
-        {% elseif field.type|default('text') == 'number' %}
-          <input type="number" step="{{ field.step|default('1') }}" name="{{ field.name }}" id="field_{{ field.name }}" class="form-control"
-            value="{{ item is defined ? attribute(item, field.getter)|default('') : field.default|default('') }}" {{ field.required|default(false) ? 'required' : '' }}>
-
-        {% elseif field.type|default('text') == 'date' %}
-          <input type="date" name="{{ field.name }}" id="field_{{ field.name }}" class="form-control"
-            value="{{ item is defined and attribute(item, field.getter) ? attribute(item, field.getter)|date('Y-m-d') : '' }}" {{ field.required|default(false) ? 'required' : '' }}>
-
-        {% elseif field.type|default('text') == 'datetime' %}
-          <input type="datetime-local" name="{{ field.name }}" id="field_{{ field.name }}" class="form-control"
-            value="{{ item is defined and attribute(item, field.getter) ? attribute(item, field.getter)|date('Y-m-d\\TH:i') : '' }}" {{ field.required|default(false) ? 'required' : '' }}>
-
-        {% elseif field.type|default('text') == 'checkbox' %}
-          <div class="form-check">
-            <input type="checkbox" name="{{ field.name }}" id="field_{{ field.name }}" class="form-check-input" value="1"
-              {{ item is defined and attribute(item, field.getter) ? 'checked' : '' }}>
-            <label class="form-check-label" for="field_{{ field.name }}">{{ field.check_label|default('Activer') }}</label>
+    {% for field in form %}
+      {% if field.vars.name != '_token' %}
+        {% if 'checkbox' in field.vars.block_prefixes %}
+          <div class="mb-3 form-check">
+            {{ form_widget(field, {'attr': {'class': 'form-check-input'}}) }}
+            {{ form_label(field, null, {'label_attr': {'class': 'form-check-label'}}) }}
+            {{ form_errors(field) }}
           </div>
-
-        {% elseif field.type|default('text') == 'relation_select' %}
-          <select name="{{ field.name }}" id="field_{{ field.name }}" class="form-select" {{ field.required|default(false) ? 'required' : '' }}>
-            <option value="">-- Choisir --</option>
-            {% for opt in field.options %}
-              <option value="{{ opt.id }}" {{ (item is defined and attribute(item, field.getter) and attribute(item, field.getter).id == opt.id) ? 'selected' : '' }}>{{ opt.label }}</option>
-            {% endfor %}
-          </select>
-
-        {% elseif field.type|default('text') == 'password' %}
-          <input type="password" name="{{ field.name }}" id="field_{{ field.name }}" class="form-control"
-            {{ field.required|default(false) ? 'required' : '' }} placeholder="{{ field.placeholder|default('') }}">
-
         {% else %}
-          <input type="text" name="{{ field.name }}" id="field_{{ field.name }}" class="form-control"
-            value="{{ item is defined ? attribute(item, field.getter)|default('') : field.default|default('') }}" {{ field.required|default(false) ? 'required' : '' }}>
+          <div class="mb-3">
+            {{ form_label(field, null, {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(field, {'attr': {'class': 'choice' in field.vars.block_prefixes and field.vars.expanded == false ? 'form-select' : 'form-control'}}) }}
+            {{ form_errors(field) }}
+          </div>
         {% endif %}
-      </div>
+      {% endif %}
     {% endfor %}
-
-    <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id|default('form')) }}">
 
     <div class="d-flex gap-2 mt-4">
       <button type="submit" class="btn btn-admin">
@@ -70,6 +31,7 @@
       </button>
       <a href="{{ path(cancel_route) }}" class="btn btn-admin-outline">Annuler</a>
     </div>
-  </form>
+
+  {{ form_end(form) }}
 </div>
 {% endblock %}

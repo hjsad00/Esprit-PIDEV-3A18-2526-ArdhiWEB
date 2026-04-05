@@ -2,9 +2,8 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\CommunityComment;
+use App\Form\UserAndDiag\Admin\AdminCommunityCommentType;
 use App\Repository\UserAndDiag\CommunityCommentRepository;
-use App\Repository\UserAndDiag\CommunityPostRepository;
-use App\Repository\UserAndDiag\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,29 +36,48 @@ class AdminCommunityCommentController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_community_comment_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, UserRepository $userRepo, CommunityPostRepository $postRepo): Response
+    public function new(Request $request, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $item = new CommunityComment();
-            $this->handle($request, $item, $em, $userRepo, $postRepo);
+        $item = new CommunityComment();
+        $form = $this->createForm(AdminCommunityCommentType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($item);
+            $em->flush();
             $this->addFlash('success', 'Commentaire créé.');
             return $this->redirectToRoute('admin_community_comment_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Nouveau Commentaire', 'fields' => $this->getFields($userRepo, $postRepo), 'cancel_route' => 'admin_community_comment_index', 'csrf_token_id' => 'comment_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Nouveau Commentaire',
+            'form' => $form,
+            'cancel_route' => 'admin_community_comment_index',
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'admin_community_comment_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityCommentRepository $repo, UserRepository $userRepo, CommunityPostRepository $postRepo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityCommentRepository $repo): Response
     {
         $item = $repo->find($id);
-        if (!$item)
+        if (!$item) {
             throw $this->createNotFoundException();
-        if ($request->isMethod('POST')) {
-            $this->handle($request, $item, $em, $userRepo, $postRepo);
+        }
+
+        $form = $this->createForm(AdminCommunityCommentType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
             $this->addFlash('success', 'Commentaire modifié.');
             return $this->redirectToRoute('admin_community_comment_index');
         }
-        return $this->render('UserAndDiag/admin/crud/form.html.twig', ['page_title' => 'Modifier Commentaire #' . $item->getId(), 'fields' => $this->getFields($userRepo, $postRepo), 'item' => $item, 'cancel_route' => 'admin_community_comment_index', 'csrf_token_id' => 'comment_form']);
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Modifier Commentaire #' . $item->getId(),
+            'form' => $form,
+            'cancel_route' => 'admin_community_comment_index',
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'admin_community_comment_delete', methods: ['POST'])]
@@ -72,31 +90,5 @@ class AdminCommunityCommentController extends AbstractController
             $this->addFlash('success', 'Commentaire supprimé.');
         }
         return $this->redirectToRoute('admin_community_comment_index');
-    }
-
-    private function handle(Request $r, CommunityComment $item, EntityManagerInterface $em, UserRepository $userRepo, CommunityPostRepository $postRepo): void
-    {
-        $item->setContent($r->request->get('content', ''));
-        $item->setLikes((int) $r->request->get('likes', 0));
-        $item->setDislikes((int) $r->request->get('dislikes', 0));
-        $item->setIsSolution($r->request->has('is_solution'));
-        $item->setUser($r->request->get('user_id') ? $userRepo->find($r->request->get('user_id')) : null);
-        $item->setPost($r->request->get('post_id') ? $postRepo->find($r->request->get('post_id')) : null);
-        $em->persist($item);
-        $em->flush();
-    }
-
-    private function getFields(UserRepository $userRepo, CommunityPostRepository $postRepo): array
-    {
-        $users = array_map(fn($u) => ['id' => $u->getId(), 'label' => $u->getEmail()], $userRepo->findAll());
-        $posts = array_map(fn($p) => ['id' => $p->getId(), 'label' => $p->getTitle()], $postRepo->findAll());
-        return [
-            ['name' => 'post_id', 'label' => 'Post', 'getter' => 'post', 'type' => 'relation_select', 'options' => $posts, 'required' => true],
-            ['name' => 'user_id', 'label' => 'Utilisateur', 'getter' => 'user', 'type' => 'relation_select', 'options' => $users, 'required' => true],
-            ['name' => 'content', 'label' => 'Contenu', 'getter' => 'content', 'type' => 'textarea', 'required' => true],
-            ['name' => 'likes', 'label' => 'Likes', 'getter' => 'likes', 'type' => 'number', 'default' => '0'],
-            ['name' => 'dislikes', 'label' => 'Dislikes', 'getter' => 'dislikes', 'type' => 'number', 'default' => '0'],
-            ['name' => 'is_solution', 'label' => 'Solution', 'getter' => 'solution', 'type' => 'checkbox'],
-        ];
     }
 }

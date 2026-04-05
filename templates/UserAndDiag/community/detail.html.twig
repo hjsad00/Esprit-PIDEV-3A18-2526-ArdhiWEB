@@ -1,0 +1,307 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ post.title }} - Communauté Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .detail-hero {
+        padding: 120px 0 40px;
+        background: linear-gradient(135deg, #0b140f 0%, #1a2e1a 50%, #0b140f 100%);
+        min-height: 100vh;
+    }
+    .detail-container { max-width: 820px; margin: 0 auto; padding: 0 20px; }
+
+    .btn-back {
+        display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7);
+        text-decoration: none; font-size: 14px; font-weight: 600; margin-bottom: 20px; transition: 0.3s;
+        background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 10px;
+    }
+    .btn-back:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+    .glass-card {
+        background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 30px; margin-bottom: 24px;
+    }
+
+    /* Post */
+    .post-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .avatar {
+        width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0;
+    }
+    .post-meta .author { font-weight: 700; color: #fff; font-size: 15px; }
+    .post-meta .date { color: rgba(255,255,255,0.5); font-size: 12px; }
+    .badge-resolved { background: #166534; color: #BBF7D0; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-left: auto; }
+
+    .post-title { color: #fff; font-size: 26px; font-weight: 800; margin-bottom: 14px; line-height: 1.3; }
+    .post-body { color: rgba(255,255,255,0.75); font-size: 15px; line-height: 1.8; margin-bottom: 16px; white-space: pre-wrap; }
+    .post-image { width: 100%; max-height: 400px; object-fit: cover; border-radius: 14px; margin-bottom: 16px; }
+
+    .action-bar { display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .vote-btn {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; padding: 8px 18px; color: rgba(255,255,255,0.7);
+        font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .vote-btn:hover { background: rgba(255,255,255,0.12); }
+    .vote-btn.active-like { color: #60a5fa; border-color: #60a5fa; background: rgba(96,165,250,0.1); }
+    .vote-btn.active-dislike { color: #f87171; border-color: #f87171; background: rgba(248,113,113,0.1); }
+
+    /* Comments */
+    .comments-header { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+
+    .comment-card {
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; padding: 18px; margin-bottom: 12px; transition: 0.2s;
+    }
+    .comment-card.solution { background: rgba(22,101,52,0.15); border-color: rgba(187,247,208,0.3); }
+
+    .comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .avatar-sm { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .comment-author { color: #fff; font-weight: 700; font-size: 13px; }
+    .badge-op { background: rgba(96,165,250,0.2); color: #93c5fd; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+    .badge-solution { background: rgba(22,101,52,0.3); color: #BBF7D0; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+
+    .comment-body { color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
+
+    .comment-actions { display: flex; gap: 10px; align-items: center; }
+    .comment-actions button {
+        background: transparent; border: none; color: rgba(255,255,255,0.45);
+        font-size: 12px; cursor: pointer; font-weight: 600; padding: 4px 8px; border-radius: 6px; transition: 0.2s;
+    }
+    .comment-actions button:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    .comment-actions button.active-like { color: #60a5fa; }
+    .comment-actions button.active-dislike { color: #f87171; }
+
+    .btn-solve {
+        color: #4ade80 !important; font-weight: 700 !important;
+    }
+
+    /* Comment Input */
+    .comment-input-area {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+        background: rgba(11,20,15,0.95); backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255,255,255,0.1); padding: 16px 20px;
+    }
+    .comment-input-inner { max-width: 820px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
+    .comment-input-inner textarea {
+        flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px; padding: 12px 16px; color: #fff; font-size: 14px; resize: none; height: 44px;
+        font-family: 'Inter', sans-serif; outline: none; transition: 0.3s;
+    }
+    .comment-input-inner textarea:focus { border-color: rgba(255,255,255,0.35); }
+    .comment-input-inner textarea::placeholder { color: rgba(255,255,255,0.4); }
+    .btn-send {
+        background: linear-gradient(135deg, #6B7F3F, #4A5A2B); color: #fff; border: none;
+        padding: 12px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap;
+    }
+    .btn-send:hover { opacity: 0.9; }
+
+    .reply-indicator {
+        display: none; background: rgba(107,127,63,0.15); border: 1px solid rgba(107,127,63,0.3);
+        border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; color: rgba(255,255,255,0.7);
+        font-size: 13px; max-width: 820px; margin-left: auto; margin-right: auto;
+    }
+    .reply-indicator .cancel-reply {
+        background: none; border: none; color: #f87171; cursor: pointer; font-weight: 700; margin-left: 10px;
+    }
+
+    .detail-hero { padding-bottom: 100px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="detail-hero">
+    <div class="detail-container">
+        <a href="{{ path('app_user_and_diag_community') }}" class="btn-back">← Communauté</a>
+
+        {# ─── Post Card ─── #}
+        <div class="glass-card">
+            <div class="post-header">
+                {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
+                {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
+                {% set idx = post.user.id % 5 %}
+                <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                    {{ post.user.prenom|default('U')|first|upper }}
+                </div>
+                <div class="post-meta">
+                    <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
+                    <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                </div>
+                {% if post.resolved %}
+                    <span class="badge-resolved">✓ RÉSOLU</span>
+                {% endif %}
+            </div>
+
+            <div class="post-title">{{ post.title }}</div>
+            <div class="post-body">{{ post.description }}</div>
+
+            {% if post.imageUrl %}
+                <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy">
+            {% endif %}
+
+            <div class="action-bar">
+                <button class="vote-btn {{ postVote == 'LIKE' ? 'active-like' : '' }}" id="btnLikePost" onclick="votePost('LIKE')">
+                    👍 <span id="postLikes">{{ post.likes }}</span>
+                </button>
+                <button class="vote-btn {{ postVote == 'DISLIKE' ? 'active-dislike' : '' }}" id="btnDislikePost" onclick="votePost('DISLIKE')">
+                    👎 <span id="postDislikes">{{ post.dislikes }}</span>
+                </button>
+            </div>
+        </div>
+
+        {# ─── Comments ─── #}
+        <div class="comments-header">Réponses ({{ commentCount }})</div>
+
+        <div id="commentsContainer">
+            {% macro render_comment(comment, childrenMap, commentVotes, post, currentUserId, depth) %}
+                {% set isOp = comment.user.id == post.user.id %}
+                {% set vote = commentVotes[comment.id] ?? null %}
+                {% set ml = depth * 35 %}
+                {% if ml > 200 %}{% set ml = 200 %}{% endif %}
+
+                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}">
+                    <div class="comment-header">
+                        {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
+                        {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
+                        {% set idx = comment.user.id % 5 %}
+                        <div class="avatar-sm" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                            {{ comment.user.prenom|default('U')|first|upper }}
+                        </div>
+                        <span class="comment-author">{{ comment.user.prenom }} {{ comment.user.nom }}</span>
+                        {% if isOp %}<span class="badge-op">OP</span>{% endif %}
+                        {% if comment.solution %}<span class="badge-solution">✓ SOLUTION</span>{% endif %}
+                    </div>
+                    <div class="comment-body">{{ comment.content }}</div>
+                    <div class="comment-actions">
+                        <button class="{{ vote == 'LIKE' ? 'active-like' : '' }}" onclick="voteComment({{ comment.id }}, 'LIKE', this)">👍 <span>{{ comment.likes }}</span></button>
+                        <button class="{{ vote == 'DISLIKE' ? 'active-dislike' : '' }}" onclick="voteComment({{ comment.id }}, 'DISLIKE', this)">👎 <span>{{ comment.dislikes }}</span></button>
+                        <button onclick="replyTo({{ comment.id }}, '{{ comment.user.prenom }}')">Répondre</button>
+                        {% if post.user.id == currentUserId and not post.resolved and not comment.solution %}
+                            <button class="btn-solve" onclick="markSolution({{ post.id }}, {{ comment.id }})">✓ Marquer comme solution</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if childrenMap[comment.id] is defined %}
+                    {% for child in childrenMap[comment.id] %}
+                        {{ _self.render_comment(child, childrenMap, commentVotes, post, currentUserId, depth + 1) }}
+                    {% endfor %}
+                {% endif %}
+            {% endmacro %}
+
+            {% for comment in rootComments %}
+                {{ _self.render_comment(comment, childrenMap, commentVotes, post, app.user.id, 0) }}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ─── Sticky Comment Input ─── #}
+<div class="comment-input-area">
+    <div class="reply-indicator" id="replyIndicator">
+        Réponse à <strong id="replyName"></strong>
+        <button class="cancel-reply" onclick="cancelReply()">✕</button>
+    </div>
+    <div class="comment-input-inner">
+        <textarea id="txtComment" placeholder="Écrire un commentaire..." rows="1"></textarea>
+        <button class="btn-send" onclick="sendComment()">Envoyer</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    let replyingToId = null;
+    const postId = {{ post.id }};
+
+    // ── Post Voting ──
+    function votePost(type) {
+        fetch(`/user-and-diag/community/${postId}/vote`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `vote=${type}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('postLikes').textContent = d.likes;
+            document.getElementById('postDislikes').textContent = d.dislikes;
+            const btnL = document.getElementById('btnLikePost');
+            const btnD = document.getElementById('btnDislikePost');
+            btnL.className = 'vote-btn' + (d.userVote === 'LIKE' ? ' active-like' : '');
+            btnD.className = 'vote-btn' + (d.userVote === 'DISLIKE' ? ' active-dislike' : '');
+        });
+    }
+
+    // ── Comment Voting ──
+    function voteComment(commentId, type, btn) {
+        fetch(`/user-and-diag/community/comment/${commentId}/vote`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `vote=${type}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            const card = btn.closest('.comment-card');
+            const btns = card.querySelectorAll('.comment-actions button');
+            btns[0].className = d.userVote === 'LIKE' ? 'active-like' : '';
+            btns[0].querySelector('span').textContent = d.likes;
+            btns[1].className = d.userVote === 'DISLIKE' ? 'active-dislike' : '';
+            btns[1].querySelector('span').textContent = d.dislikes;
+        });
+    }
+
+    // ── Reply ──
+    function replyTo(commentId, name) {
+        replyingToId = commentId;
+        document.getElementById('replyIndicator').style.display = 'block';
+        document.getElementById('replyName').textContent = name;
+        document.getElementById('txtComment').focus();
+        document.getElementById('txtComment').placeholder = `Réponse à ${name}...`;
+    }
+
+    function cancelReply() {
+        replyingToId = null;
+        document.getElementById('replyIndicator').style.display = 'none';
+        document.getElementById('txtComment').placeholder = 'Écrire un commentaire...';
+    }
+
+    // ── Send Comment ──
+    function sendComment() {
+        const txt = document.getElementById('txtComment');
+        const content = txt.value.trim();
+        if (!content) return;
+
+        const body = `content=${encodeURIComponent(content)}` + (replyingToId ? `&parent_id=${replyingToId}` : '');
+
+        fetch(`/user-and-diag/community/${postId}/comment`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body
+        })
+        .then(r => r.json())
+        .then(() => {
+            txt.value = '';
+            cancelReply();
+            location.reload(); // Reload to show threaded comment correctly
+        });
+    }
+
+    // ── Mark Solution ──
+    function markSolution(postId, commentId) {
+        if (!confirm('Marquer ce commentaire comme solution ? Cela marquera votre question comme résolue.')) return;
+
+        fetch(`/user-and-diag/community/${postId}/solve/${commentId}`, {
+            method: 'POST',
+        })
+        .then(r => r.json())
+        .then(() => location.reload());
+    }
+
+    // Auto-expand textarea
+    document.getElementById('txtComment').addEventListener('input', function() {
+        this.style.height = '44px';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+</script>
+{% endblock %}

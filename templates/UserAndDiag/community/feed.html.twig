@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Communauté Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .community-hero {
+        padding: 120px 0 40px;
+        background: linear-gradient(135deg, #0b140f 0%, #1a2e1a 50%, #0b140f 100%);
+        min-height: 100vh;
+    }
+    .community-header {
+        display: flex; align-items: center; justify-content: space-between;
+        max-width: 820px; margin: 0 auto 30px; padding: 0 20px; flex-wrap: wrap; gap: 15px;
+    }
+    .community-header h1 { color: #fff; font-weight: 800; font-size: 28px; }
+    .search-box {
+        display: flex; gap: 10px; flex: 1; max-width: 400px;
+    }
+    .search-box input {
+        flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 30px; padding: 10px 20px; color: #fff; font-size: 14px; outline: none;
+        backdrop-filter: blur(10px); transition: 0.3s;
+    }
+    .search-box input::placeholder { color: rgba(255,255,255,0.5); }
+    .search-box input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.15); }
+    .btn-new-post {
+        background: linear-gradient(135deg, #6B7F3F, #4A5A2B); color: #fff; border: none;
+        padding: 10px 24px; border-radius: 30px; font-weight: 700; font-size: 14px;
+        text-decoration: none; transition: 0.3s; white-space: nowrap;
+    }
+    .btn-new-post:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; }
+
+    .feed-container { max-width: 820px; margin: 0 auto; padding: 0 20px; }
+
+    .post-card {
+        background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+        padding: 28px; margin-bottom: 24px; cursor: pointer; transition: 0.3s;
+        text-decoration: none; display: block; color: inherit;
+    }
+    .post-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); }
+
+    .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .avatar {
+        width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0;
+    }
+    .post-meta .author { font-weight: 700; color: #fff; font-size: 14px; }
+    .post-meta .date { color: rgba(255,255,255,0.5); font-size: 12px; }
+
+    .badge-resolved {
+        background: #166534; color: #BBF7D0; font-size: 10px; font-weight: 800;
+        padding: 4px 10px; border-radius: 20px; margin-left: auto;
+    }
+
+    .post-title { color: #fff; font-size: 20px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
+    .post-desc { color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
+    .post-image { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
+
+    .post-footer {
+        display: flex; gap: 24px; padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 600;
+    }
+    .post-footer span.active-like { color: #60a5fa; }
+    .post-footer span.active-dislike { color: #f87171; }
+    .empty-state { text-align: center; color: rgba(255,255,255,0.5); padding: 60px 20px; font-size: 16px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="community-hero">
+    <div class="community-header">
+        <h1>👥 Communauté</h1>
+        <form class="search-box" method="GET" action="{{ path('app_user_and_diag_community') }}">
+            <input type="text" name="q" placeholder="Rechercher un sujet..." value="{{ keyword }}">
+        </form>
+        <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+    </div>
+
+    <div class="feed-container">
+        {% for item in feedData %}
+            {% set post = item.post %}
+            <a href="{{ path('app_user_and_diag_community_detail', {id: post.id}) }}" class="post-card">
+                <div class="post-header">
+                    {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
+                    {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
+                    {% set idx = loop.index0 % 5 %}
+                    <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                        {{ post.user.prenom|default('U')|first|upper }}
+                    </div>
+                    <div class="post-meta">
+                        <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
+                        <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                    </div>
+                    {% if post.resolved %}
+                        <span class="badge-resolved">✓ RÉSOLU</span>
+                    {% endif %}
+                </div>
+
+                <div class="post-title">{{ post.title }}</div>
+                <div class="post-desc">{{ post.description|length > 200 ? post.description|slice(0,200) ~ '...' : post.description }}</div>
+
+                {% if post.imageUrl %}
+                    <img src="{{ post.imageUrl }}" class="post-image" alt="Image jointe" loading="lazy">
+                {% endif %}
+
+                <div class="post-footer">
+                    <span>💬 {{ item.commentCount }}</span>
+                    <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
+                    <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
+                </div>
+            </a>
+        {% else %}
+            <div class="empty-state">
+                <p style="font-size: 40px; margin-bottom: 12px;">🌱</p>
+                <p>Aucun post pour le moment.<br>Soyez le premier à poser une question !</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -2,9 +2,8 @@
 namespace App\Controller\UserAndDiag\Admin;
 
 use App\Entity\UserAndDiag\CommunityLike;
+use App\Form\UserAndDiag\Admin\AdminCommunityLikeType;
 use App\Repository\UserAndDiag\CommunityLikeRepository;
-use App\Repository\UserAndDiag\UserRepository;
-use App\Repository\UserAndDiag\CommunityPostRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,40 +24,58 @@ class AdminCommunityLikeController extends AbstractController
                 ['label' => 'ID', 'field' => 'id'],
                 ['label' => 'User', 'field' => 'user', 'type' => 'relation', 'display' => 'email'],
                 ['label' => 'Post', 'field' => 'post', 'type' => 'relation'],
+                ['label' => 'Comment', 'field' => 'comment', 'type' => 'relation'],
                 ['label' => 'Type', 'field' => 'voteType', 'type' => 'badge', 'color' => '#dc3545'],
                 ['label' => 'Créé le', 'field' => 'createdAt', 'type' => 'date'],
             ],
+            'new_route' => 'admin_community_like_new',
             'edit_route' => 'admin_community_like_edit',
             'delete_route' => 'admin_community_like_delete',
         ]);
     }
 
+    #[Route('/new', name: 'admin_community_like_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $em): Response
+    {
+        $item = new CommunityLike();
+        $form = $this->createForm(AdminCommunityLikeType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($item);
+            $em->flush();
+            $this->addFlash('success', 'Like créé.');
+            return $this->redirectToRoute('admin_community_like_index');
+        }
+
+        return $this->render('UserAndDiag/admin/crud/form.html.twig', [
+            'page_title' => 'Nouveau Like',
+            'form' => $form,
+            'cancel_route' => 'admin_community_like_index',
+        ]);
+    }
+
     #[Route('/{id}/edit', name: 'admin_community_like_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityLikeRepository $repo, UserRepository $userRepo, CommunityPostRepository $postRepo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityLikeRepository $repo): Response
     {
         $item = $repo->find($id);
-        if (!$item)
+        if (!$item) {
             throw $this->createNotFoundException();
-        if ($request->isMethod('POST')) {
-            $item->setVoteType($request->request->get('vote_type', 'LIKE'));
-            $item->setUser($request->request->get('user_id') ? $userRepo->find($request->request->get('user_id')) : null);
-            $item->setPost($request->request->get('post_id') ? $postRepo->find($request->request->get('post_id')) : null);
+        }
+
+        $form = $this->createForm(AdminCommunityLikeType::class, $item);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
             $this->addFlash('success', 'Like modifié.');
             return $this->redirectToRoute('admin_community_like_index');
         }
-        $users = array_map(fn($u) => ['id' => $u->getId(), 'label' => $u->getEmail()], $userRepo->findAll());
-        $posts = array_map(fn($p) => ['id' => $p->getId(), 'label' => $p->getTitle()], $postRepo->findAll());
+
         return $this->render('UserAndDiag/admin/crud/form.html.twig', [
             'page_title' => 'Modifier Like #' . $item->getId(),
-            'item' => $item,
+            'form' => $form,
             'cancel_route' => 'admin_community_like_index',
-            'csrf_token_id' => 'like_form',
-            'fields' => [
-                ['name' => 'user_id', 'label' => 'Utilisateur', 'getter' => 'user', 'type' => 'relation_select', 'options' => $users],
-                ['name' => 'post_id', 'label' => 'Post', 'getter' => 'post', 'type' => 'relation_select', 'options' => $posts],
-                ['name' => 'vote_type', 'label' => 'Vote', 'getter' => 'voteType', 'type' => 'select', 'options' => [['value' => 'LIKE', 'label' => 'Like'], ['value' => 'DISLIKE', 'label' => 'Dislike']]],
-            ],
         ]);
     }
 
