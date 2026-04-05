@@ -1,0 +1,62 @@
+{# Farmer: Irrigation Calculator #}
+{% extends 'parcelles_cultures/base.html.twig' %}
+
+{% block title %}Calculateur Irrigation{% endblock %}
+
+{% block content %}
+<h1>Calculateur d'Irrigation</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="POST" class="card p-4">
+            <h5>Données météorologiques</h5>
+            <div class="mb-3">
+                <label>Température moyenne (°C)</label>
+                <input type="number" name="temp_moyenne" class="form-control" required step="0.1">
+            </div>
+            <div class="mb-3">
+                <label>Température max (°C)</label>
+                <input type="number" name="temp_max" class="form-control" required step="0.1">
+            </div>
+            <div class="mb-3">
+                <label>Température min (°C)</label>
+                <input type="number" name="temp_min" class="form-control" required step="0.1">
+            </div>
+            <div class="mb-3">
+                <label>Précipitations (mm)</label>
+                <input type="number" name="precipitations" class="form-control" required step="0.1">
+            </div>
+
+            <h5 class="mt-4">Paramètres culture</h5>
+            <div class="mb-3">
+                <label>Surface (ha)</label>
+                <input type="number" name="surface" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Coefficient cultural Kc</label>
+                <input type="number" name="kc" class="form-control" value="1.0" step="0.01">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Calculer</button>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        {% if result %}
+            <div class="card p-4 bg-light">
+                <h5>Résultats d'irrigation</h5>
+                <p><strong>ET0 (mm/jour):</strong> {{ result.et0|number_format(3) }}</p>
+                <p><strong>Besoin brut (mm/jour):</strong> {{ result.besoin_brut|number_format(3) }}</p>
+                <p><strong>Besoin net (mm/jour):</strong> {{ result.besoin_net|number_format(3) }}</p>
+                <hr>
+                <p><strong>Volume d'eau (litres):</strong> {{ result.volume_litres|number_format(0) }}</p>
+                <p><strong>Volume d'eau (m³):</strong> {{ result.volume_cubique|number_format(2) }}</p>
+            </div>
+        {% else %}
+            <div class="card p-4 bg-light text-center text-muted">
+                Remplissez le formulaire pour calculer
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{# Farmer: ROI Calculator #}
+{% extends 'parcelles_cultures/base.html.twig' %}
+
+{% block title %}Calculateur ROI{% endblock %}
+
+{% block content %}
+<h1>Calculateur ROI</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="POST" class="card p-4">
+            <h5>Paramètres de la culture</h5>
+            <div class="mb-3">
+                <label>Surface (ha)</label>
+                <input type="number" name="surface" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Rendement estimé</label>
+                <input type="number" name="rendement" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Prix de vente (TND/unité)</label>
+                <input type="number" name="prix_vente" class="form-control" required step="0.01">
+            </div>
+
+            <h5 class="mt-4">Coûts de production</h5>
+            <div class="mb-3">
+                <label>Coût semences (TND)</label>
+                <input type="number" name="cout_semences" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Coût engrais (TND)</label>
+                <input type="number" name="cout_engrais" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Coût main-d'œuvre (TND)</label>
+                <input type="number" name="cout_main_oeuvre" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Coût irrigation (TND)</label>
+                <input type="number" name="cout_irrigation" class="form-control" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Coût autres (TND)</label>
+                <input type="number" name="cout_autres" class="form-control" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label>Facteur climatique (0.5-1.0)</label>
+                <input type="number" name="facteur_climatique" class="form-control" value="1.0" min="0.5" max="1.0" step="0.01">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Calculer</button>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        {% if result %}
+            <div class="card p-4 bg-light">
+                <h5>Résultats</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Production théorique:</strong> {{ result.production_theorique|number_format(2) }}</p>
+                        <p><strong>Production réelle:</strong> {{ result.production_reelle|number_format(2) }}</p>
+                        <p><strong>Coût total:</strong> {{ result.cout_total|number_format(2) }} TND</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Revenu brut:</strong> {{ result.revenu_brut|number_format(2) }} TND</p>
+                        <p><strong>Marge brute:</strong> {{ result.marge_brute|number_format(2) }} TND</p>
+                        <p><strong>Prix seuil:</strong> {% if result.prix_seuil %}{{ result.prix_seuil|number_format(2) }}{% else %}N/A{% endif %}</p>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <strong>Score ROI: {% if result.score_roi %}{{ result.score_roi|number_format(2) }}%{% else %}N/A{% endif %}</strong>
+                </div>
+            </div>
+        {% else %}
+            <div class="card p-4 bg-light text-center text-muted">
+                Remplissez le formulaire pour calculer
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

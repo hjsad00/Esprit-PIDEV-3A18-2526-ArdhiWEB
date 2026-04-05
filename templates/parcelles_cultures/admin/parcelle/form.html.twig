@@ -1,0 +1,29 @@
+{# Admin/Farmer: Form Parcelle #}
+{% extends 'parcelles_cultures/base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>{{ title }}</h1>
+
+        {{ form_start(form) }}
+            <div class="card">
+                <div class="card-body">
+                    {{ form_row(form.surface) }}
+                    {{ form_row(form.localisation) }}
+                    {{ form_row(form.type_sol) }}
+                    {{ form_row(form.systeme_irrigation) }}
+                    {{ form_row(form.statut) }}
+                    {{ form_row(form.latitude) }}
+                    {{ form_row(form.longitude) }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
+            <a href="{{ path('admin_parcelle_index')|default(path('farmer_parcelle_index')) }}" class="btn btn-secondary mt-3">Annuler</a>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

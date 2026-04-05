@@ -1,0 +1,59 @@
+{# Admin: Stats #}
+{% extends 'parcelles_cultures/base.html.twig' %}
+
+{% block title %}Statistiques Agricoles{% endblock %}
+
+{% block content %}
+<h1>Statistiques Agricoles</h1>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Parcelles</h5>
+                <p class="card-text display-6">{{ total_parcelles }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Cultures</h5>
+                <p class="card-text display-6">{{ total_cultures }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Surface Totale (ha)</h5>
+                <p class="card-text display-6">{{ total_surface|number_format(2, '.', '') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mt-5">Répartition par Saison</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Saison</th>
+                <th>Nombre de cultures</th>
+                <th>Surface totale</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for saison, stats in stats_by_saison %}
+                <tr>
+                    <td>{{ saison }}</td>
+                    <td>{{ stats.count }}</td>
+                    <td>{{ stats.surface|number_format(2, '.', '') }} ha</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3" class="text-center text-muted">Aucune donnée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

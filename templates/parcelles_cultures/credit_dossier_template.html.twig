@@ -1,0 +1,117 @@
+{# Farmer: Credit Dossier PDF Template #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dossier Crédit</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; }
+        .section { margin: 20px 0; }
+        .section h2 { background-color: #f0f0f0; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .score { font-size: 24px; font-weight: bold; }
+        .risk-faible { color: green; }
+        .risk-modere { color: orange; }
+        .risk-eleve { color: red; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dossier de Crédit Agricole</h1>
+        <p>Généré le {{ dossier.dateCreation|date('d/m/Y H:i') }}</p>
+    </div>
+
+    <div class="section">
+        <h2>📋 Informations Agriculteur</h2>
+        <table>
+            <tr>
+                <td><strong>Nom:</strong></td>
+                <td>{{ user.nom }} {{ user.prenom }}</td>
+            </tr>
+            <tr>
+                <td><strong>Email:</strong></td>
+                <td>{{ user.email }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🌾 Parcelle</h2>
+        <table>
+            <tr>
+                <td><strong>Localisation:</strong></td>
+                <td>{{ parcelle.localisation }}</td>
+            </tr>
+            <tr>
+                <td><strong>Surface:</strong></td>
+                <td>{{ parcelle.surface }} ha</td>
+            </tr>
+            <tr>
+                <td><strong>Type de sol:</strong></td>
+                <td>{{ parcelle.typeSol }}</td>
+            </tr>
+            <tr>
+                <td><strong>Système irrigation:</strong></td>
+                <td>{{ parcelle.systemeIrrigation }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📊 Analyse de Risque</h2>
+        <p>
+            <strong>Score de risque globale:</strong>
+            <span class="score risk-{{ dossier.niveauRisque|lower }}">
+                {{ dossier.scoreRisque|number_format(2) }} / 10 ({{ dossier.niveauRisque }})
+            </span>
+        </p>
+        <table>
+            <tr>
+                <th>Composante</th>
+                <th>Score</th>
+            </tr>
+            <tr>
+                <td>Rentabilité</td>
+                <td>{{ dossier.scoreRentabilite|number_format(2) }}</td>
+            </tr>
+            <tr>
+                <td>Stabilité climatique</td>
+                <td>{{ dossier.scoreStabiliteClimat|number_format(2) }}</td>
+            </tr>
+            <tr>
+                <td>Diversification</td>
+                <td>{{ dossier.scoreDiversification|number_format(2) }}</td>
+            </tr>
+            <tr>
+                <td>Historique</td>
+                <td>{{ dossier.scoreHistorique|number_format(2) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>💰 Capacité de Crédit</h2>
+        <table>
+            <tr>
+                <td><strong>Durée demandée:</strong></td>
+                <td>{{ dossier.dureeAnnees }} an(s)</td>
+            </tr>
+            <tr>
+                <td><strong>Capacité remboursement annuelle:</strong></td>
+                <td>{{ dossier.capaciteRemboursement|number_format(2) }} TND</td>
+            </tr>
+            <tr>
+                <td><strong>Montant crédit max:</strong></td>
+                <td>{{ dossier.montantPretMax|number_format(2) }} TND</td>
+            </tr>
+        </table>
+    </div>
+
+    <p style="text-align: center; margin-top: 30px; font-size: 12px; color: #999;">
+        Dossier généré automatiquement par ArdhiWEB
+    </p>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Controller\Parcelles_Cultures\Farmer;
+
+use App\Entity\Parcelles_Cultures\Parcelle;
+use App\Form\Parcelles_Cultures\ParceleType;
+use App\Repository\Parcelles_Cultures\ParceleRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[Route('/farmer/parcelles', name: 'farmer_parcelle_')]
+#[IsGranted('ROLE_FARMER')]
+class ParceleFarmerController extends AbstractController
+{
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(
+        ParceleRepository $repository,
+        PaginatorInterface $paginator,
+        Request $request
+    ): Response {
+        $user = $this->getUser();
+        $query = $repository->createQueryBuilder('p')
+            ->where('p.agriculteur = :user')
+            ->setParameter('user', $user)
+            ->getQuery();
+        
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            10
+        );
+
+        return $this->render('parcelles_cultures/farmer/parcelle/index.html.twig', [
+            'pagination' => $pagination
+        ]);
+    }
+
+    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $em
+    ): Response {
+        $parcelle = new Parcelle();
+        $parcelle->setAgriculteur($this->getUser());
+
+        $form = $this->createForm(ParceleType::class, $parcelle);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($parcelle);
+            $em->flush();
+
+            return $this->redirectToRoute('farmer_parcelle_show', [
+                'id' => $parcelle->getId()
+            ]);
+        }
+
+        return $this->render('parcelles_cultures/farmer/parcelle/form.html.twig', [
+            'form' => $form,
+            'parcelle' => $parcelle
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(
+        Parcelle $parcelle,
+        Request $request,
+        EntityManagerInterface $em
+    ): Response {
+        $this->denyAccessUnlessGranted('EDIT', $parcelle);
+
+        $form = $this->createForm(ParceleType::class, $parcelle);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            return $this->redirectToRoute('farmer_parcelle_show', ['id' => $parcelle->getId()]);
+        }
+
+        return $this->render('parcelles_cultures/farmer/parcelle/form.html.twig', [
+            'form' => $form,
+            'parcelle' => $parcelle
+        ]);
+    }
+
+    #[Route('/{id}/show', name: 'show', methods: ['GET'])]
+    public function show(Parcelle $parcelle): Response
+    {
+        $this->denyAccessUnlessGranted('EDIT', $parcelle);
+
+        return $this->render('parcelles_cultures/farmer/parcelle/show.html.twig', [
+            'parcelle' => $parcelle
+        ]);
+    }
+}

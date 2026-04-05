@@ -1,0 +1,75 @@
+{# Admin: List Parcelles #}
+{% extends 'parcelles_cultures/base.html.twig' %}
+
+{% block title %}Gestion des Parcelles{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Gestion des Parcelles</h1>
+        <a href="{{ path('admin_parcelle_new') }}" class="btn btn-primary mb-3">
+            <i class="bi bi-plus"></i> Créer une parcelle
+        </a>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Localisation</th>
+                        <th>Surface (ha)</th>
+                        <th>Type de sol</th>
+                        <th>Système irrigation</th>
+                        <th>Statut</th>
+                        <th>Agriculteur</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parcelle in pagination %}
+                        <tr>
+                            <td>{{ parcelle.localisation }}</td>
+                            <td>{{ parcelle.surface }}</td>
+                            <td>{{ parcelle.typeSol }}</td>
+                            <td>{{ parcelle.systemeIrrigation }}</td>
+                            <td><span class="badge bg-info">{{ parcelle.statut }}</span></td>
+                            <td>{{ parcelle.agriculteur.nom }} {{ parcelle.agriculteur.prenom }}</td>
+                            <td>
+                                <a href="{{ path('admin_parcelle_show', {id: parcelle.id}) }}" class="btn btn-sm btn-info">Voir</a>
+                                <a href="{{ path('admin_parcelle_edit', {id: parcelle.id}) }}" class="btn btn-sm btn-warning">Éditer</a>
+                                <form method="POST" action="{{ path('admin_parcelle_delete', {id: parcelle.id}) }}" style="display:inline;">
+                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Confirmer suppression?')">Supp</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="text-center text-muted">Aucune parcelle</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        <nav aria-label="Pagination">
+            <ul class="pagination justify-content-center">
+                {% if pagination.hasPreviousPage %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {page: pagination.previousPage}) }}">Précédent</a>
+                    </li>
+                {% endif %}
+
+                {% for i in 1..pagination.lastPage %}
+                    <li class="page-item {% if i == pagination.currentPage %}active{% endif %}">
+                        <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {page: i}) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if pagination.hasNextPage %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {page: pagination.nextPage}) }}">Suivant</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}
