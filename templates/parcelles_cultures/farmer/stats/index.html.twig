@@ -1,0 +1,266 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Statistiques Agricoles - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+    .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+    
+    .stat-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; text-align: center; position: relative; overflow: hidden; height: 100%; transition: transform 0.3s ease; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .stat-card.parcelles::before { background: #116530; }
+    .stat-card.cultures::before { background: #38a169; }
+    .stat-card.surface::before { background: #4299e1; }
+    .stat-card.production::before { background: #f59e0b; }
+    
+    .stat-icon { width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 15px; }
+    .stat-icon.parcelles { background: #e8f5e9; color: #116530; }
+    .stat-icon.cultures { background: #f0faf4; color: #38a169; }
+    .stat-icon.surface { background: #ebf8ff; color: #4299e1; }
+    .stat-icon.production { background: #fff8e1; color: #f59e0b; }
+    
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-value { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+    .stat-value.parcelles { color: #116530; }
+    .stat-value.cultures { color: #38a169; }
+    .stat-value.surface { color: #4299e1; }
+    .stat-value.production { color: #f59e0b; }
+    .stat-unit { font-size: 1rem; font-weight: 500; color: #aaa; }
+
+    .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; }
+    .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+    
+    .chart-container { position: relative; height: 350px; width: 100%; }
+
+    .analysis-table-container { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #f0f0f0; }
+    .analysis-table { width: 100%; margin-bottom: 0; }
+    .analysis-table thead th { background: #f8faf7; color: #116530; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; padding: 15px 20px; border-bottom: 2px solid #f0f0f0; }
+    .analysis-table tbody td { padding: 15px 20px; vertical-align: middle; border-top: 1px solid #f5f5f5; font-size: 0.9rem; }
+    .analysis-table tbody tr:hover { background-color: #fcfdfe; }
+    
+    .culture-tag { display: inline-block; padding: 4px 12px; border-radius: 50px; background: #e8f5e9; color: #116530; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-right: 5px; margin-bottom: 5px; }
+
+    .btn-details { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: #f0f7ee; color: #116530; transition: all 0.3s; text-decoration: none; }
+    .btn-details:hover { background: #116530; color: white; transform: rotate(15deg); }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">Mes Statistiques Agricoles</h1>
+                <p class="text-muted lead mt-2">Vue d'ensemble de votre productivité et de vos cultures par parcelle.</p>
+            </div>
+
+            {# === KPI Cards === #}
+            <div class="row g-4 mb-5">
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="0">
+                    <div class="stat-card parcelles">
+                        <div class="stat-icon parcelles"><i class="bi bi-geo-alt-fill"></i></div>
+                        <div class="stat-label">Parcelles</div>
+                        <div class="stat-value parcelles">{{ kpi.parcelles }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-card cultures">
+                        <div class="stat-icon cultures"><i class="bi bi-flower1"></i></div>
+                        <div class="stat-label">Cultures Actives</div>
+                        <div class="stat-value cultures">{{ kpi.cultures }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-card surface">
+                        <div class="stat-icon surface"><i class="bi bi-aspect-ratio-fill"></i></div>
+                        <div class="stat-label">Surface Totale</div>
+                        <div class="stat-value surface">{{ kpi.surface }} <span class="stat-unit">ha</span></div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-card production">
+                        <div class="stat-icon production"><i class="bi bi-bar-chart-fill"></i></div>
+                        <div class="stat-label">Production Est.</div>
+                        <div class="stat-value production">{{ kpi.production|number_format(0, '.', ' ') }} <span class="stat-unit">kg</span></div>
+                    </div>
+                </div>
+            </div>
+
+            {# === Charts Row === #}
+            <div class="row g-4 mb-5">
+                {# Chart 1: Production par Parcelle #}
+                <div class="col-lg-7" data-aos="fade-right">
+                    <div class="premium-card h-100">
+                        <span class="card-label"><i class="bi bi-bar-chart-line-fill"></i> Production par Parcelle (kg)</span>
+                        {% if chartParcelles.labels|length > 0 %}
+                            <div class="chart-container">
+                                <canvas id="chartParcelles"></canvas>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-bar-chart" style="font-size: 4rem; opacity: 0.2;"></i>
+                                <p class="mt-3">Aucune donnée disponible</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Chart 2: Répartition par Type Culture #}
+                <div class="col-lg-5" data-aos="fade-left">
+                    <div class="premium-card h-100">
+                        <span class="card-label"><i class="bi bi-pie-chart-fill"></i> Répartition des Cultures</span>
+                        {% if chartTypes.labels|length > 0 %}
+                            <div class="chart-container">
+                                <canvas id="chartTypes"></canvas>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-pie-chart" style="font-size: 4rem; opacity: 0.2;"></i>
+                                <p class="mt-3">Aucune culture enregistrée</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# === Detailed Table === #}
+            <div class="premium-card" data-aos="fade-up">
+                <span class="card-label"><i class="bi bi-table"></i> Détails de Production par Parcelle</span>
+                <div class="analysis-table-container">
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Localisation</th>
+                                <th>Surface</th>
+                                <th>Cultures Associées</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for parcelle in parcelles %}
+                                <tr>
+                                    <td class="fw-bold">#{{ parcelle.id }}</td>
+                                    <td>{{ parcelle.localisation }}</td>
+                                    <td>{{ parcelle.surface }} ha</td>
+                                    <td>
+                                        {% if parcelle.cultures|length > 0 %}
+                                            {% for culture in parcelle.cultures %}
+                                                <span class="culture-tag">{{ culture.typeCulture }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted small">Aucune culture</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-details" title="Voir détails">
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Colors
+    const COLORS = ['#116530', '#38a169', '#4299e1', '#f59e0b', '#9f7aea', '#fc8181', '#63b3ed', '#48bb78'];
+
+    // ── Chart 1 : Bar Chart (Production par Parcelle) ───────────────────────
+    const ctxP = document.getElementById('chartParcelles');
+    if (ctxP) {
+        new Chart(ctxP, {
+            type: 'bar',
+            data: {
+                labels: {{ chartParcelles.labels|json_encode|raw }},
+                datasets: [{
+                    label: 'Production Totale (kg)',
+                    data: {{ chartParcelles.production|json_encode|raw }},
+                    backgroundColor: 'rgba(17, 101, 48, 0.8)',
+                    borderColor: '#116530',
+                    borderWidth: 2,
+                    borderRadius: 10,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` Production: ${ctx.parsed.y.toLocaleString()} kg`
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { weight: '600' } } },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { callback: (v) => v.toLocaleString() + ' kg', font: { weight: '600' } }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Chart 2 : Donut (Types de Culture) ──────────────────────────────────
+    const ctxT = document.getElementById('chartTypes');
+    if (ctxT) {
+        new Chart(ctxT, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chartTypes.labels|json_encode|raw }},
+                datasets: [{
+                    data: {{ chartTypes.production|json_encode|raw }},
+                    backgroundColor: COLORS,
+                    borderWidth: 5,
+                    borderColor: '#ffffff',
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { size: 12, weight: '600' },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toLocaleString()} kg`
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

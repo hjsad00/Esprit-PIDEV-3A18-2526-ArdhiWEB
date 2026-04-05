@@ -44,8 +44,18 @@ class CultureFarmerController extends AbstractController
 
         $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
 
+        // Quick Stats for the header
+        $stats = $this->cultureRepository->createQueryBuilder('c')
+            ->join('c.parcelle', 'p')
+            ->select('COUNT(c.id) as count, SUM(c.surface_utilisee) as surface, SUM(c.production_estimee) as production')
+            ->where('p.agriculteur = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleResult();
+
         return $this->render('parcelles_cultures/farmer/cultures/index.html.twig', [
             'cultures' => $cultures,
+            'summary' => $stats,
         ]);
     }
 

@@ -38,6 +38,21 @@
               Suivi complet de vos parcelles, calcul d'irrigation, analyse financière 
               et gestion du crédit agricole pour une productivité maximale.
             </p>
+            <div class="d-flex gap-4 mb-5" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <div class="text-white">
+                    <div class="fs-4 fw-bold text-success">{{ stats.parcelles|default(0) }}</div>
+                    <div class="text-uppercase small opacity-50" style="letter-spacing: 1px;">Parcelles</div>
+                </div>
+                <div class="text-white">
+                    <div class="fs-4 fw-bold text-success">{{ stats.surface|default(0)|round(1) }} ha</div>
+                    <div class="text-uppercase small opacity-50" style="letter-spacing: 1px;">Surface</div>
+                </div>
+                <div class="text-white">
+                    <div class="fs-4 fw-bold text-success">{{ stats.cultures|default(0) }}</div>
+                    <div class="text-uppercase small opacity-50" style="letter-spacing: 1px;">Cultures</div>
+                </div>
+            </div>
+
             <a href="{{ path('farmer_parcelle_index') }}" class="hero-btn-primary">
               Commencer
             </a>
@@ -61,6 +76,14 @@
                 <div class="category-text">
                   <h4>Mes Cultures</h4>
                   <span>Suivi des cultures</span>
+                </div>
+              </a>
+
+              <a href="{{ path('farmer_stats_index') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-pie-chart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Statistiques</h4>
+                  <span>Analyse & Evolution</span>
                 </div>
               </a>
 

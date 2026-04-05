@@ -15,21 +15,42 @@
             font-size: 2.2rem;
             margin: 0;
         }
-        .btn-add {
+        .btn-premium-add {
             background: #116530;
             color: white;
-            border-radius: 50px;
-            padding: 10px 25px;
-            font-weight: 600;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 700;
             border: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(17, 101, 48, 0.2);
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(17,101,48,0.15);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
         }
-        .btn-add:hover {
+        .btn-premium-add:hover {
             background: #1e8341;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(17, 101, 48, 0.3);
+            box-shadow: 0 8px 20px rgba(17,101,48,0.25);
+        }
+        .btn-premium-outline {
+            background: white;
+            color: #116530;
+            border: 2px solid #116530;
+            border-radius: 12px;
+            padding: 8px 22px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-premium-outline:hover {
+            background: #f0f7ee;
+            color: #116530;
+            border-color: #116530;
+            transform: translateY(-2px);
         }
         .culture-card {
             background: white;
@@ -139,9 +160,36 @@
                     <h1 class="page-title">Mes Cultures</h1>
                     <p class="text-muted mb-0">Suivez l'évolution et les rendements de vos plantations.</p>
                 </div>
-                <a href="{{ path('farmer_culture_new') }}" class="btn btn-add">
-                    <i class="bi bi-plus-lg me-2"></i> Nouvelle Culture
-                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ path('farmer_stats_index') }}" class="btn btn-premium-outline">
+                        <i class="bi bi-graph-up me-2"></i> Statistiques
+                    </a>
+                    <a href="{{ path('farmer_culture_new') }}" class="btn btn-premium-add">
+                        <i class="bi bi-plus-lg me-2"></i> Nouvelle Culture
+                    </a>
+                </div>
+            </div>
+
+            {# === Summary Stats Section === #}
+            <div class="row g-4 mb-5" data-aos="fade-up">
+                <div class="col-6 col-md-4">
+                    <div class="culture-card p-4 text-center border-0" style="background: linear-gradient(135deg, #f8faf7, #ffffff);">
+                        <div class="text-success fs-2 mb-1 fw-black">{{ summary.count|default(0) }}</div>
+                        <div class="text-muted text-uppercase small fw-bold">Cultures Total</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="culture-card p-4 text-center border-0" style="background: linear-gradient(135deg, #f8faf7, #ffffff);">
+                        <div class="text-success fs-2 mb-1 fw-black">{{ summary.surface|default(0)|round(1) }} ha</div>
+                        <div class="text-muted text-uppercase small fw-bold">Surface Occupée</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="culture-card p-4 text-center border-0" style="background: linear-gradient(135deg, #116530, #1e8341); color: white;">
+                        <div class="fs-2 mb-1 fw-black">{{ summary.production|default(0)|round(0)|number_format(0, '.', ' ') }} kg</div>
+                        <div class="opacity-75 text-uppercase small fw-bold">Production Totale Est.</div>
+                    </div>
+                </div>
             </div>
 
             {% if cultures.getTotalItemCount > 0 %}
@@ -214,7 +262,7 @@
                     <i class="bi bi-flower1 text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
                     <h3 class="mt-3">Aucune culture trouvée</h3>
                     <p class="text-muted">Commencez par planifier votre première culture sur l'une de vos parcelles.</p>
-                    <a href="{{ path('farmer_culture_new') }}" class="btn btn-add mt-2">Planifier une culture</a>
+                    <a href="{{ path('farmer_culture_new') }}" class="btn btn-premium-add mt-2">Planifier une culture</a>
                 </div>
             {% endif %}
         </div>

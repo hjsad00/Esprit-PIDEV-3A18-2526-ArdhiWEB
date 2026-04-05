@@ -1,94 +1,306 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Statistiques - Administration Agriculture{% endblock %}
+{% block title %}Statistiques Agricoles - Administration Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+    .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+    .admin-badge { background: rgba(17,101,48,0.1); color: #116530; font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; vertical-align: middle; margin-left: 10px; }
+
+    /* KPI cards */
+    .stat-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; text-align: center; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .stat-card.parcelles::before { background: #116530; }
+    .stat-card.cultures::before { background: #38a169; }
+    .stat-card.surface::before { background: #4299e1; }
+    .stat-card.production::before { background: #f59e0b; }
+    .stat-icon { width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 15px; }
+    .stat-icon.parcelles { background: #e8f5e9; color: #116530; }
+    .stat-icon.cultures { background: #f0faf4; color: #38a169; }
+    .stat-icon.surface { background: #ebf8ff; color: #4299e1; }
+    .stat-icon.production { background: #fff8e1; color: #f59e0b; }
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-value { font-size: 2.8rem; font-weight: 900; line-height: 1; }
+    .stat-value.parcelles { color: #116530; }
+    .stat-value.cultures { color: #38a169; }
+    .stat-value.surface { color: #4299e1; }
+    .stat-value.production { color: #f59e0b; }
+    .stat-unit { font-size: 1rem; font-weight: 500; color: #aaa; }
+
+    /* Chart & premium cards */
+    .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; }
+    .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .chart-wrapper { position: relative; height: 300px; }
+
+    /* Farmer list */
+    .farmer-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #f0f0f0; }
+    .farmer-row:last-child { border-bottom: none; }
+    .farmer-avatar { width: 42px; height: 42px; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; color: #116530; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+    .farmer-info { flex: 1; margin-left: 15px; }
+    .farmer-email { font-weight: 600; color: #2d3436; font-size: 0.95rem; }
+    .farmer-meta { font-size: 0.78rem; color: #888; }
+    .farmer-id { font-size: 0.8rem; font-weight: 700; color: #116530; background: #e8f5e9; padding: 4px 12px; border-radius: 50px; }
+</style>
+{% endblock %}
 
 {% block body %}
 {% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-5 px-lg-5">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3 col-xl-2">
             {% include 'parcelles_cultures/components/sidebar.html.twig' %}
         </div>
-        <div class="col-md-10">
-            <h1 class="mb-4"><i class="fas fa-chart-bar"></i> Tableaux de bord - Statistiques Agricoles</h1>
 
-            {# Stats Cards #}
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card text-center border-primary">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary">
-                                <i class="fas fa-th-large fa-2x"></i>
-                            </h5>
-                            <p class="card-text text-muted">Parcelles Total</p>
-                            <h3 class="text-primary fw-bold">{{ stats.total_parcelles }}</h3>
-                        </div>
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">
+                    Statistiques Agricoles
+                    <span class="admin-badge">Administration</span>
+                </h1>
+                <p class="text-muted lead mt-2">Tableau de bord global de la production et des exploitations.</p>
+            </div>
+
+            {# === KPI Cards === #}
+            <div class="row g-4 mb-5">
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="50">
+                    <div class="stat-card parcelles">
+                        <div class="stat-icon parcelles"><i class="bi bi-map-fill"></i></div>
+                        <div class="stat-label">Parcelles Total</div>
+                        <div class="stat-value parcelles">{{ stats.total_parcelles }}</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center border-success">
-                        <div class="card-body">
-                            <h5 class="card-title text-success">
-                                <i class="fas fa-leaf fa-2x"></i>
-                            </h5>
-                            <p class="card-text text-muted">Cultures Total</p>
-                            <h3 class="text-success fw-bold">{{ stats.total_cultures }}</h3>
-                        </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-card cultures">
+                        <div class="stat-icon cultures"><i class="bi bi-flower1"></i></div>
+                        <div class="stat-label">Cultures Total</div>
+                        <div class="stat-value cultures">{{ stats.total_cultures }}</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center border-info">
-                        <div class="card-body">
-                            <h5 class="card-title text-info">
-                                <i class="fas fa-ruler-horizontal fa-2x"></i>
-                            </h5>
-                            <p class="card-text text-muted">Surface Totale</p>
-                            <h3 class="text-info fw-bold">{{ stats.surface_totale|default(0)|round(2) }} ha</h3>
-                        </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="150">
+                    <div class="stat-card surface">
+                        <div class="stat-icon surface"><i class="bi bi-aspect-ratio-fill"></i></div>
+                        <div class="stat-label">Surface Totale</div>
+                        <div class="stat-value surface">{{ stats.surface_totale|default(0)|round(1) }} <span class="stat-unit">ha</span></div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center border-warning">
-                        <div class="card-body">
-                            <h5 class="card-title text-warning">
-                                <i class="fas fa-chart-line fa-2x"></i>
-                            </h5>
-                            <p class="card-text text-muted">Production Est.</p>
-                            <h3 class="text-warning fw-bold">{{ stats.production_estimee|default(0)|round(2) }}</h3>
-                        </div>
+                <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-card production">
+                        <div class="stat-icon production"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="stat-label">Production Est.</div>
+                        <div class="stat-value production">{{ stats.production_estimee|default(0)|round(0)|number_format(0, '.', ' ') }} <span class="stat-unit">kg</span></div>
                     </div>
                 </div>
             </div>
 
-            <hr>
+            {# === Charts Row === #}
+            <div class="row g-4 mb-5">
+                {# Chart 1 : Répartition des cultures (Donut) #}
+                <div class="col-lg-5" data-aos="fade-right" data-aos-delay="100">
+                    <div class="premium-card h-100">
+                        <span class="card-label"><i class="bi bi-pie-chart-fill"></i> Répartition des Cultures</span>
+                        {% if chartTypes.labels|length > 0 %}
+                            <div class="chart-wrapper">
+                                <canvas id="chartTypes"></canvas>
+                            </div>
+                            <p class="text-muted small text-center mt-3 mb-0">
+                                Distribution par type parmi {{ stats.total_cultures }} cultures enregistrées.
+                            </p>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-pie-chart" style="font-size:3rem; color:#cce8d8;"></i>
+                                <p class="mt-3">Aucune culture enregistrée.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
 
-            {# Agriculteurs List #}
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="card-title mb-0"><i class="fas fa-users"></i> Agriculteurs Enregistrés</h5>
+                {# Chart 2 : Production & Rendement (Bar) #}
+                <div class="col-lg-7" data-aos="fade-left" data-aos-delay="150">
+                    <div class="premium-card h-100">
+                        <span class="card-label"><i class="bi bi-bar-chart-steps"></i> Production & Rendement par Culture</span>
+                        {% if chartProduction.labels|length > 0 %}
+                            <div class="chart-wrapper">
+                                <canvas id="chartProduction"></canvas>
+                            </div>
+                            <p class="text-muted small text-center mt-3 mb-0">
+                                Production totale (kg) et rendement moyen (kg/ha) par type de culture.
+                            </p>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-bar-chart" style="font-size:3rem; color:#cce8d8;"></i>
+                                <p class="mt-3">Aucune donnée de production disponible.</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if agriculteurs|length > 0 %}
-                        <div class="list-group">
-                            {% for agriculteur in agriculteurs %}
-                                <div class="list-group-item">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ agriculteur.email }}</h6>
-                                        <small class="text-muted">ID: {{ agriculteur.id }}</small>
-                                    </div>
-                                    <p class="mb-1 text-muted">
-                                        ID: {{ agriculteur.id }} | Role: {{ agriculteur.role }}
-                                    </p>
-                                </div>
-                            {% endfor %}
+            </div>
+
+            {# === Agriculteurs List === #}
+            <div class="premium-card" data-aos="fade-up" data-aos-delay="250">
+                <span class="card-label"><i class="bi bi-people-fill"></i> Agriculteurs Enregistrés</span>
+
+                {% if agriculteurs|length > 0 %}
+                    {% for agriculteur in agriculteurs %}
+                        <div class="farmer-row">
+                            <div class="farmer-avatar">{{ agriculteur.email|slice(0,1)|upper }}</div>
+                            <div class="farmer-info">
+                                <div class="farmer-email">{{ agriculteur.email }}</div>
+                                <div class="farmer-meta">Rôle : {{ agriculteur.role }}</div>
+                            </div>
+                            <span class="farmer-id">ID #{{ agriculteur.id }}</span>
                         </div>
-                    {% else %}
-                        <div class="alert alert-info">Aucun agriculteur enregistré</div>
-                    {% endif %}
-                </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-person-x" style="font-size: 2rem; color: #cce8d8;"></i>
+                        <p class="text-muted mt-2">Aucun agriculteur enregistré pour le moment.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const GREEN_PALETTE = [
+        '#116530','#1e8341','#38a169','#48bb78','#68d391',
+        '#4299e1','#f59e0b','#9f7aea','#fc8181','#63b3ed'
+    ];
+
+    // ── Chart 1 : Donut – Répartition des types de culture ──────────────────
+    const ctxTypes = document.getElementById('chartTypes');
+    if (ctxTypes) {
+        const labelsTypes = {{ chartTypes.labels|json_encode|raw }};
+        const countsTypes = {{ chartTypes.counts|json_encode|raw }};
+
+        new Chart(ctxTypes, {
+            type: 'doughnut',
+            data: {
+                labels: labelsTypes,
+                datasets: [{
+                    data: countsTypes,
+                    backgroundColor: GREEN_PALETTE.slice(0, labelsTypes.length),
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 16,
+                            font: { size: 13, weight: '600' },
+                            usePointStyle: true,
+                            pointStyleWidth: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.label} : ${ctx.parsed} culture(s)`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Chart 2 : Barres – Production & Rendement par culture ───────────────
+    const ctxProd = document.getElementById('chartProduction');
+    if (ctxProd) {
+        const labelsProd    = {{ chartProduction.labels|json_encode|raw }};
+        const productions   = {{ chartProduction.production|json_encode|raw }};
+        const rendements    = {{ chartProduction.rendement|json_encode|raw }};
+
+        new Chart(ctxProd, {
+            type: 'bar',
+            data: {
+                labels: labelsProd,
+                datasets: [
+                    {
+                        label: 'Production totale (kg)',
+                        data: productions,
+                        backgroundColor: 'rgba(17, 101, 48, 0.8)',
+                        borderColor: '#116530',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        yAxisID: 'yProd'
+                    },
+                    {
+                        label: 'Rendement moyen (kg/ha)',
+                        data: rendements,
+                        type: 'line',
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#f59e0b',
+                        pointRadius: 6,
+                        tension: 0.4,
+                        yAxisID: 'yRend'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 16,
+                            font: { size: 13, weight: '600' },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                if (ctx.datasetIndex === 0) return ` Production : ${ctx.parsed.y.toLocaleString()} kg`;
+                                return ` Rendement : ${ctx.parsed.y} kg/ha`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { weight: '600' } }
+                    },
+                    yProd: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: {
+                            callback: v => v.toLocaleString() + ' kg',
+                            color: '#116530',
+                            font: { weight: '600' }
+                        }
+                    },
+                    yRend: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: v => v + ' kg/ha',
+                            color: '#f59e0b',
+                            font: { weight: '600' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

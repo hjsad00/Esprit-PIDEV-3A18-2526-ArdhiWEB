@@ -12,8 +12,27 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class DashboardController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): Response
+    public function index(
+        \App\Repository\Parcelles_Cultures\ParcelleRepository $parcelleRepo,
+        \App\Repository\Parcelles_Cultures\CultureRepository $cultureRepo
+    ): Response
     {
-        return $this->render('parcelles_cultures/farmer/dashboard.html.twig');
+        $user = $this->getUser();
+        $stats = [
+            'parcelles' => $parcelleRepo->count(['agriculteur' => $user]),
+            'surface'   => $parcelleRepo->createQueryBuilder('p')
+                ->select('SUM(p.surface)')
+                ->where('p.agriculteur = :u')->setParameter('u', $user)
+                ->getQuery()->getSingleScalarResult(),
+            'cultures'  => $cultureRepo->createQueryBuilder('c')
+                ->join('c.parcelle', 'p')
+                ->select('COUNT(c.id)')
+                ->where('p.agriculteur = :u')->setParameter('u', $user)
+                ->getQuery()->getSingleScalarResult(),
+        ];
+
+        return $this->render('parcelles_cultures/farmer/dashboard.html.twig', [
+            'stats' => $stats
+        ]);
     }
 }

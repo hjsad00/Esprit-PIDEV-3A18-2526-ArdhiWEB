@@ -45,9 +45,38 @@ class StatsController extends AbstractController
                 ->getSingleScalarResult(),
         ];
 
+        // Chart 1: Distribution des types de culture (donut)
+        $typesRaw = $this->cultureRepository->createQueryBuilder('c')
+            ->select('c.type_culture as type, COUNT(c.id) as count')
+            ->groupBy('c.type_culture')
+            ->orderBy('count', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        // Chart 2: Production totale + rendement moyen par type (bar)
+        $productionRaw = $this->cultureRepository->createQueryBuilder('c')
+            ->select('c.type_culture as type, SUM(c.production_estimee) as total, AVG(c.rendement_estime) as avgRendement')
+            ->groupBy('c.type_culture')
+            ->orderBy('total', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $chartTypes = [
+            'labels' => array_map(fn($r) => ucfirst($r['type']), $typesRaw),
+            'counts' => array_map(fn($r) => (int)$r['count'], $typesRaw),
+        ];
+
+        $chartProduction = [
+            'labels'     => array_map(fn($r) => ucfirst($r['type']), $productionRaw),
+            'production' => array_map(fn($r) => round((float)$r['total'], 0), $productionRaw),
+            'rendement'  => array_map(fn($r) => round((float)$r['avgRendement'], 1), $productionRaw),
+        ];
+
         return $this->render('parcelles_cultures/admin/stats/index.html.twig', [
-            'stats' => $stats,
-            'agriculteurs' => $agriculteurs,
+            'stats'           => $stats,
+            'agriculteurs'    => $agriculteurs,
+            'chartTypes'      => $chartTypes,
+            'chartProduction' => $chartProduction,
         ]);
     }
 }
