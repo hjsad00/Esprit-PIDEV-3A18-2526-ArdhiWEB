@@ -27,6 +27,11 @@
                             <div class="mb-3">
                                 {{ form_label(form.date) }}
                                 {{ form_widget(form.date, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
+                                {% if form.date.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.date) }}
+                                    </div>
+                                {% endif %}
                             </div>
 
                             <div class="mb-3">
@@ -35,16 +40,20 @@
                                     <div class="col-md-6">
                                         {{ form_label(form.temperature_min) }}
                                         {{ form_widget(form.temperature_min, {'attr': {'class': 'form-control'}}) }}
+                                        {% if form.temperature_min.vars.errors|length > 0 %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form_errors(form.temperature_min) }}
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                    <div class="col-md-6">
-                                        {{ form_label(form.temperature_moyenne) }}
-                                        {{ form_widget(form.temperature_moyenne, {'attr': {'class': 'form-control'}}) }}
-                                    </div>
-                                </div>
-                                <div class="row mt-2">
                                     <div class="col-md-6">
                                         {{ form_label(form.temperature_max) }}
                                         {{ form_widget(form.temperature_max, {'attr': {'class': 'form-control'}}) }}
+                                        {% if form.temperature_max.vars.errors|length > 0 %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form_errors(form.temperature_max) }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -52,18 +61,27 @@
                             <div class="mb-3">
                                 {{ form_label(form.precipitations) }}
                                 {{ form_widget(form.precipitations, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.precipitations.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.precipitations) }}</div>
+                                {% endif %}
                                 <small class="text-muted">En mm</small>
                             </div>
 
                             <div class="mb-3">
                                 {{ form_label(form.humidite) }}
                                 {{ form_widget(form.humidite, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.humidite.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.humidite) }}</div>
+                                {% endif %}
                                 <small class="text-muted">Humidité du sol (0-100%)</small>
                             </div>
 
                             <div class="mb-3">
                                 {{ form_label(form.kc) }}
                                 {{ form_widget(form.kc, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.kc.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.kc) }}</div>
+                                {% endif %}
                                 <small class="text-muted">Coefficient cultural (ex: 0.3-1.2)</small>
                             </div>
 
@@ -76,13 +94,19 @@
                     </div>
                 </div>
 
-                {% if calculation_result is defined %}
+                {% if calculation_result %}
                     <div class="col-md-6">
                         <div class="card border-success">
                             <div class="card-header bg-success text-white">
                                 <h5 class="card-title mb-0">Résultats du Calcul</h5>
                             </div>
                             <div class="card-body">
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <h6>Température Moyenne Calculée</h6>
+                                    <h4 class="text-info">{{ calculation_result.temp|round(2) }} °C</h4>
+                                    <small class="text-muted">(Min + Max) / 2</small>
+                                </div>
+
                                 <div class="mb-3 p-3 bg-light rounded">
                                     <h6>ET0 (Evapotranspiration)</h6>
                                     <h4 class="text-primary">{{ calculation_result.et0|round(3) }} mm/jour</h4>

@@ -20,20 +20,14 @@ class IrrigationFormType extends AbstractType
                 'required' => true,
                 'format' => 'yyyy-MM-dd'
             ])
-            ->add('temperature_moyenne', NumberType::class, [
-                'label' => 'Température moyenne (°C)',
+            ->add('temperature_min', NumberType::class, [
+                'label' => 'Température min (°C)',
                 'scale' => 2,
                 'required' => true,
                 'attr' => ['step' => 0.01]
             ])
             ->add('temperature_max', NumberType::class, [
                 'label' => 'Température max (°C)',
-                'scale' => 2,
-                'required' => true,
-                'attr' => ['step' => 0.01]
-            ])
-            ->add('temperature_min', NumberType::class, [
-                'label' => 'Température min (°C)',
                 'scale' => 2,
                 'required' => true,
                 'attr' => ['step' => 0.01]

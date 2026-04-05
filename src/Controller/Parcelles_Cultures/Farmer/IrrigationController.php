@@ -39,7 +39,11 @@ class IrrigationController extends AbstractController
         $result = null;
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $et0 = 0.0023 * ($dto->temperature_moyenne + 17.8) * sqrt($dto->temperature_max - $dto->temperature_min);
+            $min = (float)$dto->temperature_min;
+            $max = (float)$dto->temperature_max;
+            $dto->temperature_moyenne = ($min + $max) / 2;
+            
+            $et0 = 0.0023 * ($dto->temperature_moyenne + 17.8) * sqrt($max - $min);
             $besoinBrut = $dto->kc * $et0;
             $besoinNet = max(0, $besoinBrut - $dto->precipitations);
             

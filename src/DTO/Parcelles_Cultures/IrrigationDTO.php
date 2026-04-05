@@ -10,17 +10,25 @@ class IrrigationDTO
     #[Assert\Type(\DateTimeInterface::class)]
     public ?\DateTimeInterface $date = null;
 
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'La température min est obligatoire')]
     #[Assert\Type('numeric')]
-    public ?string $temperature_moyenne = null;
+    public ?string $temperature_min = null;
 
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'La température max est obligatoire')]
     #[Assert\Type('numeric')]
     public ?string $temperature_max = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Type('numeric')]
-    public ?string $temperature_min = null;
+    public ?string $temperature_moyenne = null;
+
+    #[Assert\Callback]
+    public function validateTemperatures(\Symfony\Component\Validator\Context\ExecutionContextInterface $context): void
+    {
+        if ($this->temperature_min !== null && $this->temperature_max !== null && $this->temperature_min >= $this->temperature_max) {
+            $context->buildViolation('La température minimale doit être inférieure à la température maximale.')
+                ->atPath('temperature_min')
+                ->addViolation();
+        }
+    }
 
     #[Assert\NotBlank]
     #[Assert\GreaterThanOrEqual(0)]
