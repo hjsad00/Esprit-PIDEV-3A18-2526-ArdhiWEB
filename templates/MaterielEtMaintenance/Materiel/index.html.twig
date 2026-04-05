@@ -5,7 +5,7 @@
 {% block body_class %}materiel-theme{% endblock %}
 
 {% block stylesheets %}
-    <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/materiel/materiel.css') }}?v={{ random() }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
@@ -90,21 +90,48 @@
                                 <i class="bi bi-tag" style="color: var(--mat-primary);"></i>
                                 Type: <strong class="fs-5">{{ m.type ?: 'Non spécifié' }}</strong>
                             </li>
-                            <li class="mt-2">
-                                <i class="bi bi-clock-history" style="color: var(--mat-primary);"></i>
-                                Prochain Entretien: 
+                            <li class="d-block border-0 pt-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-clock-history me-2" style="color: var(--mat-primary);"></i>
+                                    <span class="text-muted fw-bold">Prochain Entretien</span>
+                                </div>
                                 {% set mProchaine = m.dateProchaineMaintenance %}
-                                {% if mProchaine %}
+                                
+                                {# Vérifier si une maintenance est déjà existante (active) pour ce matériel #}
+                                {% set maintenanceActive = null %}
+                                {% for maint in m.maintenances %}
+                                    {% if maint.statutMaintenance in ['planifiee', 'en_attente', 'en_cours', 'verifie'] and not maintenanceActive %}
+                                        {% set maintenanceActive = maint %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if maintenanceActive %}
+                                    <div class="d-flex justify-content-between align-items-center bg-light p-2 border rounded mb-2 w-100">
+                                        <div class="d-flex flex-column">
+                                            <span class="badge bg-primary mb-1 align-self-start" style="font-size: 0.7rem;">PLANIFIÉE LE</span>
+                                            <strong class="fs-6 text-dark">{{ maintenanceActive.dateMaintenance|date('d/m/Y') }}</strong>
+                                        </div>
+                                        <a href="https://calendar.google.com/calendar/r/day/{{ maintenanceActive.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-decoration-none" style="color: #4285F4; font-weight: 600;" title="Voir l'agenda">
+                                            <i class="bi bi-google"></i> Agenda
+                                        </a>
+                                    </div>
+                                {% elseif mProchaine %}
                                     {% set today = date('today') %}
                                     {% set dateProchaine = date(mProchaine|date('Y-m-d')) %}
                                     {% set nowDiff = dateProchaine.diff(today) %}
                                     {% set isEnRetard = dateProchaine < today %}
                                     
-                                    <strong class="fs-6 d-block">{{ mProchaine|date('d/m/Y') }}</strong>
+                                    <div class="d-flex justify-content-between align-items-center bg-light p-2 border rounded mb-2 w-100">
+                                        <strong class="fs-6 text-dark">{{ mProchaine|date('d/m/Y') }}</strong>
+                                        <a href="https://calendar.google.com/calendar/r/day/{{ mProchaine|date('Y/m/d') }}" target="_blank" class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-decoration-none" style="color: #4285F4; font-weight: 600;" title="Voir l'agenda à cette date">
+                                            <i class="bi bi-google"></i> Agenda
+                                        </a>
+                                    </div>
+                                    
                                     {% if isEnRetard %}
-                                        <div class="mt-1"><span class="badge bg-danger shadow-sm py-2 px-3 w-100 text-start"><i class="bi bi-exclamation-triangle-fill"></i> EN RETARD DE {{ nowDiff.days }} JOUR(S) !</span></div>
+                                        <div class="badge bg-danger shadow-sm py-2 px-0 w-100 text-center" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle-fill"></i> EN RETARD DE {{ nowDiff.days }} JOUR(S) !</div>
                                     {% else %}
-                                        <div class="mt-1"><span class="badge bg-success shadow-sm py-1 px-3" style="background:#27ae60 !important;"><i class="bi bi-calendar-check"></i> {{ nowDiff.days }} jour(s) restant(s) pour planifier</span></div>
+                                        <div class="badge bg-success shadow-sm py-2 px-0 w-100 text-center" style="background:#27ae60 !important; font-size: 0.8rem;"><i class="bi bi-calendar-check"></i> {{ nowDiff.days }} jour(s) restant(s)</div>
                                     {% endif %}
                                 {% else %}
                                     <strong class="fs-6 d-block text-muted">Non définie</strong>

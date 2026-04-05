@@ -143,12 +143,12 @@
                             {{ m.description ?: 'Aucun détail fourni.' }}
                         </p>
                         
-                        <div class="mat-card-footer mt-auto" style="display:flex; gap: 8px;">
+                        <div class="mat-card-footer mt-auto" style="display:flex; gap: 10px; align-items: center;">
                             {% if m.googleCalendarEventId or m.dateMaintenance %}
-                                <a href="https://calendar.google.com/calendar/r/day/{{ m.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn-mat-outline me-auto" style="border-color: #4285F4; color: #4285F4; padding: 10px 14px;" title="Ouvrir Google Agenda"><i class="bi bi-google"></i></a>
+                                <a href="https://calendar.google.com/calendar/r/day/{{ m.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn-mat-outline d-flex align-items-center justify-content-center" style="border-color: #4285F4; color: #4285F4; width: 60px; padding: 10px 0;" title="Ouvrir Google Agenda"><i class="bi bi-google fs-5"></i></a>
                             {% endif %}
                             <a href="{{ path('app_maintenance_show', {'id': m.idMaintenance}) }}" class="btn-mat-action" style="flex: 1; text-align: center;">Timeline</a>
-                            <a href="{{ path('app_maintenance_edit', {'id': m.idMaintenance}) }}" class="btn-mat-outline"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ path('app_maintenance_edit', {'id': m.idMaintenance}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 60px; padding: 10px 0;"><i class="bi bi-pencil fs-5"></i></a>
                         </div>
                     </div>
                 </div>

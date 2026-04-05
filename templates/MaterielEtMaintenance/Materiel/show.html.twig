@@ -5,7 +5,7 @@
 {% block body_class %}materiel-theme{% endblock %}
 
 {% block stylesheets %}
-    <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/materiel/materiel.css') }}?v={{ random() }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
@@ -80,7 +80,10 @@
                                     <div class="d-flex flex-column align-items-end ms-3">
                                         <span class="badge {{ maint.typeMaintenance == 'urgente' ? 'bg-danger' : (maint.typeMaintenance == 'preventive' ? 'bg-info text-dark' : 'bg-secondary') }} mb-1 opacity-75 rounded-pill">{{ maint.typeMaintenance }}</span>
                                         <span class="badge border text-dark bg-light rounded-pill">{{ maint.statutMaintenance|capitalize|replace({'_': ' '}) }}</span>
-                                        <a href="{{ path('app_maintenance_show', {id: maint.idMaintenance}) }}" class="mt-2 text-decoration-none small text-primary fw-bold">Détails <i class="bi bi-arrow-right"></i></a>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <a href="https://calendar.google.com/calendar/r/day/{{ maint.dateMaintenance|date('Y/m/d') }}" target="_blank" class="text-decoration-none small fw-bold" style="color:#4285F4;"><i class="bi bi-google"></i> Agenda</a>
+                                            <a href="{{ path('app_maintenance_show', {id: maint.idMaintenance}) }}" class="text-decoration-none small text-primary fw-bold">Détails <i class="bi bi-arrow-right"></i></a>
+                                        </div>
                                     </div>
                                 </div>
                             {% endfor %}
