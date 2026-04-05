@@ -98,8 +98,12 @@
                         </ul>
                         
                         <div class="mat-card-footer">
-                            <a href="{{ path('app_materiel_show', {'id': m.id}) }}" class="btn-mat-action">Voir détails</a>
+                            <a href="{{ path('app_materiel_show', {'id': m.id}) }}" class="btn-mat-action">Détails</a>
                             <a href="{{ path('app_materiel_edit', {'id': m.id}) }}" class="btn-mat-outline"><i class="bi bi-pencil"></i></a>
+                            <form method="post" action="{{ path('app_materiel_delete', {'id': m.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ce matériel ?');" style="display:inline-block; flex: 0;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_materiel_' ~ m.id) }}">
+                                <button type="submit" class="btn-mat-outline" style="color: #dc3545; border-color: rgba(220, 53, 69, 0.3);"><i class="bi bi-trash"></i></button>
+                            </form>
                         </div>
                     </div>
                 </div>
