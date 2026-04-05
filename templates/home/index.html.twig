@@ -98,6 +98,7 @@
                 </div>
               </a>
 
+            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
             <a href="{{ path('app_employe_dashboard') }}" class="service-sidebar-item">
               <div class="service-sidebar-icon">
                 <i class="bi bi-people"></i>
@@ -107,6 +108,7 @@
                 <span>Gestion d'équipe</span>
               </div>
             </a>
+            {% endif %}
 
             </div>
           </div>
@@ -200,6 +202,7 @@
               </div>
             </div>
 
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
         <a href="{{ path('app_employe_dashboard') }}" style="text-decoration:none;color:inherit">
             <div class="service-item" style="transition:.2s;cursor:pointer" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
@@ -214,6 +217,7 @@
             </div>
           </a>
         </div>
+        {% endif %}
  
 
           </div>

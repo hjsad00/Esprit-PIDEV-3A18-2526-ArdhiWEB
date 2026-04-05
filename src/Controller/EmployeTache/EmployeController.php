@@ -5,6 +5,7 @@ namespace App\Controller\EmployeTache;
 use App\Entity\EmployeTache\Employe;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Service\EmployeTache\AgriculteurContextService;
+use App\Service\EmployeTache\AttestationMail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -232,6 +233,30 @@ class EmployeController extends AbstractController
             'supervision_mode' => $this->ctx->isSupervisionMode(),
             'nom_supervise'    => $this->ctx->getNomAgriculteurSupervise(),
         ]);
+    }
+
+    // ── Attestation Mail ──────────────────────────────────────────────
+
+    #[Route('/{id<\d+>}/attestation', name: 'employe_attestation', methods: ['GET'])]
+    public function envoyerAttestation(int $id, EmployeRepository $repo, AttestationMail $mailService): Response
+    {
+        $result = $this->checkAccess();
+        if ($result instanceof Response) return $result;
+        $idAgriculteur = $result;
+
+        $employe = $repo->find($id);
+        if (!$employe || $employe->getIdAgriculteur() !== $idAgriculteur) {
+            throw $this->createNotFoundException('Employé introuvable.');
+        }
+
+        try {
+            $mailService->envoyerAttestation($employe);
+            $this->addFlash('success', '📧 Attestation envoyée avec succès à ' . $employe->getEmail());
+        } catch (\Exception $e) {
+            $this->addFlash('danger', '❌ Erreur : ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('employe_index');
     }
 
     // ── Export PDF ────────────────────────────────────────────────────
