@@ -116,7 +116,22 @@
               </div>
               <div class="product-card-body">
                 {% if produit.categorie %}
-                  <div class="product-card-category">{{ produit.categorie }}</div>
+                  <div class="product-card-category" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ produit.categorie }}</span>
+                    {% if app.user and produit.user.id != app.user.id %}
+                        <a href="{{ path('app_marketplace_reclamations', {'produit_id': produit.id}) }}" title="Signaler ce produit" style="color: #cbd5e1; transition: color 0.2s; font-size: 12px; margin-right: 5px;">
+                            <i class="bi bi-flag-fill"></i>
+                        </a>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  {% if app.user and produit.user.id != app.user.id %}
+                      <div style="text-align: right; margin-bottom: 8px;">
+                        <a href="{{ path('app_marketplace_reclamations', {'produit_id': produit.id}) }}" title="Signaler ce produit" style="color: #cbd5e1; transition: color 0.2s; font-size: 12px; margin-right: 5px;">
+                            <i class="bi bi-flag-fill"></i>
+                        </a>
+                      </div>
+                  {% endif %}
                 {% endif %}
                 <h3 class="product-card-title">{{ produit.nom }}</h3>
                 <div class="product-card-seller">

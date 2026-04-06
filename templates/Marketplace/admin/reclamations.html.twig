@@ -3,45 +3,388 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Marketplace Admin - Sous-section</title>
+  <title>Admin Marketplace - Gestion Réclamations</title>
 
   <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+  <style>
+    .mp-admin-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #edf2f7; overflow: hidden; }
+    .mp-admin-table thead th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; padding: 1.25rem 0.8rem; border-bottom: 2px solid #edf2f7; }
+    .mp-admin-table tbody td { padding: 1.1rem 0.8rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+    
+    /* SIDEBAR FILTERS */
+    .filter-sidebar { 
+      background: white; padding: 24px; border-radius: 20px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #edf2f7; 
+      position: sticky; top: 90px; max-height: calc(100vh - 120px); 
+      overflow-y: auto; scrollbar-width: none; 
+    }
+    .filter-sidebar::-webkit-scrollbar { display: none; }
+    
+    .filter-group { margin-bottom: 18px; }
+    .filter-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
+    .filter-input { border-radius: 12px; border: 1.5px solid #f1f5f9; padding: 11px 16px; font-size: 0.85rem; width: 100%; transition: all 0.25s; background: #f8fafc; color: #1e293b; }
+    .filter-input:focus { border-color: #116530; outline: none; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.08); background: white; }
+
+    /* STAT CARD SIDEBAR */
+    .stat-sidebar { 
+      background: linear-gradient(135deg, #116530 0%, #1a8a44 100%); 
+      color: white; padding: 24px 20px; border-radius: 20px; 
+      margin-bottom: 24px; text-align: left; 
+      box-shadow: 0 12px 24px rgba(17, 101, 48, 0.2); 
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .stat-sidebar::after {
+      content: "\F2CB"; font-family: "bootstrap-icons"; position: absolute;
+      right: -10px; bottom: -10px; font-size: 5rem; opacity: 0.1;
+      transform: rotate(-15deg);
+    }
+    .stat-content { position: relative; z-index: 1; }
+    .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; opacity: 0.85; letter-spacing: 0.08em; margin-bottom: 4px; display: block; }
+    .stat-value { font-size: 2.2rem; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+    .stat-icon { background: rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; backdrop-filter: blur(4px); }
+
+    /* MINI STATS IN SIDEBAR */
+    .mini-stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #f1f5f9; font-size: 0.8rem; font-weight: 600; color: #475569; }
+    .mini-stat:last-child { border-bottom: none; }
+    .mini-stat span:last-child { color: #116530; }
+
+    /* BADGES */
+    .badge-status { padding: 0.4rem 0.8rem; border-radius: 50rem; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .status-en_attente { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+    .status-en_cours { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .status-resolue { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
+    .status-rejetee { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+
+    .btn-detail { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; font-weight: 600; transition: all 0.2s; }
+    .btn-detail:hover { background: #116530; color: white; border-color: #116530; }
+
+    /* MODALE */
+    .rec-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .rec-modal-overlay.active { display: flex; }
+    .rec-modal { background: #fff; border-radius: 20px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .rec-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid #f1f5f9; background: white; position: sticky; top: 0; z-index: 1; }
+    .rec-modal-header h3 { font-size: 18px; font-weight: 700; margin: 0; color: #1e293b; }
+    .rec-modal-close { width: 38px; height: 38px; border-radius: 50%; border: none; background: #f1f5f9; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #64748b; transition: all .2s; }
+    .rec-modal-close:hover { background: #dc2626; color: #fff; }
+    .rec-modal-body { padding: 32px; }
+
+    /* STATUS POPUP */
+    .status-popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 11000; display: none; align-items: center; justify-content: center; }
+    .status-popup { background: #fff; border-radius: 12px; padding: 16px; width: 220px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+    @keyframes popIn { from{opacity:0; transform:scale(0.8);} to{opacity:1; transform:scale(1);} }
+    .status-option { width: 100%; padding: 10px; border: none; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+    .status-option:hover { filter: brightness(0.95); }
+    .opt-attente { background: #fffbeb; color: #d97706; }
+    .opt-cours { background: #eff6ff; color: #1d4ed8; }
+    .opt-resolue { background: #ecfdf5; color: #059669; }
+    .opt-rejetee { background: #fef2f2; color: #dc2626; }
+  </style>
 </head>
 <body style="background-color: #f7f9fc;">
 
-<header style="background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 38px;">
-        <span style="font-weight: 700; font-size: 1.1rem; color: #116530; display: block;">MARKETPLACE ADMIN</span>
+<header style="background: white; padding: 0.8rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 32px;">
+        <h5 class="mb-0 fw-bold" style="color: #116530;">Gestion des Réclamations</h5>
     </div>
-    <a href="{{ path('admin_marketplace_accueil') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
-        <i class="bi bi-arrow-left me-1"></i> Retour au Dashboard
-    </a>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-outline-success btn-sm px-3 rounded-pill" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <a href="{{ path('admin_marketplace_accueil') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
 </header>
 
-<div class="container py-5 text-center">
-    <div class="py-5 bg-white rounded-5 shadow-sm border mx-auto" style="max-width: 700px;">
-        <div class="mb-4">
-            <div style="width:100px; height:100px; background:#e8f5e9; color:#116530; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:48px;">
-                <i class="bi bi-gear-wide-connected"></i>
+<div class="container-fluid py-4 px-4">
+    <div class="row g-4">
+        
+        {# ── SIDEBAR FILTRES ── #}
+        <aside class="col-lg-3">
+            <div class="stat-sidebar">
+                <div class="stat-content">
+                    <span class="stat-label">Total Réclamations</span>
+                    <span class="stat-value" id="stat-total">{{ stats.total }}</span>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-clipboard-x"></i>
+                </div>
             </div>
+
+            <div class="filter-sidebar">
+                <div class="mb-4">
+                    <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.7rem; color: #94a3b8; letter-spacing: 1px;">FILTRAGE RAPIDE</h6>
+                    <div class="filter-group">
+                        <label class="filter-label">ID / Référence</label>
+                        <input type="text" id="filter-id" class="filter-input" placeholder="Chercher par ID..." onkeyup="filterReclamations()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Statut Actuel</label>
+                        <select id="filter-status" class="filter-input" onchange="filterReclamations()">
+                            <option value="ALL">Tous les statuts</option>
+                            <option value="EN_ATTENTE">En attente</option>
+                            <option value="EN_COURS">En cours</option>
+                            <option value="RESOLUE">Résolues</option>
+                            <option value="REJETEE">Rejetées</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.7rem; color: #94a3b8; letter-spacing: 1px;">STATISTIQUES</h6>
+                    <div class="mini-stat">
+                        <span>En attente</span>
+                        <span id="stat-attente">{{ stats.en_attente }}</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span>En cours</span>
+                        <span id="stat-cours">{{ stats.en_cours }}</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span>Traitées</span>
+                        <span id="stat-resolue">{{ stats.resolue }}</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span>Rejetées</span>
+                        <span id="stat-rejetee">{{ stats.rejetee }}</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-outline-success btn-sm w-100" style="border-radius:10px;" onclick="resetFilters()">
+                    Réinitialiser les filtres
+                </button>
+            </div>
+        </aside>
+
+        {# ── MAIN CONTENT ── #}
+        <main class="col-lg-9">
+            <div class="mp-admin-card">
+                <div class="table-responsive">
+                    <table class="table mp-admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Produit</th>
+                                <th>Client</th>
+                                <th>Type / Raison</th>
+                                <th>Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rec-admin-list">
+                            {% for rec in reclamations %}
+                                <tr class="rec-row" data-id="{{ rec.id }}" data-status="{{ rec.statut }}">
+                                    <td class="fw-bold text-success">#{{ rec.id }}</td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-dark">{{ rec.nomProduit }}</span>
+                                            <small class="text-muted">Réf: #{{ rec.produit.id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium">{{ rec.user.prenom }} {{ rec.user.nom }}</span>
+                                            <small class="text-muted">{{ rec.dateReclamation|date('d/m/Y H:i') }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2 py-1" style="font-size:0.7rem; border-radius:6px; text-transform:capitalize;">
+                                            {{ rec.type|replace({'_': ' '})|lower }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status status-{{ rec.statut|lower }}">
+                                            {% if rec.statut == 'EN_ATTENTE' %}<i class="bi bi-hourglass-split"></i>{% endif %}
+                                            {% if rec.statut == 'EN_COURS' %}<i class="bi bi-arrow-repeat"></i>{% endif %}
+                                            {% if rec.statut == 'RESOLUE' %}<i class="bi bi-check2"></i>{% endif %}
+                                            {% if rec.statut == 'REJETEE' %}<i class="bi bi-x-lg"></i>{% endif %}
+                                            {{ rec.statut|replace({'_': ' '})|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button class="btn-detail" onclick="openRecDetails({{ rec.id }})">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </button>
+                                            <button class="btn-detail" onclick="showStatusMenu({{ rec.id }}, this)" style="color: #1d4ed8; background: #eff6ff;">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-clipboard-check display-4 opacity-25 d-block mb-3"></i>
+                                        Aucune réclamation trouvée.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{# ── MODALE DÉTAILS ── #}
+<div class="rec-modal-overlay" id="rec-modal-overlay" onclick="closeRecModal(event)">
+    <div class="rec-modal">
+        <div class="rec-modal-header">
+            <h3>Détails de la Réclamation</h3>
+            <button class="rec-modal-close" onclick="closeRecModalForce()"><i class="bi bi-x-lg"></i></button>
         </div>
-        <h1 class="fw-bold mb-3" style="color: #116530;">Section en construction</h1>
-        <p class="text-muted fs-5 px-4">
-            Cette interface de gestion administrative est actuellement en cours de développement. 
-            Elle permettra bientôt de visualiser et d'interagir avec les données réelles du Marketplace.
-        </p>
-        <div class="mt-4 pt-4 border-top">
-            <span class="badge bg-success bg-opacity-10 text-success px-4 py-2 rounded-pill fw-bold">
-                <i class="bi bi-clock me-1"></i> DISPONIBLE PROCHAINEMENT
-            </span>
+        <div class="rec-modal-body" id="rec-modal-content">
+            <div class="text-center py-5">
+                <div class="spinner-border text-success" role="status"></div>
+                <p class="mt-2 text-muted">Chargement des informations...</p>
+            </div>
         </div>
     </div>
 </div>
 
+{# ── MENU POPUP STATUT ── #}
+<div class="status-popup-overlay" id="status-popup-overlay" onclick="hideStatusMenu()">
+    <div class="status-popup" onclick="event.stopPropagation()">
+        <h6 class="fw-bold mb-3" style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase;">Changer Statut</h6>
+        <button class="status-option opt-attente" onclick="performStatusUpdate('EN_ATTENTE')">
+            <i class="bi bi-hourglass-split"></i> En attente
+        </button>
+        <button class="status-option opt-cours" onclick="performStatusUpdate('EN_COURS')">
+            <i class="bi bi-arrow-repeat"></i> En cours
+        </button>
+        <button class="status-option opt-resolue" onclick="performStatusUpdate('RESOLUE')">
+            <i class="bi bi-check2"></i> Résolue
+        </button>
+        <button class="status-option opt-rejetee" onclick="performStatusUpdate('REJETEE')">
+            <i class="bi bi-x-lg"></i> Rejetée
+        </button>
+    </div>
+</div>
+
+<script>
+let currentRecId = null;
+
+function filterReclamations() {
+    const idVal = document.getElementById('filter-id').value.toLowerCase();
+    const statusVal = document.getElementById('filter-status').value;
+    
+    document.querySelectorAll('.rec-row').forEach(row => {
+        const id = row.dataset.id;
+        const status = row.dataset.status;
+        
+        const matchId = !idVal || id.includes(idVal);
+        const matchStatus = statusVal === 'ALL' || status === statusVal;
+        
+        row.style.display = (matchId && matchStatus) ? '' : 'none';
+    });
+}
+
+function resetFilters() {
+    document.getElementById('filter-id').value = '';
+    document.getElementById('filter-status').value = 'ALL';
+    filterReclamations();
+}
+
+async function openRecDetails(id) {
+    const overlay = document.getElementById('rec-modal-overlay');
+    const content = document.getElementById('rec-modal-content');
+    overlay.classList.add('active');
+    
+    try {
+        const res = await fetch(`/marketplace/reclamations/${id}/details`);
+        const data = await res.json();
+        if (data.success) {
+            const r = data.reclamation;
+            let statusIcon = 'hourglass-split', statusColor = '#d97706';
+            if(r.statut === 'EN_COURS') { statusIcon = 'arrow-repeat'; statusColor = '#1d4ed8'; }
+            if(r.statut === 'RESOLUE')  { statusIcon = 'check2'; statusColor = '#15803d'; }
+            if(r.statut === 'REJETEE')  { statusIcon = 'x-lg'; statusColor = '#b91c1c'; }
+
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <h6 class="fw-bold small text-muted text-uppercase mb-3">Informations Réclamation</h6>
+                        <div class="p-3 bg-light rounded-4 border mb-3">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-white p-2 rounded-3 border text-center" style="min-width:60px;">
+                                    <span class="d-block small text-muted">ID</span>
+                                    <span class="fw-bold text-success">#${r.id}</span>
+                                </div>
+                                <div>
+                                    <span class="badge-status" style="background:#fff; border:1px solid #e2e8f0; color:${statusColor}">
+                                        <i class="bi bi-${statusIcon}"></i> ${r.statut.replace('_',' ')}
+                                    </span>
+                                    <div class="mt-1 small text-muted">${r.date}</div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Sujet / Type :</small>
+                                <span class="fw-bold">${r.type.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted d-block">Description client :</small>
+                                <div class="p-3 bg-white rounded-3 border small mt-1" style="white-space: pre-line;">${r.description}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <h6 class="fw-bold small text-muted text-uppercase mb-3">Produit Concerné</h6>
+                        <div class="p-3 bg-light rounded-4 border mb-4">
+                            <span class="fw-bold d-block">${r.nomProduit}</span>
+                            <small class="text-muted">ID Produit: #${r.idProduit || 'N/A'}</small>
+                        </div>
+
+                        <h6 class="fw-bold small text-muted text-uppercase mb-3">Informations Client</h6>
+                        <div class="p-3 bg-light rounded-4 border">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-person-circle fs-4 text-success"></i>
+                                <span class="fw-bold">${r.user || 'Utilisateur'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch(err) { content.innerHTML = '<div class="alert alert-danger">Erreur de chargement.</div>'; }
+}
+
+function closeRecModalForce() { document.getElementById('rec-modal-overlay').classList.remove('active'); }
+function closeRecModal(e) { if(e.target.id === 'rec-modal-overlay') closeRecModalForce(); }
+
+function showStatusMenu(id, btn) {
+    currentRecId = id;
+    document.getElementById('status-popup-overlay').style.display = 'flex';
+}
+
+function hideStatusMenu() { document.getElementById('status-popup-overlay').style.display = 'none'; }
+
+async function performStatusUpdate(newStatus) {
+    if(!currentRecId) return;
+    hideStatusMenu();
+    
+    try {
+        const res = await fetch(`/marketplace/admin/reclamations/${currentRecId}/status/${newStatus}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message);
+        }
+    } catch(err) { alert('Erreur réseau.'); }
+}
+</script>
 </body>
 </html>

@@ -12,20 +12,71 @@
   <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
   <style>
     .mp-admin-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #edf2f7; overflow: hidden; }
-    .mp-admin-table thead th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 1.25rem 1rem; border-bottom: 2px solid #edf2f7; }
-    .mp-admin-table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-    .mp-admin-img { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #f1f5f9; }
-    .badge-status { padding: 0.4rem 0.8rem; border-radius: 50rem; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-    .badge-visible { background: #e0f2fe; color: #0369a1; }
-    .badge-hidden { background: #f1f5f9; color: #64748b; }
-    .btn-toggle { padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; border: none; }
+    .mp-admin-table thead th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; padding: 1.25rem 0.8rem; border-bottom: 2px solid #edf2f7; }
+    .mp-admin-table tbody td { padding: 1.1rem 0.8rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+    .mp-admin-img { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #f1f5f9; border: 1px solid #edf2f7; }
+    
+    /* SIDEBAR FILTERS */
+    .filter-sidebar { 
+      background: white; padding: 24px; border-radius: 20px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #edf2f7; 
+      position: sticky; top: 90px; max-height: calc(100vh - 120px); 
+      overflow-y: auto; scrollbar-width: none; 
+    }
+    .filter-sidebar::-webkit-scrollbar { display: none; }
+    
+    .filter-group { margin-bottom: 18px; }
+    .filter-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
+    .filter-input { border-radius: 12px; border: 1.5px solid #f1f5f9; padding: 11px 16px; font-size: 0.85rem; width: 100%; transition: all 0.25s; background: #f8fafc; color: #1e293b; }
+    .filter-input:focus { border-color: #116530; outline: none; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.08); background: white; }
+
+    /* RANGE SLIDERS STYLING */
+    .range-container { margin-bottom: 24px; padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
+    .range-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .range-val { font-size: 0.8rem; font-weight: 800; color: #116530; background: #ecfdf5; padding: 2px 8px; border-radius: 6px; }
+    
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+    input[type=range]:focus { outline: none; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 10px; }
+    input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #116530; cursor: pointer; -webkit-appearance: none; margin-top: -6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input[type=range]:active::-webkit-slider-thumb { transform: scale(1.1); }
+
+    /* STAT CARD SIDEBAR */
+    .stat-sidebar { 
+      background: linear-gradient(135deg, #116530 0%, #1a8a44 100%); 
+      color: white; padding: 24px 20px; border-radius: 20px; 
+      margin-bottom: 24px; text-align: left; 
+      box-shadow: 0 12px 24px rgba(17, 101, 48, 0.2); 
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .stat-sidebar::after {
+      content: "\F4D7"; font-family: "bootstrap-icons"; position: absolute;
+      right: -10px; bottom: -10px; font-size: 5rem; opacity: 0.1;
+      transform: rotate(-15deg);
+    }
+    .stat-content { position: relative; z-index: 1; }
+    .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; opacity: 0.85; letter-spacing: 0.08em; margin-bottom: 4px; display: block; }
+    .stat-value { font-size: 2.2rem; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+    .stat-icon { background: rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; backdrop-filter: blur(4px); }
+
+    /* BADGES */
+    .badge-status { padding: 0.4rem 0.8rem; border-radius: 50rem; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .badge-visible { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
+    .badge-hidden { background: #f8fafc; color: #475569; border: 1px solid #f1f5f9; }
+    
+    .status-allowed { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
+    .status-blocked { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+
+    .btn-toggle-status { padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; transition: all 0.2s; border: none; }
     .btn-allow { background: #ecfdf5; color: #059669; }
     .btn-allow:hover { background: #10b981; color: white; }
     .btn-block { background: #fff1f2; color: #e11d48; }
     .btn-block:hover { background: #f43f5e; color: white; }
+
     .seller-info { display: flex; flex-direction: column; }
-    .seller-name { font-weight: 600; color: #1e293b; }
-    .seller-email { font-size: 0.75rem; color: #94a3b8; }
+    .seller-name { font-weight: 600; color: #1e293b; font-size: 0.82rem; }
+    .seller-email { font-size: 0.7rem; color: #94a3b8; }
   </style>
 </head>
 <body style="background-color: #f7f9fc;">
@@ -33,9 +84,12 @@
 <header style="background: white; padding: 0.8rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
     <div style="display: flex; align-items: center; gap: 12px;">
         <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 32px;">
-        <h5 class="mb-0 fw-bold" style="color: #116530;">Gestion Produits</h5>
+        <h5 class="mb-0 fw-bold" style="color: #116530;">Gestion du Catalogue Global</h5>
     </div>
     <div style="display: flex; gap: 10px;">
+        <button class="btn btn-outline-success btn-sm px-3 rounded-pill" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
         <a href="{{ path('admin_marketplace_accueil') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
             <i class="bi bi-arrow-left me-1"></i> Dashboard
         </a>
@@ -43,117 +97,316 @@
 </header>
 
 <div class="container-fluid py-4 px-4">
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="fw-bold text-dark mb-1">Catalogue Global</h3>
-                <p class="text-muted mb-0">Modération des produits de tous les vendeurs</p>
+    <div class="row g-4">
+        
+        {# ── SIDEBAR FILTRES ── #}
+        <aside class="col-lg-3">
+            <div class="stat-sidebar">
+                <div class="stat-content">
+                    <span class="stat-label">Total Produits</span>
+                    <span class="stat-value" id="count-display">{{ produits|length }}</span>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
             </div>
-            <div class="bg-white p-2 rounded-3 shadow-sm border px-3">
-                <span class="text-muted small fw-bold">TOTAL :</span>
-                <span class="h5 fw-bold text-success mb-0 ms-2">{{ produits|length }}</span>
-            </div>
-        </div>
-    </div>
 
-    <div class="mp-admin-card">
-        <div class="table-responsive">
-            <table class="table mp-admin-table mb-0">
-                <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th>Vendeur</th>
-                        <th>Catégorie</th>
-                        <th>Prix</th>
-                        <th>Stock</th>
-                        <th>État Vendeur</th>
-                        <th>État Admin</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in produits %}
-                        <tr id="row-{{ p.id }}">
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    {% if p.image %}
-                                        <img src="{{ asset('uploads/produits/' ~ p.image) }}" class="mp-admin-img">
-                                    {% else %}
-                                        <div class="mp-admin-img d-flex align-items-center justify-content-center text-muted">
-                                            <i class="bi bi-image"></i>
+            <div class="filter-sidebar">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0" style="font-size: 0.85rem;"><i class="bi bi-search me-2"></i>Recherche</h5>
+                    <button class="btn p-0 text-success fw-bold" onclick="resetFilters()" style="font-size: 0.7rem;">Effacer</button>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Nom Produit</label>
+                    <input type="text" id="filter-nom" class="filter-input" placeholder="Ex: Fraises..." onkeyup="filterProducts()">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Vendeur</label>
+                    <input type="text" id="filter-vendeur" class="filter-input" placeholder="Nom ou email..." onkeyup="filterProducts()">
+                </div>
+
+                {# ── SLIDERS PRIX ── #}
+                <div class="range-container">
+                    <div class="range-header">
+                        <label class="filter-label mb-0">Intervalle de Prix (DT)</label>
+                        <span class="range-val" id="val-prix-max">∞</span>
+                    </div>
+                    <div class="d-flex flex-column gap-3 mt-2">
+                        <div>
+                            <small class="text-muted" style="font-size:0.6rem;">Min: <span id="v-min-p">0</span> DT</small>
+                            <input type="range" id="filter-prix-min" value="0" min="0" step="1" oninput="updateLabels(); filterProducts()">
+                        </div>
+                        <div>
+                            <small class="text-muted" style="font-size:0.6rem;">Max: <span id="v-max-p">1000</span> DT</small>
+                            <input type="range" id="filter-prix-max" value="1000" min="0" step="1" oninput="updateLabels(); filterProducts()">
+                        </div>
+                    </div>
+                </div>
+
+                {# ── SLIDERS STOCK ── #}
+                <div class="range-container">
+                    <div class="range-header">
+                        <label class="filter-label mb-0">Quantité en Stock</label>
+                        <span class="range-val" id="val-stock-max">∞</span>
+                    </div>
+                    <div class="d-flex flex-column gap-3 mt-2">
+                        <div>
+                            <small class="text-muted" style="font-size:0.6rem;">Mini: <span id="v-min-s">0</span></small>
+                            <input type="range" id="filter-stock-min" value="0" min="0" step="1" oninput="updateLabels(); filterProducts()">
+                        </div>
+                        <div>
+                            <small class="text-muted" style="font-size:0.6rem;">Maxi: <span id="v-max-s">5000</span></small>
+                            <input type="range" id="filter-stock-max" value="5000" min="0" step="1" oninput="updateLabels(); filterProducts()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">État Vendeur</label>
+                    <select id="filter-visible" class="filter-input" onchange="filterProducts()">
+                        <option value="ALL">Tous les produits</option>
+                        <option value="1">Visibles (Public)</option>
+                        <option value="0">Cachés (Privé)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Modération Admin</label>
+                    <select id="filter-admin" class="filter-input" onchange="filterProducts()">
+                        <option value="ALL">Tous les statuts</option>
+                        <option value="1">Autorisés</option>
+                        <option value="0">Bloqués</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        {# ── MAIN CONTENT ── #}
+        <main class="col-lg-9">
+            <div class="mp-admin-card">
+                <div class="table-responsive">
+                    <table class="table mp-admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Vendeur</th>
+                                <th>Catégorie</th>
+                                <th>Prix</th>
+                                <th>Stock</th>
+                                <th>Statuts</th>
+                                <th class="text-center">Action Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list">
+                            {% for p in produits %}
+                                <tr class="prod-row" 
+                                    data-nom="{{ p.nom|lower }}" 
+                                    data-vendeur="{{ p.user.prenom|lower }} {{ p.user.nom|lower }} {{ p.user.email|lower }}"
+                                    data-prix="{{ p.prix }}" 
+                                    data-stock="{{ p.quantiteStock }}"
+                                    data-visible="{{ p.visible ? 1 : 0 }}"
+                                    data-admin="{{ p.visibleAdmin ? 1 : 0 }}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if p.image %}
+                                                <img src="{{ asset('uploads/produits/' ~ p.image) }}" class="mp-admin-img">
+                                            {% else %}
+                                                <div class="mp-admin-img d-flex align-items-center justify-content-center text-muted">
+                                                    <i class="bi bi-image" style="font-size: 1rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold text-dark">{{ p.nom }}</span>
+                                                <small class="text-muted">ID: #{{ p.id }}</small>
+                                            </div>
                                         </div>
-                                    {% endif %}
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-bold text-dark">{{ p.nom }}</span>
-                                        <span class="text-muted" style="font-size: 0.7rem;">#{{ p.id }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="seller-info">
-                                    <span class="seller-name">{{ p.user.prenom }} {{ p.user.nom }}</span>
-                                    <span class="seller-email">{{ p.user.email }}</span>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-light text-dark border">{{ p.categorie }}</span></td>
-                            <td><strong>{{ p.prix|number_format(2, '.', ' ') }}</strong> <small class="text-muted">/{{ p.uniteMesure }}</small></td>
-                            <td>
-                                <span class="fw-bold {{ p.quantiteStock > 10 ? 'text-dark' : 'text-danger' }}">
-                                    {{ p.quantiteStock }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if p.visible %}
-                                    <span class="badge-status badge-visible"><i class="bi bi-eye-fill"></i> Visible</span>
-                                {% else %}
-                                    <span class="badge-status badge-hidden"><i class="bi bi-eye-slash-fill"></i> Caché</span>
-                                {% endif %}
-                            </td>
-                            <td id="status-admin-{{ p.id }}">
-                                {% if p.visibleAdmin %}
-                                    <span class="badge-status" style="background:#ecfdf5; color:#059669; border: 1px solid #d1fae5;">
-                                        <i class="bi bi-shield-check"></i> Autorisé
-                                    </span>
-                                {% else %}
-                                    <span class="badge-status" style="background:#fff1f2; color:#e11d48; border: 1px solid #ffe4e6;">
-                                        <i class="bi bi-shield-slash"></i> Bloqué
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <button type="button" 
-                                        class="btn-toggle {{ p.visibleAdmin ? 'btn-block' : 'btn-allow' }}"
-                                        onclick="toggleVisibility({{ p.id }}, this)">
-                                    {% if p.visibleAdmin %}
-                                        <i class="bi bi-slash-circle me-1"></i> Bloquer
-                                    {% else %}
-                                        <i class="bi bi-check-circle me-1"></i> Autoriser
-                                    {% endif %}
-                                </button>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox display-4 d-block mb-3 opacity-25"></i>
-                                Aucun produit trouvé en base de données.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                                    </td>
+                                    <td>
+                                        <div class="seller-info">
+                                            <span class="seller-name">{{ p.user.prenom }} {{ p.user.nom }}</span>
+                                            <span class="seller-email">{{ p.user.email }}</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border px-2 py-1" style="font-size:0.7rem; border-radius:6px;">{{ p.categorie }}</span></td>
+                                    <td><span class="fw-bold text-dark">{{ p.prix|number_format(2, ',', ' ') }} <small class="text-muted">DT</small></span></td>
+                                    <td>
+                                        <span class="fw-bold {{ p.quantiteStock <= 5 ? 'text-danger' : 'text-dark' }}">
+                                            {{ p.quantiteStock }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            {% if p.visible %}
+                                                <span class="badge-status badge-visible" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-eye-fill"></i> Public</span>
+                                            {% else %}
+                                                <span class="badge-status badge-hidden" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-eye-slash-fill"></i> Privé</span>
+                                            {% endif %}
+                                            
+                                            <div id="status-admin-{{ p.id }}">
+                                                {% if p.visibleAdmin %}
+                                                    <span class="badge-status status-allowed" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-shield-check"></i> Autorisé</span>
+                                                {% else %}
+                                                    <span class="badge-status status-blocked" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-shield-slash"></i> Bloqué</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" 
+                                                class="btn-toggle-status {{ p.visibleAdmin ? 'btn-block' : 'btn-allow' }}"
+                                                onclick="toggleVisibility({{ p.id }}, this)">
+                                            {% if p.visibleAdmin %}
+                                                <i class="bi bi-slash-circle me-1"></i> Bloquer
+                                            {% else %}
+                                                <i class="bi bi-check-circle me-1"></i> Autoriser
+                                            {% endif %}
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox display-4 d-block mb-3 opacity-25"></i>
+                                        Aucun produit trouvé.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
-<!-- TOAST CONTAINER -->
-<div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999;"></div>
+<div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999;"></div>
 
 <script>
+// ── INITIALISATION DYNAMIQUE DES SLIDERS ──
+let absPriceMax = 0;
+let absStockMax = 0;
+
+function initSliders() {
+    const rows = document.querySelectorAll('.prod-row');
+    rows.forEach(r => {
+        const p = parseFloat(r.dataset.prix);
+        const s = parseFloat(r.dataset.stock);
+        if (p > absPriceMax) absPriceMax = p;
+        if (s > absStockMax) absStockMax = s;
+    });
+
+    // Arrondir au supérieur pour le prix
+    absPriceMax = Math.ceil(absPriceMax);
+    absStockMax = Math.ceil(absStockMax);
+
+    const sPmin = document.getElementById('filter-prix-min');
+    const sPmax = document.getElementById('filter-prix-max');
+    const sSmin = document.getElementById('filter-stock-min');
+    const sSmax = document.getElementById('filter-stock-max');
+
+    sPmin.max = sPmax.max = absPriceMax;
+    sSmin.max = sSmax.max = absStockMax;
+
+    sPmax.value = absPriceMax;
+    sSmax.value = absStockMax;
+
+    updateLabels();
+}
+
+function updateLabels() {
+    const sPmin = document.getElementById('filter-prix-min');
+    const sPmax = document.getElementById('filter-prix-max');
+    const sSmin = document.getElementById('filter-stock-min');
+    const sSmax = document.getElementById('filter-stock-max');
+
+    // Prix Validation
+    if (parseFloat(sPmin.value) > parseFloat(sPmax.value)) {
+        sPmin.value = sPmax.value;
+    }
+
+    // Stock Validation
+    if (parseFloat(sSmin.value) > parseFloat(sSmax.value)) {
+        sSmin.value = sSmax.value;
+    }
+
+    const pMin = sPmin.value;
+    const pMax = sPmax.value;
+    const sMin = sSmin.value;
+    const sMax = sSmax.value;
+
+    document.getElementById('v-min-p').innerText = pMin;
+    document.getElementById('v-max-p').innerText = pMax;
+    document.getElementById('v-min-s').innerText = sMin;
+    document.getElementById('v-max-s').innerText = sMax;
+
+    document.getElementById('val-prix-max').innerText = `${pMin} - ${pMax} DT`;
+    document.getElementById('val-stock-max').innerText = `${sMin} - ${sMax}`;
+}
+
+// ── FILTRAGE DYNAMIQUE ──
+function filterProducts() {
+    const nomVal = document.getElementById('filter-nom').value.toLowerCase();
+    const vendeurVal = document.getElementById('filter-vendeur').value.toLowerCase();
+    
+    // Sliders
+    const pMin = parseFloat(document.getElementById('filter-prix-min').value);
+    const pMax = parseFloat(document.getElementById('filter-prix-max').value);
+    const sMin = parseFloat(document.getElementById('filter-stock-min').value);
+    const sMax = parseFloat(document.getElementById('filter-stock-max').value);
+
+    const visibleVal = document.getElementById('filter-visible').value;
+    const adminVal = document.getElementById('filter-admin').value;
+
+    let count = 0;
+    document.querySelectorAll('.prod-row').forEach(row => {
+        const nom = row.dataset.nom;
+        const vendeur = row.dataset.vendeur;
+        const prix = parseFloat(row.dataset.prix);
+        const stock = parseFloat(row.dataset.stock);
+        const vis = row.dataset.visible;
+        const adm = row.dataset.admin;
+
+        const matchNom = !nomVal || nom.includes(nomVal);
+        const matchVendeur = !vendeurVal || vendeur.includes(vendeurVal);
+        const matchPrix = prix >= pMin && prix <= pMax;
+        const matchStock = stock >= sMin && stock <= sMax;
+        const matchVis = visibleVal === 'ALL' || vis === visibleVal;
+        const matchAdm = adminVal === 'ALL' || adm === adminVal;
+
+        if (matchNom && matchVendeur && matchPrix && matchStock && matchVis && matchAdm) {
+            row.style.display = '';
+            count++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('count-display').innerText = count;
+}
+
+function resetFilters() {
+    document.getElementById('filter-nom').value = '';
+    document.getElementById('filter-vendeur').value = '';
+    
+    document.getElementById('filter-prix-min').value = 0;
+    document.getElementById('filter-prix-max').value = absPriceMax;
+    document.getElementById('filter-stock-min').value = 0;
+    document.getElementById('filter-stock-max').value = absStockMax;
+
+    document.getElementById('filter-visible').value = 'ALL';
+    document.getElementById('filter-admin').value = 'ALL';
+    
+    updateLabels();
+    filterProducts();
+}
+
+// ── ACTIONS AJAX ──
 async function toggleVisibility(id, btn) {
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
     try {
         const response = await fetch(`/marketplace/admin/produit/toggle-visible-admin/${id}`, {
@@ -163,26 +416,23 @@ async function toggleVisibility(id, btn) {
         const data = await response.json();
 
         if (data.success) {
-            // Mise à jour du badge de statut
+            const specificRow = btn.closest('.prod-row');
             const statusCell = document.getElementById(`status-admin-${id}`);
+            
             if (data.newStatus) {
-                statusCell.innerHTML = `
-                    <span class="badge-status" style="background:#ecfdf5; color:#059669; border: 1px solid #d1fae5;">
-                        <i class="bi bi-shield-check"></i> Autorisé
-                    </span>`;
-                btn.className = 'btn-toggle btn-block';
+                statusCell.innerHTML = `<span class="badge-status status-allowed" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-shield-check"></i> Autorisé</span>`;
+                btn.className = 'btn-toggle-status btn-block';
                 btn.innerHTML = '<i class="bi bi-slash-circle me-1"></i> Bloquer';
+                specificRow.dataset.admin = "1";
             } else {
-                statusCell.innerHTML = `
-                    <span class="badge-status" style="background:#fff1f2; color:#e11d48; border: 1px solid #ffe4e6;">
-                        <i class="bi bi-shield-slash"></i> Bloqué
-                    </span>`;
-                btn.className = 'btn-toggle btn-allow';
+                statusCell.innerHTML = `<span class="badge-status status-blocked" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"><i class="bi bi-shield-slash"></i> Bloqué</span>`;
+                btn.className = 'btn-toggle-status btn-allow';
                 btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Autoriser';
+                specificRow.dataset.admin = "0";
             }
             showToast(data.message);
         } else {
-            showToast(data.message || 'Une erreur est survenue.', true);
+            showToast(data.message || 'Erreur.', true);
             btn.innerHTML = originalHtml;
         }
     } catch (error) {
@@ -197,22 +447,26 @@ function showToast(message, isError = false) {
     const toast = document.createElement('div');
     toast.style.cssText = `
         background: ${isError ? '#e11d48' : '#116530'};
-        color: white; padding: 12px 24px; border-radius: 10px; margin-top: 10px;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); font-weight: 600; font-size: 0.9rem;
-        animation: slideIn 0.3s ease-out;
+        color: white; padding: 12px 24px; border-radius: 12px; margin-top: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1); font-weight: 600; font-size: 0.85rem;
+        animation: slideInToast 0.3s ease-out forwards;
     `;
-    toast.innerHTML = (isError ? '<i class="bi bi-x-circle me-2"></i>' : '<i class="bi bi-check-circle me-2"></i>') + message;
+    toast.innerHTML = (isError ? '<i class="bi bi-exclamation-circle me-2"></i>' : '<i class="bi bi-check2-circle me-2"></i>') + message;
     document.getElementById('toast-container').appendChild(toast);
     setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.5s ease-in forwards';
+        toast.style.animation = 'fadeOutToast 0.5s ease-in forwards';
         setTimeout(() => toast.remove(), 500);
-    }, 3000);
+    }, 4000);
 }
+
+// Lancement au chargement
+window.onload = initSliders;
+
 </script>
 
 <style>
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideInToast { from { transform: translateX(120%); } to { transform: translateX(0); } }
+@keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
 </style>
 
 </body>
