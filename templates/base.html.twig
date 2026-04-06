@@ -46,7 +46,7 @@
             {% if is_granted('ROLE_AGRICULTEUR') %}
               <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
             {% elseif is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_agriculture_index') }}" class="{{ app.request.get('_route') == 'admin_agriculture_index' ? 'active' : '' }}">Cultures</a>
+              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
             {% else %}
               <a href="#">Cultures</a>
             {% endif %}
