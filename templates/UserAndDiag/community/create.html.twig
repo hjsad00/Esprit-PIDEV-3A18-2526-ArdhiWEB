@@ -2,15 +2,26 @@
 
 {% block title %}Poser une question - Communauté Ardhi{% endblock %}
 
+{% block body_class %}community-create-page{% endblock %}
+
 {% block stylesheets %}
 <style>
     .create-hero {
         padding: 120px 0 40px;
-        background: linear-gradient(135deg, #0b140f 0%, #1a2e1a 50%, #0b140f 100%);
+        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;
         min-height: 100vh; display: flex; align-items: flex-start; justify-content: center;
+        position: relative;
     }
+    .create-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.45);
+        z-index: 0;
+    }
+    .create-hero > * { position: relative; z-index: 1; }
     .create-card {
-        background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+        background: rgba(0,0,0,0.45); backdrop-filter: blur(20px);
         border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
         padding: 40px; width: 100%; max-width: 700px; margin: 0 20px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.4);
@@ -30,11 +41,11 @@
     .form-group textarea { min-height: 160px; resize: vertical; }
 
     .file-zone {
-        background: rgba(255,255,255,0.06); border: 2px dashed rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.25); border: 2px dashed rgba(255,255,255,0.35);
         border-radius: 16px; padding: 24px; text-align: center; color: rgba(255,255,255,0.5);
         cursor: pointer; transition: 0.3s; position: relative;
     }
-    .file-zone:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); }
+    .file-zone:hover { border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.35); }
     .file-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .file-zone .preview { max-height: 120px; border-radius: 10px; margin-top: 10px; }
 

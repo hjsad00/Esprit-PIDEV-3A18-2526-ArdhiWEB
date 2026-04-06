@@ -28,7 +28,20 @@
   {% block stylesheets %}{% endblock %}
 </head>
 
-<body class="{% block body_class %}index-page{% endblock %}">
+  {% set current_path = app.request.pathInfo %}
+  {% set current_route = app.request.attributes.get('_route') %}
+  {% set current_controller = app.request.attributes.get('_controller') %}
+
+  {% set is_user_diag_route = 
+    (current_path starts with '/user-and-diag' and not (current_path starts with '/admin')) or 
+    (current_route starts with 'app_user_and_diag_') or 
+    (current_route in ['app_client_dashboard', 'app_profile', 'app_login', 'app_register']) or
+    ('Controller\\UserAndDiag' in current_controller and 'Controller\\UserAndDiag\\Admin' not in current_controller)
+  %}
+
+{% set is_homepage = current_route == 'app_home' %}
+{% set is_premium = is_homepage or is_user_diag_route %}
+<body class="{{ is_premium ? 'premium-header-active index-page' : '' }} {% block body_class %}{% endblock %}" {% if is_user_diag_route %}style="background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;"{% endif %}>
 
   <div class="flash-container">
     {% for label, messages in app.flashes %}
@@ -48,7 +61,7 @@
     {% endfor %}
   </div>
 
-  <header id="header" class="header d-flex align-items-center fixed-top">
+  <header id="header" class="header d-flex align-items-center fixed-top {% block header_class %}{% endblock %}">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
       <a href="/" class="logo d-flex align-items-center">

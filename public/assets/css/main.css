@@ -410,7 +410,7 @@ h6 {
 /*--------------------------------------------------------------
 # Global Header
 --------------------------------------------------------------*/
-.header {
+body:not(.premium-header-active) .header {
   color: var(--default-color);
   background-color: var(--background-color);
   padding: 20px 0;
@@ -418,24 +418,130 @@ h6 {
   z-index: 997;
 }
 
-.header .logo {
+body:not(.premium-header-active) .header .logo {
   line-height: 1;
 }
 
-.header .logo img {
+body:not(.premium-header-active) .header .logo img {
   max-height: 32px;
   margin-right: 8px;
 }
 
-.header .logo h1 {
+body:not(.premium-header-active) .header .logo h1 {
   font-size: 30px;
   margin: 0;
   font-weight: 700;
   color: var(--heading-color);
 }
 
-.scrolled .header {
+body:not(.premium-header-active).scrolled .header {
   box-shadow: 0px 0 18px color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+/* --- Premium Header Base (Large Logo, Custom Nav) --- */
+.header-premium #header,
+body.premium-header-active #header {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Transparent state (Standard for Home & Hero pages) */
+.index-page #header {
+  background: transparent !important;
+  padding: 12px 0 !important;
+}
+
+/* Solid state (Default for Premium or Scrolled) */
+body.premium-header-active:not(.index-page) #header,
+.scrolled.index-page #header,
+.index-page.scrolled #header {
+  background: rgba(15, 20, 15, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 8px 0 !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.header-premium .logo img,
+.index-page #header .logo img,
+body.premium-header-active #header .logo img {
+  max-height: 44px !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.header-premium .navmenu ul>li>a,
+.index-page #header .navmenu ul>li>a,
+body.premium-header-active #header .navmenu ul>li>a {
+  color: #fff !important;
+  font-family: 'Inter', var(--nav-font), sans-serif;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  padding: 8px 16px !important;
+  border-radius: 8px;
+}
+
+.header-premium .navmenu ul>li>a:hover,
+.index-page #header .navmenu ul>li>a:hover,
+body.premium-header-active #header .navmenu ul>li>a:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  text-shadow: none;
+}
+
+/* Scrolled state already handled above for better logic flow */
+
+/* Specific fix for non-hero pages: if premium-header-active and not scrolled and NOT homepage, 
+   we might want it solid if it looks bad transparent. 
+   But the user said "same as homepage", so we stick to transparent-to-solid first.
+*/
+
+/* "Se connecter" CTA Button in Nav */
+.nav-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ardhi-green) !important;
+  color: #fff !important;
+  padding: 10px 24px !important;
+  border-radius: 50px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  letter-spacing: 0.3px;
+  text-shadow: none !important;
+  box-shadow: 0 4px 15px var(--ardhi-green-glow);
+  transition: all 0.3s ease !important;
+  border: none;
+  text-decoration: none !important;
+}
+
+.nav-cta-btn:hover {
+  background: var(--ardhi-green-light) !important;
+  box-shadow: 0 6px 25px var(--ardhi-green-glow) !important;
+  transform: translateY(-2px);
+}
+
+.header-premium .nav-user-circle,
+body.premium-header-active #header .nav-user-circle {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.header-premium .logo img,
+body.premium-header-active #header .logo img {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.header-premium .mobile-nav-toggle,
+body.premium-header-active #header .mobile-nav-toggle {
+  color: #fff !important;
 }
 
 /*--------------------------------------------------------------
@@ -459,8 +565,8 @@ h6 {
     position: relative;
   }
 
-  .navmenu a,
-  .navmenu a:focus {
+  body:not(.premium-header-active) .navmenu a,
+  body:not(.premium-header-active) .navmenu a:focus {
     color: var(--nav-color);
     padding: 18px 15px;
     font-size: 16px;
@@ -485,9 +591,9 @@ h6 {
     padding-right: 0;
   }
 
-  .navmenu li:hover>a,
-  .navmenu .active,
-  .navmenu .active:focus {
+  body:not(.premium-header-active) .navmenu li:hover>a,
+  body:not(.premium-header-active) .navmenu .active,
+  body:not(.premium-header-active) .navmenu .active:focus {
     color: var(--nav-hover-color);
   }
 
@@ -550,7 +656,7 @@ h6 {
 
 /* Navmenu - Mobile */
 @media (max-width: 1199px) {
-  .mobile-nav-toggle {
+  body:not(.premium-header-active) .mobile-nav-toggle {
     color: var(--nav-color);
     font-size: 28px;
     line-height: 0;

@@ -2,13 +2,24 @@
 
 {% block title %}Communauté Ardhi{% endblock %}
 
+{% block body_class %}community-page{% endblock %}
+
 {% block stylesheets %}
 <style>
     .community-hero {
         padding: 120px 0 40px;
-        background: linear-gradient(135deg, #0b140f 0%, #1a2e1a 50%, #0b140f 100%);
+        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;
         min-height: 100vh;
+        position: relative;
     }
+    .community-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.45);
+        z-index: 0;
+    }
+    .community-hero > * { position: relative; z-index: 1; }
     .community-header {
         display: flex; align-items: center; justify-content: space-between;
         max-width: 820px; margin: 0 auto 30px; padding: 0 20px; flex-wrap: wrap; gap: 15px;
@@ -18,12 +29,12 @@
         display: flex; gap: 10px; flex: 1; max-width: 400px;
     }
     .search-box input {
-        flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3);
         border-radius: 30px; padding: 10px 20px; color: #fff; font-size: 14px; outline: none;
         backdrop-filter: blur(10px); transition: 0.3s;
     }
     .search-box input::placeholder { color: rgba(255,255,255,0.5); }
-    .search-box input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.15); }
+    .search-box input:focus { border-color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.4); }
     .btn-new-post {
         background: linear-gradient(135deg, #6B7F3F, #4A5A2B); color: #fff; border: none;
         padding: 10px 24px; border-radius: 30px; font-weight: 700; font-size: 14px;
@@ -34,12 +45,12 @@
     .feed-container { max-width: 820px; margin: 0 auto; padding: 0 20px; }
 
     .post-card {
-        background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+        background: rgba(0,0,0,0.45); backdrop-filter: blur(20px);
         border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
         padding: 28px; margin-bottom: 24px; cursor: pointer; transition: 0.3s;
         text-decoration: none; display: block; color: inherit;
     }
-    .post-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); }
+    .post-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.35); background: rgba(0,0,0,0.55); }
 
     .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .avatar {

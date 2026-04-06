@@ -2,6 +2,8 @@
 
 {% block title %}Ardhi - Diagnostic IA{% endblock %}
 
+{% block body_class %}diagnostic-page{% endblock %}
+
 {% block stylesheets %}
 <style>
     /* Premium Glassmorphic Core Setup */
@@ -9,7 +11,7 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
-        background: url('{{ asset('assets/img/hero_3.jpg') }}') no-repeat center center fixed;
+        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed;
         background-size: cover;
     }
     
@@ -17,7 +19,7 @@
     .dashboard-background {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0, 0.4);
+        background-color: rgba(0,0,0, 0.45);
         z-index: -1;
     }
 
@@ -27,7 +29,7 @@
     }
 
     .panel-glass {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -40,7 +42,7 @@
     .header-bar {
         display: flex;
         align-items: center;
-        background: rgba(0,0,0,0.3);
+        background: rgba(0,0,0,0.55);
         padding: 15px 25px;
         border-radius: 15px;
         margin-bottom: 30px;
@@ -237,8 +239,6 @@
 
 <div class="container diagnostic-container">
     <div class="header-bar">
-        <a href="{{ path('app_client_dashboard') }}" class="btn-back"><i class="bi bi-arrow-left"></i></a>
-        <h1 class="header-title">Diagnostic IA</h1>
         <div class="badge-premium" id="badgePremium">
             {% if limit == -1 %}
                 ✅ Illimité ({{ planName }})
@@ -280,10 +280,6 @@
                     </button>
                     <!-- Hidden input to handle the actual file selection -->
                     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewImage(event)" {% if limit != -1 and used >= limit %}disabled{% endif %}>
-
-                    <button id="btnCamera" class="btn-glass btn-orange flex-grow-1" {% if limit != -1 and used >= limit %}disabled{% endif %} onclick="alert('Module Caméra intégré dans l\'application iOS/Android.')">
-                        <i class="bi bi-camera"></i> Caméra
-                    </button>
                 </div>
                 
                 <hr style="opacity: 0.2;">
@@ -323,8 +319,6 @@
                 <div class="action-stack">
                     <a href="#" id="btnChatIa" class="btn-glass btn-blue w-100"><i class="bi bi-chat-dots"></i> Discuter avec l'IA</a>
                     <a href="#" class="btn-glass btn-purple w-100"><i class="bi bi-people"></i> Demander à la Communauté</a>
-                    <a href="#" class="btn-glass" style="background: rgba(39, 174, 96, 0.85); w-100"><i class="bi bi-person-check"></i> Demander l'avis d'un Expert</a>
-                    <a href="#" class="btn-glass w-100" style="background: #e67e22;"><i class="bi bi-journal-medical"></i> Commencer le Protocole de Soin</a>
                 </div>
             </div>
         </div>

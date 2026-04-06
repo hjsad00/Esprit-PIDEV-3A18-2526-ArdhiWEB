@@ -8,7 +8,7 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
-        background: url('{{ asset('assets/img/hero_3.jpg') }}') no-repeat center center fixed;
+        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed;
         background-size: cover;
     }
     
@@ -31,7 +31,7 @@
     .header-bar {
         display: flex;
         align-items: center;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0,0,0,0.15);
         padding: 15px 25px;
         border-radius: 15px;
         margin-bottom: 20px;
@@ -174,9 +174,7 @@
         <div id="typingIndicator" class="px-4 typing">Ardhi-IA réfléchit...</div>
 
         <div class="input-bar">
-            <button class="btn-action btn-mic" id="btnMic" title="Utiliser la voix">
-                <i class="bi bi-mic"></i>
-            </button>
+
             <input type="text" id="chatInput" class="chat-input" placeholder="Posez une question sur le traitement..." autocomplete="off">
             <button class="btn-action btn-send" id="btnSend">
                 ENVOYER

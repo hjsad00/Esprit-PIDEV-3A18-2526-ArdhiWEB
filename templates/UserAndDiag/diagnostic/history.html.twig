@@ -8,14 +8,14 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
-        background: url('{{ asset('assets/img/hero_3.jpg') }}') no-repeat center center fixed;
+        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed;
         background-size: cover;
     }
     
     .dashboard-background {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0, 0.4);
+        background-color: rgba(0,0,0, 0.45);
         z-index: -1;
     }
 
@@ -26,7 +26,7 @@
     }
 
     .glass-panel {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(25px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 20px;
@@ -47,7 +47,7 @@
     .search-box {
         display: flex;
         align-items: center;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.35);
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 30px;
         padding: 5px 20px;
@@ -152,9 +152,6 @@
             <form action="{{ path('app_user_and_diag_history') }}" method="GET" class="search-box">
                 <i class="bi bi-search text-white-50"></i>
                 <input type="text" name="q" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." value="{{ keyword }}">
-                <button type="button" class="btn-mic" id="btnMic" title="Recherche vocale">
-                    <i class="bi bi-mic"></i>
-                </button>
             </form>
         </div>
 

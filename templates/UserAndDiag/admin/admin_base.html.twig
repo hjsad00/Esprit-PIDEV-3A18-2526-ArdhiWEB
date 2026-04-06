@@ -28,7 +28,7 @@
       <div class="nav-section-title">Navigation</div>
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_user_diag_dashboard' ? 'active' : '' }}" href="{{ path('admin_user_diag_dashboard') }}">
+          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'active' : '' }}" href="{{ path('admin_dashboard') }}">
             <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
           </a>
         </li>
@@ -138,12 +138,7 @@
       </ul>
 
       <div class="nav-section-title">Compte</div>
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a class="nav-link" href="{{ path('app_home') }}">
-            <i class="bi bi-house-fill"></i><span>Retour au site</span>
-          </a>
-        </li>
+      <ul class="nav flex-column">  
         <li class="nav-item">
           <a class="nav-link" href="{{ path('app_logout') }}">
             <i class="bi bi-box-arrow-left"></i><span>Déconnexion</span>
