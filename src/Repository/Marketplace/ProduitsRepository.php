@@ -28,7 +28,11 @@ class ProduitsRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.categorie = :cat')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('cat', $categorie)
+            ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
             ->getQuery()
             ->getResult();
@@ -40,8 +44,12 @@ class ProduitsRepository extends ServiceEntityRepository
     public function searchByKeyword(string $keyword): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.nom LIKE :kw OR p.description LIKE :kw')
+            ->andWhere('(p.nom LIKE :kw OR p.description LIKE :kw)')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
             ->setParameter('kw', '%' . $keyword . '%')
+            ->setParameter('true', true)
             ->orderBy('p.nom', 'ASC')
             ->getQuery()
             ->getResult();
@@ -53,8 +61,141 @@ class ProduitsRepository extends ServiceEntityRepository
     public function findAllOrderedByPrice(string $direction = 'ASC'): array
     {
         return $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
+            ->setParameter('true', true)
             ->orderBy('p.prix', $direction)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Tous les produits sauf ceux de l'utilisateur connecté.
+     */
+    public function findAllExceptUser(?int $userId): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->andWhere('p.quantiteStock > 0')
+            ->setParameter('true', true);
+
+        if ($userId) {
+            $qb->andWhere('p.user != :uid')
+               ->setParameter('uid', $userId);
+        }
+
+        return $qb->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Tous les produits d'un utilisateur donné.
+     */
+    public function findByUser(int $userId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.user = :uid')
+            ->setParameter('uid', $userId)
+            ->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Liste des catégories distinctes existantes en base.
+     */
+    public function findDistinctCategories(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->select('DISTINCT p.categorie')
+            ->where('p.categorie IS NOT NULL')
+            ->andWhere('p.categorie != :empty')
+            ->setParameter('empty', '')
+            ->orderBy('p.categorie', 'ASC')
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
+    /**
+     * Filtrage avancé du catalogue avec tous les critères combinés.
+     */
+    public function findAllWithFilters(array $filters, ?int $excludeUserId): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true);
+
+        if ($excludeUserId) {
+            $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);
+        }
+
+        if (!empty($filters['nom'])) {
+            $qb->andWhere('p.nom LIKE :nom')
+               ->setParameter('nom', '%' . $filters['nom'] . '%');
+        }
+
+        if (!empty($filters['categorie'])) {
+            $qb->andWhere('p.categorie = :cat')
+               ->setParameter('cat', $filters['categorie']);
+        }
+
+        if (isset($filters['prix_min']) && $filters['prix_min'] !== '') {
+            $qb->andWhere('p.prix >= :pmin')
+               ->setParameter('pmin', (float) $filters['prix_min']);
+        }
+
+        if (isset($filters['prix_max']) && $filters['prix_max'] !== '') {
+            $qb->andWhere('p.prix <= :pmax')
+               ->setParameter('pmax', (float) $filters['prix_max']);
+        }
+
+        if (isset($filters['stock_min']) && $filters['stock_min'] !== '') {
+            $qb->andWhere('p.quantiteStock >= :smin')
+               ->setParameter('smin', (int) $filters['stock_min']);
+        }
+
+        if (isset($filters['stock_max']) && $filters['stock_max'] !== '') {
+            $qb->andWhere('p.quantiteStock <= :smax')
+               ->setParameter('smax', (int) $filters['stock_max']);
+        }
+
+        if (!empty($filters['en_solde'])) {
+            $qb->andWhere('p.remise > 0');
+        }
+
+        // Tri
+        $tri = $filters['tri'] ?? 'recent';
+        match($tri) {
+            'prix_asc'   => $qb->orderBy('p.prix', 'ASC'),
+            'prix_desc'  => $qb->orderBy('p.prix', 'DESC'),
+            'nom_az'     => $qb->orderBy('p.nom', 'ASC'),
+            'nom_za'     => $qb->orderBy('p.nom', 'DESC'),
+            'solde'      => $qb->orderBy('p.remise', 'DESC')->addOrderBy('p.id', 'DESC'),
+            default      => $qb->orderBy('p.id', 'DESC'),
+        };
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Récupère le prix minimum et maximum de tous les produits visibles.
+     */
+    public function findPriceRange(?int $excludeUserId): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('MIN(p.prix) as pMin, MAX(p.prix) as pMax')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true);
+
+        if ($excludeUserId) {
+            $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);
+        }
+
+        return $qb->getQuery()->getSingleResult();
     }
 }

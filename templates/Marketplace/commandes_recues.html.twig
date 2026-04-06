@@ -1,0 +1,506 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Commandes Reçues{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+    /* ── Stats Bar ── */
+    .cmd-stats-bar {
+      display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .cmd-stat-card {
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, #4a8c3f 0%, #3a7030 100%);
+      color: #fff; border-radius: 14px; padding: 16px 28px;
+      box-shadow: 0 4px 20px rgba(74, 140, 63, 0.25);
+      min-width: 180px;
+    }
+    .cmd-stat-card i { font-size: 28px; opacity: .85; }
+    .cmd-stat-card .cmd-stat-value { font-size: 26px; font-weight: 800; line-height: 1; }
+    .cmd-stat-card .cmd-stat-label { font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── Layout ── */
+    .cmd-layout { display: flex; gap: 28px; align-items: flex-start; }
+    .cmd-sidebar {
+      width: 260px; flex-shrink: 0; background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.06); padding: 24px;
+      position: sticky; top: 100px;
+    }
+    .cmd-sidebar h4 { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: #2d3436; display: flex; align-items: center; gap: 8px; }
+    .cmd-sidebar label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #636e72; font-weight: 600; margin-bottom: 6px; display: block; }
+    .cmd-sidebar input, .cmd-sidebar select {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+      font-size: 14px; margin-bottom: 16px; transition: border-color .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .cmd-sidebar input:focus, .cmd-sidebar select:focus { border-color: #4a8c3f; outline: none; }
+    .cmd-sidebar .cmd-reset-btn {
+      width: 100%; padding: 10px; border: 1.5px solid #e74c3c; border-radius: 10px;
+      background: transparent; color: #e74c3c; font-weight: 600; cursor: pointer;
+      font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .2s;
+    }
+    .cmd-sidebar .cmd-reset-btn:hover { background: #e74c3c; color: #fff; }
+
+    .cmd-main { flex: 1; min-width: 0; }
+    .cmd-main h3 { font-size: 20px; font-weight: 700; color: #2d3436; margin-bottom: 20px; }
+
+    /* ── Grille ── */
+    .cmd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+    /* ── Carte ── */
+    .cmd-card {
+      background: #fff; border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.06); border: 1px solid #f0f0f0;
+      transition: transform .25s, box-shadow .25s; position: relative; overflow: hidden;
+    }
+    .cmd-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
+
+    .cmd-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .cmd-badge {
+      padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+      text-transform: capitalize; letter-spacing: .3px;
+    }
+    .cmd-badge.en_attente { background: #fef3c7; color: #92400e; }
+    .cmd-badge.en_cours   { background: #dbeafe; color: #1e40af; }
+    .cmd-badge.livree     { background: #d1fae5; color: #065f46; }
+    .cmd-badge.annulee    { background: #fee2e2; color: #991b1b; }
+
+    .cmd-card-id { font-size: 13px; color: #636e72; }
+    .cmd-card-id strong { color: #2d3436; }
+    .cmd-card-total { font-size: 22px; font-weight: 800; color: #4a8c3f; }
+    .cmd-card-total small { font-size: 14px; font-weight: 600; }
+
+    .cmd-card-date { font-size: 12px; color: #b2bec3; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+    .cmd-card-date strong { color: #2d3436; font-size: 14px; display: block; margin-top: 2px; }
+
+    .cmd-card-buyer { font-size: 13px; color: #636e72; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .cmd-card-buyer strong { color: #2d3436; }
+
+    /* ── Timeline ── */
+    .cmd-timeline { display: flex; align-items: center; gap: 0; margin-bottom: 18px; position: relative; }
+    .cmd-timeline-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+    .cmd-timeline-dot {
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; transition: all .3s;
+      border: 3px solid #e0e0e0; background: #fff; color: #b2bec3;
+    }
+    .cmd-timeline-dot.active { border-color: #4a8c3f; background: #4a8c3f; color: #fff; }
+    .cmd-timeline-dot.done { border-color: #4a8c3f; background: #d1fae5; color: #4a8c3f; }
+    .cmd-timeline-label { font-size: 10px; color: #b2bec3; margin-top: 4px; font-weight: 600; }
+    .cmd-timeline-label.active { color: #4a8c3f; }
+    .cmd-timeline-line { position: absolute; top: 16px; left: 16%; right: 16%; height: 3px; background: #e0e0e0; z-index: 0; }
+    .cmd-timeline-line-fill { height: 100%; background: #4a8c3f; border-radius: 2px; transition: width .4s ease; }
+
+    .cmd-cancelled-msg {
+      display: flex; align-items: center; gap: 8px; justify-content: center;
+      padding: 10px; background: #fee2e2; border-radius: 10px; color: #991b1b;
+      font-weight: 600; font-size: 13px; margin-bottom: 14px;
+    }
+
+    /* ── Actions Vendeur ── */
+    .cmd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cmd-action-btn {
+      flex: 1; padding: 9px 10px; border-radius: 10px; border: 1.5px solid #e0e0e0;
+      background: transparent; font-weight: 600; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: all .2s; min-width: 100px;
+    }
+    .cmd-action-btn:hover { border-color: #4a8c3f; color: #4a8c3f; }
+    .cmd-action-btn.btn-ship { border-color: #3498db; color: #3498db; }
+    .cmd-action-btn.btn-ship:hover { background: #3498db; color: #fff; }
+    .cmd-action-btn.btn-deliver { border-color: #4a8c3f; color: #4a8c3f; }
+    .cmd-action-btn.btn-deliver:hover { background: #4a8c3f; color: #fff; }
+    .cmd-action-btn.btn-cancel { border-color: #e74c3c; color: #e74c3c; }
+    .cmd-action-btn.btn-cancel:hover { background: #e74c3c; color: #fff; }
+    .cmd-action-btn.btn-details { border-color: #636e72; color: #636e72; }
+    .cmd-action-btn.btn-details:hover { border-color: #4a8c3f; color: #4a8c3f; }
+
+    /* ── Toast ── */
+    #cmd-toast-container {
+      position: fixed; bottom: 28px; right: 28px; z-index: 99999;
+      display: flex; flex-direction: column; gap: 12px; pointer-events: none;
+    }
+    @keyframes toastIn { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(60px); } }
+
+    /* ── Modale ── */
+    .cmd-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 10000;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+    .cmd-modal-overlay.active { display: flex; }
+    .cmd-modal {
+      background: #fff; border-radius: 20px; width: 90%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: modalIn .3s ease;
+    }
+    @keyframes modalIn { from { opacity:0; transform:scale(.95) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .cmd-modal-header { display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid #f0f0f0; }
+    .cmd-modal-header h3 { font-size:17px; font-weight:700; margin:0; }
+    .cmd-modal-close { width:36px; height:36px; border-radius:50%; border:none; background:#f5f5f5; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; color:#636e72; transition:all .2s; }
+    .cmd-modal-close:hover { background:#e74c3c; color:#fff; }
+    .cmd-modal-body { padding:20px 24px; }
+    .cmd-detail-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f5f5f5; }
+    .cmd-detail-item:last-child { border-bottom:none; }
+    .cmd-detail-img { width:52px; height:52px; border-radius:10px; object-fit:cover; background:#f5f5f5; flex-shrink:0; }
+    .cmd-detail-img-placeholder { width:52px; height:52px; border-radius:10px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#b2bec3; font-size:20px; flex-shrink:0; }
+    .cmd-detail-info { flex:1; min-width:0; }
+    .cmd-detail-info strong { font-size:14px; color:#2d3436; display:block; }
+    .cmd-detail-info small { color:#636e72; font-size:12px; }
+    .cmd-detail-price { font-weight:700; color:#4a8c3f; font-size:14px; white-space:nowrap; }
+    .cmd-modal-footer { display:flex; justify-content:space-between; align-items:center; padding:16px 24px; border-top:1px solid #f0f0f0; background:#fafafa; border-radius:0 0 20px 20px; }
+    .cmd-modal-footer .cmd-modal-total { font-size:18px; font-weight:800; color:#2d3436; }
+
+    /* ── Vide ── */
+    .cmd-empty { text-align:center; padding:60px 20px; color:#b2bec3; }
+    .cmd-empty i { font-size:48px; margin-bottom:12px; display:block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .cmd-layout { flex-direction: column; }
+      .cmd-sidebar { width: 100%; position: static; }
+      .cmd-grid { grid-template-columns: 1fr; }
+    }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    {# ── HEADER BAR ── #}
+    <section class="mp-header">
+      <div class="container">
+        <div class="mp-header-inner">
+          <div class="mp-header-left">
+            <h1 class="mp-header-title">Commandes Reçues</h1>
+          </div>
+          <div class="mp-header-right">
+            <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
+              <i class="bi bi-arrow-left"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container" style="padding: 28px 0 60px;">
+
+      {# ── STATS ── #}
+      <div class="cmd-stats-bar">
+        <div class="cmd-stat-card">
+          <i class="bi bi-box-arrow-in-down"></i>
+          <div>
+            <div class="cmd-stat-value">{{ stats.nbCommandes }}</div>
+            <div class="cmd-stat-label">Commandes reçues</div>
+          </div>
+        </div>
+        <div class="cmd-stat-card">
+          <i class="bi bi-cash-coin"></i>
+          <div>
+            <div class="cmd-stat-value">{{ stats.totalGagne|number_format(2, ',', ' ') }} <small>DT</small></div>
+            <div class="cmd-stat-label">Total gagné</div>
+          </div>
+        </div>
+      </div>
+
+      {# ── LAYOUT ── #}
+      <div class="cmd-layout">
+
+        {# ── SIDEBAR FILTRES ── #}
+        <aside class="cmd-sidebar">
+          <h4><i class="bi bi-funnel-fill"></i> Filtres</h4>
+
+          <label>Recherche par ID</label>
+          <input type="text" id="filter-cmd-id" placeholder="Ex: 47" oninput="filterCommandes()">
+
+          <label>Statut</label>
+          <select id="filter-cmd-statut" onchange="filterCommandes()">
+            <option value="">Tous</option>
+            <option value="en_attente">En attente</option>
+            <option value="en_cours">En cours</option>
+            <option value="livree">Livrée</option>
+            <option value="annulee">Annulée</option>
+          </select>
+
+          <button class="cmd-reset-btn" onclick="resetFilters()">
+            <i class="bi bi-x-lg"></i> Réinitialiser les filtres
+          </button>
+        </aside>
+
+        {# ── MAIN CONTENT ── #}
+        <div class="cmd-main">
+          <h3><i class="bi bi-box-arrow-in-down"></i> Ventes reçues</h3>
+
+          {% if commandes is empty %}
+            <div class="cmd-empty">
+              <i class="bi bi-inbox"></i>
+              <p>Aucune commande reçue pour le moment.</p>
+            </div>
+          {% else %}
+            <div class="cmd-grid" id="cmd-grid">
+              {% for commande in commandes %}
+                {% set etat = commande.etat %}
+                <div class="cmd-card" id="cmd-card-{{ commande.id }}" data-cmd-id="{{ commande.id }}" data-cmd-etat="{{ etat }}">
+
+                  {# Header #}
+                  <div class="cmd-card-header">
+                    <div>
+                      <span class="cmd-badge {{ etat }}" id="cmd-badge-{{ commande.id }}">{{ etat|replace({'_': ' '})|capitalize }}</span>
+                      <div class="cmd-card-id">Commande <strong>#{{ commande.id }}</strong></div>
+                    </div>
+                    <div class="cmd-card-total">{{ commande.total|number_format(2, ',', ' ') }} <small>DT</small></div>
+                  </div>
+
+                  {# Date #}
+                  <div class="cmd-card-date">
+                    DATE
+                    <strong>{{ commande.dateCommande|date('d F Y') }}</strong>
+                  </div>
+
+                  {# Acheteur #}
+                  <div class="cmd-card-buyer">
+                    <i class="bi bi-person-fill"></i> Acheteur : <strong>{{ commande.user.nom }} {{ commande.user.prenom }}</strong>
+                  </div>
+
+                  {# Timeline ou Annulée #}
+                  {% if etat == 'annulee' %}
+                    <div class="cmd-cancelled-msg">
+                      <i class="bi bi-x-circle-fill"></i> Commande annulée
+                    </div>
+                  {% else %}
+                    {% set stepIndex = etat == 'en_attente' ? 0 : (etat == 'en_cours' ? 1 : (etat == 'livree' ? 2 : 2)) %}
+                    <div class="cmd-timeline" id="cmd-timeline-{{ commande.id }}">
+                      <div class="cmd-timeline-line">
+                        <div class="cmd-timeline-line-fill" style="width: {{ stepIndex == 0 ? '0%' : (stepIndex == 1 ? '50%' : '100%') }};"></div>
+                      </div>
+                      {% set steps = ['Attente', 'En cours', 'Livrée'] %}
+                      {% for step in steps %}
+                        <div class="cmd-timeline-step">
+                          <div class="cmd-timeline-dot {{ loop.index0 < stepIndex ? 'done' : (loop.index0 == stepIndex ? 'active' : '') }}">
+                            {% if loop.index0 < stepIndex %}
+                              <i class="bi bi-check"></i>
+                            {% elseif loop.index0 == stepIndex %}
+                              <i class="bi bi-truck"></i>
+                            {% endif %}
+                          </div>
+                          <span class="cmd-timeline-label {{ loop.index0 <= stepIndex ? 'active' : '' }}">{{ step }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+
+                  {# Actions vendeur #}
+                  <div class="cmd-actions" id="cmd-actions-{{ commande.id }}">
+                    {% if etat == 'en_attente' %}
+                      <button class="cmd-action-btn btn-ship" onclick="updateStatus({{ commande.id }}, 'en_cours')">
+                        <i class="bi bi-truck"></i> Expédier
+                      </button>
+                      <button class="cmd-action-btn btn-cancel" onclick="updateStatus({{ commande.id }}, 'annulee')">
+                        <i class="bi bi-x-lg"></i> Annuler
+                      </button>
+                    {% elseif etat == 'en_cours' %}
+                      <button class="cmd-action-btn btn-deliver" onclick="updateStatus({{ commande.id }}, 'livree')">
+                        <i class="bi bi-check-circle"></i> Marquer livrée
+                      </button>
+                    {% endif %}
+                    <button class="cmd-action-btn btn-details" onclick="openDetails({{ commande.id }})">
+                      <i class="bi bi-eye-fill"></i> Détails
+                    </button>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── TOAST ── #}
+    <div id="cmd-toast-container"></div>
+
+    {# ── MODALE ── #}
+    <div class="cmd-modal-overlay" id="cmd-modal-overlay" onclick="closeModal(event)">
+      <div class="cmd-modal" onclick="event.stopPropagation();">
+        <div class="cmd-modal-header">
+          <h3 id="modal-title">Détails de la commande</h3>
+          <button class="cmd-modal-close" onclick="document.getElementById('cmd-modal-overlay').classList.remove('active')">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="cmd-modal-body" id="modal-body">
+          <p style="text-align:center;color:#b2bec3;">Chargement...</p>
+        </div>
+        <div class="cmd-modal-footer">
+          <div style="flex:1;">
+            <div id="modal-delivery-row" style="display:none;font-size:13px;color:#636e72;">
+              Frais de livraison : <span id="modal-delivery-cost">0,00</span> DT
+            </div>
+            <div id="modal-discount-row" style="display:none;font-size:13px;color:#116530;margin-top:4px;font-weight:600;">
+              Coupon (<span id="modal-discount-code"></span>) : -<span id="modal-discount-amount">0,00</span> DT
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:14px;color:#636e72;">Total : </span>
+            <span class="cmd-modal-total" id="modal-total">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Filtres ──
+function filterCommandes() {
+  const filterId     = document.getElementById('filter-cmd-id').value.toLowerCase();
+  const filterStatut = document.getElementById('filter-cmd-statut').value;
+
+  document.querySelectorAll('.cmd-card').forEach(card => {
+    const id   = card.dataset.cmdId;
+    const etat = card.dataset.cmdEtat;
+    const matchId     = !filterId || id.includes(filterId);
+    const matchStatut = !filterStatut || etat === filterStatut;
+    card.style.display = (matchId && matchStatut) ? '' : 'none';
+  });
+}
+
+function resetFilters() {
+  document.getElementById('filter-cmd-id').value = '';
+  document.getElementById('filter-cmd-statut').value = '';
+  filterCommandes();
+}
+
+// ── Toast ──
+function showToast(message, isError = false) {
+  let container = document.getElementById('cmd-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'cmd-toast-container';
+    container.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:99999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+    document.body.appendChild(container);
+  }
+
+  const id = 'toast-' + Date.now();
+  const barColor = isError ? '#e74c3c' : '#4a8c3f';
+  const icon = isError ? 'x-circle-fill' : 'check-circle-fill';
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = `pointer-events:all;display:flex;align-items:center;gap:14px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:300px;max-width:380px;overflow:hidden;animation:toastIn .4s cubic-bezier(.22,1,.36,1);border:1px solid #ececec;`;
+  el.innerHTML = `
+    <div style="width:6px;min-height:64px;background:${barColor};flex-shrink:0;"></div>
+    <i class="bi bi-${icon}" style="font-size:26px;color:${barColor};flex-shrink:0;"></i>
+    <span style="flex:1;font-size:14px;font-weight:600;color:#2d3436;padding:14px 0;">${message}</span>
+    <button type="button" onclick="this.closest('div[id^=toast]').remove()"
+      style="background:none;border:none;cursor:pointer;color:#b2bec3;font-size:16px;padding:14px;line-height:1;">
+      <i class="bi bi-x-lg"></i>
+    </button>`;
+  container.appendChild(el);
+  setTimeout(() => { const t = document.getElementById(id); if (t) { t.style.animation = 'toastOut .35s ease forwards'; setTimeout(() => t.remove(), 350); } }, 4000);
+}
+
+// ── Mise à jour du statut (AJAX) ──
+async function updateStatus(cmdId, newStatus) {
+  const labels = { en_cours: 'expédier', livree: 'marquer livrée', annulee: 'annuler' };
+  if (!confirm(`Voulez-vous ${labels[newStatus] || 'modifier'} cette commande ?`)) return;
+
+  try {
+    const res = await fetch(`/marketplace/commande/${cmdId}/status/${newStatus}`, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(data.message);
+      // Recharger la page pour mettre à jour la timeline et les boutons
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(data.message || 'Erreur.', true);
+    }
+  } catch (err) {
+    showToast('Erreur réseau.', true);
+  }
+}
+
+// ── Modale Détails ──
+async function openDetails(id) {
+  const overlay = document.getElementById('cmd-modal-overlay');
+  const body    = document.getElementById('modal-body');
+  const title   = document.getElementById('modal-title');
+  const total   = document.getElementById('modal-total');
+
+  overlay.classList.add('active');
+  body.innerHTML = '<p style="text-align:center;color:#b2bec3;padding:30px;">Chargement...</p>';
+  title.textContent = 'Détails de la commande';
+  total.textContent = '—';
+
+  try {
+    const res  = await fetch(`/marketplace/commande/${id}/details`);
+    const data = await res.json();
+
+    if (!data.success) {
+      body.innerHTML = `<p style="text-align:center;color:#e74c3c;">${data.message}</p>`;
+      return;
+    }
+
+    const cmd = data.commande;
+    title.textContent = `Commande #${cmd.id} — ${cmd.date}`;
+    total.textContent = `${cmd.total} DT`;
+
+    // Affichage des frais de livraison
+    const deliveryRow = document.getElementById('modal-delivery-row');
+    const deliveryCost = document.getElementById('modal-delivery-cost');
+    if (cmd.fraisLivraison && cmd.fraisLivraison !== "0,00") {
+      deliveryRow.style.display = 'block';
+      deliveryCost.textContent = cmd.fraisLivraison;
+    } else {
+      deliveryRow.style.display = 'none';
+    }
+
+    // Affichage de la remise (Coupon)
+    const discountRow = document.getElementById('modal-discount-row');
+    const discountCode = document.getElementById('modal-discount-code');
+    const discountAmount = document.getElementById('modal-discount-amount');
+    
+    if (cmd.montantRemise && cmd.codeCoupon) {
+      discountRow.style.display = 'block';
+      discountCode.textContent = cmd.codeCoupon;
+      discountAmount.textContent = cmd.montantRemise;
+    } else {
+      discountRow.style.display = 'none';
+    }
+
+    let html = '';
+    cmd.items.forEach(item => {
+      const img = item.image
+        ? `<img src="/uploads/produits/${item.image}" alt="${item.nom}" class="cmd-detail-img">`
+        : `<div class="cmd-detail-img-placeholder"><i class="bi bi-image"></i></div>`;
+
+      html += `
+        <div class="cmd-detail-item">
+          ${img}
+          <div class="cmd-detail-info">
+            <strong>${item.nom}</strong>
+            <small>${item.quantite} × ${item.prixUnitaire} DT</small>
+          </div>
+          <div class="cmd-detail-price">${item.sousTotal} DT</div>
+        </div>`;
+    });
+
+    body.innerHTML = html || '<p style="text-align:center;color:#b2bec3;">Aucun article.</p>';
+  } catch (err) {
+    body.innerHTML = '<p style="text-align:center;color:#e74c3c;">Erreur réseau.</p>';
+  }
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('cmd-modal-overlay')) {
+    document.getElementById('cmd-modal-overlay').classList.remove('active');
+  }
+}
+</script>
+{% endblock %}

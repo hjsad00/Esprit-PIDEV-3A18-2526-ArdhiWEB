@@ -7,6 +7,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * Contrôleur de la page d'accueil du marketplace.
+ */
 class MarketplaceController extends AbstractController
 {
     #[Route('/marketplace', name: 'app_marketplace')]
@@ -14,7 +17,7 @@ class MarketplaceController extends AbstractController
     {
         $produits = $produitsRepository->findAll();
 
-        return $this->render('Marketplace/index.html.twig', [
+        return $this->render('Marketplace/accueil.html.twig', [
             'produits' => $produits,
         ]);
     }

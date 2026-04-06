@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Marketplace{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       HERO SECTION
+       ============================ #}
+    <section class="marketplace-hero">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/hero_1.jpg') }}" alt="Marketplace Ardhi">
+      </div>
+
+      <div class="container">
+        <div class="hero-inner">
+
+          {# --- Left Content --- #}
+          <div class="hero-left">
+            <div class="hero-label">ARDHI MARKETPLACE</div>
+            <h1 class="hero-headline">Votre marché<br>agricole<br>en ligne.</h1>
+            <p class="hero-description">
+              Achetez et vendez semences, équipements, engrais et bien plus
+              auprès d'agriculteurs vérifiés à travers toute la Tunisie.
+            </p>
+            <a href="{{ path('app_marketplace_catalogue') }}" class="hero-btn-primary">
+              <i class="bi bi-shop"></i> Explorer le marché
+            </a>
+          </div>
+
+          {# --- Right: Categories Panel --- #}
+          <div class="hero-right">
+            <div class="categories-glass-panel">
+              <div class="categories-panel-title">Services Marketplace</div>
+
+              <a href="{{ path('app_marketplace_catalogue') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-cart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Catalogue</h4>
+                  <span>Parcourir les produits</span>
+                </div>
+              </a>
+
+              <a href="{{ path('app_marketplace_mes_commandes') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-box-seam-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Commandes</h4>
+                  <span>Suivre mes achats</span>
+                </div>
+              </a>
+
+              <a href="{{ path('app_marketplace_favoris') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Favoris</h4>
+                  <span>Mes produits sauvegardés</span>
+                </div>
+              </a>
+
+              <a href="{{ path('app_marketplace_mes_produits') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-shop-window"></i></div>
+                <div class="category-text">
+                  <h4>Mes Produits</h4>
+                  <span>Gérer mes produits</span>
+                </div>
+              </a>
+
+              <a href="#" class="category-item">
+                <div class="category-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Statistiques</h4>
+                  <span>Performances & ventes</span>
+                </div>
+              </a>
+                 <a href="{{ path('app_marketplace_commandes_recues') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-box-arrow-in-down"></i></div>
+                <div class="category-text">
+                  <h4>Commandes reçues</h4>
+                  <span>Gérer les commandes</span>
+                </div>
+              </a>
+
+              <a href="{{ path('app_marketplace_reclamations') }}" class="category-item">
+                <div class="category-icon"><i class="bi bi-chat-left-dots-fill"></i></div>
+                <div class="category-text">
+                  <h4>Mes Réclamations</h4>
+                  <span>Suivre mes litiges</span>
+                </div>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}

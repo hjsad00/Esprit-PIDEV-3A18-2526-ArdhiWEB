@@ -3,8 +3,8 @@
 namespace App\Command;
 
 use App\Repository\Evenement\ParticipationRepository;
-use App\Service\EvenementParticipationMailer;
-use App\Service\EvenementStatusSyncService;
+use App\Service\Evenement\EvenementParticipationMailer;
+use App\Service\Evenement\EvenementStatusSyncService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;

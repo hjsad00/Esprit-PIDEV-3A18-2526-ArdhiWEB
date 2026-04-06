@@ -6,6 +6,8 @@ use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: ProduitsRepository::class)]
 #[ORM\Table(name: 'produits')]
@@ -17,18 +19,30 @@ class Produits
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Le nom du produit est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 100,
+        minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::FLOAT)]
+    #[Assert\NotBlank(message: 'Le prix est obligatoire.')]
+    #[Assert\GreaterThan(value: 0.1, message: 'Le prix doit être supérieur à 0.1 DT.')]
     private ?float $prix = null;
 
     #[ORM\Column(name: 'quantiteStock')]
+    #[Assert\NotBlank(message: 'La quantité en stock est obligatoire.')]
+    #[Assert\GreaterThanOrEqual(value: 1, message: 'Le stock doit être supérieur à 0.')]
     private ?int $quantiteStock = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
     private ?string $categorie = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -36,6 +50,11 @@ class Produits
     private ?User $user = null;
 
     #[ORM\Column(name: 'uniteMesure', type: Types::STRING, length: 10, columnDefinition: "ENUM('Kg','L','Piece') NOT NULL")]
+    #[Assert\NotBlank(message: "L'unité de mesure est obligatoire.")]
+    #[Assert\Choice(
+        choices: ['Kg', 'L', 'Piece'],
+        message: "L'unité de mesure doit être l'une des valeurs suivantes : Kg, L, Piece."
+    )]
     private ?string $uniteMesure = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -46,6 +65,12 @@ class Produits
 
     #[ORM\Column(name: 'typeRemise', length: 20, nullable: true)]
     private ?string $typeRemise = null;
+
+    #[ORM\Column(type: Types::BOOLEAN, options: ["default" => true])]
+    private bool $visible = true;
+
+    #[ORM\Column(name: 'visible_admin', type: Types::BOOLEAN, options: ["default" => true])]
+    private bool $visibleAdmin = true;
 
     // ==================== GETTERS & SETTERS ====================
 
@@ -164,6 +189,63 @@ class Produits
         return $this;
     }
 
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    public function setVisible(bool $visible): static
+    {
+        $this->visible = $visible;
+        return $this;
+    }
+
+    public function isVisibleAdmin(): bool
+    {
+        return $this->visibleAdmin;
+    }
+
+    public function setVisibleAdmin(bool $visibleAdmin): static
+    {
+        $this->visibleAdmin = $visibleAdmin;
+        return $this;
+    }
+
+    // ==================== VALIDATION CALLBACK (Remise) ====================
+
+    /**
+     * Validation conditionnelle de la remise selon son type.
+     * - POURCENTAGE : doit être entre 1 et 100.
+     * - FIXE        : doit être entre 0.1 DT et le prix du produit.
+     */
+    #[Assert\Callback]
+    public function validateRemise(ExecutionContextInterface $context): void
+    {
+        if ($this->typeRemise === null || $this->typeRemise === 'AUCUNE') {
+            return; // Pas de remise : rien à valider.
+        }
+
+        if ($this->typeRemise === 'POURCENTAGE') {
+            if ($this->remise === null || $this->remise < 1 || $this->remise > 100) {
+                $context->buildViolation('La remise en pourcentage doit être comprise entre 1 et 100.')
+                    ->atPath('remise')
+                    ->addViolation();
+            }
+        } elseif ($this->typeRemise === 'FIXE') {
+            if ($this->remise === null || $this->remise < 0.1) {
+                $context->buildViolation('La remise fixe doit être d\'au moins 0.1 DT.')
+                    ->atPath('remise')
+                    ->addViolation();
+            } elseif ($this->prix !== null && $this->remise >= $this->prix) {
+                $context->buildViolation('La remise fixe ({{ remise }} DT) ne peut pas être supérieure ou égale au prix du produit ({{ prix }} DT).')
+                    ->setParameter('{{ remise }}', $this->remise)
+                    ->setParameter('{{ prix }}', $this->prix)
+                    ->atPath('remise')
+                    ->addViolation();
+            }
+        }
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**
@@ -175,11 +257,11 @@ class Produits
             return $this->prix;
         }
 
-        if ($this->typeRemise === 'pourcentage') {
+        if ($this->typeRemise === 'POURCENTAGE') {
             return $this->prix * (1 - $this->remise / 100);
         }
 
-        // remise fixe
+        // Remise fixe
         return max(0, $this->prix - $this->remise);
     }
 }

@@ -1,0 +1,940 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Gestion des Produits{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+      .mp-flash {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 16px auto;
+        max-width: 860px;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        animation: flashIn .35s ease;
+      }
+      @keyframes flashIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .mp-flash span { display: flex; align-items: center; gap: 10px; }
+      .mp-flash button {
+        background: none; border: none; cursor: pointer;
+        font-size: 16px; opacity: .6; transition: opacity .2s;
+        padding: 0; line-height: 1;
+      }
+      .mp-flash button:hover { opacity: 1; }
+      .mp-flash-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+      .mp-flash-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+      .mp-flash-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+      .mp-flash-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+      
+      /* Styles pour les sélecteurs de filtres */
+      .mp-filter-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e0e6e0;
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        color: #2d3436;
+        background: #f8faf7;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .mp-filter-group select:focus {
+        border-color: #4a8c3f;
+        box-shadow: 0 0 0 3px rgba(74, 140, 63, 0.1);
+        background: #fff;
+      }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       TOP HEADER BAR
+       ============================ #}
+    <section class="mp-header">
+      <div class="container">
+        <div class="mp-header-inner">
+          <div class="mp-header-left">
+            <h1 class="mp-header-title">
+              <i class="bi bi-shop-window"></i> Gestion des Produits
+            </h1>
+          </div>
+          <div class="mp-header-right">
+            <button type="button" class="mp-btn-add" onclick="toggleForm()">
+              <i class="bi bi-plus-lg"></i> Ajouter un produit
+            </button>
+            <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
+              <i class="bi bi-arrow-left"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       TOAST NOTIFICATIONS
+       ============================ #}
+    <div id="mp-toast-container" style="
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    ">
+      {% for type, messages in app.flashes %}
+        {% for message in messages %}
+          {% set bgColor  = type == 'success' ? '#ffffff' : (type == 'danger' ? '#ffffff' : '#ffffff') %}
+          {% set barColor = type == 'success' ? '#4a8c3f' : (type == 'danger' ? '#e74c3c' : (type == 'warning' ? '#f39c12' : '#3498db')) %}
+          {% set icon     = type == 'success' ? 'check-circle-fill' : (type == 'danger' ? 'x-circle-fill' : (type == 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill')) %}
+          <div id="mp-toast-{{ loop.index }}" style="
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 0;
+            min-width: 300px;
+            max-width: 380px;
+            overflow: hidden;
+            animation: toastIn .4s cubic-bezier(.22,1,.36,1);
+            border: 1px solid #ececec;
+          ">
+            {# Barre colorée à gauche #}
+            <div style="width:6px; min-height:64px; background:{{ barColor }}; flex-shrink:0;"></div>
+
+            {# Icône #}
+            <i class="bi bi-{{ icon }}" style="font-size:26px; color:{{ barColor }}; flex-shrink:0;"></i>
+
+            {# Texte #}
+            <span style="flex:1; font-size:14px; font-weight:600; color:#2d3436; padding: 14px 0;">
+              {{ message }}
+            </span>
+
+            {# Bouton fermer #}
+            <button type="button"
+                    onclick="mpToastClose('mp-toast-{{ loop.index }}')"
+                    style="background:none; border:none; cursor:pointer; color:#b2bec3; font-size:16px; padding:14px 14px; line-height:1; transition:color .2s;"
+                    onmouseover="this.style.color='#636e72'"
+                    onmouseout="this.style.color='#b2bec3'">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <style>
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateX(60px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateX(0); max-height: 100px; margin: 0; }
+        to   { opacity: 0; transform: translateX(60px); max-height: 0; margin: 0; }
+      }
+    </style>
+
+    {# ============================
+       INFO BANNER
+       ============================ #}
+    <section class="mp-info-banner">
+      <div class="container">
+        <div class="mp-info-inner">
+          <span class="mp-info-text">
+            <i class="bi bi-hand-index-thumb"></i> Cliquez sur un produit pour le modifier
+          </span>
+          <span class="mp-info-count">
+            <i class="bi bi-check-circle-fill"></i> Produits ajoutés/créés : <strong>{{ produits|length }}</strong>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       SEARCH & FILTERS
+       ============================ #}
+    <section class="mp-filters-section">
+      <div class="container">
+        <div class="mp-filters-bar">
+          <div class="mp-filters-toggle" onclick="document.querySelector('.mp-filters-fields').classList.toggle('open')">
+            <i class="bi bi-search"></i> Recherche & Filtres
+          </div>
+          <a href="{{ path('app_marketplace_mes_produits') }}" class="mp-filters-reset">Réinitialiser</a>
+        </div>
+        <div class="mp-filters-fields open">
+          <div class="mp-filter-group">
+            <label>ID</label>
+            <input type="text" id="filter-id" placeholder="Ex: 12" oninput="filterTable()">
+          </div>
+          <div class="mp-filter-group">
+            <label>NOM</label>
+            <input type="text" id="filter-nom" placeholder="Nom du produit..." oninput="filterTable()">
+          </div>
+          <div class="mp-filter-group">
+            <label>CATÉGORIE</label>
+            <select id="filter-cat" onchange="filterTable()">
+              <option value="">Toutes les catégories</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       PRODUCT TABLE
+       ============================ #}
+    <section class="mp-table-section">
+      <div class="container">
+        <div class="mp-table-wrapper">
+          <table class="mp-table" id="produits-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Catégorie</th>
+                <th>Prix (DT)</th>
+                <th>Stock</th>
+                <th>Remise</th>
+                <th>Visible</th>
+                <th>État Admin</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for produit in produits %}
+                <tr class="mp-table-row" onclick="editProduit(this)" style="cursor:pointer;"
+                    data-id="{{ produit.id }}"
+                    data-nom="{{ produit.nom }}"
+                    data-description="{{ produit.description }}"
+                    data-prix="{{ produit.prix }}"
+                    data-stock="{{ produit.quantiteStock }}"
+                    data-categorie="{{ produit.categorie }}"
+                    data-unite="{{ produit.uniteMesure }}"
+                    data-remise="{{ produit.remise }}"
+                    data-type-remise="{{ produit.typeRemise }}"
+                    data-image="{{ produit.image }}"
+                    data-visible="{{ produit.visible ? '1' : '0' }}">
+                  <td>
+                    <div class="mp-table-img">
+                      {% if produit.image %}
+                        <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}">
+                      {% else %}
+                        <div class="mp-table-img-placeholder">
+                          <i class="bi bi-image"></i>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td><span class="mp-table-id">#{{ produit.id }}</span></td>
+                  <td><strong>{{ produit.nom }}</strong></td>
+                  <td>
+                    {% if produit.categorie %}
+                      <span class="mp-table-badge">{{ produit.categorie }}</span>
+                    {% else %}
+                      <span style="color:#b2bec3;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if produit.remise > 0 %}
+                      <span style="text-decoration:line-through;color:#b2bec3;font-size:12px;">{{ produit.prix|number_format(2, '.', ' ') }}</span><br>
+                      <strong style="color:#4a8c3f;">{{ produit.prixFinal|number_format(2, '.', ' ') }}</strong>
+                    {% else %}
+                      <strong>{{ produit.prix|number_format(2, '.', ' ') }}</strong>
+                    {% endif %}
+                    <small style="color:#b2bec3;"> /{{ produit.uniteMesure }}</small>
+                  </td>
+                  <td>
+                    <span class="mp-table-stock {{ produit.quantiteStock > 0 ? 'in-stock' : 'out-stock' }}">
+                      {{ produit.quantiteStock }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if produit.remise > 0 %}
+                      {% if produit.typeRemise == 'POURCENTAGE' %}
+                        <span class="mp-table-remise">-{{ produit.remise|number_format(0) }}%</span>
+                      {% else %}
+                        <span class="mp-table-remise">-{{ produit.remise|number_format(2, '.', ' ') }} DT</span>
+                      {% endif %}
+                    {% else %}
+                      <span style="color:#b2bec3;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if produit.visible %}
+                      <span class="mp-table-badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;">
+                        <i class="bi bi-eye-fill"></i> Oui
+                      </span>
+                    {% else %}
+                      <span class="mp-table-badge" style="background:#fff3e0;color:#ef6c00;border:1px solid #ffe0b2;">
+                        <i class="bi bi-eye-slash-fill"></i> Caché
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if produit.visibleAdmin %}
+                      <span class="mp-table-badge" style="background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;">
+                        <i class="bi bi-shield-check"></i> Autorisé
+                      </span>
+                    {% else %}
+                      <span class="mp-table-badge" style="background:#ffebee;color:#c62828;border:1px solid #ffcdd2;">
+                        <i class="bi bi-shield-slash"></i> Bloqué
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td onclick="event.stopPropagation();">
+                    <div class="mp-table-actions">
+                      <button type="button" class="mp-action-edit" title="Modifier" onclick="editProduit(this.closest('tr'))">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button type="button" class="mp-action-delete" title="Supprimer" 
+                              data-delete-url="{{ path('app_marketplace_produit_delete', {id: produit.id}) }}">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:40px;color:#b2bec3;">
+                    <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:10px;"></i>
+                    Aucun produit. Cliquez sur "Ajouter un produit" pour commencer.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       ADD / EDIT FORM PANEL
+       Le formulaire reste ouvert (display:block) si des erreurs de validation sont présentes.
+       ============================ #}
+    <section class="mp-form-section" id="form-section"
+             style="{{ validationErrors is not empty ? 'display:block' : 'display:none' }}">
+      <div class="container">
+        <div class="mp-form-card">
+
+          <div class="mp-form-header">
+            <h2 id="form-title">
+              {% if formProduit and formProduit.id %}
+                <i class="bi bi-pencil-square"></i> Modifier le produit #{{ formProduit.id }}
+              {% else %}
+                <i class="bi bi-plus-square"></i> Ajouter un nouveau produit
+              {% endif %}
+            </h2>
+            <button type="button" class="mp-form-close" onclick="toggleForm()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          {# ── BLOC ERREURS DE VALIDATION ────────────────────────────────── #}
+          {% if validationErrors is not empty %}
+            <div class="alert alert-danger" style="margin:0 0 20px 0; border-radius:8px; padding:16px 20px;">
+              <strong><i class="bi bi-exclamation-triangle-fill"></i> Veuillez corriger les erreurs suivantes :</strong>
+              <ul style="margin:10px 0 0 0; padding-left:20px;">
+                {% for field, messages in validationErrors %}
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          {# ─────────────────────────────────────────────────────────────── #}
+
+          <form action="{{ path('app_marketplace_produit_save') }}" method="POST" enctype="multipart/form-data" novalidate>
+            {# Conservation de l'ID en mode édition #}
+            <input type="hidden" name="id" id="form-id"
+                   value="{{ formProduit and formProduit.id ? formProduit.id : '' }}">
+
+            <div class="mp-form-grid">
+              {# LEFT COLUMN #}
+              <div class="mp-form-left">
+
+                <div class="mp-form-group {% if validationErrors['nom'] is defined %}has-error{% endif %}">
+                  <label>NOM DU PRODUIT *</label>
+                  <input type="text" name="nom" id="form-nom"
+                         placeholder="Ex: Engrais organique"
+                         value="{{ formProduit ? formProduit.nom : '' }}"
+                        >
+                  {% if validationErrors['nom'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['nom']|join(' ') }}
+                    </small>
+                  {% endif %}
+                </div>
+
+                <div class="mp-form-group">
+                  <label>DESCRIPTION</label>
+                  <textarea name="description" id="form-description" rows="4"
+                            placeholder="Description détaillée...">{{ formProduit ? formProduit.description : '' }}</textarea>
+                </div>
+
+                <div class="mp-form-row">
+                  <div class="mp-form-group {% if validationErrors['prix'] is defined %}has-error{% endif %}">
+                    <label>PRIX (DT) *</label>
+                    <input type="number" step="0.01" name="prix" id="form-prix"
+                           placeholder="29.99"
+                           value="{{ formProduit ? formProduit.prix : '' }}"
+                          >
+                    <small><i class="bi bi-info-circle"></i> En Dinar Tunisien (DT)</small>
+                    {% if validationErrors['prix'] is defined %}
+                      <small class="text-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                        {{ validationErrors['prix']|join(' ') }}
+                      </small>
+                    {% endif %}
+                  </div>
+
+                  <div class="mp-form-group {% if validationErrors['quantiteStock'] is defined %}has-error{% endif %}">
+                    <label>STOCK *</label>
+                    <input type="number" name="quantiteStock" id="form-stock"
+                           placeholder="100"
+                           value="{{ formProduit ? formProduit.quantiteStock : '' }}"
+                          >
+                    {% if validationErrors['quantiteStock'] is defined %}
+                      <small class="text-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                        {{ validationErrors['quantiteStock']|join(' ') }}
+                      </small>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="mp-form-group {% if validationErrors['uniteMesure'] is defined %}has-error{% endif %}">
+                  <label>UNITÉ DE MESURE *</label>
+                  <select name="uniteMesure" id="form-unite">
+                    <option value="Kg"    {{ formProduit and formProduit.uniteMesure == 'Kg'    ? 'selected' : '' }}>Kg</option>
+                    <option value="L"     {{ formProduit and formProduit.uniteMesure == 'L'     ? 'selected' : '' }}>L</option>
+                    <option value="Piece" {{ formProduit and formProduit.uniteMesure == 'Piece' ? 'selected' : '' }}>Pièce</option>
+                  </select>
+                  {% if validationErrors['uniteMesure'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['uniteMesure']|join(' ') }}
+                    </small>
+                  {% endif %}
+                </div>
+
+              </div>
+
+              {# RIGHT COLUMN #}
+              <div class="mp-form-right">
+
+                <div class="mp-form-group {% if validationErrors['categorie'] is defined %}has-error{% endif %}">
+                  <label>CATÉGORIE *</label>
+                  <select name="categorie" id="form-categorie">
+                    <option value="">— Choisir une catégorie —</option>
+                    {% for cat in categories %}
+                      <option value="{{ cat }}"
+                              {{ formProduit and formProduit.categorie == cat ? 'selected' : '' }}>
+                        {{ cat }}
+                      </option>
+                    {% endfor %}
+                    {# Si la catégorie saisie n'existe pas encore dans la liste, on l'ajoute dynamiquement #}
+                    {% if formProduit and formProduit.categorie and formProduit.categorie not in categories %}
+                      <option value="{{ formProduit.categorie }}" selected>{{ formProduit.categorie }}</option>
+                    {% endif %}
+                  </select>
+                  {% if validationErrors['categorie'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['categorie']|join(' ') }}
+                    </small>
+                  {% endif %}
+                  <div class="mp-form-newcat" style="margin-top:8px;">
+                    <small style="color:#636e72;">Ou ajouter une nouvelle :</small>
+                    <input type="text" id="new-categorie" placeholder="Nouvelle catégorie..." style="margin-top:4px;">
+                    <button type="button" class="mp-btn-newcat" onclick="addNewCategory()">
+                      <i class="bi bi-plus"></i> Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mp-form-group">
+                  <label>REMISE / SOLDE</label>
+                  <select name="typeRemise" id="form-type-remise" onchange="toggleRemiseField()">
+                    <option value="AUCUNE"     {{ formProduit and formProduit.typeRemise == null   ? 'selected' : '' }}>Aucune remise</option>
+                    <option value="POURCENTAGE"{{ formProduit and formProduit.typeRemise == 'POURCENTAGE' ? 'selected' : '' }}>Pourcentage (%)</option>
+                    <option value="FIXE"       {{ formProduit and formProduit.typeRemise == 'FIXE' ? 'selected' : '' }}>Montant fixe (DT)</option>
+                  </select>
+                </div>
+
+                <div class="mp-form-group {% if validationErrors['remise'] is defined %}has-error{% endif %}"
+                     id="remise-value-group"
+                     style="{{ formProduit and formProduit.typeRemise is not null ? 'display:block' : 'display:none' }}">
+                  <label>VALEUR DE LA REMISE *</label>
+                  <input type="number" step="0.01" name="remise" id="form-remise"
+                         placeholder="0"
+                         value="{{ formProduit ? formProduit.remise : '' }}">
+                  {% if validationErrors['remise'] is defined %}
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ validationErrors['remise']|join(' ') }}
+                    </small>
+                  {% endif %}
+                </div>
+
+                <div class="mp-form-group">
+                  <label>IMAGE DU PRODUIT</label>
+                  <div class="mp-form-upload" id="upload-area">
+                    <div class="mp-form-upload-preview" id="upload-preview">
+                      {# Affiche l'image actuelle si on est en mode édition avec une image existante #}
+                      {% if formProduit and formProduit.image %}
+                        <img src="{{ asset('uploads/produits/' ~ formProduit.image) }}" alt="Image actuelle">
+                      {% else %}
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <span>Glissez ou cliquez pour choisir</span>
+                      {% endif %}
+                    </div>
+                    <input type="file" name="image" id="form-image" accept="image/*" onchange="previewImage(this)">
+                  </div>
+                  <button type="button" class="mp-btn-upload" onclick="document.getElementById('form-image').click()">
+                    <i class="bi bi-camera"></i> Choisir une image
+                  </button>
+                </div>
+
+                {# Champ Visibilité #}
+                <div class="mp-form-group" style="margin-top:20px; padding:15px; background:#f8faf7; border-radius:12px; border:1px dashed #d5e8d0;">
+                  <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
+                    <input type="checkbox" name="visible" id="form-visible" value="1" checked style="width:20px; height:20px; cursor:pointer;">
+                    <div style="flex:1;">
+                      <strong style="display:block; color:#2d3436; font-size:14px;">Afficher sur le Marketplace</strong>
+                      <small style="color:#636e72; font-weight:400;">Si coché, le produit sera visible par tous les clients.</small>
+                    </div>
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="mp-form-submit">
+              <button type="submit" class="mp-btn-submit" id="form-submit-btn">
+                {% if formProduit and formProduit.id %}
+                  <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                {% else %}
+                  <i class="bi bi-plus-lg"></i> Ajouter le produit
+                {% endif %}
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </section>
+
+{% endblock %}
+{% block javascripts %}
+<script>
+// ==================== TOGGLE FORM ====================
+function toggleForm(reset = true) {
+  const section = document.getElementById('form-section');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  if (isHidden && reset) resetForm();
+  if (isHidden) setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function resetForm() {
+  document.getElementById('form-id').value = '';
+  document.getElementById('form-nom').value = '';
+  document.getElementById('form-description').value = '';
+  document.getElementById('form-prix').value = '';
+  document.getElementById('form-stock').value = '';
+  document.getElementById('form-unite').value = 'Kg';
+  document.getElementById('form-categorie').value = '';
+  document.getElementById('form-type-remise').value = 'AUCUNE';
+  document.getElementById('form-remise').value = '';
+  document.getElementById('remise-value-group').style.display = 'none';
+    document.getElementById('form-visible').checked = true;
+  document.getElementById('form-image').value = '';
+  document.getElementById('upload-preview').innerHTML =
+    '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
+  document.getElementById('form-title').innerHTML =
+    '<i class="bi bi-plus-square"></i> Ajouter un nouveau produit';
+  document.getElementById('form-submit-btn').innerHTML =
+    '<i class="bi bi-plus-lg"></i> Ajouter le produit';
+  clearAllFieldErrors();
+}
+
+function editProduit(row) {
+  const data = row.dataset;
+  document.getElementById('form-id').value = data.id;
+  document.getElementById('form-nom').value = data.nom;
+  document.getElementById('form-description').value = data.description || '';
+  document.getElementById('form-prix').value = data.prix;
+  document.getElementById('form-stock').value = data.stock;
+  document.getElementById('form-unite').value = data.unite;
+  document.getElementById('form-categorie').value = data.categorie || '';
+
+  const typeRemise = data.typeRemise;
+  if (typeRemise && typeRemise !== '' && typeRemise !== 'null') {
+    document.getElementById('form-type-remise').value = typeRemise;
+    document.getElementById('form-remise').value = data.remise;
+    document.getElementById('remise-value-group').style.display = 'block';
+  } else {
+    document.getElementById('form-type-remise').value = 'AUCUNE';
+    document.getElementById('form-remise').value = '';
+    document.getElementById('remise-value-group').style.display = 'none';
+  }
+
+  document.getElementById('form-visible').checked = (data.visible === '1');
+
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = data.image
+    ? '<img src="/uploads/produits/' + data.image + '" alt="Image actuelle">'
+    : '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
+
+  document.getElementById('form-title').innerHTML =
+    '<i class="bi bi-pencil-square"></i> Modifier le produit #' + data.id;
+  document.getElementById('form-submit-btn').innerHTML =
+    '<i class="bi bi-check-lg"></i> Enregistrer les modifications';
+
+  clearAllFieldErrors();
+  const section = document.getElementById('form-section');
+  section.style.display = 'block';
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function toggleRemiseField() {
+  const type = document.getElementById('form-type-remise').value;
+  document.getElementById('remise-value-group').style.display = (type !== 'AUCUNE') ? 'block' : 'none';
+  if (type === 'AUCUNE') document.getElementById('form-remise').value = '';
+}
+
+function previewImage(input) {
+  const preview = document.getElementById('upload-preview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function addNewCategory() {
+  const input = document.getElementById('new-categorie');
+  const val = input.value.trim();
+  if (!val) return;
+  const selectForm = document.getElementById('form-categorie');
+  const selectFilter = document.getElementById('filter-cat');
+  
+  // Vérifier si elle existe déjà dans le formulaire
+  let exists = false;
+  for (let opt of selectForm.options) {
+    if (opt.value.toLowerCase() === val.toLowerCase()) { 
+      selectForm.value = opt.value; 
+      exists = true;
+      break;
+    }
+  }
+  
+  if (!exists) {
+    // Ajouter au formulaire
+    selectForm.add(new Option(val, val, true, true));
+    // Ajouter au filtre si pas déjà présent
+    let filterExists = false;
+    for (let opt of selectFilter.options) {
+      if (opt.value.toLowerCase() === val.toLowerCase()) {
+        filterExists = true;
+        break;
+      }
+    }
+    if (!filterExists) {
+      selectFilter.add(new Option(val, val));
+    }
+  }
+  
+  input.value = '';
+}
+
+function filterTable() {
+  const filterId  = document.getElementById('filter-id').value.toLowerCase();
+  const filterNom = document.getElementById('filter-nom').value.toLowerCase();
+  const filterCat = document.getElementById('filter-cat').value.toLowerCase();
+  document.querySelectorAll('#produits-table tbody .mp-table-row').forEach(row => {
+    const match =
+      (!filterId  || (row.dataset.id        || '').toLowerCase().includes(filterId))  &&
+      (!filterNom || (row.dataset.nom       || '').toLowerCase().includes(filterNom)) &&
+      (!filterCat || (row.dataset.categorie || '').toLowerCase().includes(filterCat));
+    row.style.display = match ? '' : 'none';
+  });
+}
+
+// ==================== TOAST ====================
+function showToast(message, isError = false) {
+  let container = document.getElementById('mp-toast-container');
+
+  // Auto-créer le conteneur s'il n'existe pas dans le DOM
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'mp-toast-container';
+    container.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+    document.body.appendChild(container);
+  }
+
+  const id = 'toast-' + Date.now();
+  const barColor = isError ? '#e74c3c' : '#4a8c3f';
+  const icon = isError ? 'x-circle-fill' : 'check-circle-fill';
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = `pointer-events:all;display:flex;align-items:center;gap:14px;
+    background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    min-width:300px;max-width:380px;overflow:hidden;
+    animation:toastIn .4s cubic-bezier(.22,1,.36,1);border:1px solid #ececec;`;
+  el.innerHTML = `
+    <div style="width:6px;min-height:64px;background:${barColor};flex-shrink:0;"></div>
+    <i class="bi bi-${icon}" style="font-size:26px;color:${barColor};flex-shrink:0;"></i>
+    <span style="flex:1;font-size:14px;font-weight:600;color:#2d3436;padding:14px 0;">${message}</span>
+    <button type="button" onclick="mpToastClose('${id}')"
+      style="background:none;border:none;cursor:pointer;color:#b2bec3;font-size:16px;padding:14px;line-height:1;">
+      <i class="bi bi-x-lg"></i>
+    </button>`;
+  container.appendChild(el);
+  setTimeout(() => mpToastClose(id), 4000);
+}
+
+function mpToastClose(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = 'toastOut .35s ease forwards';
+  setTimeout(() => el.remove(), 350);
+}
+
+// ==================== FIELD ERRORS ====================
+function showFieldErrors(errors) {
+  clearAllFieldErrors();
+  const fieldMap = {
+    nom: 'form-nom', prix: 'form-prix',
+    quantiteStock: 'form-stock', categorie: 'form-categorie',
+    uniteMesure: 'form-unite', remise: 'form-remise',
+  };
+  for (const [field, messages] of Object.entries(errors)) {
+    const input = document.getElementById(fieldMap[field]);
+    if (!input) continue;
+    const group = input.closest('.mp-form-group');
+    if (!group) continue;
+    group.classList.add('has-error');
+    const small = document.createElement('small');
+    small.className = 'text-danger field-ajax-error';
+    small.innerHTML = '<i class="bi bi-exclamation-circle"></i> ' + messages.join(' ');
+    group.appendChild(small);
+  }
+}
+
+function clearAllFieldErrors() {
+  document.querySelectorAll('.field-ajax-error').forEach(el => el.remove());
+  document.querySelectorAll('.mp-form-group.has-error').forEach(el => el.classList.remove('has-error'));
+}
+
+// ==================== INIT — window.onload garanti après tout le DOM ====================
+window.addEventListener('load', function () {
+
+  // Auto-scroll si erreurs serveur
+  const formSection = document.getElementById('form-section');
+  if (formSection && formSection.style.display === 'block') {
+    setTimeout(() => formSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+
+  // Clear erreurs à la saisie
+  const form = document.querySelector('#form-section form');
+  console.log('FORM FOUND:', form); // debug — à retirer après confirmation
+
+  if (form) {
+    form.querySelectorAll('input, select, textarea').forEach(field => {
+      field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', function () {
+        const group = field.closest('.mp-form-group');
+        if (!group) return;
+        group.querySelector('small.text-danger')?.remove();
+        group.classList.remove('has-error');
+      });
+    });
+
+    // ── AJAX SUBMIT ──
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      console.log('SUBMIT intercepté'); // debug
+
+      const btn = document.getElementById('form-submit-btn');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .6s linear infinite"></i> Enregistrement...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('{{ path("app_marketplace_produit_save") }}', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+        });
+
+        const data = await response.json();
+        console.log('DATA:', data); // debug
+
+        if (data.success) {
+          showToast(data.message);
+          clearAllFieldErrors();
+
+          const p = data.produit;
+          const tbody = document.querySelector('#produits-table tbody');
+
+          const imgHtml = p.image
+            ? `<img src="/uploads/produits/${p.image}" alt="${p.nom}">`
+            : `<div class="mp-table-img-placeholder"><i class="bi bi-image"></i></div>`;
+
+          const catHtml = p.categorie
+            ? `<span class="mp-table-badge">${p.categorie}</span>`
+            : `<span style="color:#b2bec3;">—</span>`;
+
+          let prixHtml = p.remise > 0
+            ? `<span style="text-decoration:line-through;color:#b2bec3;font-size:12px;">${p.prix}</span><br><strong style="color:#4a8c3f;">${p.prixFinal}</strong>`
+            : `<strong>${p.prix}</strong>`;
+          prixHtml += ` <small style="color:#b2bec3;"> /${p.unite}</small>`;
+
+          const remiseHtml = p.remise > 0
+            ? `<span class="mp-table-remise">-${p.typeRemise === 'POURCENTAGE' ? parseFloat(p.remise).toFixed(0)+'%' : parseFloat(p.remise).toFixed(2)+' DT'}</span>`
+            : `<span style="color:#b2bec3;">—</span>`;
+
+          const visibleHtml = p.visible
+            ? `<span class="mp-table-badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;"><i class="bi bi-eye-fill"></i> Oui</span>`
+            : `<span class="mp-table-badge" style="background:#fff3e0;color:#ef6c00;border:1px solid #ffe0b2;"><i class="bi bi-eye-slash-fill"></i> Caché</span>`;
+
+          const visibleAdminHtml = p.visibleAdmin
+            ? `<span class="mp-table-badge" style="background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;"><i class="bi bi-shield-check"></i> Autorisé</span>`
+            : `<span class="mp-table-badge" style="background:#ffebee;color:#c62828;border:1px solid #ffcdd2;"><i class="bi bi-shield-slash"></i> Bloqué</span>`;
+
+          const rowHtml = `
+            <tr class="mp-table-row" onclick="editProduit(this)" style="cursor:pointer;"
+                data-id="${p.id}" data-nom="${p.nom}" data-description="${p.description}"
+                data-prix="${p.prix}" data-stock="${p.stock}" data-categorie="${p.categorie}"
+                data-unite="${p.unite}" data-remise="${p.remise}" data-type-remise="${p.typeRemise}"
+                data-image="${p.image}" data-visible="${p.visible ? '1' : '0'}">
+              <td><div class="mp-table-img">${imgHtml}</div></td>
+              <td><span class="mp-table-id">#${p.id}</span></td>
+              <td><strong>${p.nom}</strong></td>
+              <td>${catHtml}</td>
+              <td>${prixHtml}</td>
+              <td><span class="mp-table-stock ${p.stock > 0 ? 'in-stock' : 'out-stock'}">${p.stock}</span></td>
+              <td>${remiseHtml}</td>
+              <td>${visibleHtml}</td>
+              <td>${visibleAdminHtml}</td>
+              <td onclick="event.stopPropagation();">
+                <div class="mp-table-actions">
+                  <button type="button" class="mp-action-edit" onclick="editProduit(this.closest('tr'))">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="mp-action-delete"
+                          data-delete-url="/marketplace/mes-produits/delete/${p.id}">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+
+          if (data.isNew) {
+            const emptyRow = tbody.querySelector('td[colspan="8"]');
+            if (emptyRow) emptyRow.closest('tr').remove();
+            tbody.insertAdjacentHTML('afterbegin', rowHtml);
+          } else {
+            const existing = tbody.querySelector(`tr[data-id="${p.id}"]`);
+            if (existing) existing.outerHTML = rowHtml;
+          }
+
+          formSection.style.display = 'none';
+          resetForm();
+
+          // Ré-attacher les listeners de suppression sur les nouveaux boutons
+          if (window.attachDeleteListeners) window.attachDeleteListeners();
+
+        } else if (data.errors) {
+          showFieldErrors(data.errors);
+          showToast('Veuillez corriger les erreurs.', true);
+        } else {
+          showToast(data.message || 'Erreur inconnue.', true);
+        }
+
+      } catch (err) {
+        console.error('CATCH ERR:', err);
+        showToast("Erreur: " + err.message, true);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // ── AJAX DELETE ──
+  function attachDeleteListeners() {
+    document.querySelectorAll('.mp-action-delete[data-delete-url]').forEach(btn => {
+      // Éviter les doublons d'événements
+      if (btn.dataset.listenerAttached) return;
+      btn.dataset.listenerAttached = 'true';
+
+      btn.addEventListener('click', async function (e) {
+        e.stopPropagation();
+        if (!confirm('Supprimer ce produit ?')) return;
+
+        const row = btn.closest('tr');
+        try {
+          const response = await fetch(btn.dataset.deleteUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await response.json();
+          if (data.success) {
+            row.style.transition = 'opacity .35s, transform .35s';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(30px)';
+            setTimeout(() => row.remove(), 380);
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Erreur suppression.', true);
+          }
+        } catch (err) {
+          showToast('Erreur réseau lors de la suppression.', true);
+        }
+      });
+    });
+  }
+
+  // Attacher les listeners au chargement
+  attachDeleteListeners();
+
+  // Exposer globalement pour ré-attacher après un ajout/modification AJAX
+  window.attachDeleteListeners = attachDeleteListeners;
+
+  // Auto-fermeture toasts Twig
+  document.querySelectorAll('[id^="mp-toast-"]').forEach(toast => {
+    setTimeout(() => mpToastClose(toast.id), 4000);
+  });
+
+});
+</script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

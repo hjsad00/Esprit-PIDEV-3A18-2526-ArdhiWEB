@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Evenement;
 
 use App\Entity\Evenement\Evenement;
 use App\Repository\Evenement\EvenementRepository;

@@ -1,0 +1,149 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - {{ produit.nom }}{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       TOP BAR — Breadcrumb
+       ============================ #}
+    <section style="background:#1a3a15;padding:85px 0 18px;">
+      <div class="container d-flex align-items-center justify-content-end">
+        <a href="{{ path('app_marketplace_catalogue') }}" style="color:#fff;text-decoration:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.3);padding:8px 20px;border-radius:8px;transition:all 0.3s;">
+          ← Retour au catalogue
+        </a>
+      </div>
+    </section>
+
+    {# ============================
+       PRODUCT DETAIL
+       ============================ #}
+    <section style="background:#f8faf7;padding:40px 0 60px;">
+      <div class="container">
+        <div class="row g-4">
+
+          {# --- LEFT: Product Image --- #}
+          <div class="col-lg-5">
+            <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.04);height:400px;display:flex;align-items:center;justify-content:center;">
+              {% if produit.image %}
+                <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}" style="width:100%;height:100%;object-fit:cover;">
+              {% else %}
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);">
+                  <i class="bi bi-flower1" style="font-size:6rem;color:#4a8c3f;opacity:0.4;"></i>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {# --- RIGHT: Product Info --- #}
+          <div class="col-lg-7">
+            <div style="background:#fff;border-radius:16px;padding:32px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+
+              {# Category & Stock badges #}
+              <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                {% if produit.categorie %}
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:#e8f5e9;color:#2d5a27;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:50px;">
+                    <i class="bi bi-tag-fill"></i> {{ produit.categorie }}
+                  </span>
+                {% endif %}
+                {% if produit.quantiteStock > 0 %}
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:#4a8c3f;color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:50px;">
+                    <i class="bi bi-check-lg"></i> En stock
+                  </span>
+                {% else %}
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:#e17055;color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:50px;">
+                    <i class="bi bi-x-lg"></i> Rupture de stock
+                  </span>
+                {% endif %}
+              </div>
+
+              {# Product Name #}
+              <h1 style="font-family:'Inter',sans-serif;font-size:26px;font-weight:700;color:#2d3436;margin-bottom:10px;">
+                {{ produit.nom }}
+              </h1>
+
+              {# Seller #}
+              {% if produit.user %}
+                <p style="font-family:'Inter',sans-serif;font-size:14px;color:#b2bec3;margin-bottom:16px;">
+                  <i class="bi bi-person-circle"></i> Vendu par <strong style="color:#636e72;">{{ produit.user.prenom ?? '' }} {{ produit.user.nom ?? '' }}</strong>
+                </p>
+              {% endif %}
+
+              {# Rating placeholder #}
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-star" style="color:#fdcb6e;"></i>
+                <i class="bi bi-star" style="color:#fdcb6e;"></i>
+                <i class="bi bi-star" style="color:#fdcb6e;"></i>
+                <i class="bi bi-star" style="color:#fdcb6e;"></i>
+                <i class="bi bi-star" style="color:#fdcb6e;"></i>
+                <span style="font-family:'Inter',sans-serif;font-size:14px;color:#636e72;font-weight:600;">0,0</span>
+                <span style="font-family:'Inter',sans-serif;font-size:13px;color:#b2bec3;">(0 avis)</span>
+              </div>
+
+              <hr style="border-color:rgba(0,0,0,0.06);">
+
+              {# Price #}
+              <div class="mb-3">
+                {% if produit.remise > 0 %}
+                  <p style="font-family:'Inter',sans-serif;font-size:16px;color:#b2bec3;text-decoration:line-through;margin-bottom:4px;">
+                    {{ produit.prix|number_format(2, ',', ' ') }} DT/{{ produit.uniteMesure }}
+                  </p>
+                  <span style="font-family:'Inter',sans-serif;font-size:36px;font-weight:800;color:#4a8c3f;">
+                    {{ produit.prixFinal|number_format(2, ',', ' ') }}
+                  </span>
+                  <span style="font-family:'Inter',sans-serif;font-size:16px;color:#636e72;">DT/{{ produit.uniteMesure }}</span>
+                {% else %}
+                  <span style="font-family:'Inter',sans-serif;font-size:36px;font-weight:800;color:#4a8c3f;">
+                    {{ produit.prix|number_format(2, ',', ' ') }}
+                  </span>
+                  <span style="font-family:'Inter',sans-serif;font-size:16px;color:#636e72;">DT/{{ produit.uniteMesure }}</span>
+                {% endif %}
+              </div>
+
+              {# Stock & Unit badges #}
+              <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+                <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #e0e6e0;padding:8px 16px;border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:#2d3436;">
+                  <i class="bi bi-box-seam" style="color:#4a8c3f;"></i> Stock : {{ produit.quantiteStock }} {{ produit.uniteMesure }}
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #e0e6e0;padding:8px 16px;border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:#2d3436;">
+                  Unité : {{ produit.uniteMesure }}
+                </span>
+              </div>
+
+              {# Description #}
+              {% if produit.description %}
+                <div class="mb-4">
+                  <h6 style="font-family:'Inter',sans-serif;font-weight:700;font-size:12px;color:#636e72;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Description</h6>
+                  <p style="font-family:'Inter',sans-serif;font-size:14px;color:#2d3436;line-height:1.7;">
+                    {{ produit.description }}
+                  </p>
+                </div>
+              {% endif %}
+
+              <hr style="border-color:rgba(0,0,0,0.06);">
+
+              {# Quantity + Add to Cart #}
+              <div class="d-flex align-items-center gap-3 mt-4 flex-wrap">
+                <div>
+                  <label style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Quantité</label>
+                  <input type="number" value="1" min="1" max="{{ produit.quantiteStock }}" style="width:80px;padding:10px 12px;border:1.5px solid #e0e6e0;border-radius:10px;font-family:'Inter',sans-serif;font-size:15px;text-align:center;">
+                </div>
+                <button style="margin-top:22px;display:inline-flex;align-items:center;gap:8px;padding:14px 36px;background:#4a8c3f;color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;border-radius:50px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(74,140,63,0.4);transition:all 0.3s;" onmouseover="this.style.background='#5ea851';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#4a8c3f';this.style.transform='translateY(0)'">
+                  <i class="bi bi-cart-plus"></i> Ajouter au panier
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}

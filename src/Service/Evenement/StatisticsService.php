@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Evenement;
 
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\ParticipationRepository;

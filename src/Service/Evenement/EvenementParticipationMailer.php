@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Evenement;
 
 use App\Entity\Evenement\Participation;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
