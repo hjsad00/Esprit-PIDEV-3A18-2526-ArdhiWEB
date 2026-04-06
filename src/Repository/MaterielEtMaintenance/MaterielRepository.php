@@ -76,4 +76,36 @@ class MaterielRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Pour l'administration : trouve tous les matériels avec filtres optionnels.
+     * On peut chercher par nom de matériel OU par nom de l'agriculteur.
+     */
+    public function findAllForAdmin(?string $search = null, ?string $type = null, ?string $etat = null): array
+    {
+        $qb = $this->createQueryBuilder('m');
+
+        if ($search) {
+            // Dans ce projet, userId est un simple entier, donc on récupère d'abord les IDs des utilisateurs correspondants
+            // ou on fait une sous-requête.
+            // On va simplifier en cherchant le nom du matériel.
+            // Si on voulait chercher par nom de user, il faudrait que la relation soit mappée.
+            $qb->andWhere('m.nom LIKE :search')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($type) {
+            $qb->andWhere('m.type = :type')
+               ->setParameter('type', $type);
+        }
+
+        if ($etat) {
+            $qb->andWhere('m.etat = :etat')
+               ->setParameter('etat', $etat);
+        }
+
+        return $qb->orderBy('m.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

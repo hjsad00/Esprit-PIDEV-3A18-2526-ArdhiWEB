@@ -117,11 +117,16 @@
                         <td>
                             {% if owner %}
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ owner.profilePicture ?? 'https://ui-avatars.com/api/?name=' ~ owner.prenom ~ '+' ~ owner.nom ~ '&background=f0f2f5&color=000' }}" class="rounded-circle me-2" width="24" height="24">
-                                    <span class="small text-muted">{{ owner.prenom }} {{ owner.nom }}</span>
+                                    <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person text-secondary"></i>
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold small" style="color: #116530;">{{ owner.prenom }} {{ owner.nom }}</span>
+                                        <span class="text-muted" style="font-size: 0.75rem;">{{ owner.email }}</span>
+                                    </div>
                                 </div>
                             {% else %}
-                                <span class="text-danger small">Inconnu ({{ m.userId }})</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger small">Utilisateur #{{ m.userId }}</span>
                             {% endif %}
                         </td>
                         <td class="text-end pe-4">

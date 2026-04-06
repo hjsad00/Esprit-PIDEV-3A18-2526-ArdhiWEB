@@ -159,9 +159,6 @@ class MaintenanceController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Maintenance $maintenance): Response
     {
-        // Enlever après test d'affichage
-        $this->addFlash('success', 'DEBUG : Affichage des notifications opérationnel.');
-
         return $this->render('MaterielEtMaintenance/maintenance/show.html.twig', [
             'maintenance' => $maintenance,
         ]);
