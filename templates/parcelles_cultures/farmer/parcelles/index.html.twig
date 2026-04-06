@@ -1,0 +1,304 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Parcelles - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.2rem;
+            margin: 0;
+        }
+        .btn-premium-add {
+            background: #116530;
+            color: white;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 700;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(17,101,48,0.15);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-premium-add:hover {
+            background: #1e8341;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17,101,48,0.25);
+        }
+        .btn-premium-outline {
+            background: white;
+            color: #116530;
+            border: 2px solid #116530;
+            border-radius: 12px;
+            padding: 8px 22px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-premium-outline:hover {
+            background: #f0f7ee;
+            color: #116530;
+            border-color: #116530;
+            transform: translateY(-2px);
+        }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 25px;
+        }
+        .parcel-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            height: 100%;
+        }
+        .parcel-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border-color: rgba(17, 101, 48, 0.1);
+        }
+        .parcel-header {
+            padding: 20px;
+            background: #f8faf7;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .parcel-id {
+            font-weight: 800;
+            color: #116530;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .parcel-body {
+            padding: 25px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .info-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #b2bec3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-value i {
+            color: #116530;
+            font-size: 1.1rem;
+        }
+        .parcel-footer {
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #f8faf7;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-view { background: #f0f7ee; color: #116530; }
+        .btn-view:hover { background: #116530; color: white; }
+        .btn-edit { background: #fffcf0; color: #d4a017; }
+        .btn-edit:hover { background: #d4a017; color: white; }
+        .btn-delete { background: #fff5f5; color: #e74c3c; border: none; }
+        .btn-delete:hover { background: #e74c3c; color: white; }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" data-aos="fade-down">
+                <div>
+                    <h1 class="page-title">Mes Parcelles</h1>
+                    <p class="text-muted mb-0">Visualisez et gérez l'ensemble de vos terrains agricoles.</p>
+                </div>
+                <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-premium-add">
+                    <i class="bi bi-plus-lg me-2"></i> Nouvelle Parcelle
+                </a>
+            </div>
+
+            {# === Search & Filter Section === #}
+            <div class="premium-card mb-4" data-aos="fade-up">
+                <form id="filterForm" action="{{ path('farmer_parcelle_index') }}" method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="info-label mb-2">Rechercher</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="ID, Localisation, Type..." value="{{ filters.q|default('') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="info-label mb-2">Type de sol</label>
+                        <select name="typeSol" class="form-select bg-light border-0">
+                            <option value="">Tous les types</option>
+                            <option value="Argileux" {{ filters.typeSol|default('') == 'Argileux' ? 'selected' : '' }}>Argileux</option>
+                            <option value="Limoneux" {{ filters.typeSol|default('') == 'Limoneux' ? 'selected' : '' }}>Limoneux</option>
+                            <option value="Sableux" {{ filters.typeSol|default('') == 'Sableux' ? 'selected' : '' }}>Sableux</option>
+                            <option value="Humifère" {{ filters.typeSol|default('') == 'Humifère' ? 'selected' : '' }}>Humifère</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-premium-add flex-grow-1">
+                            <i class="bi bi-filter me-2"></i> Filtrer
+                        </button>
+                        {% if filters.q|default('') or filters.typeSol|default('') %}
+                            <a href="{{ path('farmer_parcelle_index') }}" class="btn btn-premium-outline">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {% if parcelles.getTotalItemCount > 0 %}
+                <div class="row g-4">
+                    {% for parcelle in parcelles %}
+                        <div class="col-md-6 col-lg-6 col-xl-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                            <div class="parcel-card">
+                                <div class="parcel-header">
+                                    <span class="parcel-id">Parcelle #{{ parcelle.id }}</span>
+                                    <span class="badge rounded-pill bg-success">{{ parcelle.cultures|length }} cultures</span>
+                                </div>
+                                <div class="parcel-body">
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <span class="info-label">Surface</span>
+                                            <span class="info-value"><i class="bi bi-aspect-ratio"></i> {{ parcelle.surface }} ha</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Type de sol</span>
+                                            <span class="info-value"><i class="bi bi-layers"></i> {{ parcelle.typeSol }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Localisation</span>
+                                            <span class="info-value"><i class="bi bi-geo-alt"></i> {{ parcelle.localisation }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Irrigation</span>
+                                            <span class="info-value"><i class="bi bi-droplet"></i> {{ parcelle.systemeIrrigation|replace({'_': ' '})|capitalize }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="parcel-footer">
+                                    <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-action btn-view">
+                                        <i class="bi bi-eye"></i> Voir
+                                    </a>
+                                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn-action btn-edit">
+                                        <i class="bi bi-pencil"></i> Modif.
+                                    </a>
+                                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" class="flex-grow-1" 
+                                          onsubmit="return confirm('Confirmer la suppression ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
+                                        <button type="submit" class="btn-action btn-delete w-100">
+                                            <i class="bi bi-trash"></i> Suppr.
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {# Pagination #}
+                <div class="mt-5 d-flex justify-content-center" data-aos="fade-up">
+                    {{ knp_pagination_render(parcelles) }}
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-white rounded-4 shadow-sm" data-aos="zoom-in">
+                    <i class="bi bi-map text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <h3 class="mt-3">Aucune parcelle trouvée</h3>
+                    <p class="text-muted">Commencez par ajouter votre première parcelle de terrain.</p>
+                    <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-premium-add mt-2">Créer ma première parcelle</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('filterForm');
+        if (!filterForm) return;
+
+        const inputs = filterForm.querySelectorAll('input, select');
+        let timeout = null;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            
+            input.addEventListener(eventType, function() {
+                clearTimeout(timeout);
+                const delay = input.tagName === 'SELECT' ? 0 : 600;
+                
+                timeout = setTimeout(() => {
+                    // Update search icon to spinner for feedback
+                    const searchIcon = filterForm.querySelector('.bi-search');
+                    if (searchIcon) {
+                        searchIcon.classList.remove('bi-search');
+                        searchIcon.classList.add('spinner-border', 'spinner-border-sm', 'text-success');
+                    }
+                    filterForm.submit();
+                }, delay);
+            });
+        });
+
+        // Ensure cursor stays at the end of input after reload
+        const qInput = filterForm.querySelector('input[name="q"]');
+        if (qInput && qInput.value) {
+            qInput.focus();
+            const val = qInput.value;
+            qInput.value = '';
+            qInput.value = val;
+        }
+    });
+</script>
+{% endblock %}

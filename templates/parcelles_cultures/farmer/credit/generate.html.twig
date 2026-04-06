@@ -1,0 +1,198 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Simulation de Crédit - Parcelle #{{ parcelle.id }} - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+        .card-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #116530;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-section-title {
+            font-family: 'Marcellus', serif;
+            color: #2d3436;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f8faf7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-section-title i { color: #116530; }
+        
+        .btn-generate {
+            background: #116530;
+            color: white;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(17, 101, 48, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-generate:hover {
+            background: #1e8341;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(17, 101, 48, 0.3);
+        }
+        .btn-cancel {
+            background: #f8faf7;
+            color: #636e72;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-cancel:hover {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: #116530;
+            box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">Simulation de Crédit Agricole</h1>
+                <p class="text-muted lead mt-2">Dossier technique pour la Parcelle #{{ parcelle.id }} ({{ parcelle.surface }} ha)</p>
+            </div>
+
+            {{ form_start(form, {'attr': {'data-aos': 'fade-up', 'data-aos-delay': '100'}}) }}
+            
+            <div class="premium-card">
+                <span class="card-label"><i class="bi bi-clock-history"></i> Paramètres du Crédit</span>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{ form_label(form.duree_annees) }}
+                            {{ form_widget(form.duree_annees, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 5 ans'}}) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card">
+                <span class="card-label"><i class="bi bi-cash-stack"></i> Analyse Financière (DT)</span>
+                <p class="small text-muted mb-4">Indiquez vos coûts prévisionnels pour un calcul précis du capital requis.</p>
+                
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        {{ form_label(form.prixVente) }}
+                        {{ form_widget(form.prixVente, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_label(form.coutSemences) }}
+                        {{ form_widget(form.coutSemences, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_label(form.coutEngrais) }}
+                        {{ form_widget(form.coutEngrais, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_label(form.coutMainOeuvre) }}
+                        {{ form_widget(form.coutMainOeuvre, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_label(form.coutIrrigation) }}
+                        {{ form_widget(form.coutIrrigation, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_label(form.coutAutres) }}
+                        {{ form_widget(form.coutAutres, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card">
+                <span class="card-label"><i class="bi bi-graph-up"></i> Évaluation Qualitative</span>
+                <p class="small text-muted mb-4">Auto-évaluez ces critères de 1 (faible) à 10 (excellent) pour affiner votre score de risque.</p>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        {{ form_label(form.score_rentabilite) }}
+                        {{ form_widget(form.score_rentabilite, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.score_stabilite_climat) }}
+                        {{ form_widget(form.score_stabilite_climat, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.score_diversification) }}
+                        {{ form_widget(form.score_diversification, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.score_historique) }}
+                        {{ form_widget(form.score_historique, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center gap-3 mt-5 pb-5">
+                <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-cancel">Annuler</a>
+                <button type="submit" class="btn-generate">
+                    <i class="bi bi-check-circle-fill"></i> Générer le dossier technique
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

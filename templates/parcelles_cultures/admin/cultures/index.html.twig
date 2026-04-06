@@ -1,0 +1,191 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cultures Globales - Administration Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+    .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+    .admin-badge { background: rgba(17,101,48,0.1); color: #116530; font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; vertical-align: middle; margin-left: 10px; }
+    .premium-table-container { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); overflow: hidden; }
+    .premium-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 0; }
+    .premium-table thead th { background: #f8faf7; color: #116530; font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 1px; padding: 18px 20px; border: none; }
+    .premium-table tbody td { padding: 16px 20px; vertical-align: middle; border-top: 1px solid #f0f0f0; font-size: 0.9rem; color: #4a4a4a; }
+    .premium-table tbody tr:hover { background-color: #fcfdfe; }
+    .type-badge { font-weight: 700; font-size: 0.72rem; padding: 4px 12px; border-radius: 8px; background: #e8f5e9; color: #116530; text-transform: capitalize; }
+    .status-badge { font-weight: 600; font-size: 0.72rem; padding: 5px 12px; border-radius: 50px; text-transform: uppercase; }
+    .action-btn { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; text-decoration: none; }
+    .btn-view { background: #e8f5e9; color: #116530; }
+    .btn-view:hover { background: #116530; color: white; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; color: #116530; font-weight: 700; font-size: .75rem; flex-shrink: 0; }
+    .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 25px; margin-bottom: 25px; }
+    .btn-premium-add { background: #116530; color: white; border-radius: 12px; padding: 10px 24px; font-weight: 700; border: none; transition: all 0.3s; box-shadow: 0 5px 15px rgba(17,101,48,0.15); font-size: 0.9rem; display: inline-flex; align-items: center; }
+    .btn-premium-add:hover { background: #1e8341; color: white; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(17,101,48,0.25); }
+    .btn-premium-outline { background: white; color: #116530; border: 2px solid #116530; border-radius: 12px; padding: 8px 22px; font-weight: 700; transition: all 0.3s; font-size: 0.9rem; display: inline-flex; align-items: center; }
+    .btn-premium-outline:hover { background: #f0f7ee; color: #116530; border-color: #116530; transform: translateY(-2px); }
+    .info-label { font-size: 11px; font-weight: 700; color: #b2bec3; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">
+                    Cultures Globales
+                    <span class="admin-badge">Administration</span>
+                </h1>
+                <p class="text-muted lead mt-2">Vue d'ensemble de toutes les cultures actives sur la plateforme.</p>
+            </div>
+
+            {# === Search & Filter Section === #}
+            <div class="premium-card" data-aos="fade-up">
+                <form id="filterForm" action="{{ path('admin_culture_index') }}" method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="info-label mb-2">Rechercher</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="ID, Type, Saison, Parcelle..." value="{{ filters.q|default('') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-2">Type</label>
+                        <select name="typeCulture" class="form-select bg-light border-0">
+                            <option value="">Tous les types</option>
+                            <option value="Blé" {{ filters.typeCulture|default('') == 'Blé' ? 'selected' : '' }}>Blé</option>
+                            <option value="Orge" {{ filters.typeCulture|default('') == 'Orge' ? 'selected' : '' }}>Orge</option>
+                            <option value="Maïs" {{ filters.typeCulture|default('') == 'Maïs' ? 'selected' : '' }}>Maïs</option>
+                            <option value="Olive" {{ filters.typeCulture|default('') == 'Olive' ? 'selected' : '' }}>Olive</option>
+                            <option value="Tomate" {{ filters.typeCulture|default('') == 'Tomate' ? 'selected' : '' }}>Tomate</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-2">Saison</label>
+                        <select name="saison" class="form-select bg-light border-0">
+                            <option value="">Toutes les saisons</option>
+                            <option value="Printemps" {{ filters.saison|default('') == 'Printemps' ? 'selected' : '' }}>Printemps</option>
+                            <option value="Été" {{ filters.saison|default('') == 'Été' ? 'selected' : '' }}>Été</option>
+                            <option value="Automne" {{ filters.saison|default('') == 'Automne' ? 'selected' : '' }}>Automne</option>
+                            <option value="Hiver" {{ filters.saison|default('') == 'Hiver' ? 'selected' : '' }}>Hiver</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-premium-add flex-grow-1">
+                            <i class="bi bi-filter me-2"></i> Filtrer
+                        </button>
+                        {% if filters.q|default('') or filters.typeCulture|default('') or filters.saison|default('') %}
+                            <a href="{{ path('admin_culture_index') }}" class="btn btn-premium-outline">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {% if cultures.getTotalItemCount > 0 %}
+                <div class="premium-table-container" data-aos="fade-up">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Parcelle</th>
+                                <th>Agriculteur</th>
+                                <th>Surface</th>
+                                <th>Rendement</th>
+                                <th>Production Est.</th>
+                                <th>État</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for culture in cultures %}
+                                <tr>
+                                    <td class="fw-bold text-success">C-{{ culture.id }}</td>
+                                    <td><span class="type-badge">{{ culture.typeCulture }}</span></td>
+                                    <td>
+                                        <span class="text-muted small">P-{{ culture.parcelle.id }}</span>
+                                        <span class="ms-1 text-dark">{{ culture.parcelle.localisation }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar">{{ culture.parcelle.agriculteur.email|slice(0,1)|upper }}</div>
+                                            <span>{{ culture.parcelle.agriculteur.email }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="fw-semibold">{{ culture.surfaceUtilisee }} ha</td>
+                                    <td>{{ culture.rendementEstime }} kg/ha</td>
+                                    <td class="fw-bold text-success">{{ culture.productionEstimee|round(0)|number_format(0, '.', ' ') }} kg</td>
+                                    <td>
+                                        <span class="status-badge {{ culture.etatCulture == 'active' or culture.etatCulture == 'actif' ? 'bg-success text-white' : 'bg-secondary text-white' }}">
+                                            {{ culture.etatCulture }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path('admin_culture_show', {id: culture.id}) }}" class="action-btn btn-view" title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4" data-aos="fade-up">
+                    {{ knp_pagination_render(cultures) }}
+                </div>
+            {% else %}
+                <div class="premium-table-container text-center py-5" data-aos="zoom-in">
+                    <i class="bi bi-flower1" style="font-size: 3rem; color: #cce8d8;"></i>
+                    <h4 class="mt-3 text-muted">Aucune culture enregistrée</h4>
+                    <p class="text-muted">Aucun agriculteur n'a encore créé de culture sur la plateforme.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('filterForm');
+        if (!filterForm) return;
+
+        const inputs = filterForm.querySelectorAll('input, select');
+        let timeout = null;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            
+            input.addEventListener(eventType, function() {
+                clearTimeout(timeout);
+                const delay = input.tagName === 'SELECT' ? 0 : 600;
+                
+                timeout = setTimeout(() => {
+                    const searchIcon = filterForm.querySelector('.bi-search');
+                    if (searchIcon) {
+                        searchIcon.classList.remove('bi-search');
+                        searchIcon.classList.add('spinner-border', 'spinner-border-sm', 'text-success');
+                    }
+                    filterForm.submit();
+                }, delay);
+            });
+        });
+
+        const qInput = filterForm.querySelector('input[name="q"]');
+        if (qInput && qInput.value) {
+            qInput.focus();
+            const val = qInput.value;
+            qInput.value = '';
+            qInput.value = val;
+        }
+    });
+</script>
+{% endblock %}

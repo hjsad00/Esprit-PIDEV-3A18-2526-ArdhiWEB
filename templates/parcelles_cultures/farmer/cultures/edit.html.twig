@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Culture: {{ culture.typeCulture|capitalize }}{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h3 class="card-title mb-0"><i class="fas fa-edit"></i> Modifier: {{ culture.typeCulture|capitalize }}</h3>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                {{ form_label(form.type_culture) }}
+                                {{ form_widget(form.type_culture, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.type_culture.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.type_culture) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.saison) }}
+                                {{ form_widget(form.saison, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.saison.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.saison) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.surface_utilisee) }}
+                                {{ form_widget(form.surface_utilisee, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.surface_utilisee.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.surface_utilisee) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.date_plantation) }}
+                                {{ form_widget(form.date_plantation, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
+                                {% if form.date_plantation.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.date_plantation) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.date_recolte_prevue) }}
+                                {{ form_widget(form.date_recolte_prevue, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
+                                {% if form.date_recolte_prevue.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.date_recolte_prevue) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.rendement_estime) }}
+                                {{ form_widget(form.rendement_estime, {'attr': {'class': 'form-control'}}) }}
+                                {% if form.rendement_estime.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.rendement_estime) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.parcelle) }}
+                                {{ form_widget(form.parcelle) }}
+                                {% if form.parcelle.vars.errors|length > 0 %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form_errors(form.parcelle) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ path('farmer_culture_show', {id: culture.id}) }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Mettre à jour
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

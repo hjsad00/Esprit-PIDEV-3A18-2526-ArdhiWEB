@@ -1,0 +1,282 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Analyse Financière ROI - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+    .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+    .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; height: 100%; }
+    .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+    .form-section { font-size: 0.8rem; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .form-control, .form-select { border-radius: 12px; padding: 10px 15px; border: 1px solid #eee; transition: all 0.3s; font-size: 0.9rem; }
+    .form-control:focus, .form-select:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17,101,48,0.05); }
+    .form-label { font-weight: 600; color: #2d3436; margin-bottom: 6px; font-size: 0.85rem; }
+    .btn-calculate { background: #116530; color: white; border-radius: 50px; padding: 14px; font-weight: 700; border: none; width: 100%; transition: all 0.3s; box-shadow: 0 8px 20px rgba(17,101,48,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; }
+    .btn-calculate:hover { background: #1e8341; transform: translateY(-2px); }
+    .btn-premium-back { color: #116530; background: #e8f5e9; border-radius: 50px; padding: 10px 20px; font-weight: 600; text-decoration: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .btn-premium-back:hover { background: #116530; color: white; }
+
+    /* Result side */
+    .roi-score-box { background: linear-gradient(135deg, #116530, #1e8341); border-radius: 20px; padding: 30px; text-align: center; color: white; margin-bottom: 20px; }
+    .roi-score-box .score-num { font-size: 3.5rem; font-weight: 900; line-height: 1; }
+    .roi-score-box .score-label { font-size: 0.85rem; opacity: 0.8; margin-top: 5px; }
+    .result-metric { background: #f8faf7; border-radius: 14px; padding: 18px; border-left: 4px solid #116530; }
+    .result-label { font-size: 0.72rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .result-value { font-size: 1.4rem; font-weight: 800; color: #2d3436; }
+    .risk-band { border-radius: 14px; padding: 20px; text-align: center; }
+    .risk-band.faible { background: #e8f5e9; color: #116530; }
+    .risk-band.modere { background: #fff8e1; color: #f59e0b; }
+    .risk-band.eleve { background: #fff0f0; color: #e53e3e; }
+    .sim-box { background: #f8faf7; border-radius: 16px; padding: 20px; margin-top: 20px; }
+    .sim-result { background: #116530; color: white; border-radius: 14px; padding: 20px; text-align: center; }
+    .sim-result.loss { background: #e53e3e; }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+
+        <div class="col-md-9 col-xl-10">
+            <div data-aos="fade-right">
+                <a href="{{ path('farmer_roi_index') }}" class="btn-premium-back">
+                    <i class="bi bi-arrow-left"></i> Retour au ROI
+                </a>
+            </div>
+
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">Analyse Financière</h1>
+                <p class="text-muted lead mt-2">Calculez votre ROI et évaluez la rentabilité réelle de votre exploitation.</p>
+            </div>
+
+            <div class="row g-4">
+                {# ===== FORM COLUMN ===== #}
+                <div class="col-xl-5" data-aos="fade-right" data-aos-delay="100">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-graph-up-arrow"></i> Paramètres d'Analyse</span>
+
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                        <div class="mb-3">
+                            {{ form_label(form.parcelle) }}
+                            {{ form_widget(form.parcelle, {'attr': {'class': 'form-select'}}) }}
+                            {% if form.parcelle.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.parcelle) }}</div>{% endif %}
+                            <small class="text-muted">La surface sera pré-remplie si possible.</small>
+                        </div>
+
+                        <div class="form-section"><i class="bi bi-layers"></i> Production</div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                {{ form_label(form.surface_ha) }}
+                                {{ form_widget(form.surface_ha, {'attr': {'class': 'form-control', 'placeholder': '5'}}) }}
+                                {% if form.surface_ha.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.surface_ha) }}</div>{% endif %}
+                            </div>
+                            <div class="col-6">
+                                {{ form_label(form.rendement) }}
+                                {{ form_widget(form.rendement, {'attr': {'class': 'form-control', 'placeholder': '50'}}) }}
+                                {% if form.rendement.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.rendement) }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-section"><i class="bi bi-cloud-sun"></i> Conditions Climatiques</div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-4">
+                                {{ form_label(form.jours_canicule) }}
+                                {{ form_widget(form.jours_canicule, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                            </div>
+                            <div class="col-4">
+                                {{ form_label(form.jours_excespluie) }}
+                                {{ form_widget(form.jours_excespluie, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                            </div>
+                            <div class="col-4">
+                                {{ form_label(form.jours_gel) }}
+                                {{ form_widget(form.jours_gel, {'attr': {'class': 'form-control', 'placeholder': '0'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-section"><i class="bi bi-cash-stack"></i> Coûts de Production (DT)</div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                {{ form_label(form.cout_semences) }}
+                                {{ form_widget(form.cout_semences, {'attr': {'class': 'form-control', 'placeholder': '1000'}}) }}
+                            </div>
+                            <div class="col-6">
+                                {{ form_label(form.cout_engrais) }}
+                                {{ form_widget(form.cout_engrais, {'attr': {'class': 'form-control', 'placeholder': '2000'}}) }}
+                            </div>
+                            <div class="col-6">
+                                {{ form_label(form.cout_main_oeuvre) }}
+                                {{ form_widget(form.cout_main_oeuvre, {'attr': {'class': 'form-control', 'placeholder': '1500'}}) }}
+                            </div>
+                            <div class="col-6">
+                                {{ form_label(form.cout_irrigation) }}
+                                {{ form_widget(form.cout_irrigation, {'attr': {'class': 'form-control', 'placeholder': '500'}}) }}
+                            </div>
+                            <div class="col-12">
+                                {{ form_label(form.cout_autres) }}
+                                {{ form_widget(form.cout_autres, {'attr': {'class': 'form-control', 'placeholder': '300'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-section"><i class="bi bi-tag"></i> Prix de Vente</div>
+                        <div class="mb-4">
+                            {{ form_label(form.prix_vente) }}
+                            {{ form_widget(form.prix_vente, {'attr': {'class': 'form-control', 'placeholder': '5'}}) }}
+                            {% if form.prix_vente.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.prix_vente) }}</div>{% endif %}
+                            <small class="text-muted">Prix par unité de production (DT)</small>
+                        </div>
+
+                        <button type="submit" class="btn-calculate">
+                            <i class="bi bi-bar-chart-line-fill"></i> Analyser la Rentabilité
+                        </button>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+
+                {# ===== RESULTS COLUMN ===== #}
+                {% if roi_result %}
+                <div class="col-xl-7" data-aos="fade-left" data-aos-delay="150">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-trophy-fill"></i> Résultats de l'Analyse</span>
+
+                        <div class="roi-score-box">
+                            <div class="score-label">Score ROI Global</div>
+                            <div class="score-num">{{ roi_result.score_roi|round(1) }}%</div>
+                            <div class="mt-2">
+                                {% if roi_result.score_roi > 100 %}
+                                    <span class="badge bg-white text-success fw-bold">🚀 Très Rentable</span>
+                                {% elseif roi_result.score_roi > 0 %}
+                                    <span class="badge bg-white text-warning fw-bold">✅ Rentable</span>
+                                {% else %}
+                                    <span class="badge bg-white text-danger fw-bold">⚠️ Non Rentable</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Production Réelle</div>
+                                    <div class="result-value">{{ roi_result.production_reelle|round(0) }} <small style="font-size:.9rem; color:#888">un.</small></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Revenu Brut</div>
+                                    <div class="result-value">{{ roi_result.revenu_brut|round(0)|number_format(0,'.', ' ') }} <small style="font-size:.9rem; color:#888">DT</small></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Coût Total</div>
+                                    <div class="result-value" style="color:#e67e22;">{{ roi_result.cout_total|round(0)|number_format(0,'.', ' ') }} <small style="font-size:.9rem; color:#888">DT</small></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Facteur Climatique</div>
+                                    <div class="result-value">{{ roi_result.facteur_climatique|round(3) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Capacité Remboursement</div>
+                                    <div class="result-value">{{ roi_result.capacite_remboursement|round(0)|number_format(0,'.', ' ') }} <small style="font-size:.9rem; color:#888">DT</small></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="result-metric">
+                                    <div class="result-label">Prêt Max ({{ form.vars.value.duree_pret }} ans)</div>
+                                    <div class="result-value">{{ roi_result.montant_pret_max|round(0)|number_format(0,'.', ' ') }} <small style="font-size:.9rem; color:#888">DT</small></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="risk-band {{ roi_result.risque_niveau == 'Faible' ? 'faible' : (roi_result.risque_niveau == 'Modéré' ? 'modere' : 'eleve') }} mb-4">
+                            <div style="font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:.7;">Évaluation du Risque</div>
+                            <div style="font-size:2rem; font-weight:900;">{{ roi_result.risque_score|round(1) }} / 10</div>
+                            <div class="fw-bold">Risque {{ roi_result.risque_niveau }}</div>
+                        </div>
+
+                        {# Dynamic Simulator #}
+                        <div class="sim-box">
+                            <div class="card-label mb-3"><i class="bi bi-sliders"></i> Simulateur de Scénario</div>
+                            <label class="form-label">Ajustement des Revenus</label>
+                            <input type="range" class="form-range" id="simulationSlider" min="50" max="200" value="100" step="1">
+                            <div class="d-flex justify-content-between mb-3">
+                                <small class="text-danger">-50%</small>
+                                <span id="sliderValue" class="badge bg-success">Normal (100%)</span>
+                                <small class="text-success">+100%</small>
+                            </div>
+                            <div class="sim-result" id="simContainer">
+                                <div style="font-size:.75rem; opacity:.7; text-transform:uppercase; letter-spacing:1px;">Score ROI Simulé</div>
+                                <div style="font-size:2.5rem; font-weight:900;" id="simScore">{{ roi_result.score_roi|round(2) }}%</div>
+                                <small id="simStatus">{% if roi_result.score_roi > 100 %}Très rentable!{% elseif roi_result.score_roi > 0 %}Rentable{% else %}Non rentable{% endif %}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-xl-7 d-flex align-items-center justify-content-center" data-aos="fade-left">
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-bar-chart" style="font-size: 4rem; color: #cce8d8;"></i>
+                        <h4 class="mt-3" style="color: #bbb;">Résultats ici</h4>
+                        <p>Remplissez le formulaire et lancez l'analyse pour voir vos résultats financiers.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const parcelleSelect = document.getElementById('{{ form.parcelle.vars.id }}');
+    const surfaceInput = document.getElementById('{{ form.surface_ha.vars.id }}');
+    if (parcelleSelect && surfaceInput) {
+        parcelleSelect.addEventListener('change', function() {
+            const surface = this.options[this.selectedIndex].getAttribute('data-surface');
+            if (surface) surfaceInput.value = surface;
+        });
+    }
+
+    const slider = document.getElementById('simulationSlider');
+    if (slider) {
+        const baseRevenu = {{ roi_result.revenu_brut|default(0) }};
+        const baseCout = {{ roi_result.cout_total|default(0) }};
+        const simScore = document.getElementById('simScore');
+        const simStatus = document.getElementById('simStatus');
+        const simContainer = document.getElementById('simContainer');
+        const sliderLabel = document.getElementById('sliderValue');
+
+        slider.addEventListener('input', function() {
+            const ratio = this.value / 100;
+            const newMarge = (baseRevenu * ratio) - baseCout;
+            const newScore = baseCout > 0 ? (newMarge / baseCout) * 100 : 0;
+
+            sliderLabel.textContent = ratio === 1 ? 'Normal (100%)' : (this.value + '%');
+            sliderLabel.className = 'badge ' + (ratio < 1 ? 'bg-danger' : ratio > 1 ? 'bg-success' : 'bg-success');
+            simScore.textContent = newScore.toFixed(1) + '%';
+
+            if (newScore > 0) {
+                simContainer.classList.remove('loss');
+                simStatus.textContent = newScore > 100 ? 'Très rentable!' : 'Rentable';
+            } else {
+                simContainer.classList.add('loss');
+                simStatus.textContent = 'Non rentable';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

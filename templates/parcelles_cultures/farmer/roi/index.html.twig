@@ -1,0 +1,178 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}ROI & Finances - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 30px;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        .premium-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #116530;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-label i {
+            font-size: 1.2rem;
+        }
+        .formula-box {
+            background: #f8faf7;
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #2d3436;
+            border-left: 4px solid #116530;
+        }
+        .formula-line {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .formula-line:last-child {
+            margin-bottom: 0;
+        }
+        .btn-launch {
+            background: #116530;
+            color: white;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(17, 101, 48, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .btn-launch:hover {
+            background: #1e8341;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(17, 101, 48, 0.3);
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        .info-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+        }
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        .info-list i {
+            color: #116530;
+            margin-top: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header text-center text-md-start" data-aos="fade-down">
+                <h1 class="page-title">Analyse Financière & ROI</h1>
+                <p class="text-muted lead mt-2">Mesurez la rentabilité réelle de votre exploitation agricole avec précision.</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-lg-6" data-aos="fade-right" data-aos-delay="100">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-graph-up-arrow"></i> Vision Financière</span>
+                        <p class="text-secondary">Notre analyseur englobe l'ensemble du cycle de production pour vous offrir une vue transparente de vos bénéfices :</p>
+                        <ul class="info-list mt-4">
+                            <li>
+                                <i class="bi bi-calculator"></i>
+                                <div>
+                                    <strong>Coûts d'Exploitation</strong>
+                                    <p class="small text-muted mb-0">Semences, engrais, main d'œuvre et irrigation.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <i class="bi bi-briefcase"></i>
+                                <div>
+                                    <strong>Revenu Brut Estimé</strong>
+                                    <p class="small text-muted mb-0">Calculé selon la production réelle prévue et les prix du marché.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <i class="bi bi-shield-check"></i>
+                                <div>
+                                    <strong>Score de Rentabilité (ROI)</strong>
+                                    <p class="small text-muted mb-0">Le rapport direct entre vos investissements et vos gains.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-gear-fill"></i> Logique de Calcul</span>
+                        <p class="text-secondary">Basé sur des modèles économiques agricoles robustes prenant en compte les risques climatiques :</p>
+                        
+                        <div class="formula-box mt-4">
+                            <div class="formula-line"><strong>Production:</strong> (Surface × Rendement) × Facteur Climatique</div>
+                            <div class="formula-line"><strong>Revenu:</strong> Production × Prix Vente</div>
+                            <div class="formula-line"><strong>Marge:</strong> Revenu − Coût Total</div>
+                            <div class="formula-line"><strong>Score ROI:</strong> (Marge / Coût) × 100</div>
+                            <div class="formula-line"><strong>Capacité:</strong> Marge Brute × 0.60</div>
+                        </div>
+                        
+                        <div class="mt-4 p-3 rounded-4 bg-light">
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                <em>L'évaluation du risque inclut la stabilité climatique locale et l'historique de production.</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5" data-aos="zoom-in" data-aos-delay="300">
+                <a href="{{ path('farmer_roi_calculator') }}" class="btn-launch">
+                    <i class="bi bi-bar-chart-line"></i> Lancer l'Analyseur Financier
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -71,7 +71,15 @@
           <li><a href="{{ path('app_client_dashboard') }}">Diagnostics IA</a></li>
           <li><a href="#">Marketplace</a></li>
           <li><a href="#">Maintenance</a></li>
-          <li><a href="#">Cultures</a></li>
+          <li>
+            {% if is_granted('ROLE_AGRICULTEUR') %}
+              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
+            {% elseif is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
+            {% else %}
+              <a href="#">Cultures</a>
+            {% endif %}
+          </li>
           <li><a href="#">Évènements</a></li>
           {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
           <li>

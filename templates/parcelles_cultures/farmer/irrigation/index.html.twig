@@ -1,0 +1,176 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Irrigation - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .page-title {
+            font-family: 'Marcellus', serif;
+            color: #116530;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .premium-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 30px;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        .premium-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #116530;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-label i {
+            font-size: 1.2rem;
+        }
+        .formula-box {
+            background: #f8faf7;
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #2d3436;
+            border-left: 4px solid #116530;
+        }
+        .formula-line {
+            margin-bottom: 10px;
+        }
+        .formula-line:last-child {
+            margin-bottom: 0;
+        }
+        .btn-launch {
+            background: #116530;
+            color: white;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(17, 101, 48, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .btn-launch:hover {
+            background: #1e8341;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(17, 101, 48, 0.3);
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        .info-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+        }
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        .info-list i {
+            color: #116530;
+            margin-top: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+        
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header text-center text-md-start" data-aos="fade-down">
+                <h1 class="page-title">Calcul d'Irrigation</h1>
+                <p class="text-muted lead mt-2">Optimisez vos ressources en eau grâce à notre algorithme de précision agricole.</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-lg-6" data-aos="fade-right" data-aos-delay="100">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-info-circle-fill"></i> À propos de l'outil</span>
+                        <p class="text-secondary">Cet assistant intelligent calcule le besoin hydrique exact de vos cultures en temps réel, en combinant plusieurs facteurs environnementaux :</p>
+                        <ul class="info-list mt-4">
+                            <li>
+                                <i class="bi bi-thermometer-half"></i>
+                                <div>
+                                    <strong>Données Climatiques (ET0)</strong>
+                                    <p class="small text-muted mb-0">Analyse de l'évaporation basée sur les températures locales.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <i class="bi bi-flower1"></i>
+                                <div>
+                                    <strong>Coefficient Cultural (Kc)</strong>
+                                    <p class="small text-muted mb-0">Ajustement précis selon le type de plante et son stade de croissance.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <i class="bi bi-cloud-rain-fill"></i>
+                                <div>
+                                    <strong>Apports Naturels</strong>
+                                    <p class="small text-muted mb-0">Déduction automatique des précipitations enregistrées.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-cpu-fill"></i> Algorithme de calcul</span>
+                        <p class="text-secondary">Nous utilisons les standards internationaux pour garantir une précision maximale dans l'estimation de vos besoins :</p>
+                        
+                        <div class="formula-box mt-4">
+                            <div class="formula-line"><strong>ET0:</strong> 0.0023 × (T + 17.8) × √(Tmax − Tmin)</div>
+                            <div class="formula-line"><strong>Besoin Brut:</strong> Kc × ET0</div>
+                            <div class="formula-line"><strong>Besoin Net:</strong> max(0, Brut − Pluie)</div>
+                            <div class="formula-line"><strong>Volume:</strong> Besoin Net × Surface × 10000</div>
+                        </div>
+                        
+                        <div class="mt-4 p-3 rounded-4 bg-light">
+                            <p class="small text-muted mb-0 italic">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <em>Le volume final est exprimé en litres par hectare, converti automatiquement selon la surface de votre parcelle.</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5" data-aos="zoom-in" data-aos-delay="300">
+                <a href="{{ path('farmer_irrigation_calculator') }}" class="btn-launch">
+                    <i class="bi bi-calculator"></i> Lancer le calculateur intelligent
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

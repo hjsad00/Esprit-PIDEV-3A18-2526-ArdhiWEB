@@ -3,6 +3,9 @@
 namespace App\Entity\UserAndDiag;
 
 use App\Repository\UserAndDiag\UserRepository;
+use App\Entity\Parcelles_Cultures\Parcelle;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -91,6 +94,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255, maxMessage: 'La localisation ne peut pas dépasser 255 caractères.')]
     private ?string $location = null;
+
+    /**
+     * @var Collection<int, Parcelle>
+     */
+    #[ORM\OneToMany(targetEntity: Parcelle::class, mappedBy: 'agriculteur', cascade: ['remove'])]
+    private Collection $parcelles;
+
+    public function __construct()
+    {
+        $this->parcelles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
