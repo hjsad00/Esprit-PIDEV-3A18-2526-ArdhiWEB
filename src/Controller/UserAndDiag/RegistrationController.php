@@ -63,7 +63,8 @@ class RegistrationController extends AbstractController
             $errors = [];
             if (count($violationList) > 0) {
                 foreach ($violationList as $violation) {
-                    $errors[$violation->getPropertyPath()] = $violation->getMessage();
+                    $path = $violation->getPropertyPath();
+                    $errors[$path] = $violation->getMessage();
                 }
             }
 
@@ -76,7 +77,7 @@ class RegistrationController extends AbstractController
                     'last_phone' => $phone,
                     'last_location' => $location,
                     'errors' => $errors,
-                ]);
+                ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
             // If valid, hash password and save

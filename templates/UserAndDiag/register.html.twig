@@ -13,6 +13,20 @@
               <p class="text-muted">Rejoignez la communauté Ardhi</p>
             </div>
 
+            {% if errors is not empty %}
+              <div class="alert alert-danger mb-4 shadow-sm border-0" style="background: rgba(220, 53, 69, 0.1); border-left: 5px solid #dc3545 !important;">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-exclamation-triangle-fill fs-4 text-danger me-3"></i>
+                  <h5 class="mb-0 text-danger fw-bold">Erreur d'inscription</h5>
+                </div>
+                <ul class="mb-0 ps-4">
+                  {% for field, message in errors %}
+                    <li class="text-danger small fw-600">{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
@@ -53,11 +67,17 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputPhone" class="form-label">Téléphone</label>
-                <input type="tel" name="phone" id="inputPhone" class="form-control" value="{{ last_phone }}" placeholder="+216 XX XXX XXX">
+                <input type="tel" name="phone" id="inputPhone" class="form-control {{ errors.phone is defined ? 'is-invalid' : '' }}" value="{{ last_phone }}" placeholder="+216 XX XXX XXX">
+                {% if errors.phone is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.phone }}</div>
+                {% endif %}
               </div>
               <div class="col-md-6 mb-3">
                 <label for="inputLocation" class="form-label">Localisation</label>
-                <input type="text" name="location" id="inputLocation" class="form-control" value="{{ last_location }}" placeholder="Ville, Gouvernorat">
+                <input type="text" name="location" id="inputLocation" class="form-control {{ errors.location is defined ? 'is-invalid' : '' }}" value="{{ last_location }}" placeholder="Ville, Gouvernorat">
+                {% if errors.location is defined %}
+                  <div class="premium-invalid-feedback">{{ errors.location }}</div>
+                {% endif %}
               </div>
             </div>
 
