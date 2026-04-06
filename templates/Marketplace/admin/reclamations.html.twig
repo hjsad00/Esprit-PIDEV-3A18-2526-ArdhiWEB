@@ -332,7 +332,7 @@ async function openRecDetails(id) {
                             </div>
                             <div class="mt-3">
                                 <small class="text-muted d-block">Description client :</small>
-                                <div class="p-3 bg-white rounded-3 border small mt-1" style="white-space: pre-line;">${r.description}</div>
+                                <div class="p-3 bg-white rounded-3 border small mt-1" style="white-space: pre-line; word-break: break-word; overflow-wrap: break-word;">${r.description}</div>
                             </div>
                         </div>
                     </div>
@@ -340,6 +340,9 @@ async function openRecDetails(id) {
                         <h6 class="fw-bold small text-muted text-uppercase mb-3">Produit Concerné</h6>
                         <div class="p-3 bg-light rounded-4 border mb-4">
                             <span class="fw-bold d-block">${r.nomProduit}</span>
+                            <div class="small mt-1">
+                                <span class="text-muted">Vendeur :</span> <strong>${r.vendeurNom}</strong>
+                            </div>
                             <small class="text-muted">ID Produit: #${r.idProduit || 'N/A'}</small>
                         </div>
 
@@ -347,7 +350,7 @@ async function openRecDetails(id) {
                         <div class="p-3 bg-light rounded-4 border">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-person-circle fs-4 text-success"></i>
-                                <span class="fw-bold">${r.user || 'Utilisateur'}</span>
+                                <span class="fw-bold">${r.clientNom}</span>
                             </div>
                         </div>
                     </div>

@@ -231,7 +231,7 @@
                       <div class="tile-icon amber"><i class="bi bi-gem"></i></div>
                       <div class="tile-content">
                         <strong>Points de Fidélité</strong>
-                        <small>Utiliser vos points accumulés</small>
+                        <small>Solde actuel : {{ app.user.pointsFidelite|default(0)|number_format(2, ',', ' ') }} pts</small>
                       </div>
                     </div>
                   </div>
@@ -387,6 +387,10 @@
     const deliveryRadio = document.querySelector('input[name="delivery"]:checked');
     const modeLivraison = (deliveryRadio && deliveryRadio.value === 'home') ? 'LIVRAISON' : 'RECUPERATION';
 
+    // Déterminer la méthode de paiement
+    const paymentRadio = document.querySelector('input[name="payment"]:checked');
+    const paymentMethod = paymentRadio ? paymentRadio.value : 'stripe';
+
     try {
       const res = await fetch('/marketplace/panier/checkout', {
         method: 'POST',
@@ -396,6 +400,7 @@
         },
         body: JSON.stringify({ 
             mode_livraison: modeLivraison,
+            payment_method: paymentMethod,
             coupon_code: appliedCoupon ? appliedCoupon.code : null
         })
       });
@@ -403,7 +408,7 @@
 
       if (data.success) {
         alert(data.message);
-        window.location.href = '{{ path('app_marketplace_mes_commandes') }}';
+        window.location.href = '{{ path('app_marketplace_catalogue') }}';
       } else {
         alert(data.message || 'Erreur lors de la commande.');
         btn.disabled = false;

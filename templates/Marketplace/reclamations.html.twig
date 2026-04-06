@@ -350,7 +350,7 @@
         .rec-mod-box-val { font-size: 15px; font-weight: 700; color: #1e293b; }
         .rec-mod-desc-area { border-top: 1px dashed #e2e8f0; padding-top: 24px; }
         .rec-mod-desc-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 700; margin-bottom: 12px; }
-        .rec-mod-desc-txt { font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line; background: #f8fafc; padding: 16px; border-radius: 12px; }
+        .rec-mod-desc-txt { font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-line; background: #f8fafc; padding: 16px; border-radius: 12px; word-break: break-word; overflow-wrap: break-word; }
         .rec-mod-footer {
             padding: 16px 24px; display: flex; justify-content: flex-end; border-top: 1px solid #f1f5f9;
         }
@@ -694,6 +694,9 @@ async function openRecDetails(id) {
                     <div class="rec-mod-box">
                         <div class="rec-mod-box-lbl"><i class="bi bi-box-seam"></i> PRODUIT</div>
                         <div class="rec-mod-box-val">${r.nomProduit}</div>
+                        <div class="mt-1" style="font-size: 11px; color: #64748b;">
+                            Vendeur : <span class="fw-bold text-dark">${r.vendeurNom}</span>
+                        </div>
                     </div>
                     <div class="rec-mod-box">
                         <div class="rec-mod-box-lbl"><i class="bi bi-tag"></i> TYPE</div>

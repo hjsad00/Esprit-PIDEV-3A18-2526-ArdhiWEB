@@ -155,12 +155,25 @@ class CommandeController extends AbstractController
         $oldStatus = $commande->getEtat();
         $commande->setEtat($status);
 
-        // Gérer le stock en cas d'annulation
+        // Gérer le stock et les points en cas d'annulation
         if ($status === 'annulee' && $oldStatus !== 'annulee') {
+            // Rendre le stock
             foreach ($commande->getDetails() as $detail) {
                 $produit = $detail->getProduit();
                 if ($produit) {
                     $produit->setQuantiteStock($produit->getQuantiteStock() + $detail->getQuantite());
+                }
+            }
+
+            // Gestion de la Fidélité (Remboursement ou Retrait du bonus)
+            $acheteur = $commande->getUser();
+            if ($acheteur) {
+                if ($commande->isPayeeParPoints()) {
+                    // Si payée par points, on les rend
+                    $acheteur->setPointsFidelite($acheteur->getPointsFidelite() + $commande->getTotal());
+                } else {
+                    // Si payée par carte, on retire le bonus de 10% qui avait été gagné
+                    $acheteur->setPointsFidelite($acheteur->getPointsFidelite() - ($commande->getTotal() * 0.1));
                 }
             }
         }
@@ -252,6 +265,7 @@ class CommandeController extends AbstractController
         // 2. Récupérer données requête
         $data = json_decode($request->getContent(), true);
         $modeLivraison = $data['mode_livraison'] ?? 'RECUPERATION';
+        $paymentMethod = $data['payment_method'] ?? 'stripe';
         $fraisParVendeur = ($modeLivraison === 'LIVRAISON') ? 7.0 : 0.0;
         $couponCode = $data['coupon_code'] ?? null;
 
@@ -307,6 +321,29 @@ class CommandeController extends AbstractController
             }
         }
 
+        // 3.8. Calcul du Total Global Final pour validation des Points
+        $totalFinalGlobal = $totalBasket + (count($groupesParVendeur) * $fraisParVendeur);
+        if ($coupon) {
+            if ($coupon->getTypeReduction() === 'POURCENTAGE') {
+                $totalFinalGlobal -= ($totalBasket * ($coupon->getValeur() / 100));
+            } else {
+                $totalFinalGlobal -= min($coupon->getValeur(), $totalBasket);
+            }
+        }
+        $totalFinalGlobal = round($totalFinalGlobal, 2);
+
+        // 3.9. Gestion des Points de Fidélité
+        if ($paymentMethod === 'points') {
+            if ($user->getPointsFidelite() < $totalFinalGlobal) {
+                return $this->json(['success' => false, 'message' => 'Points de fidélité insuffisants (Solde : ' . $user->getPointsFidelite() . ' pts).'], 400);
+            }
+            $user->setPointsFidelite($user->getPointsFidelite() - $totalFinalGlobal);
+        } else {
+            // Gain de 10% lors du paiement normal (Stripe/Carte)
+            $pointsGagnes = $totalFinalGlobal * 0.1;
+            $user->setPointsFidelite($user->getPointsFidelite() + $pointsGagnes);
+        }
+
         // 4. Créer une commande par vendeur
         $nbCommandes = 0;
         foreach ($groupesParVendeur as $vendeurId => $lignes) {
@@ -316,6 +353,7 @@ class CommandeController extends AbstractController
             $commande->setEtat('en_attente');
             $commande->setModeLivraison($modeLivraison);
             $commande->setFraisLivraison($fraisParVendeur);
+            $commande->setPayeeParPoints($paymentMethod === 'points');
 
             $sousTotal = 0.0;
             foreach ($lignes as $ligne) {

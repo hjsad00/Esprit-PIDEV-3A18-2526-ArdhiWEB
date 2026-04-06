@@ -133,6 +133,9 @@ class ReclamationController extends AbstractController
             'reclamation' => [
                 'id' => $reclamation->getId(),
                 'nomProduit' => $reclamation->getNomProduit(),
+                'idProduit' => $reclamation->getProduit() ? $reclamation->getProduit()->getId() : null,
+                'vendeurNom' => $reclamation->getProduit() ? ($reclamation->getProduit()->getUser()->getPrenom() . ' ' . $reclamation->getProduit()->getUser()->getNom()) : 'Inconnu',
+                'clientNom' => $reclamation->getUser()->getPrenom() . ' ' . $reclamation->getUser()->getNom(),
                 'type' => $reclamation->getType(),
                 'statut' => $reclamation->getStatut(),
                 'date' => $reclamation->getDateReclamation()->format('d/m/Y à H:i'),

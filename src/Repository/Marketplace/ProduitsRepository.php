@@ -118,4 +118,84 @@ class ProduitsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleColumnResult();
     }
+
+    /**
+     * Filtrage avancé du catalogue avec tous les critères combinés.
+     */
+    public function findAllWithFilters(array $filters, ?int $excludeUserId): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true);
+
+        if ($excludeUserId) {
+            $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);
+        }
+
+        if (!empty($filters['nom'])) {
+            $qb->andWhere('p.nom LIKE :nom')
+               ->setParameter('nom', '%' . $filters['nom'] . '%');
+        }
+
+        if (!empty($filters['categorie'])) {
+            $qb->andWhere('p.categorie = :cat')
+               ->setParameter('cat', $filters['categorie']);
+        }
+
+        if (isset($filters['prix_min']) && $filters['prix_min'] !== '') {
+            $qb->andWhere('p.prix >= :pmin')
+               ->setParameter('pmin', (float) $filters['prix_min']);
+        }
+
+        if (isset($filters['prix_max']) && $filters['prix_max'] !== '') {
+            $qb->andWhere('p.prix <= :pmax')
+               ->setParameter('pmax', (float) $filters['prix_max']);
+        }
+
+        if (isset($filters['stock_min']) && $filters['stock_min'] !== '') {
+            $qb->andWhere('p.quantiteStock >= :smin')
+               ->setParameter('smin', (int) $filters['stock_min']);
+        }
+
+        if (isset($filters['stock_max']) && $filters['stock_max'] !== '') {
+            $qb->andWhere('p.quantiteStock <= :smax')
+               ->setParameter('smax', (int) $filters['stock_max']);
+        }
+
+        if (!empty($filters['en_solde'])) {
+            $qb->andWhere('p.remise > 0');
+        }
+
+        // Tri
+        $tri = $filters['tri'] ?? 'recent';
+        match($tri) {
+            'prix_asc'   => $qb->orderBy('p.prix', 'ASC'),
+            'prix_desc'  => $qb->orderBy('p.prix', 'DESC'),
+            'nom_az'     => $qb->orderBy('p.nom', 'ASC'),
+            'nom_za'     => $qb->orderBy('p.nom', 'DESC'),
+            'solde'      => $qb->orderBy('p.remise', 'DESC')->addOrderBy('p.id', 'DESC'),
+            default      => $qb->orderBy('p.id', 'DESC'),
+        };
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Récupère le prix minimum et maximum de tous les produits visibles.
+     */
+    public function findPriceRange(?int $excludeUserId): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('MIN(p.prix) as pMin, MAX(p.prix) as pMax')
+            ->andWhere('p.visible = :true')
+            ->andWhere('p.visibleAdmin = :true')
+            ->setParameter('true', true);
+
+        if ($excludeUserId) {
+            $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);
+        }
+
+        return $qb->getQuery()->getSingleResult();
+    }
 }
