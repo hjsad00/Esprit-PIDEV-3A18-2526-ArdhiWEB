@@ -20,6 +20,7 @@ class MaterielType extends AbstractType
         $builder
             ->add('nom', TextType::class, [
                 'label' => 'Nom du matériel',
+                'required' => false,
             ])
             ->add('type', ChoiceType::class, [
                 'label' => 'Type',

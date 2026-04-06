@@ -18,7 +18,7 @@
                         <h4 class="mb-0 fw-bold"><i class="bi bi-calendar-plus me-2"></i>Planifier une intervention</h4>
                     </div>
                     <div class="card-body p-5">
-                        {{ form_start(form) }}
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
                             {{ form_widget(form) }}
                             <div class="d-flex justify-content-between mt-5 pt-3 border-top">
                                 <a href="{{ path('app_maintenance_index') }}" class="btn-mat-outline px-4"><i class="bi bi-arrow-left"></i> Annuler</a>

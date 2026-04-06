@@ -22,11 +22,11 @@ class Materiel
     private ?int $userId = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Le nom du matériel est obligatoire.')]
+    #[Assert\NotBlank(message: "Oups, n'oubliez pas le nom.")]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    #[Assert\LessThanOrEqual('today', message: 'La date d\'achat ne peut pas être au futur.')]
+    #[Assert\LessThanOrEqual('today', message: "Tu ne peux pas mettre une date d'achat au futur.")]
     private ?\DateTimeInterface $dateAchat = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
@@ -36,9 +36,13 @@ class Materiel
     private ?\DateTimeInterface $dateProchaineMaintenance = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Veuillez choisir un type de matériel.")]
+    #[Assert\Choice(choices: ['Tracteur', 'Moissonneuse', 'Semoir', 'Pulvérisateur', 'Charrue', 'Herse', 'Autre'], message: "Type invalide.")]
     private ?string $type = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Veuillez indiquer l'état du matériel.")]
+    #[Assert\Choice(choices: ['Neuf', 'Bon', 'Moyen', 'En panne', 'En maintenance'], message: "État invalide.")]
     private ?string $etat = null;
 
     #[ORM\Column(length: 255, nullable: true)]

@@ -29,7 +29,7 @@ class Maintenance
 
     #[ORM\Column(name: 'date_maintenance', type: 'date')]
     #[Assert\NotBlank(message: 'La date de maintenance est obligatoire.')]
-    #[Assert\GreaterThanOrEqual('today', message: 'La date de maintenance ne peut pas être dans le passé.')]
+    #[Assert\GreaterThanOrEqual('today', message: "Tu ne peux pas mettre une date de maintenance au passé.")]
     #[Assert\Expression(
         "value == null or value.format('w') != 0",
         message: "La date de maintenance ne peut pas être prévue un dimanche."

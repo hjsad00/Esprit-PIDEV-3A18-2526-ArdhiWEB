@@ -124,7 +124,18 @@
     </div>
     {% endif %}
 
-    {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'needs-validation'}}) }}
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    {# Alerte globale si le formulaire contient des erreurs #}
+    {% if not form.vars.valid %}
+        <div class="alert alert-danger shadow-sm border-start border-4 border-danger py-3 mb-4">
+            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+            <strong>Attention !</strong> Le formulaire contient des erreurs. Veuillez vérifier les champs en rouge ci-dessous.
+            <ul class="mt-2 mb-0 small">
+                {% for error in form.vars.errors %}<li>{{ error.message }}</li>{% endfor %}
+            </ul>
+        </div>
+    {% endif %}
 
     <div class="section-divider">Informations générales</div>
 
@@ -174,11 +185,12 @@
     <div class="row g-3 mb-3">
       <div class="col-12">
         {{ form_label(form.dateAchat) }}
-        {{ form_widget(form.dateAchat) }}
+        {{ form_widget(form.dateAchat, {'attr': {'class': 'form-control ' ~ (form.dateAchat.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
+        {{ form_errors(form.dateAchat) }}
         {% if form.dateAchat.vars.errors|length > 0 %}
-          <div class="invalid-feedback d-block">
-            {% for error in form.dateAchat.vars.errors %}{{ error.message }}{% endfor %}
-          </div>
+            <div class="invalid-feedback d-block fw-bold" style="font-size: 0.9rem;">
+                {% for error in form.dateAchat.vars.errors %}{{ error.message }}{% endfor %}
+            </div>
         {% endif %}
         <div class="form-hint">La prochaine maintenance sera automatiquement fixée à 6 mois après cette date.</div>
       </div>

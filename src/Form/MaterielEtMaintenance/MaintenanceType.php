@@ -24,6 +24,7 @@ class MaintenanceType extends AbstractType
             ->add('materiel', EntityType::class, [
                 'class' => Materiel::class,
                 'label' => 'Matériel concerné',
+                'required' => false,
                 'choice_label' => function (Materiel $m) {
                     return $m->getNom() . ' (' . $m->getType() . ')';
                 },
@@ -42,6 +43,7 @@ class MaintenanceType extends AbstractType
             ])
             ->add('type_maintenance', ChoiceType::class, [
                 'label' => 'Type de maintenance',
+                'required' => false,
                 'choices' => [
                     'Préventive' => 'preventive',
                     'Corrective' => 'corrective',
@@ -60,10 +62,8 @@ class MaintenanceType extends AbstractType
             ->add('date_maintenance', DateType::class, [
                 'label' => 'Date de l\'intervention',
                 'widget' => 'single_text',
+                'required' => false,
                 'attr' => ['class' => 'form-control'],
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'La date est obligatoire.']),
-                ],
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description (optionnel)',
