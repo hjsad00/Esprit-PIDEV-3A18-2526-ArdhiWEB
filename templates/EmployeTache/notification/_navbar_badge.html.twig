@@ -1,0 +1,36 @@
+{#
+  ══════════════════════════════════════════════════════════════════════
+  SNIPPET À COLLER DANS base.html.twig — dans le <nav>, près de l'icône
+  profil / menu utilisateur.
+
+  Prérequis : injecter NotificationService dans votre base controller ou
+  passer nb_notif_non_lues via un Twig Global (voir instructions ci-dessous).
+  ══════════════════════════════════════════════════════════════════════
+#}
+
+{# ── Badge cloche dans la navbar ─────────────────────────────────────── #}
+<a href="{{ path('notification_index') }}" class="notif-bell-link" title="Notifications">
+    <span style="position:relative; display:inline-flex; align-items:center;">
+        🔔
+        <span id="notif-badge-count"
+              style="
+                  display: {% if app.user and nb_notif_non_lues is defined and nb_notif_non_lues > 0 %}inline-flex{% else %}none{% endif %};
+                  position: absolute;
+                  top: -8px;
+                  right: -10px;
+                  background: #e74c3c;
+                  color: white;
+                  border-radius: 50%;
+                  width: 20px;
+                  height: 20px;
+                  font-size: 11px;
+                  font-weight: 700;
+                  align-items: center;
+                  justify-content: center;
+                  border: 2px solid white;
+                  line-height: 1;
+              ">
+            {{ nb_notif_non_lues is defined ? (nb_notif_non_lues > 99 ? '99+' : nb_notif_non_lues) : '' }}
+        </span>
+    </span>
+</a>

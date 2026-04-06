@@ -6,6 +6,28 @@
 
 {% block stylesheets %}
     <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+        .notif-badge-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            min-width: 22px;
+            height: 22px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 6px;
+            padding: 0 4px;
+            vertical-align: middle;
+            animation: pulse-badge 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.15); }
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -59,6 +81,24 @@
                 <div class="category-text">
                   <h4>Tâches</h4>
                   <span>Gérer les tâches</span>
+                </div>
+              </a>
+
+              {# NOTIFICATIONS ✅ #}
+              <a href="{{ path('notification_index') }}" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-bell-fill"></i>
+                </div>
+                <div class="category-text">
+                  <h4>
+                    Notifications
+                    {% if nb_notif_non_lues is defined and nb_notif_non_lues > 0 %}
+                      <span class="notif-badge-circle">
+                        {{ nb_notif_non_lues > 99 ? '99+' : nb_notif_non_lues }}
+                      </span>
+                    {% endif %}
+                  </h4>
+                  <span>Alertes retard &amp; météo agricole</span>
                 </div>
               </a>
 
