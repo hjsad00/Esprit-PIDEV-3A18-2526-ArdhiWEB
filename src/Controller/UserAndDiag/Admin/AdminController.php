@@ -51,6 +51,7 @@ class AdminController extends AbstractController
         return $this->render('UserAndDiag/admin/dashboard.html.twig', [
             'stats' => $stats,
             'title' => 'Gestion des Utilisateurs',
+            'dashboard_context' => 'users',
         ]);
     }
 
@@ -81,6 +82,7 @@ class AdminController extends AbstractController
         return $this->render('UserAndDiag/admin/dashboard.html.twig', [
             'stats' => $stats,
             'title' => 'Gestion des Diagnostics',
+            'dashboard_context' => 'diags',
         ]);
     }
 }
