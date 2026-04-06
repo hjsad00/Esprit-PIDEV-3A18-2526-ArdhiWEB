@@ -48,11 +48,6 @@
             <i class="bi bi-grid-fill"></i><span>Portail Global</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link {{ current_route == 'admin_users_dashboard' or current_route == 'admin_diags_dashboard' ? 'active' : '' }}" href="{{ is_users_context ? path('admin_users_dashboard') : path('admin_diags_dashboard') }}">
-            <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
-          </a>
-        </li>
       </ul>
 
       {% if is_users_context %}
