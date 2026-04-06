@@ -26,6 +26,37 @@
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
   
   {% block stylesheets %}{% endblock %}
+  
+  <style>
+    /* Système de Notification "Inratable" */
+    .ardhi-toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999999;
+      width: 90%;
+      max-width: 500px;
+    }
+    .ardhi-toast {
+      background: white;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: slideDown 0.5s ease-out;
+      border-left: 6px solid #2ecc71;
+    }
+    .ardhi-toast.error { border-left-color: #e74c3c; }
+    
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
 </head>
 
 <body class="{% block body_class %}index-page{% endblock %}">
@@ -36,6 +67,40 @@
         console.log("Flash detected: {{ label }} - {{ message|striptags }}");
       {% endfor %}
     {% endfor %}
+  </script>
+
+  <div id="ardhi-notifications" class="ardhi-toast-container"></div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashData = [];
+      {% for label, messages in app.flashes %}
+        {% for message in messages %}
+          flashData.push({ label: '{{ label }}', message: `{{ message|raw }}` });
+        {% endfor %}
+      {% endfor %}
+
+      const container = document.getElementById('ardhi-notifications');
+      
+      flashData.forEach(flash => {
+        // Alerte de secours pour débug
+        console.log("NOTIFICATION DISTRIBUÉE:", flash.message);
+        
+        const toast = document.createElement('div');
+        toast.className = `ardhi-toast ${flash.label === 'success' ? 'success' : 'error'}`;
+        toast.innerHTML = `
+          <div style="flex-grow: 1; color: #333;">
+            <i class="bi bi-${flash.label === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2" style="color: ${flash.label === 'success' ? '#2ecc71' : '#e74c3c'};"></i>
+            ${flash.message}
+          </div>
+          <button onclick="this.parentElement.remove()" style="background:none; border:none; font-size: 20px; cursor:pointer;">&times;</button>
+        `;
+        container.appendChild(toast);
+        
+        // Auto-fermeture après 8 secondes
+        setTimeout(() => { if(toast.parentElement) toast.remove(); }, 8000);
+      });
+    });
   </script>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
