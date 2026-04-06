@@ -151,10 +151,10 @@
       <button class="sidebar-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
       <h1 class="topbar-title">{% block page_title %}Administration{% endblock %}</h1>
       <div class="topbar-right">
-        <span class="topbar-user">
+        <a href="{{ path('app_profile') }}" class="topbar-user text-decoration-none" style="color: inherit;">
           <i class="bi bi-person-circle"></i>
           {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
-        </span>
+        </a>
       </div>
     </header>
 

@@ -20,7 +20,13 @@
         <span style="font-weight: 700; font-size: 1.25rem; color: #116530;">Ardhi Admin</span>
     </div>
     
-    <div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        {% if app.user %}
+            <a href="{{ path('app_profile') }}" style="text-decoration: none; color: #444; display: flex; align-items: center; gap: 8px; margin-right: 15px; font-weight: 500;">
+                <i class="bi bi-person-circle" style="font-size: 1.2rem;"></i>
+                {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
+            </a>
+        {% endif %}
         <a href="{{ path('app_home') }}" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-house-door me-1"></i>Retour au Site</a>
         {% if app.user %}
             <a href="{{ path('app_logout') }}" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
