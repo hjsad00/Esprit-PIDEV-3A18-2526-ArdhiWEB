@@ -1,0 +1,214 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Mes Favoris{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+        .wishlist-empty {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-top: 40px;
+        }
+        .wishlist-empty i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    {# ============================
+       TOP HEADER BAR
+       ============================ #}
+    <section class="mp-header">
+      <div class="container">
+        <div class="mp-header-inner">
+          <div class="mp-header-left">
+            <h1 class="mp-header-title">
+              <i class="bi bi-heart-fill"></i> Mes Favoris
+            </h1>
+          </div>
+          <div class="mp-header-right">
+            <a href="{{ path('app_marketplace') }}" class="mp-btn-back">
+              <i class="bi bi-arrow-left"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       INFO BANNER
+       ============================ #}
+    <section class="mp-info-banner">
+      <div class="container">
+        <div class="mp-info-inner">
+          <span class="mp-info-text">
+            <i class="bi bi-heart"></i> Retrouvez tous vos coups de cœur
+          </span>
+          <span class="mp-info-count">
+            <i class="bi bi-bookmark-heart-fill"></i> Total favoris : <strong>{{ favorites|length }}</strong>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    {# ============================
+       FAVORITES LIST
+       ============================ #}
+    <section class="marketplace-section">
+      <div class="container">
+
+        <div class="marketplace-section-header">
+          <h2>Ma Collection</h2>
+          <p>Retrouvez les articles que vous avez aimés</p>
+        </div>
+
+        {% if favorites is empty %}
+            <div class="wishlist-empty">
+                <i class="bi bi-heartbreak"></i>
+                <h3>Votre liste est vide</h3>
+                <p class="text-muted">Vous n'avez pas encore ajouté de produits à vos favoris.</p>
+                <a href="{{ path('app_marketplace_catalogue') }}" class="product-btn mt-3" style="font-size: 1rem; padding: 10px 30px;">
+                    Explorer le catalogue
+                </a>
+            </div>
+        {% else %}
+            <div class="product-grid">
+                {% for fav in favorites %}
+                    {% set produit = fav.produit %}
+                    <div class="product-card" id="fav-card-{{ produit.id }}">
+                        <div class="product-card-img">
+                            {% if produit.image %}
+                                <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}">
+                            {% else %}
+                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);">
+                                    <i class="bi bi-flower1" style="font-size:4rem;color:#4a8c3f;opacity:0.5;"></i>
+                                </div>
+                            {% endif %}
+                            
+                            {% if produit.remise > 0 %}
+                                <span class="product-badge badge-promo">
+                                    {% if produit.typeRemise == 'POURCENTAGE' %}
+                                        -{{ produit.remise|number_format(0) }}%
+                                    {% else %}
+                                        -{{ produit.remise|number_format(2, '.', ' ') }} TND
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+
+                            <div class="product-stock-status {{ produit.quantiteStock > 0 ? 'stock-in' : 'stock-out' }}">
+                                {{ produit.quantiteStock > 0 ? 'En stock' : 'Rupture' }}
+                            </div>
+                        </div>
+                        
+                        <div class="product-card-body">
+                            <div class="product-card-category" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>{{ produit.categorie ?? 'Général' }}</span>
+                                <button class="fav-icon-btn active" 
+                                        onclick="toggleWishlist({{ produit.id }}, this)" 
+                                        title="Retirer des favoris"
+                                        style="background:none; border:none; padding:0; cursor:pointer; font-size:1.1rem; line-height:1; transition:0.2s;">
+                                    <i class="bi bi-heart" style="display:none;"></i>
+                                    <i class="bi bi-heart-fill" style="color:#e17055;"></i>
+                                </button>
+                            </div>
+                            <h3 class="product-card-title">{{ produit.nom }}</h3>
+                            <div class="product-card-seller">
+                                <i class="bi bi-person-circle"></i> Vendu par <strong>{{ produit.user.prenom }} {{ produit.user.nom }}</strong>
+                            </div>
+                            
+                            <div class="product-card-footer">
+                                <div class="product-price">
+                                    {% if produit.remise > 0 %}
+                                        <small style="text-decoration:line-through;color:#b2bec3;">{{ produit.prix|number_format(2, '.', ' ') }}</small><br>
+                                        {{ produit.prixFinal|number_format(2, '.', ' ') }}
+                                    {% else %}
+                                        {{ produit.prix|number_format(2, '.', ' ') }}
+                                    {% endif %}
+                                    <small>TND</small>
+                                </div>
+                                <a href="{{ path('app_marketplace_produit_show', {id: produit.id}) }}" class="product-btn"><i class="bi bi-eye"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+      </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Toast ──────────────────────────────────────────────────────────
+function showToast(message, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'mp-toast' + (isError ? ' error' : '');
+    toast.innerHTML = `
+        <div class="mp-toast-icon">
+            <i class="bi bi-${isError ? 'x-circle-fill' : 'heart-fill'}"></i>
+        </div>
+        <div class="mp-toast-body">
+            <strong>${isError ? 'Erreur' : 'Favoris'}</strong>
+            <span>${message}</span>
+        </div>
+        <button class="mp-toast-close" onclick="this.parentElement.remove()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ── AJAX Toggle Wishlist ───────────────────────────────────────────
+async function toggleWishlist(productId, btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`/marketplace/favoris/toggle/${productId}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (!data.isFavorite) {
+                // Sur la page favoris, on retire la carte si on "unfavorite"
+                const card = document.getElementById(`fav-card-${productId}`);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        card.remove();
+                        // Si plus de cartes, on rafraîchit pour montrer le message vide
+                        if (document.querySelectorAll('.product-card').length === 0) {
+                            location.reload();
+                        }
+                    }, 400);
+                }
+            }
+            showToast(data.message);
+        } else {
+            showToast(data.message || 'Une erreur est survenue.', true);
+        }
+    } catch (err) {
+        showToast('Erreur de connexion.', true);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

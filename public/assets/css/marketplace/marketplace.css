@@ -774,6 +774,57 @@
     color: #fff;
 }
 
+/* --- Wishlist Heart Button --- */
+.wishlist-btn {
+    position: absolute;
+    top: 52px; /* Sous l'indicateur de stock */
+    right: 12px;
+    width: 40px; /* Plus grand */
+    height: 40px;
+    border-radius: 50%;
+    background: #ffffff; /* Fond blanc pur */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b2bec3;
+    font-size: 20px; /* Plus grand */
+    cursor: pointer;
+    z-index: 100; /* Z-index plus élevé */
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    padding: 0;
+}
+
+.wishlist-btn:hover {
+    transform: scale(1.15);
+    color: #e17055;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(225, 112, 85, 0.3);
+}
+
+.wishlist-btn.active {
+    color: #e17055;
+    background: #fff;
+    border-color: rgba(225, 112, 85, 0.3);
+}
+
+.wishlist-btn i.bi-heart-fill {
+    display: none;
+}
+
+.wishlist-btn.active i.bi-heart {
+    display: none;
+}
+
+.wishlist-btn.active i.bi-heart-fill {
+    display: block;
+}
+
+.wishlist-btn:active {
+    transform: scale(0.9);
+}
+
 /* --- Rating Stars --- */
 .product-rating {
     display: flex;

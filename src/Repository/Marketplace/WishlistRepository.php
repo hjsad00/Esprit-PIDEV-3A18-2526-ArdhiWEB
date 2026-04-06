@@ -53,15 +53,18 @@ class WishlistRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneByUserAndProduct($userId, $productId): ?Wishlist
-//    {
-//        return $this->createQueryBuilder('w')
-//            ->andWhere('w.user = :userId')
-//            ->andWhere('w.produit = :productId')
-//            ->setParameter('userId', $userId)
-//            ->setParameter('productId', $productId)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findAllIdsByUser($user): array
+    {
+        if (!$user) return [];
+        
+        $results = $this->createQueryBuilder('w')
+            ->select('p.id') // Dans l'entité Produits, le champ s'appelle $id (colonne idProduit)
+            ->join('w.produit', 'p')
+            ->where('w.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_column($results, 'id');
+    }
 }
