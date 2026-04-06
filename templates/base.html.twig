@@ -1,16 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>{% block title %}Ardhi - Agriculture{% endblock %}</title>
+
+  <!-- Favicons -->
   <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
   <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Marcellus:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Marcellus:wght@400&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -18,77 +21,31 @@
   <link href="{{ asset('assets/vendor/aos/aos.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet">
+
+  <!-- Main CSS File -->
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
+  
   {% block stylesheets %}{% endblock %}
 </head>
 
-  {% set current_path = app.request.pathInfo %}
-  {% set current_route = app.request.attributes.get('_route') %}
-  {% set current_controller = app.request.attributes.get('_controller') %}
+<body class="{% block body_class %}index-page{% endblock %}">
 
-  {% set is_user_diag_route = 
-    (current_path starts with '/user-and-diag' and not (current_path starts with '/admin')) or 
-    (current_route starts with 'app_user_and_diag_') or 
-    (current_route in ['app_client_dashboard', 'app_profile', 'app_login', 'app_register']) or
-    ('Controller\\UserAndDiag' in current_controller and 'Controller\\UserAndDiag\\Admin' not in current_controller)
-  %}
-
-{% set is_homepage = current_route == 'app_home' %}
-{% set is_premium = is_homepage or is_user_diag_route %}
-<body class="{{ is_premium ? 'premium-header-active' : '' }} {{ is_homepage ? 'index-page' : '' }} {% block body_class %}{% endblock %}" {% if is_user_diag_route %}style="background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;"{% endif %}>
-
-  <div class="flash-container">
-    {% for label, messages in app.flashes %}
-      {% for message in messages %}
-        <div class="premium-alert alert-{{ label }} alert-dismissible fade show" role="alert">
-          {% if label == 'success' %}
-            <i class="bi bi-check-circle-fill"></i>
-          {% elseif label == 'danger' %}
-            <i class="bi bi-exclamation-triangle-fill"></i>
-          {% else %}
-            <i class="bi bi-info-circle-fill"></i>
-          {% endif %}
-          <span>{{ message }}</span>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      {% endfor %}
-    {% endfor %}
-  </div>
-
-  <header id="header" class="header d-flex align-items-center fixed-top {% block header_class %}{% endblock %}">
+  <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      {% if is_granted('ROLE_ADMIN') %}
-        <a href="{{ path('admin_agriculteurs_employe') }}" class="logo d-flex align-items-center">
-      {% else %}
-        <a href="/" class="logo d-flex align-items-center">
-      {% endif %}
-        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="max-height: 50px;">
+      <a href="/" class="logo d-flex align-items-center text-decoration-none">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi">
+        <h1 class="sitename">ARDHI</h1>
       </a>
-      {% set currentRoute = app.request.attributes.get('_route') %}
+
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="{{ path('app_client_dashboard') }}">Diagnostics IA</a></li>
-          <li><a href="#">Marketplace</a></li>
-          <li><a href="#">Maintenance</a></li>
-          <li>
-            {% if is_granted('ROLE_AGRICULTEUR') %}
-              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
-            {% elseif is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
-            {% else %}
-              <a href="#">Cultures</a>
-            {% endif %}
-          </li>
+          <li><a href="/">Diagnostic IA</a></li>
+          <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
+          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
+          <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
-          {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
-          <li>
-           <a href="{{ path('app_employe_dashboard') }}"
-            class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">
-            Employés
-          </a>
-          </li>
-          {% endif %}
+          <li><a href="#">Employés</a></li>
           
           {% if app.user %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
@@ -97,25 +54,6 @@
             </div></a>
             <ul>
               <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              {% if app.user.role == 'ADMIN' %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Admin Dashboard</strong></li>
-                <li><a href="{{ path('app_evenement_admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard admin</a></li>
-                <li><a href="{{ path('app_evenement_participations') }}"><i class="bi bi-clipboard-check"></i> Participations</a></li>
-                <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% elseif app.user.role == 'AGRICULTEUR' %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Tableau de Bord</strong></li>
-                <li><a href="{{ path('app_evenement_participations') }}"><i class="bi bi-clipboard-check"></i> Mes Participations</a></li>
-                <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% else %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Mon Espace</strong></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% endif %}
-              <li><hr class="dropdown-divider"></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
             </ul>
           </li>
@@ -125,31 +63,48 @@
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
+
     </div>
   </header>
-  <main class="main" style="min-height: 70vh;">
-      {% block body %}{% endblock %}
+
+  <main class="main" style="min-height: 70vh; margin-top: 100px;">
+    {% if app.flashes|length > 0 %}
+      <div class="container mt-3">
+        {% for label, messages in app.flashes %}
+          {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show shadow border-start border-4 py-3" role="alert"
+                 style="border-left-color: {% if label == 'success' %}#2ecc71{% else %}#e74c3c{% endif %} !important; background: white; z-index: 1000000;">
+              <i class="bi bi-{% if label == 'success' %}check-circle-fill text-success{% else %}exclamation-triangle-fill text-danger{% endif %} me-2"></i>
+              {{ message|raw }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block body %}{% endblock %}
   </main>
+
   <footer id="footer" class="footer dark-background">
     <div class="footer-top">
       <div class="container">
         <div class="row gy-4">
           <div class="col-lg-4 col-md-6 footer-about">
-            <a href="/" class="logo d-flex align-items-center"><span class="sitename">Ardhi</span></a>
+            <a href="/" class="logo d-flex align-items-center">
+              <span class="sitename">Ardhi</span>
+            </a>
             <div class="footer-contact pt-3">
               <p>Votre plateforme d'agriculture intelligente</p>
               <p>Tunisie</p>
               <p class="mt-3"><strong>Email:</strong> <span>contact@ardhi.com</span></p>
             </div>
           </div>
+
           <div class="col-lg-2 col-md-3 footer-links">
             <h4>Liens utiles</h4>
             <ul>
-              {% if is_granted('ROLE_ADMIN') %}
-                <li><a href="{{ path('admin_agriculteurs_employe') }}">Accueil</a></li>
-              {% else %}
-                <li><a href="/">Accueil</a></li>
-              {% endif %}
+              <li><a href="/">Accueil</a></li>
               <li><a href="#">À propos</a></li>
               <li><a href="#">Services</a></li>
             </ul>
@@ -157,14 +112,20 @@
         </div>
       </div>
     </div>
+
     <div class="copyright text-center">
-      <div class="container">
-        <div>Copyright <strong><span>Ardhi</span></strong>. Tous droits reserves</div>
+      <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
+        <div class="d-flex flex-column align-items-center align-items-lg-start">
+          <div>
+            © Copyright <strong><span>Ardhi</span></strong>. Tous droits réservés
+          </div>
+        </div>
       </div>
     </div>
   </footer>
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
@@ -172,24 +133,10 @@
   <script src="{{ asset('assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
   <script src="{{ asset('assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
 
-  <!-- Premium Flash Auto-dismiss -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        document.querySelectorAll('.premium-alert').forEach(alert => {
-          const bsAlert = new bootstrap.Alert(alert);
-          bsAlert.close();
-        });
-      }, 5000);
-    });
-  </script>
-
   <!-- Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
-  {% block javascripts %}
-    {{ importmap('app') }}
-  {% endblock %}
+  {% block javascripts %}{% endblock %}
 
 </body>
 </html>

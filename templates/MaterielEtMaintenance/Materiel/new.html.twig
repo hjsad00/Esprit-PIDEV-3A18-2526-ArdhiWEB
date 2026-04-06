@@ -141,7 +141,7 @@
 
     <div class="mb-3">
       {{ form_label(form.nom) }}
-      {{ form_widget(form.nom) }}
+      {{ form_widget(form.nom, {'attr': {'class': 'form-control ' ~ (form.nom.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
       {% if form.nom.vars.errors|length > 0 %}
         <div class="invalid-feedback d-block">
           {% for error in form.nom.vars.errors %}{{ error.message }}{% endfor %}
@@ -152,18 +152,18 @@
     <div class="row g-3 mb-3">
       <div class="col-sm-6">
         {{ form_label(form.type) }}
-        {{ form_widget(form.type) }}
+        {{ form_widget(form.type, {'attr': {'class': 'form-select ' ~ (form.type.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
         {% if form.type.vars.errors|length > 0 %}
-          <div class="invalid-feedback d-block">
+          <div class="invalid-feedback d-block fw-bold">
             {% for error in form.type.vars.errors %}{{ error.message }}{% endfor %}
           </div>
         {% endif %}
       </div>
       <div class="col-sm-6">
         {{ form_label(form.etat) }}
-        {{ form_widget(form.etat) }}
+        {{ form_widget(form.etat, {'attr': {'class': 'form-select ' ~ (form.etat.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
         {% if form.etat.vars.errors|length > 0 %}
-          <div class="invalid-feedback d-block">
+          <div class="invalid-feedback d-block fw-bold">
             {% for error in form.etat.vars.errors %}{{ error.message }}{% endfor %}
           </div>
         {% endif %}
