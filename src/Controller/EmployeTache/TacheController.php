@@ -450,8 +450,8 @@ class TacheController extends AbstractController
 
     // ── Synchronisation Google Calendar ───────────────────────────────
 
-    #[Route('/calendrier/sync', name: 'tache_calendrier_sync', methods: ['POST'])]
-    public function syncGoogleCalendar(TacheRepository $repo): JsonResponse
+    #[Route('/calendrier/sync', name: 'tache_calendrier_sync', methods: ['GET', 'POST'])]
+    public function syncGoogleCalendar(Request $request, TacheRepository $repo): JsonResponse
     {
         $result = $this->checkAccess();
         if ($result instanceof Response) {
@@ -459,7 +459,17 @@ class TacheController extends AbstractController
         }
         $idAgriculteur = $result;
 
-        // Connexion au Service Account Google
+        // ── GET : vérification de connexion (comme Java checkTask en arrière-plan) ──
+        if ($request->isMethod('GET')) {
+            $connected = $this->gcal->connecter();
+            return new JsonResponse([
+                'connected' => $connected,
+                'calName'   => $connected ? $this->gcal->getNomCalendrier() : null,
+                'error'     => $connected ? null : $this->gcal->getLastError(),
+            ]);
+        }
+
+        // ── POST : push des tâches vers Google Calendar ──────────────────
         if (!$this->gcal->connecter()) {
             return new JsonResponse([
                 'success' => false,
@@ -488,7 +498,7 @@ class TacheController extends AbstractController
         return new JsonResponse([
             'success' => $errors === 0,
             'message' => sprintf(
-                '📅 Synchronisation vers « %s » terminée : %d envoyée(s), %d erreur(s).',
+                'Synchronisation vers « %s » terminée : %d envoyée(s), %d erreur(s).',
                 $calName, $created, $errors
             ),
             'created'  => $created,

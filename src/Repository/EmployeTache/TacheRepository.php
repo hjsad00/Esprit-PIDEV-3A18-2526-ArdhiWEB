@@ -144,6 +144,25 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
+     * Récupère les tâches prévues pour aujourd'hui
+     */
+    public function findTachesDuJour(int $idAgriculteur): array
+    {
+        $today = new \DateTime('today');
+        
+        return $this->createQueryBuilder('t')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.dateDebut <= :today')
+            ->andWhere('t.dateFin >= :today OR t.dateFin IS NULL')
+            ->andWhere('t.statut NOT IN (:finished)')
+            ->setParameter('agri', $idAgriculteur)
+            ->setParameter('today', $today)
+            ->setParameter('finished', ['Terminé', 'Validé', 'Annulé'])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Compte les tâches par priorité — pour les statistiques
      */
     public function countByPriorite(int $idAgriculteur): array
