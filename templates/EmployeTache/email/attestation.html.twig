@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Attestation de Travail</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .header {
+            background-color: #1a3a54; /* Bleu marine Ardhi */
+            padding: 30px 40px;
+            text-align: left;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: #aed6f1;
+        }
+        .body-content {
+            padding: 40px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .body-content p {
+            margin-bottom: 20px;
+        }
+        .attachment-box {
+            background-color: #f2fbf5;
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 30px 0;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .signature {
+            margin-top: 40px;
+            font-size: 16px;
+        }
+        .signature p {
+            margin: 5px 0;
+        }
+        .signature .bold-sig {
+            font-weight: bold;
+            color: #1a3a54;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #eeeeee;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>Ardhi – Ressources Humaines</h1>
+            <p>Gestion Agricole Intelligente</p>
+        </div>
+
+        <!-- BODY -->
+        <div class="body-content">
+            <p>Madame, Monsieur <strong>{{ employe.nomComplet }}</strong>,</p>
+
+            <p>Nous avons le plaisir de vous adresser votre <strong>attestation de travail</strong> officielle, 
+            établie à la date du <strong>{{ dateJour }}</strong>.</p>
+
+            <p>Ce document confirme que vous occupez le poste de <strong>{{ employe.poste|default('—') }}</strong> 
+            au sein de notre société <strong>Ardhi</strong>, et que vous y exercez vos fonctions de manière régulière et continue.</p>
+
+            <!-- BOÎTE PIÈCE JOINTE -->
+            <div class="attachment-box">
+                📎 Votre attestation de travail (PDF imprimable) est jointe à cet email.
+            </div>
+
+            <!-- SIGNATURE -->
+            <div class="signature">
+                <p>Cordialement,</p>
+                <p class="bold-sig">La Direction des Ressources Humaines</p>
+                <p>Ardhi – Gestion Agricole</p>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Document officiel · {{ dateJour }} · Ardhi © {{ "now"|date("Y") }} · Toute reproduction non autorisée est interdite
+        </div>
+    </div>
+</body>
+</html>

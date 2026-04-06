@@ -1,0 +1,452 @@
+{% extends 'base.html.twig' %}
+{% block title %}Statistiques des Employés — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Page ─────────────────────────────────────────────── */
+.stats-page {
+    padding: 90px 0 60px;
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f5e9 50%, #f1f8e9 100%);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.stats-header {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 100%);
+    border-radius: 18px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(27, 94, 32, .25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.stats-header h1 {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.stats-header h1 i { font-size: 1.4rem; }
+.stats-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.btn-back, .btn-pdf-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: .85rem;
+    text-decoration: none;
+    transition: all .2s;
+    border: none;
+    cursor: pointer;
+}
+.btn-back {
+    background: rgba(255,255,255,.15);
+    color: white;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.2);
+}
+.btn-back:hover { background: rgba(255,255,255,.25); color: white; }
+.btn-pdf-export {
+    background: #27ae60;
+    color: white;
+    box-shadow: 0 4px 12px rgba(39,174,96,.3);
+}
+.btn-pdf-export:hover { background: #219150; color: white; transform: translateY(-1px); }
+
+/* ── KPI Boxes ────────────────────────────────────────── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.kpi-box {
+    border-radius: 16px;
+    padding: 24px 22px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-box::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    transform: translate(20px, -20px);
+}
+.kpi-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,.12);
+}
+.kpi-box-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.kpi-box-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.kpi-box-label {
+    font-size: .8rem;
+    font-weight: 500;
+    opacity: .85;
+    margin-top: 2px;
+}
+.kpi-green {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: white;
+    box-shadow: 0 4px 20px rgba(27,94,32,.22);
+}
+.kpi-teal {
+    background: linear-gradient(135deg, #00695C, #00897B);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,105,92,.22);
+}
+.kpi-emerald {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    box-shadow: 0 4px 20px rgba(39,174,96,.22);
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 2px 18px rgba(0,0,0,.06);
+    transition: transform .2s, box-shadow .2s;
+    border: 1px solid rgba(0,0,0,.03);
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 36px rgba(0,0,0,.1);
+}
+.stat-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1B5E20;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.stat-card-title i { font-size: 1.2rem; color: #43A047; }
+
+/* ── Chart ────────────────────────────────────────────── */
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+.chart-wrapper-wide { max-width: 100%; }
+
+/* ── Table ────────────────────────────────────────────── */
+.stat-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+}
+.stat-table thead th {
+    background: #e8f5e9;
+    color: #1B5E20;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 10px 14px;
+    text-align: left;
+    border: none;
+}
+.stat-table thead th:first-child { border-radius: 10px 0 0 10px; }
+.stat-table thead th:last-child { border-radius: 0 10px 10px 0; }
+.stat-table tbody tr {
+    background: #fafbfa;
+    transition: background .15s;
+}
+.stat-table tbody tr:hover { background: #f0f7f0; }
+.stat-table tbody td {
+    padding: 10px 14px;
+    font-size: .87rem;
+    color: #333;
+    border: none;
+}
+.stat-table tbody td:first-child { border-radius: 8px 0 0 8px; }
+.stat-table tbody td:last-child { border-radius: 0 8px 8px 0; }
+
+.stat-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: #e8f5e9;
+    overflow: hidden;
+    min-width: 100px;
+}
+.stat-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #2E7D32, #66BB6A);
+    transition: width .6s ease;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 768px) {
+    .stats-header { padding: 20px; }
+    .stats-header h1 { font-size: 1.2rem; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-box-value { font-size: 1.6rem; }
+    .stat-card { padding: 20px; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="stats-page">
+<div class="container-fluid px-4">
+
+    {# ── Header ─────────────────────────────────────────── #}
+    <div class="stats-header">
+        <h1><i class="bi bi-bar-chart-line-fill"></i> Statistiques des Employés</h1>
+        <div class="stats-header-actions">
+            <a href="{{ path('employe_index') }}" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Retour aux employés
+            </a>
+            <a href="{{ path('employe_pdf') }}" target="_blank" class="btn-pdf-export">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Exporter PDF
+            </a>
+        </div>
+    </div>
+
+    {# ── KPI Summary ────────────────────────────────────── #}
+    <div class="kpi-grid">
+        <div class="kpi-box kpi-green">
+            <div class="kpi-box-icon">👥</div>
+            <div>
+                <div class="kpi-box-value">{{ total }}</div>
+                <div class="kpi-box-label">Total employés</div>
+            </div>
+        </div>
+        <div class="kpi-box kpi-emerald">
+            <div class="kpi-box-icon">✅</div>
+            <div>
+                <div class="kpi-box-value">{{ actifData.actifs }}</div>
+                <div class="kpi-box-label">Actifs</div>
+            </div>
+        </div>
+        <div class="kpi-box kpi-teal">
+            <div class="kpi-box-icon">⛔</div>
+            <div>
+                <div class="kpi-box-value">{{ actifData.inactifs }}</div>
+                <div class="kpi-box-label">Inactifs</div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Charts Row ─────────────────────────────────────── #}
+    <div class="row g-4">
+
+        {# ── Actifs vs Inactifs — Pie chart ──────────────── #}
+        <div class="col-md-5">
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="bi bi-pie-chart-fill"></i> Employés Actifs vs Inactifs
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="actifPieChart"></canvas>
+                </div>
+                <table class="stat-table mt-4">
+                    <thead><tr><th>Statut</th><th>Nombre</th><th>%</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2E7D32;margin-right:6px;"></span><strong>Actifs</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ actifData.actifs }}</span></td>
+                            <td>{{ total > 0 ? ((actifData.actifs / total * 100)|number_format(1)) : 0 }}%</td>
+                        </tr>
+                        <tr>
+                            <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#81C784;margin-right:6px;"></span><strong>Inactifs</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ actifData.inactifs }}</span></td>
+                            <td>{{ total > 0 ? ((actifData.inactifs / total * 100)|number_format(1)) : 0 }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# ── Répartition par Poste — Bar chart ───────────── #}
+        <div class="col-md-7">
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="bi bi-bar-chart-fill"></i> Répartition par Poste
+                </div>
+                {% if posteData|length > 0 %}
+                <div class="chart-wrapper chart-wrapper-wide">
+                    <canvas id="posteBarChart"></canvas>
+                </div>
+                <table class="stat-table mt-4">
+                    <thead><tr><th>Poste</th><th>Nombre</th><th>Barre</th></tr></thead>
+                    <tbody>
+                    {% set maxPoste = 1 %}
+                    {% for k, v in posteData %}{% if v > maxPoste %}{% set maxPoste = v %}{% endif %}{% endfor %}
+                    {% for posteName, posteCount in posteData %}
+                    <tr>
+                        <td><strong>{{ posteName }}</strong></td>
+                        <td><span style="font-weight:700;color:#2E7D32">{{ posteCount }}</span></td>
+                        <td>
+                            <div class="stat-progress-bar">
+                                <div class="stat-progress-fill" style="width: {{ maxPoste > 0 ? (posteCount/maxPoste*100) : 0 }}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align:center;padding:50px 20px;color:#aaa;">
+                    <i class="bi bi-briefcase" style="font-size:3rem;display:block;margin-bottom:10px;"></i>
+                    <h5>Aucune donnée de poste disponible</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+// ── Green palette ─────────────────────────────────────────
+const greens = [
+    '#1B5E20', '#2E7D32', '#388E3C', '#43A047', '#4CAF50',
+    '#66BB6A', '#81C784', '#A5D6A7', '#C8E6C9', '#E8F5E9'
+];
+
+// ── Actifs vs Inactifs — Pie ──────────────────────────────
+const actifData = {{ actifData|json_encode|raw }};
+new Chart(document.getElementById('actifPieChart'), {
+    type: 'pie',
+    data: {
+        labels: ['Actifs (' + actifData.actifs + ')', 'Inactifs (' + actifData.inactifs + ')'],
+        datasets: [{
+            data: [actifData.actifs, actifData.inactifs],
+            backgroundColor: ['#2E7D32', '#81C784'],
+            borderColor: '#fff',
+            borderWidth: 4,
+            hoverOffset: 12,
+            hoverBorderWidth: 5,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: { family: 'Inter', size: 13, weight: 600 },
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyleWidth: 14,
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1B5E20',
+                titleFont: { family: 'Inter', weight: 700 },
+                bodyFont: { family: 'Inter' },
+                cornerRadius: 10,
+                padding: 12,
+            }
+        }
+    }
+});
+
+// ── Répartition par Poste — Bar ───────────────────────────
+const posteData = {{ posteData|json_encode|raw }};
+const posteLabels = Object.keys(posteData);
+const posteValues = Object.values(posteData);
+
+if (posteLabels.length > 0) {
+    new Chart(document.getElementById('posteBarChart'), {
+        type: 'bar',
+        data: {
+            labels: posteLabels,
+            datasets: [{
+                label: 'Employés',
+                data: posteValues,
+                backgroundColor: posteLabels.map((_, i) => greens[i % greens.length]),
+                borderColor: posteLabels.map((_, i) => greens[Math.max(0, (i % greens.length) - 1)]),
+                borderWidth: 2,
+                borderRadius: 10,
+                barPercentage: 0.55,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: { family: 'Inter', size: 12 }
+                    },
+                    grid: { color: 'rgba(0,0,0,.05)' },
+                    title: {
+                        display: true,
+                        text: "Nombre d'employés",
+                        font: { family: 'Inter', weight: 600, size: 13 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 12 } },
+                    title: {
+                        display: true,
+                        text: 'Poste',
+                        font: { family: 'Inter', weight: 600, size: 13 }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1B5E20',
+                    titleFont: { family: 'Inter', weight: 700 },
+                    bodyFont: { family: 'Inter' },
+                    cornerRadius: 10,
+                    padding: 12,
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

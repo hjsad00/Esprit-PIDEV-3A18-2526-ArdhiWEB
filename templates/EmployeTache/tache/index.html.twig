@@ -1,0 +1,461 @@
+{% extends 'base.html.twig' %}
+{% block title %}Gestion des Tâches — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ── Page ─────────────────────────────────────────────────────────── */
+.tache-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
+
+/* ── KPIs header ─────────────────────────────────────────────────── */
+.kpi-bar {
+    background: white; border-radius: 14px; padding: 14px 22px;
+    margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.kpi-item { display: flex; align-items: center; gap: 10px; }
+.kpi-icon { font-size: 1.4rem; color: #4a7c59; }
+.kpi-count { font-size: 1.5rem; font-weight: 700; color: #1B5E20; }
+.kpi-label { font-size: .78rem; color: #888; }
+.kpi-sep { width: 1px; height: 36px; background: #e0e0e0; }
+
+/* ── Toolbar ─────────────────────────────────────────────────────── */
+.tache-toolbar {
+    background: white; border-radius: 12px; padding: 12px 16px;
+    margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.tache-search {
+    flex: 1; min-width: 200px; border: 1.5px solid #ccc;
+    border-radius: 8px; padding: 7px 12px; font-size: .88rem; transition: .2s;
+}
+.tache-search:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 0 3px rgba(39,174,96,.12); }
+
+.filter-select {
+    border: 1.5px solid #ccc; border-radius: 8px; padding: 6px 10px;
+    font-size: .84rem; background: white; cursor: pointer; min-width: 110px;
+}
+.filter-select:focus { border-color: #27ae60; outline: none; }
+
+.tri-label { font-size: .8rem; font-weight: 600; color: #777; white-space: nowrap; }
+.toolbar-sep { width: 1px; height: 30px; background: #e0e0e0; flex-shrink: 0; }
+
+.btn-dir {
+    width: 32px; height: 32px; border: 1.5px solid #ccc; border-radius: 7px;
+    background: white; cursor: pointer; font-size: .95rem; display: flex;
+    align-items: center; justify-content: center; transition: .15s; flex-shrink: 0;
+}
+.btn-dir:hover, .btn-dir.active { border-color: #27ae60; background: #e8f5e9; color: #1B5E20; }
+.btn-dir.active { background: #27ae60; color: white; }
+.btn-actualiser {
+    border: 1.5px solid #ccc; border-radius: 8px; background: white;
+    padding: 6px 12px; font-size: .82rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; color: #555; transition: .15s;
+    text-decoration: none;
+}
+.btn-actualiser:hover { border-color: #27ae60; color: #1B5E20; }
+.btn-filtres-avances {
+    border: 1.5px solid #ccc; border-radius: 8px; background: white;
+    padding: 6px 12px; font-size: .82rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; color: #555;
+    text-decoration: none; transition: .15s;
+}
+.btn-filtres-avances:hover { border-color: #3498db; color: #3498db; }
+
+/* ── Table — identique desktop ───────────────────────────────────── */
+.tache-table-wrap {
+    background: white; border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 16px;
+}
+.tache-table { width: 100%; border-collapse: collapse; }
+.tache-table thead th {
+    background: #4a7c59; color: white; font-size: .8rem; font-weight: 700;
+    padding: 11px 12px; text-align: left; border: none; white-space: nowrap;
+    letter-spacing: .3px;
+}
+.tache-table thead th.sortable { cursor: pointer; }
+.tache-table thead th.sortable:hover { background: #3d6b4b; }
+.tache-table thead th.sorted-asc::after  { content: ' ↑'; opacity: .9; }
+.tache-table thead th.sorted-desc::after { content: ' ↓'; opacity: .9; }
+
+.tache-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; cursor: pointer; }
+.tache-table tbody tr:hover { background: #f6fbf6; }
+.tache-table tbody tr.selected { background: #e8f5e9 !important; }
+.tache-table tbody td { padding: 10px 12px; vertical-align: middle; font-size: .87rem; color: #333; }
+
+/* Statut badges — identiques au desktop */
+.st-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: .76rem; font-weight: 600;
+    white-space: nowrap;
+}
+.st-attente  { background: #fff3cd; color: #856404; }
+.st-encours  { background: #cce5ff; color: #004085; }
+.st-termine  { background: #d4edda; color: #155724; }
+.st-valide   { background: #d1ecf1; color: #0c5460; }
+.st-annule   { background: #f8d7da; color: #721c24; }
+
+/* Retard badge */
+.badge-retard { background: #f8d7da; color: #721c24; font-size: .72rem;
+    padding: 2px 7px; border-radius: 10px; margin-left: 4px; }
+
+/* Priorité ─ texte coloré */
+.prio-basse    { color: #3498db; font-weight: 600; }
+.prio-moyenne  { color: #f39c12; font-weight: 600; }
+.prio-haute    { color: #e74c3c; font-weight: 600; }
+.prio-critique { color: #8e44ad; font-weight: 700; }
+
+/* Boutons action */
+.btn-voir  { background:#e8f5e9; color:#1B5E20; border:none; border-radius:6px;
+    padding:4px 8px; font-size:.77rem; font-weight:600; cursor:pointer;
+    transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
+.btn-modif { background:#fff3cd; color:#856404; border:none; border-radius:6px;
+    padding:4px 8px; font-size:.77rem; font-weight:600; cursor:pointer;
+    transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
+.btn-suppr { background:#f8d7da; color:#842029; border:none; border-radius:6px;
+    padding:4px 8px; font-size:.77rem; font-weight:600; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
+.btn-voir:hover  { background:#27ae60; color:white; }
+.btn-modif:hover { background:#ffc107; color:#000; }
+.btn-suppr:hover { background:#dc3545; color:white; }
+
+/* ── Barre du bas ─────────────────────────────────────────────────── */
+.tache-bottombar {
+    background: white; border-radius: 14px; padding: 12px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.btn-add    { background:#27ae60; color:white; border:none; border-radius:10px;
+    padding:9px 20px; font-weight:700; font-size:.88rem; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-add:hover { background:#219150; color:white; }
+.btn-orange { background:#f39c12; color:white; border:none; border-radius:10px;
+    padding:9px 18px; font-weight:700; font-size:.88rem; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:.2s; }
+.btn-orange:hover { background:#d68910; }
+.btn-red    { background:#e74c3c; color:white; border:none; border-radius:10px;
+    padding:9px 18px; font-weight:700; font-size:.88rem; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:.2s; }
+.btn-red:hover { background:#c0392b; }
+.btn-purple { background:#8e44ad; color:white; border:none; border-radius:10px;
+    padding:9px 18px; font-weight:700; font-size:.88rem; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:.2s; }
+.btn-purple:hover { background:#7d3c98; }
+.bottom-info { margin-left:auto; color:#aaa; font-size:.82rem; font-style:italic; }
+.btn-calendrier { background:#1a6b9a; color:white; border:none; border-radius:10px;
+    padding:9px 18px; font-weight:700; font-size:.88rem; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-calendrier:hover { background:#155880; color:white; }
+
+/* ── Empty ────────────────────────────────────────────────────────── */
+.tache-empty { text-align:center; padding:55px 20px; color:#bbb; }
+.tache-empty i { font-size:3.5rem; margin-bottom:12px; display:block; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="tache-page">
+<div class="container-fluid px-4">
+
+    {# ── KPI Header — identique au desktop ─────────────────────────── #}
+    <div class="kpi-bar">
+        <div class="kpi-item">
+            <span class="kpi-icon">📋</span>
+            <div>
+                <div class="kpi-count">{{ kpis.total }}</div>
+                <div class="kpi-label">Total tâches</div>
+            </div>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi-item">
+            <span class="kpi-icon">🔄</span>
+            <div>
+                <div class="kpi-count" style="color:#3498db">{{ kpis.en_cours }}</div>
+                <div class="kpi-label">En cours</div>
+            </div>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi-item">
+            <span class="kpi-icon">✅</span>
+            <div>
+                <div class="kpi-count" style="color:#27ae60">{{ kpis.terminees }}</div>
+                <div class="kpi-label">Terminées</div>
+            </div>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi-item">
+            <span class="kpi-icon">⏳</span>
+            <div>
+                <div class="kpi-count" style="color:#f39c12">{{ kpis.en_attente }}</div>
+                <div class="kpi-label">En attente</div>
+            </div>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi-item">
+            <span class="kpi-icon">❌</span>
+            <div>
+                <div class="kpi-count" style="color:#e74c3c">{{ kpis.annulees }}</div>
+                <div class="kpi-label">Annulées</div>
+            </div>
+        </div>
+
+        {# Boutons haut droite #}
+        <div class="ms-auto d-flex gap-2">
+            <a href="{{ path('tache_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
+                <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </a>
+            <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-actualiser" style="background:#1B5E20;color:white;border-color:#1B5E20;">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+            </a>
+            <a href="{{ path('tache_statistiques') }}" class="btn-actualiser" style="background:#2E7D32;color:white;border-color:#2E7D32;">
+                <i class="bi bi-bar-chart-line-fill"></i> Statistiques
+            </a>
+        </div>
+    </div>
+
+    {# ── Toolbar : recherche + filtres + tri ───────────────────────── #}
+    <form method="GET" action="{{ path('tache_index') }}" id="filterForm">
+    <div class="tache-toolbar">
+
+        {# Recherche #}
+        <i class="bi bi-search text-muted"></i>
+        <input type="text" name="search" value="{{ search }}" class="tache-search"
+               placeholder="Rechercher une tâche (titre, description...)">
+
+        <div class="toolbar-sep"></div>
+
+        {# Filtre Statut — identique au cmbStatut desktop #}
+        <span class="tri-label">Statut</span>
+        <select name="statut" class="filter-select" onchange="this.form.submit()">
+            {% for s in statuts %}
+                <option value="{{ s }}" {{ statut == s ? 'selected' : '' }}>{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        {# Filtre Priorité #}
+        <span class="tri-label">Priorité</span>
+        <select name="priorite" class="filter-select" onchange="this.form.submit()">
+            {% for p in priorites %}
+                <option value="{{ p }}" {{ priorite == p ? 'selected' : '' }}>{{ p }}</option>
+            {% endfor %}
+        </select>
+
+        {# Filtre Catégorie #}
+        <span class="tri-label">Catégorie</span>
+        <select name="categorie" class="filter-select" onchange="this.form.submit()">
+            {% for c in categories %}
+                <option value="{{ c }}" {{ categorie == c ? 'selected' : '' }}>{{ c }}</option>
+            {% endfor %}
+        </select>
+
+        <div class="toolbar-sep"></div>
+
+        {# Tri #}
+        <span class="tri-label">Trier par :</span>
+        <select name="tri" class="filter-select" onchange="this.form.submit()">
+            <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
+            <option value="titre"     {{ tri == 'titre'     ? 'selected' : '' }}>Titre</option>
+            <option value="statut"    {{ tri == 'statut'    ? 'selected' : '' }}>Statut</option>
+            <option value="priorite"  {{ tri == 'priorite'  ? 'selected' : '' }}>Priorité</option>
+            <option value="dateDebut" {{ tri == 'dateDebut' ? 'selected' : '' }}>Date Début</option>
+            <option value="dateFin"   {{ tri == 'dateFin'   ? 'selected' : '' }}>Date Fin</option>
+            <option value="categorie" {{ tri == 'categorie' ? 'selected' : '' }}>Catégorie</option>
+        </select>
+
+        <input type="hidden" name="direction" id="dirInput" value="{{ direction }}">
+        <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
+                onclick="setDir('asc')" title="Croissant">↑</button>
+        <button type="submit" class="btn-dir {{ direction == 'desc' ? 'active' : '' }}"
+                onclick="setDir('desc')" title="Décroissant">↓</button>
+
+        <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
+            <i class="bi bi-search me-1"></i>Rechercher
+        </button>
+
+        {% if search or statut != 'Tous' or priorite != 'Toutes' or categorie != 'Toutes' %}
+        <a href="{{ path('tache_index') }}" class="btn btn-outline-secondary btn-sm" style="border-radius:7px">
+            <i class="bi bi-x-lg"></i> Réinitialiser
+        </a>
+        {% endif %}
+
+    </div>
+    </form>
+
+    {# ── Table des tâches ─────────────────────────────────────────── #}
+    <div class="tache-table-wrap">
+        {% if taches|length > 0 %}
+        <div class="table-responsive">
+        <table class="tache-table">
+            <thead>
+            <tr>
+                {# Colonnes cliquables — identiques au desktop #}
+                <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'id', direction:(tri=='id' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">ID</a>
+                </th>
+                <th class="sortable {{ tri == 'titre' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'titre', direction:(tri=='titre' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Titre</a>
+                </th>
+                <th>Description</th>
+                <th class="sortable {{ tri == 'statut' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'statut', direction:(tri=='statut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Statut</a>
+                </th>
+                <th class="sortable {{ tri == 'priorite' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'priorite', direction:(tri=='priorite' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Priorité</a>
+                </th>
+                <th class="sortable {{ tri == 'categorie' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'categorie', direction:(tri=='categorie' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Catégorie</a>
+                </th>
+                <th class="sortable {{ tri == 'dateDebut' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'dateDebut', direction:(tri=='dateDebut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Date Début</a>
+                </th>
+                <th class="sortable {{ tri == 'dateFin' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
+                    <a href="{{ path('tache_index', {tri:'dateFin', direction:(tri=='dateFin' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Date Fin</a>
+                </th>
+                <th>Employé</th>
+                <th class="text-center">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for tache in taches %}
+            <tr id="row-{{ tache.id }}">
+                <td><strong>{{ tache.id }}</strong></td>
+                <td>{{ tache.titre }}</td>
+                <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    {{ tache.description ?? '—' }}
+                </td>
+
+                {# Statut avec icône — identique au desktop #}
+                <td>
+                    {% set stClass = {
+                        'En attente': 'st-attente',
+                        'En cours':   'st-encours',
+                        'Terminé':    'st-termine',
+                        'Validé':     'st-valide',
+                        'Annulé':     'st-annule'
+                    } %}
+                    <span class="st-badge {{ stClass[tache.statut] ?? 'st-attente' }}">
+                        {{ tache.statutIcone }} {{ tache.statut }}
+                    </span>
+                    {% if tache.isEnRetard %}
+                        <span class="badge-retard">En at...</span>
+                    {% endif %}
+                </td>
+
+                {# Priorité colorée — identique au desktop #}
+                <td>
+                    {% set prioClass = {1:'prio-basse', 2:'prio-moyenne', 3:'prio-haute', 4:'prio-critique'} %}
+                    <span class="{{ prioClass[tache.priorite] ?? 'prio-moyenne' }}">
+                        {{ tache.prioriteLabel }}
+                    </span>
+                </td>
+
+                <td>{{ tache.categorie ?? '—' }}</td>
+                <td>{{ tache.dateDebut ? tache.dateDebut|date('d/m/Y') : '—' }}</td>
+                <td>
+                    {{ tache.dateFin ? tache.dateFin|date('d/m/Y') : '—' }}
+                    {% if tache.isEnRetard %}
+                        <span style="color:#e74c3c;font-size:.75rem">⚠</span>
+                    {% endif %}
+                </td>
+                <td>{{ mapEmployes[tache.idEmploye] ?? '—' }}</td>
+
+                {# Actions inline #}
+                <td>
+                    <div class="d-flex gap-1 justify-content-center">
+                        <a href="{{ path('tache_edit', {id: tache.id}) }}" class="btn-modif" title="Modifier">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <form method="POST" action="{{ path('tache_delete', {id: tache.id}) }}"
+                              onsubmit="return confirm('Supprimer « {{ tache.titre }} » ?')" style="margin:0">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tache.id) }}">
+                            <button type="submit" class="btn-suppr" title="Supprimer">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="tache-empty">
+            <i class="bi bi-clipboard-x d-block"></i>
+            {% if search or statut != 'Tous' or priorite != 'Toutes' or categorie != 'Toutes' %}
+                <h5>Aucune tâche trouvée avec ces filtres</h5>
+                <a href="{{ path('tache_index') }}" class="btn btn-outline-success mt-2">Réinitialiser les filtres</a>
+            {% else %}
+                <h5>Aucune tâche pour le moment</h5>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── Barre du bas — identique au desktop + PDF & Stats ────────── #}
+    <div class="tache-bottombar">
+        <a href="{{ path('tache_new') }}" class="btn-add">
+            <i class="bi bi-plus-lg"></i> Ajouter une Tâche
+        </a>
+        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled>
+            <i class="bi bi-pencil-square"></i> Modifier
+        </button>
+        <button class="btn-red" id="btnSupprimer" onclick="supprimerSelectionne()" disabled>
+            <i class="bi bi-trash3"></i> Supprimer
+        </button>
+        <a href="{{ path('tache_calendrier') }}" class="btn-calendrier">
+            <i class="bi bi-calendar3"></i> Calendrier
+        </a>
+
+        <span class="bottom-info" id="selectionInfo">Aucune tâche sélectionnée</span>
+    </div>
+
+</div>
+</div>
+
+<form id="formDeleteBottom" method="POST" style="display:none">
+    <input type="hidden" name="_token" id="tokenDeleteBottom">
+</form>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+function setDir(d) { document.getElementById('dirInput').value = d; }
+
+// Sélection de ligne
+let selId = null, selTitre = null, selEdit = null, selDel = null, selTok = null;
+
+document.querySelectorAll('.tache-table tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+        if (e.target.closest('a, button, form')) return;
+
+        document.querySelectorAll('.tache-table tbody tr').forEach(r => r.classList.remove('selected'));
+        this.classList.add('selected');
+
+        selId    = this.id.replace('row-', '');
+        selTitre = this.querySelectorAll('td')[1]?.textContent.trim();
+
+        const editBtn = this.querySelector('a.btn-modif');
+        const delForm = this.querySelector('form');
+        if (editBtn) selEdit = editBtn.href;
+        if (delForm) {
+            selDel = delForm.action;
+            selTok = delForm.querySelector('input[name="_token"]')?.value;
+        }
+
+        document.getElementById('btnModifier').disabled = false;
+        document.getElementById('btnSupprimer').disabled = false;
+        document.getElementById('selectionInfo').textContent = '✔ Sélectionnée : ' + selTitre;
+    });
+});
+
+function modifierSelectionne() {
+    if (selEdit) window.location.href = selEdit;
+}
+function supprimerSelectionne() {
+    if (!selId || !confirm('Supprimer « ' + selTitre + ' » ?')) return;
+    const form = document.getElementById('formDeleteBottom');
+    form.action = selDel;
+    document.getElementById('tokenDeleteBottom').value = selTok;
+    form.submit();
+}
+</script>
+{% endblock %}

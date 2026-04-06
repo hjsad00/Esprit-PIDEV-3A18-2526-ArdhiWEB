@@ -64,7 +64,11 @@
   <header id="header" class="header d-flex align-items-center fixed-top {% block header_class %}{% endblock %}">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      <a href="/" class="logo d-flex align-items-center">
+      {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('admin_agriculteurs_employe') }}" class="logo d-flex align-items-center">
+      {% else %}
+        <a href="/" class="logo d-flex align-items-center">
+      {% endif %}
         <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="max-height: 50px;">
       </a>
 
@@ -75,7 +79,14 @@
           <li><a href="#">Maintenance</a></li>
           <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
-          <li><a href="#">Employés</a></li>
+          {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
+          <li>
+           <a href="{{ path('app_employe_dashboard') }}"
+            class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">
+            Employés
+          </a>
+          </li>
+          {% endif %}
           
           {% if app.user %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
@@ -119,7 +130,11 @@
           <div class="col-lg-2 col-md-3 footer-links">
             <h4>Liens utiles</h4>
             <ul>
-              <li><a href="/">Accueil</a></li>
+              {% if is_granted('ROLE_ADMIN') %}
+                <li><a href="{{ path('admin_agriculteurs_employe') }}">Accueil</a></li>
+              {% else %}
+                <li><a href="/">Accueil</a></li>
+              {% endif %}
               <li><a href="#">À propos</a></li>
               <li><a href="#">Services</a></li>
             </ul>

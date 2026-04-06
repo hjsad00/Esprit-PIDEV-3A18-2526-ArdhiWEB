@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Gestion Employés{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+    <style>
+        .notif-badge-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            min-width: 22px;
+            height: 22px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 6px;
+            padding: 0 4px;
+            vertical-align: middle;
+            animation: pulse-badge 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.15); }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    <section class="marketplace-hero">
+      <div class="hero-bg">
+       <img src="{{ asset('assets/img/emp4.jpg?v=2') }}">
+      </div>
+
+      <div class="container">
+        <div class="hero-inner">
+
+          <div class="hero-left">
+            <div class="hero-label">ARDHI GESTION RH</div>
+            <h1 class="hero-headline">
+              Gérez vos<br>employés<br>facilement.
+            </h1>
+            <p class="hero-description">
+              Suivez vos employés, organisez leurs tâches et optimisez
+              la gestion de votre équipe agricole en toute simplicité.
+            </p>
+
+            <a href="{{ path('employe_index') }}" class="hero-btn-primary">
+              <i class="bi bi-people"></i> Voir les employés
+            </a>
+          </div>
+
+          <div class="hero-right">
+            <div class="categories-glass-panel">
+
+              <div class="categories-panel-title">
+                Services Employés
+              </div>
+
+              {# EMPLOYES — connecté ✅ #}
+              <a href="{{ path('employe_index') }}" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="category-text">
+                  <h4>Employés</h4>
+                  <span>Gérer les employés</span>
+                </div>
+              </a>
+
+              {# TACHES — connecté ✅ #}
+              <a href="{{ path('tache_index') }}" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-list-check"></i>
+                </div>
+                <div class="category-text">
+                  <h4>Tâches</h4>
+                  <span>Gérer les tâches</span>
+                </div>
+              </a>
+
+              {# NOTIFICATIONS ✅ #}
+              <a href="{{ path('notification_index') }}" class="category-item">
+                <div class="category-icon">
+                  <i class="bi bi-bell-fill"></i>
+                </div>
+                <div class="category-text">
+                  <h4>
+                    Notifications
+                    {% if nb_notif_non_lues is defined and nb_notif_non_lues > 0 %}
+                      <span class="notif-badge-circle">
+                        {{ nb_notif_non_lues > 99 ? '99+' : nb_notif_non_lues }}
+                      </span>
+                    {% endif %}
+                  </h4>
+                  <span>Alertes retard &amp; météo agricole</span>
+                </div>
+              </a>
+
+            </div>
+
+            <!-- Widget Météo Agricole -->
+            <div style="margin-top: 2rem;">
+               {{ render(controller('App\\Controller\\EmployeTache\\MeteoController::widgetMeteo')) }}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Fiche Employé — {{ employe.nomComplet }}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body { background: #f0f4f8; color: #2d3748; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #27ae60, #1a5c38); color: white; padding: 24px 20px 40px; text-align: center; position: relative; }
+        .header h1 { font-size: 14px; letter-spacing: 3px; opacity: 0.85; text-transform: uppercase; margin-bottom: 4px; }
+        .header .app { font-size: 22px; font-weight: 800; }
+        .card { background: white; border-radius: 20px; margin: -24px 16px 16px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+        .photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #27ae60; display: block; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: 800; color: white; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .name { text-align: center; font-size: 26px; font-weight: 700; color: #1a202c; margin-bottom: 6px; }
+        .poste { text-align: center; font-size: 15px; color: #718096; margin-bottom: 16px; }
+        .badge { display: inline-block; padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .actif { background: #d4edda; color: #155724; }
+        .inactif { background: #f8d7da; color: #721c24; }
+        .badge-wrap { text-align: center; margin-bottom: 8px; }
+        .section { background: white; border-radius: 16px; margin: 0 16px 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #27ae60; margin-bottom: 16px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; }
+        .field { display: flex; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f7fafc; }
+        .field:last-child { border-bottom: none; }
+        .field-icon { width: 36px; height: 36px; border-radius: 10px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 14px; flex-shrink: 0; }
+        .field-label { font-size: 11px; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .field-value { font-size: 15px; font-weight: 600; color: #2d3748; }
+        a.field-value { color: #3182ce; text-decoration: none; }
+        .footer { text-align: center; padding: 20px; font-size: 11px; color: #a0aec0; }
+        .id-badge { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="id-badge">#{{ employe.id }}</div>
+        <div class="app">🌿 Ardhi</div>
+        <h1>Fiche Employé</h1>
+    </div>
+    
+    <div class="card">
+        {% if employe.hasPhoto %}
+            <img src="{{ employe.photoPath }}" class="photo" alt="Photo {{ employe.nomComplet }}">
+        {% else %}
+            {% set colors = ['#1abc9c','#3498db','#9b59b6','#e67e22','#e74c3c','#27ae60'] %}
+            <div class="avatar" style="background:{{ colors[employe.id % 6] }}">{{ employe.initiales }}</div>
+        {% endif %}
+        
+        <div class="name">{{ employe.nomComplet }}</div>
+        <div class="poste">{{ employe.poste ?? '—' }}</div>
+        <div class="badge-wrap">
+            {% if employe.actif %}
+                <span class="badge actif">✓ Actif</span>
+            {% else %}
+                <span class="badge inactif">✗ Inactif</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">👤 Identité</div>
+        <div class="field">
+            <div class="field-icon">🪪</div>
+            <div>
+                <div class="field-label">Nom complet</div>
+                <div class="field-value">{{ employe.nomComplet }}</div>
+            </div>
+        </div>
+        <div class="field">
+            <div class="field-icon">💼</div>
+            <div>
+                <div class="field-label">Poste</div>
+                <div class="field-value">{{ employe.poste ?? '—' }}</div>
+            </div>
+        </div>
+        <div class="field">
+            <div class="field-icon">🔢</div>
+            <div>
+                <div class="field-label">ID Employé</div>
+                <div class="field-value">#{{ employe.id }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">📞 Contact</div>
+        <div class="field">
+            <div class="field-icon">📧</div>
+            <div>
+                <div class="field-label">Email</div>
+                {% if employe.email %}
+                    <a class="field-value" href="mailto:{{ employe.email }}">{{ employe.email }}</a>
+                {% else %}
+                    <div class="field-value">—</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="field">
+            <div class="field-icon">📱</div>
+            <div>
+                <div class="field-label">Téléphone</div>
+                {% if employe.telephone %}
+                    <a class="field-value" href="tel:{{ employe.telephone }}">{{ employe.telephone }}</a>
+                {% else %}
+                    <div class="field-value">—</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Ardhi · Fiche générée le {{ "now"|date("d/m/Y H:i") }}
+    </div>
+</body>
+</html>

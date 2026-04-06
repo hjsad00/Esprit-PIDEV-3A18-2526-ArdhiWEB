@@ -1,0 +1,806 @@
+{% extends 'base.html.twig' %}
+{% block title %}Statistiques des Tâches — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Page ─────────────────────────────────────────────── */
+.stats-page {
+    padding: 90px 0 60px;
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f5e9 50%, #f1f8e9 100%);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.stats-header {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 100%);
+    border-radius: 18px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(27, 94, 32, .25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.stats-header h1 {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.stats-header h1 i { font-size: 1.4rem; }
+.stats-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.btn-back, .btn-pdf-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: .85rem;
+    text-decoration: none;
+    transition: all .2s;
+    border: none;
+    cursor: pointer;
+}
+.btn-back {
+    background: rgba(255,255,255,.15);
+    color: white;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.2);
+}
+.btn-back:hover { background: rgba(255,255,255,.25); color: white; }
+.btn-pdf-export {
+    background: #27ae60;
+    color: white;
+    box-shadow: 0 4px 12px rgba(39,174,96,.3);
+}
+.btn-pdf-export:hover { background: #219150; color: white; transform: translateY(-1px); }
+
+/* ── Tabs ─────────────────────────────────────────────── */
+.stats-tabs {
+    display: flex;
+    gap: 4px;
+    background: white;
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    overflow-x: auto;
+}
+.stats-tab {
+    flex: 1;
+    min-width: 120px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.stats-tab:hover { background: #e8f5e9; color: #2E7D32; }
+.stats-tab.active {
+    background: linear-gradient(135deg, #2E7D32, #43A047);
+    color: white;
+    box-shadow: 0 4px 14px rgba(46,125,50,.3);
+}
+
+/* ── Tab Content ──────────────────────────────────────── */
+.tab-content { display: none; animation: fadeIn .35s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Cards ────────────────────────────────────────────── */
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.06);
+    transition: transform .2s, box-shadow .2s;
+    border: 1px solid rgba(0,0,0,.04);
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,.1);
+}
+.stat-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1B5E20;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.stat-card-title i { font-size: 1.2rem; color: #43A047; }
+
+/* ── KPI Boxes ────────────────────────────────────────── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.kpi-box {
+    border-radius: 14px;
+    padding: 22px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-box::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    transform: translate(20px, -20px);
+}
+.kpi-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.kpi-box-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.kpi-box-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.kpi-box-label {
+    font-size: .78rem;
+    font-weight: 500;
+    opacity: .85;
+    margin-top: 2px;
+}
+
+.kpi-green {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: white;
+    box-shadow: 0 4px 18px rgba(27,94,32,.2);
+}
+.kpi-teal {
+    background: linear-gradient(135deg, #00695C, #00897B);
+    color: white;
+    box-shadow: 0 4px 18px rgba(0,105,92,.2);
+}
+.kpi-emerald {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    box-shadow: 0 4px 18px rgba(39,174,96,.2);
+}
+.kpi-lime {
+    background: linear-gradient(135deg, #558B2F, #689F38);
+    color: white;
+    box-shadow: 0 4px 18px rgba(85,139,47,.2);
+}
+.kpi-forest {
+    background: linear-gradient(135deg, #33691E, #558B2F);
+    color: white;
+    box-shadow: 0 4px 18px rgba(51,105,30,.2);
+}
+.kpi-danger {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    color: white;
+    box-shadow: 0 4px 18px rgba(192,57,43,.2);
+}
+
+/* ── Chart container ──────────────────────────────────── */
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.chart-wrapper-wide {
+    max-width: 100%;
+}
+.chart-wrapper canvas {
+    width: 100% !important;
+}
+
+/* ── Stat table ───────────────────────────────────────── */
+.stat-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+}
+.stat-table thead th {
+    background: #e8f5e9;
+    color: #1B5E20;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 10px 14px;
+    text-align: left;
+    border: none;
+}
+.stat-table thead th:first-child { border-radius: 10px 0 0 10px; }
+.stat-table thead th:last-child { border-radius: 0 10px 10px 0; }
+.stat-table tbody tr {
+    background: #fafbfa;
+    transition: background .15s;
+}
+.stat-table tbody tr:hover { background: #f0f7f0; }
+.stat-table tbody td {
+    padding: 10px 14px;
+    font-size: .87rem;
+    color: #333;
+    border: none;
+}
+.stat-table tbody td:first-child { border-radius: 8px 0 0 8px; }
+.stat-table tbody td:last-child { border-radius: 0 8px 8px 0; }
+
+.stat-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: #e8f5e9;
+    overflow: hidden;
+    min-width: 100px;
+}
+.stat-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #2E7D32, #66BB6A);
+    transition: width .6s ease;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 768px) {
+    .stats-header { padding: 20px; }
+    .stats-header h1 { font-size: 1.2rem; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-box-value { font-size: 1.5rem; }
+    .stat-card { padding: 18px; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="stats-page">
+<div class="container-fluid px-4">
+
+    {# ── Header ─────────────────────────────────────────── #}
+    <div class="stats-header">
+        <h1><i class="bi bi-bar-chart-line-fill"></i> Statistiques des Tâches</h1>
+        <div class="stats-header-actions">
+            <a href="{{ path('tache_index') }}" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Retour aux tâches
+            </a>
+            <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-pdf-export">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Exporter PDF
+            </a>
+        </div>
+    </div>
+
+    {# ── Tabs ───────────────────────────────────────────── #}
+    <div class="stats-tabs">
+        <button class="stats-tab active" data-tab="resume">
+            <i class="bi bi-clipboard-data"></i> Résumé
+        </button>
+        <button class="stats-tab" data-tab="statuts">
+            <i class="bi bi-pie-chart-fill"></i> Statuts
+        </button>
+        <button class="stats-tab" data-tab="priorites">
+            <i class="bi bi-flag-fill"></i> Priorités
+        </button>
+        <button class="stats-tab" data-tab="employes">
+            <i class="bi bi-people-fill"></i> Employés
+        </button>
+        <button class="stats-tab" data-tab="evolution">
+            <i class="bi bi-graph-up"></i> Évolution
+        </button>
+        <button class="stats-tab" data-tab="categories">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Catégories
+        </button>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Résumé ─────────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content active" id="tab-resume">
+        <div class="kpi-grid">
+            <div class="kpi-box kpi-green">
+                <div class="kpi-box-icon">📋</div>
+                <div>
+                    <div class="kpi-box-value">{{ kpis.total }}</div>
+                    <div class="kpi-box-label">Total tâches</div>
+                </div>
+            </div>
+            <div class="kpi-box kpi-teal">
+                <div class="kpi-box-icon">✅</div>
+                <div>
+                    <div class="kpi-box-value">{{ tauxCompletion }}%</div>
+                    <div class="kpi-box-label">Taux complétion</div>
+                </div>
+            </div>
+            <div class="kpi-box kpi-danger">
+                <div class="kpi-box-icon">⚠️</div>
+                <div>
+                    <div class="kpi-box-value">{{ enRetard }}</div>
+                    <div class="kpi-box-label">En retard</div>
+                </div>
+            </div>
+            <div class="kpi-box kpi-lime">
+                <div class="kpi-box-icon">👤</div>
+                <div>
+                    <div class="kpi-box-value">{{ nonAssignees }}</div>
+                    <div class="kpi-box-label">Non assignées</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> Répartition par Statut</div>
+                    <div class="chart-wrapper">
+                        <canvas id="resumeStatutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-bar-chart-fill"></i> Détail des statuts</div>
+                    <table class="stat-table">
+                        <thead>
+                            <tr><th>Statut</th><th>Nombre</th><th>Proportion</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for label, count in statuts %}
+                            <tr>
+                                <td><strong>{{ label }}</strong></td>
+                                <td>{{ count }}</td>
+                                <td>
+                                    <div class="stat-progress-bar">
+                                        <div class="stat-progress-fill" style="width: {{ kpis.total > 0 ? (count/kpis.total*100) : 0 }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Statuts ────────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content" id="tab-statuts">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> Répartition par Statut</div>
+                    <div class="chart-wrapper">
+                        <canvas id="statutPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-list-check"></i> Détails</div>
+                    <table class="stat-table">
+                        <thead><tr><th>Statut</th><th>Nombre</th><th>%</th></tr></thead>
+                        <tbody>
+                        {% for label, count in statuts %}
+                        <tr>
+                            <td><strong>{{ label }}</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ count }}</span></td>
+                            <td>{{ kpis.total > 0 ? ((count/kpis.total*100)|number_format(1)) : '0' }}%</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Priorités ──────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content" id="tab-priorites">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-flag-fill"></i> Tâches par Priorité</div>
+                    <div class="chart-wrapper chart-wrapper-wide">
+                        <canvas id="prioriteBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-bullseye"></i> Détails</div>
+                    {% set prioLabels = {1: 'Basse', 2: 'Moyenne', 3: 'Haute', 4: 'Critique'} %}
+                    <table class="stat-table">
+                        <thead><tr><th>Priorité</th><th>Nombre</th><th>Barre</th></tr></thead>
+                        <tbody>
+                        {% set maxPrio = 1 %}
+                        {% for k, v in priorites %}{% if v > maxPrio %}{% set maxPrio = v %}{% endif %}{% endfor %}
+                        {% for k, v in priorites %}
+                        <tr>
+                            <td><strong>{{ prioLabels[k] ?? 'N/A' }}</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ v }}</span></td>
+                            <td>
+                                <div class="stat-progress-bar">
+                                    <div class="stat-progress-fill" style="width: {{ maxPrio > 0 ? (v/maxPrio*100) : 0 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Employés ───────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content" id="tab-employes">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-people-fill"></i> Tâches par Employé</div>
+                    <div class="chart-wrapper chart-wrapper-wide">
+                        <canvas id="employeBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-person-badge"></i> Détails</div>
+                    {% if employeStats|length > 0 %}
+                    <table class="stat-table">
+                        <thead><tr><th>Employé</th><th>Tâches</th><th>Barre</th></tr></thead>
+                        <tbody>
+                        {% set maxEmp = 1 %}
+                        {% for es in employeStats %}{% if es.total > maxEmp %}{% set maxEmp = es.total %}{% endif %}{% endfor %}
+                        {% for es in employeStats %}
+                        <tr>
+                            <td><strong>{{ es.nom }}</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ es.total }}</span></td>
+                            <td>
+                                <div class="stat-progress-bar">
+                                    <div class="stat-progress-fill" style="width: {{ maxEmp > 0 ? (es.total/maxEmp*100) : 0 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div style="text-align:center;padding:40px 20px;color:#aaa;">
+                        <i class="bi bi-person-x" style="font-size:2.5rem;display:block;margin-bottom:8px;"></i>
+                        Aucune donnée par employé
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Évolution ──────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content" id="tab-evolution">
+        <div class="stat-card">
+            <div class="stat-card-title"><i class="bi bi-graph-up"></i> Évolution des tâches dans le temps</div>
+            {% if evolution|length > 0 %}
+            <div class="chart-wrapper chart-wrapper-wide" style="max-height:400px;">
+                <canvas id="evolutionLineChart"></canvas>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:50px 20px;color:#aaa;">
+                <i class="bi bi-calendar-x" style="font-size:3rem;display:block;margin-bottom:10px;"></i>
+                <h5>Aucune donnée d'évolution disponible</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════ #}
+    {# ── TAB : Catégories ─────────────────────────────── #}
+    {# ══════════════════════════════════════════════════════ #}
+    <div class="tab-content" id="tab-categories">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-grid-3x3-gap-fill"></i> Répartition par Catégorie</div>
+                    <div class="chart-wrapper">
+                        <canvas id="categorieDoughnutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-card-title"><i class="bi bi-tags-fill"></i> Détails par Catégorie</div>
+                    {% if categories|length > 0 %}
+                    <table class="stat-table">
+                        <thead><tr><th>Catégorie</th><th>Nombre</th><th>Barre</th></tr></thead>
+                        <tbody>
+                        {% set maxCat = 1 %}
+                        {% for k, v in categories %}{% if v > maxCat %}{% set maxCat = v %}{% endif %}{% endfor %}
+                        {% for catName, catCount in categories %}
+                        <tr>
+                            <td><strong>{{ catName }}</strong></td>
+                            <td><span style="font-weight:700;color:#2E7D32">{{ catCount }}</span></td>
+                            <td>
+                                <div class="stat-progress-bar">
+                                    <div class="stat-progress-fill" style="width: {{ maxCat > 0 ? (catCount/maxCat*100) : 0 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div style="text-align:center;padding:40px 20px;color:#aaa;">
+                        <i class="bi bi-folder-x" style="font-size:2.5rem;display:block;margin-bottom:8px;"></i>
+                        Aucune donnée de catégorie
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+// ── Tab switching ─────────────────────────────────────────
+document.querySelectorAll('.stats-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+});
+
+// ── Green palette ─────────────────────────────────────────
+const greens = [
+    '#1B5E20', '#2E7D32', '#388E3C', '#43A047', '#4CAF50',
+    '#66BB6A', '#81C784', '#A5D6A7', '#C8E6C9', '#E8F5E9'
+];
+const greensBg = [
+    'rgba(27,94,32,.8)',  'rgba(46,125,50,.8)', 'rgba(56,142,60,.8)',
+    'rgba(67,160,71,.8)', 'rgba(76,175,80,.8)',
+];
+const greensBorder = ['#1B5E20','#2E7D32','#388E3C','#43A047','#4CAF50'];
+
+const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+        legend: {
+            labels: { font: { family: 'Inter', size: 12, weight: 500 }, padding: 14 }
+        }
+    }
+};
+
+// ── Résumé : mini donut ────────────────────────────────────
+const statutData = {{ statuts|json_encode|raw }};
+new Chart(document.getElementById('resumeStatutChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(statutData),
+        datasets: [{
+            data: Object.values(statutData),
+            backgroundColor: greens.slice(0, 5),
+            borderColor: '#fff',
+            borderWidth: 3,
+            hoverBorderWidth: 4,
+        }]
+    },
+    options: {
+        ...chartDefaults,
+        cutout: '55%',
+        plugins: {
+            ...chartDefaults.plugins,
+            legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, padding: 16 } }
+        }
+    }
+});
+
+// ── Statuts : Pie chart ────────────────────────────────────
+new Chart(document.getElementById('statutPieChart'), {
+    type: 'pie',
+    data: {
+        labels: Object.keys(statutData),
+        datasets: [{
+            data: Object.values(statutData),
+            backgroundColor: greens.slice(0, 5),
+            borderColor: '#fff',
+            borderWidth: 3,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        ...chartDefaults,
+        plugins: {
+            ...chartDefaults.plugins,
+            legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, padding: 16 } }
+        }
+    }
+});
+
+// ── Priorités : Bar chart ──────────────────────────────────
+const prioData = {{ priorites|json_encode|raw }};
+const prioLabels = {1:'Basse', 2:'Moyenne', 3:'Haute', 4:'Critique'};
+new Chart(document.getElementById('prioriteBarChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(prioData).map(k => prioLabels[k] || k),
+        datasets: [{
+            label: 'Tâches',
+            data: Object.values(prioData),
+            backgroundColor: ['#81C784', '#4CAF50', '#2E7D32', '#1B5E20'],
+            borderColor: ['#66BB6A', '#43A047', '#1B5E20', '#0a3d0a'],
+            borderWidth: 2,
+            borderRadius: 8,
+            barPercentage: 0.6,
+        }]
+    },
+    options: {
+        ...chartDefaults,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1, font: { family: 'Inter' } },
+                grid: { color: 'rgba(0,0,0,.05)' },
+                title: { display: true, text: 'Nombre', font: { family: 'Inter', weight: 600 } }
+            },
+            x: {
+                grid: { display: false },
+                title: { display: true, text: 'Priorité', font: { family: 'Inter', weight: 600 } }
+            }
+        },
+        plugins: { legend: { display: false } }
+    }
+});
+
+// ── Employés : Horizontal bar ──────────────────────────────
+const empStats = {{ employeStats|json_encode|raw }};
+if (empStats.length > 0) {
+    new Chart(document.getElementById('employeBarChart'), {
+        type: 'bar',
+        data: {
+            labels: empStats.map(e => e.nom),
+            datasets: [{
+                label: 'Tâches assignées',
+                data: empStats.map(e => e.total),
+                backgroundColor: empStats.map((_, i) => greens[i % greens.length]),
+                borderColor: empStats.map((_, i) => greensBorder[i % greensBorder.length]),
+                borderWidth: 2,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Inter' } },
+                    grid: { color: 'rgba(0,0,0,.05)' },
+                    title: { display: true, text: 'Nombre', font: { family: 'Inter', weight: 600 } }
+                },
+                y: {
+                    grid: { display: false },
+                    title: { display: true, text: 'Employé', font: { family: 'Inter', weight: 600 } }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// ── Évolution : Line chart ─────────────────────────────────
+const evolData = {{ evolution|json_encode|raw }};
+if (evolData.length > 0) {
+    new Chart(document.getElementById('evolutionLineChart'), {
+        type: 'line',
+        data: {
+            labels: evolData.map(e => e.date),
+            datasets: [{
+                label: 'Nouvelles tâches',
+                data: evolData.map(e => e.total),
+                borderColor: '#2E7D32',
+                backgroundColor: 'rgba(46,125,50,.12)',
+                borderWidth: 3,
+                pointBackgroundColor: '#2E7D32',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                fill: true,
+                tension: 0.3,
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Inter' } },
+                    grid: { color: 'rgba(0,0,0,.06)' },
+                    title: { display: true, text: 'Nombre de tâches', font: { family: 'Inter', weight: 600 } }
+                },
+                x: {
+                    grid: { color: 'rgba(0,0,0,.04)' },
+                    title: { display: true, text: 'Date', font: { family: 'Inter', weight: 600 } }
+                }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+// ── Catégories : Doughnut ──────────────────────────────────
+const catData = {{ categories|json_encode|raw }};
+if (Object.keys(catData).length > 0) {
+    new Chart(document.getElementById('categorieDoughnutChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(catData),
+            datasets: [{
+                data: Object.values(catData),
+                backgroundColor: greens.slice(0, Object.keys(catData).length),
+                borderColor: '#fff',
+                borderWidth: 3,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            cutout: '50%',
+            plugins: {
+                ...chartDefaults.plugins,
+                legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, padding: 16 } }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

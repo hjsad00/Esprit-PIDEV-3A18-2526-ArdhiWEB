@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+{% block title %}Accès refusé — Ardhi{% endblock %}
+
+{% block body %}
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:100px 20px 60px;">
+    <div style="text-align:center;max-width:500px;">
+        <div style="font-size:5rem;margin-bottom:20px;">⛔</div>
+        <h2 style="color:#1B5E20;font-weight:700;margin-bottom:12px;">Accès refusé</h2>
+        <p style="color:#555;font-size:1.05rem;margin-bottom:28px;">
+            Ce service est dédié uniquement aux <strong>administrateurs</strong>
+            et aux <strong>agriculteurs</strong>.<br>
+            Votre rôle actuel ne vous permet pas d'accéder à cette fonctionnalité.
+        </p>
+        <a href="{{ path('app_home') }}"
+           style="background:#27ae60;color:white;border:none;border-radius:10px;
+                  padding:12px 28px;font-weight:700;font-size:1rem;text-decoration:none;
+                  display:inline-flex;align-items:center;gap:8px;">
+            <i class="bi bi-house-door"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}

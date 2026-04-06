@@ -1,0 +1,338 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}🔔 Notifications — Ardhi{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* ── Layout ─────────────────────────────────────────────────────── */
+        .notif-page {
+            max-width: 860px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* ── En-tête stats ───────────────────────────────────────────────── */
+        .notif-header-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .notif-header-title { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; }
+        .notif-header-sub   { color: #6c757d; font-size: .95rem; margin-top: .25rem; }
+        .notif-stat-badge {
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: .75rem 1.5rem;
+            min-width: 90px;
+        }
+        .notif-stat-badge .stat-num { font-size: 2rem; font-weight: 800; color: #2d6a4f; }
+        .notif-stat-badge .stat-lbl { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; }
+
+        /* ── Barre d'actions ─────────────────────────────────────────────── */
+        .notif-actions {
+            display: flex;
+            gap: .75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .btn-notif-action {
+            padding: .55rem 1.2rem;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+        .btn-mark-all  { background: #2d6a4f; color: white; }
+        .btn-mark-all:hover  { background: #1b4332; }
+        .btn-refresh   { background: #e9ecef; color: #495057; }
+        .btn-refresh:hover   { background: #dee2e6; }
+        .btn-mark-all:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── Carte notification ──────────────────────────────────────────── */
+        .notif-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: .9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            border-left: 4px solid transparent;
+            transition: all .25s;
+            position: relative;
+            animation: slideIn .35s ease forwards;
+        }
+        .notif-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(-1px); }
+
+        .notif-card.notif-unread   { border-left-color: #2d6a4f; background: #f0faf5; }
+        .notif-card.notif-critical { border-left-color: #e74c3c; }
+        .notif-card.notif-unread.notif-critical { background: #fff5f5; }
+        .notif-card.notif-warning  { border-left-color: #f39c12; }
+        .notif-card.notif-unread.notif-warning  { background: #fffcf0; }
+
+        .notif-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .notif-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+        .notif-title-block { flex: 1; }
+        .notif-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a1a2e;
+            margin-bottom: .2rem;
+        }
+        .notif-time { font-size: .8rem; color: #868e96; }
+        .notif-message { font-size: .9rem; color: #495057; margin: .6rem 0 0; line-height: 1.5; }
+
+        .notif-badge {
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+        .badge-critical { background: #e74c3c; }
+        .badge-warning  { background: #f39c12; }
+        .badge-info     { background: #27ae60; }
+
+        .notif-card-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+            margin-top: .75rem;
+        }
+        .btn-small {
+            padding: .3rem .8rem;
+            border-radius: 6px;
+            font-size: .8rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-read   { background: #d4edda; color: #155724; }
+        .btn-read:hover   { background: #c3e6cb; }
+        .btn-delete { background: #f8d7da; color: #721c24; }
+        .btn-delete:hover { background: #f5c6cb; }
+
+        /* ── Empty state ─────────────────────────────────────────────────── */
+        .notif-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+        .notif-empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .notif-empty-title { font-size: 1.2rem; font-weight: 600; color: #495057; }
+        .notif-empty-sub   { color: #868e96; font-size: .9rem; margin-top: .5rem; }
+
+        /* ── Toast ───────────────────────────────────────────────────────── */
+        #notif-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: .8rem 1.4rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: .9rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+            z-index: 9999;
+        }
+        #notif-toast.show { opacity: 1; }
+        #notif-toast.toast-success { background: #2d6a4f; }
+        #notif-toast.toast-info    { background: #2980b9; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="notif-page">
+
+    {# ── En-tête ───────────────────────────────────────────────────────── #}
+    <div class="notif-header-card">
+        <div>
+            <div class="notif-header-title">🔔 Notifications</div>
+            <div class="notif-header-sub">
+                Restez informé de vos activités agricoles
+                {% if supervision_mode %}<span class="badge bg-warning text-dark ms-2">📋 {{ nom_supervise }}</span>{% endif %}
+            </div>
+        </div>
+        <div style="display:flex; gap:1rem;">
+            <div class="notif-stat-badge">
+                <div class="stat-num">{{ total }}</div>
+                <div class="stat-lbl">Total</div>
+            </div>
+            {% if nb_non_lues > 0 %}
+            <div class="notif-stat-badge">
+                <div class="stat-num" style="color:#e74c3c;">{{ nb_non_lues }}</div>
+                <div class="stat-lbl">Non lues</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Actions ───────────────────────────────────────────────────────── #}
+    <div class="notif-actions">
+        <button class="btn-notif-action btn-mark-all" id="btn-mark-all"
+            onclick="markAllRead()" {% if nb_non_lues == 0 %}disabled{% endif %}>
+            ✓ Tout marquer comme lu
+        </button>
+        <button class="btn-notif-action btn-refresh" onclick="refreshNotifs()">
+            🔄 Actualiser
+        </button>
+        <a href="{{ path('tache_index') }}" class="btn-notif-action btn-refresh">
+            📋 Voir les tâches
+        </a>
+    </div>
+
+    {# ── Liste ─────────────────────────────────────────────────────────── #}
+    <div id="notif-list">
+        {% if notifications is empty %}
+            <div class="notif-empty">
+                <div class="notif-empty-icon">🔔</div>
+                <div class="notif-empty-title">Aucune notification</div>
+                <div class="notif-empty-sub">Tout est à jour. Les alertes de retard et météo apparaîtront ici.</div>
+            </div>
+        {% else %}
+            {% for notif in notifications %}
+                <div class="notif-card
+                    {{ not notif.lue ? 'notif-unread' : '' }}
+                    {% if notif.priorite == 'CRITICAL' %}notif-critical
+                    {% elseif notif.priorite == 'WARNING' %}notif-warning
+                    {% endif %}"
+                    id="notif-{{ notif.id }}"
+                    style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+
+                    <div class="notif-card-header">
+                        <span class="notif-icon">{{ notif.icone }}</span>
+                        <div class="notif-title-block">
+                            <div class="notif-title">{{ notif.titre }}</div>
+                            <div class="notif-time">{{ notif.dateCreation|date('d/m/Y H:i') }} · {{ notif.tempsEcoule }}</div>
+                        </div>
+                        <span class="notif-badge
+                            {% if notif.priorite == 'CRITICAL' %}badge-critical
+                            {% elseif notif.priorite == 'WARNING' %}badge-warning
+                            {% else %}badge-info{% endif %}">
+                            {% if notif.priorite == 'CRITICAL' %}CRITIQUE
+                            {% elseif notif.priorite == 'WARNING' %}ATTENTION
+                            {% else %}INFO{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="notif-message">{{ notif.message }}</div>
+
+                    <div class="notif-card-footer">
+                        {% if not notif.lue %}
+                        <button class="btn-small btn-read" onclick="markRead({{ notif.id }})">
+                            ✓ Marquer comme lu
+                        </button>
+                        {% endif %}
+                        <button class="btn-small btn-delete" onclick="deleteNotif({{ notif.id }})">
+                            🗑 Supprimer
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+</div>
+
+{# ── Toast ─────────────────────────────────────────────────────────────── #}
+<div id="notif-toast"></div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+    const CSRF = ''; // Symfony gère en session pour les appels AJAX
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('notif-toast');
+        t.textContent = msg;
+        t.className = 'show toast-' + type;
+        setTimeout(() => t.className = '', 2500);
+    }
+
+    async function markRead(id) {
+        const res = await fetch(`/notifications/${id}/read`, { method: 'POST' });
+        if ((await res.json()).success) {
+            const card = document.getElementById('notif-' + id);
+            card.classList.remove('notif-unread', 'notif-critical', 'notif-warning');
+            card.querySelector('.btn-read')?.remove();
+            updateBadge();
+            showToast('✓ Marquée comme lue');
+        }
+    }
+
+    async function markAllRead() {
+        const res = await fetch('/notifications/read-all', { method: 'POST' });
+        if ((await res.json()).success) {
+            document.querySelectorAll('.notif-unread').forEach(el => {
+                el.classList.remove('notif-unread');
+                el.querySelector('.btn-read')?.remove();
+            });
+            document.getElementById('btn-mark-all').disabled = true;
+            updateBadge();
+            showToast('✓ Toutes marquées comme lues');
+        }
+    }
+
+    async function deleteNotif(id) {
+        const res = await fetch(`/notifications/${id}/delete`, { method: 'POST' });
+        if ((await res.json()).success) {
+            const card = document.getElementById('notif-' + id);
+            card.style.transition = 'opacity .3s, transform .3s';
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(30px)';
+            setTimeout(() => { card.remove(); updateBadge(); }, 300);
+            showToast('🗑 Supprimée', 'info');
+        }
+    }
+
+    async function refreshNotifs() {
+        const res = await fetch('/notifications/refresh', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('🔄 Actualisé — ' + data.count + ' non lue(s)', 'info');
+            setTimeout(() => location.reload(), 1200);
+        }
+    }
+
+    async function updateBadge() {
+        const res = await fetch('/notifications/badge');
+        const data = await res.json();
+        const badge = document.getElementById('notif-badge-count');
+        if (badge) {
+            badge.textContent = data.count > 0 ? data.count : '';
+            badge.style.display = data.count > 0 ? 'inline-flex' : 'none';
+        }
+    }
+
+    // Mise à jour automatique du badge toutes les 60s
+    setInterval(updateBadge, 60000);
+    </script>
+{% endblock %}

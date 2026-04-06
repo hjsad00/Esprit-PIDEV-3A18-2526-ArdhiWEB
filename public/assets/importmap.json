@@ -1,0 +1,62 @@
+{
+    "app": {
+        "path": "\/assets\/app-97cf5db159abcbbe9470d13a84afc10a.js",
+        "type": "js"
+    },
+    "\/assets\/bootstrap.js": {
+        "path": "\/assets\/bootstrap-7d6354d3e22b86483b44e32a99d2c73c.js",
+        "type": "js"
+    },
+    "\/assets\/@symfony\/stimulus-bundle\/controllers.js": {
+        "path": "\/assets\/@symfony\/stimulus-bundle\/controllers-9d42643c079ab11f27a3a9614f81cc2f.js",
+        "type": "js"
+    },
+    "\/assets\/@symfony\/ux-turbo\/turbo_controller.js": {
+        "path": "\/assets\/@symfony\/ux-turbo\/turbo_controller-6c50a8e6e6ca21c94e8fd8573c988499.js",
+        "type": "js"
+    },
+    "\/assets\/controllers\/hello_controller.js": {
+        "path": "\/assets\/controllers\/hello_controller-87b6385829902356204e988334af9bf5.js",
+        "type": "js"
+    },
+    "\/assets\/styles\/app.css": {
+        "path": "\/assets\/styles\/app-eddbbd371a8b5ef0cc1ad2cb664160ba.css",
+        "type": "css"
+    },
+    "@hotwired\/stimulus": {
+        "path": "\/assets\/vendor\/@hotwired\/stimulus\/stimulus.index-4b8ccd71e6b1c4ddba22853d5a50a26c.js",
+        "type": "js"
+    },
+    "@symfony\/stimulus-bundle": {
+        "path": "\/assets\/@symfony\/stimulus-bundle\/loader-20ecc10cbbb74d097d458e14577bcd99.js",
+        "type": "js"
+    },
+    "@hotwired\/turbo": {
+        "path": "\/assets\/vendor\/@hotwired\/turbo\/turbo.index-a53d794fa85309d61a95703410716017.js",
+        "type": "js"
+    },
+    "bootstrap": {
+        "path": "\/assets\/vendor\/bootstrap\/bootstrap.index-1e01aa1aff3ce04d1ff69adb835125cb.js",
+        "type": "js"
+    },
+    "@popperjs\/core": {
+        "path": "\/assets\/vendor\/@popperjs\/core\/core.index-4013baa633d6c530f3ac068433ba0593.js",
+        "type": "js"
+    },
+    "bootstrap\/dist\/css\/bootstrap.min.css": {
+        "path": "\/assets\/vendor\/bootstrap\/dist\/css\/bootstrap.min-cf4cd0b7e86ca2d4039dfed2b7d527d5.css",
+        "type": "css"
+    },
+    "aos": {
+        "path": "\/assets\/vendor\/aos\/aos.index-ca14d2c7d496924e33414ef0870f7da1.js",
+        "type": "js"
+    },
+    "swiper": {
+        "path": "\/assets\/vendor\/swiper\/swiper.index-6c39a1dc3f7037c155943c2f397221da.js",
+        "type": "js"
+    },
+    "glightbox": {
+        "path": "\/assets\/vendor\/glightbox\/glightbox.index-0e9683bda0b28220fe10b5246082f93a.js",
+        "type": "js"
+    }
+}

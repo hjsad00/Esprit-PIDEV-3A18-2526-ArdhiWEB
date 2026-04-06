@@ -98,15 +98,17 @@
                 </div>
               </a>
 
-              <a href="#" class="service-sidebar-item">
-                <div class="service-sidebar-icon">
-                  <i class="bi bi-people"></i>
-                </div>
-                <div class="service-sidebar-text">
-                  <h4>Employés</h4>
-                  <span>Gestion d'équipe</span>
-                </div>
-              </a>
+            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
+            <a href="{{ path('app_employe_dashboard') }}" class="service-sidebar-item">
+              <div class="service-sidebar-icon">
+                <i class="bi bi-people"></i>
+              </div>
+              <div class="service-sidebar-text">
+                <h4>Employés</h4>
+                <span>Gestion d'équipe</span>
+              </div>
+            </a>
+            {% endif %}
 
             </div>
           </div>
@@ -200,18 +202,23 @@
               </div>
             </div>
 
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
-              <div class="service-item">
-                <span class="number">06</span>
-                <div class="service-item-icon">
-                  <i class="bi bi-people display-4"></i>
-                </div>
-                <div class="service-item-content">
-                  <h3 class="service-heading">Employés</h3>
-                  <p>Gérez les plannings, les tâches et les profils de vos ouvriers agricoles ou consultants directement depuis une interface centralisée.</p>
-                </div>
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR') %}
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+        <a href="{{ path('app_employe_dashboard') }}" style="text-decoration:none;color:inherit">
+            <div class="service-item" style="transition:.2s;cursor:pointer" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+              <span class="number">06</span>
+              <div class="service-item-icon">
+                <i class="bi bi-people display-4"></i>
+              </div>
+              <div class="service-item-content">
+                <h3 class="service-heading">Employés</h3>
+                <p>Gérez les plannings, les tâches et les profils de vos ouvriers agricoles depuis une interface centralisée.</p>
               </div>
             </div>
+          </a>
+        </div>
+        {% endif %}
+ 
 
           </div>
         </div>
