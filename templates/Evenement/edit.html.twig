@@ -18,11 +18,11 @@
 {% set isEdit = evenement.id is not null %}
 
 <section class="hero section dark-background"
-  style="background-image:linear-gradient(180deg,rgba(10,15,8,.56),rgba(10,15,8,.16)),url('{{ asset('assets/img/hero_4.jpg') }}');
-         background-size:cover;background-position:center;min-height:300px;margin-top:70px;">
-  <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
-    <div class="hero-left" style="max-width:760px;padding:80px 40px;">
-      <span class="hero-label">{{ isEdit ? 'MODIFIER UN ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT' }}</span>
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.5),rgba(10,15,8,.2)),url('{{ asset('assets/img/hero_4.jpg') }}');
+         background-size:cover;background-position:center;padding-top:120px;padding-bottom:60px;min-height:40ch;display:flex;align-items:center;">
+  <div class="hero-content-wrapper" style="position:relative;width:100%;padding-top:0;align-items:center;justify-content:flex-start;">
+    <div class="hero-left" style="max-width:760px;padding:20px 40px;">
+      <span class="hero-label" style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.6); font-weight: 800; font-size: 15px; letter-spacing: 2px;">{{ isEdit ? 'MODIFIER UN ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT' }}</span>
       <h1 class="hero-headline">{{ isEdit ? evenement.titre : 'Publiez un événement agricole' }}</h1>
       <p class="hero-description">{{ isEdit ? 'Mettez à jour les informations et enregistrez vos modifications.' : 'Ajoutez un événement, invitez des participants et développez votre réseau.' }}</p>
       <div class="hero-actions-row">
