@@ -15,6 +15,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Service\EmployeTache\QrCodeService;
 use App\Service\EmployeTache\FicheEmployePdfService;
+use App\Service\EmployeTache\EmployeAutoInactifService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[Route('/employes')]
@@ -24,6 +25,7 @@ class EmployeController extends AbstractController
 
     public function __construct(
         private AgriculteurContextService $ctx,
+        private EmployeAutoInactifService $autoInactif,
     ) {}
 
     // ── Garde d'accès commune ─────────────────────────────────────────
@@ -68,6 +70,10 @@ class EmployeController extends AbstractController
 
         if (!in_array($tri, self::TRIS_VALIDES, true)) $tri = 'nom';
         $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        // ✅ Synchronisation automatique à chaque affichage (identique à autoActiverEmployesAvecTaches()
+        // du desktop Java : active/désactive l'employé selon ses tâches actives)
+        $this->autoInactif->synchroniserStatuts($idAgriculteur);
 
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 

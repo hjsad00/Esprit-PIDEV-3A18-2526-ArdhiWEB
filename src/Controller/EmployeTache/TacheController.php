@@ -7,6 +7,7 @@ use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Service\EmployeTache\AgriculteurContextService;
 use App\Service\EmployeTache\GoogleCalendarService;
+use App\Service\EmployeTache\EmployeAutoInactifService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,8 +23,9 @@ class TacheController extends AbstractController
     private const TRIS_VALIDES = ['id','titre','statut','priorite','dateDebut','dateFin','categorie'];
 
     public function __construct(
-        private AgriculteurContextService $ctx,
-        private GoogleCalendarService     $gcal,
+        private AgriculteurContextService  $ctx,
+        private GoogleCalendarService      $gcal,
+        private EmployeAutoInactifService  $autoInactif,  // ✅ AJOUT
     ) {}
 
     private function checkAccess(): int|Response
@@ -54,6 +56,9 @@ class TacheController extends AbstractController
         if ($result instanceof Response) return $result;
         $idAgriculteur = $result;
 
+        // ✅ Synchronisation automatique à chaque affichage de la liste
+        $this->autoInactif->synchroniserStatuts($idAgriculteur);
+
         $search    = $request->query->get('search', '');
         $statut    = $request->query->get('statut', 'Tous');
         $priorite  = $request->query->get('priorite', 'Toutes');
@@ -67,7 +72,8 @@ class TacheController extends AbstractController
         $taches = $repo->findFiltreeTrie($idAgriculteur, $search, $statut, $priorite, $categorie, $tri, $direction);
         $kpis   = $repo->countByStatut($idAgriculteur);
 
-        $employes    = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        // Tous les employés (actifs ET inactifs) pour la map d'affichage des noms
+        $employes    = $empRepo->findByAgriculteur($idAgriculteur);
         $mapEmployes = [];
         foreach ($employes as $emp) {
             $mapEmployes[$emp->getId()] = $emp->getNomComplet();
@@ -104,7 +110,9 @@ class TacheController extends AbstractController
 
         $errors   = [];
         $old      = [];
-        $employes = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        // Tous les employés (actifs ET inactifs) — un employé inactif peut
+        // recevoir une tâche, ce qui le réactivera automatiquement.
+        $employes = $empRepo->findByAgriculteur($idAgriculteur);
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
@@ -123,6 +131,11 @@ class TacheController extends AbstractController
 
                 $em->persist($tache);
                 $em->flush();
+
+                // ✅ Réactiver l'employé si besoin (il vient d'être assigné)
+                if ($data['idEmploye']) {
+                    $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+                }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" créée.');
                 return $this->redirectToRoute('tache_index');
@@ -159,7 +172,11 @@ class TacheController extends AbstractController
 
         $errors   = [];
         $old      = [];
-        $employes = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        // Tous les employés (actifs ET inactifs) — idem new()
+        $employes = $empRepo->findByAgriculteur($idAgriculteur);
+
+        // ✅ Mémoriser l'ancien employé AVANT modification
+        $ancienEmployeId = $tache->getIdEmploye();
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
@@ -174,6 +191,14 @@ class TacheController extends AbstractController
             if (empty($errors)) {
                 $this->hydraterTache($tache, $data);
                 $em->flush();
+
+                // ✅ Synchroniser l'ancien ET le nouvel employé
+                if ($ancienEmployeId) {
+                    $this->autoInactif->synchroniserEmploye($ancienEmployeId, $idAgriculteur);
+                }
+                if ($data['idEmploye'] && $data['idEmploye'] !== $ancienEmployeId) {
+                    $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+                }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" modifiée.');
                 return $this->redirectToRoute('tache_index');
@@ -205,9 +230,18 @@ class TacheController extends AbstractController
         $tache = $repo->find($id);
         if ($tache && $tache->getIdAgriculteur() === $idAgriculteur
             && $this->isCsrfTokenValid('delete' . $id, $request->request->get('_token'))) {
-            $titre = $tache->getTitre();
+
+            $titre     = $tache->getTitre();
+            $employeId = $tache->getIdEmploye(); // ✅ Mémoriser avant suppression
+
             $em->remove($tache);
             $em->flush();
+
+            // ✅ Vérifier si l'employé doit être désactivé
+            if ($employeId) {
+                $this->autoInactif->synchroniserEmploye($employeId, $idAgriculteur);
+            }
+
             $this->addFlash('success', '🗑️ Tâche "' . $titre . '" supprimée.');
         }
         return $this->redirectToRoute('tache_index');
@@ -226,8 +260,15 @@ class TacheController extends AbstractController
         $tache = $repo->find($id);
         if ($tache && $tache->getIdAgriculteur() === $idAgriculteur
             && in_array($statut, Tache::STATUTS, true)) {
+
             $tache->setStatut($statut);
             $em->flush();
+
+            // ✅ Si tâche terminée/annulée → vérifier inactivation de l'employé
+            if ($tache->getIdEmploye()) {
+                $this->autoInactif->synchroniserEmploye($tache->getIdEmploye(), $idAgriculteur);
+            }
+
             $this->addFlash('success', '"' . $tache->getTitre() . '" → ' . $statut);
         }
         return $this->redirectToRoute('tache_index');
@@ -262,7 +303,6 @@ class TacheController extends AbstractController
         $pdf->SetAutoPageBreak(true, 12);
         $pdf->AddPage();
 
-        // Header green bar
         $pdf->SetFillColor(34, 120, 60);
         $pdf->Rect(0, 0, 297, 28, 'F');
         $pdf->SetFillColor(39, 174, 96);
@@ -277,17 +317,16 @@ class TacheController extends AbstractController
         $pdf->Cell(0, 6, 'Généré le : ' . $date, 0, 1, 'C');
         $pdf->Ln(8);
 
-        // KPI boxes
         $pdf->SetTextColor(50, 50, 50);
         $startX = 18;
         $boxW = 50;
         $gap = 5;
         $kpiData = [
-            ['label' => 'Total tâches',  'value' => $kpis['total'],     'r' => 74, 'g' => 124, 'b' => 89],
-            ['label' => 'En cours',      'value' => $kpis['en_cours'],  'r' => 46, 'g' => 139, 'b' => 87],
-            ['label' => 'Terminées',     'value' => $kpis['terminees'], 'r' => 39, 'g' => 174, 'b' => 96],
-            ['label' => 'En attente',    'value' => $kpis['en_attente'],'r' => 100,'g' => 160, 'b' => 120],
-            ['label' => 'En retard',     'value' => $enRetard,          'r' => 180,'g' => 60,  'b' => 60],
+            ['label' => 'Total tâches',  'value' => $kpis['total'],      'r' => 74,  'g' => 124, 'b' => 89],
+            ['label' => 'En cours',      'value' => $kpis['en_cours'],   'r' => 46,  'g' => 139, 'b' => 87],
+            ['label' => 'Terminées',     'value' => $kpis['terminees'],  'r' => 39,  'g' => 174, 'b' => 96],
+            ['label' => 'En attente',    'value' => $kpis['en_attente'], 'r' => 100, 'g' => 160, 'b' => 120],
+            ['label' => 'En retard',     'value' => $enRetard,           'r' => 180, 'g' => 60,  'b' => 60],
         ];
 
         $y = $pdf->GetY();
@@ -305,41 +344,42 @@ class TacheController extends AbstractController
         }
         $pdf->Ln(22);
 
-        // Table header
         $pdf->SetFont('helvetica', 'B', 9);
         $pdf->SetFillColor(34, 120, 60);
         $pdf->SetTextColor(255, 255, 255);
         $pdf->SetDrawColor(34, 120, 60);
 
         $cols = [
-            ['w' => 12, 'h' => 'ID'],    ['w' => 42, 'h' => 'Titre'],
-            ['w' => 50, 'h' => 'Description'], ['w' => 25, 'h' => 'Statut'],
-            ['w' => 22, 'h' => 'Priorité'],    ['w' => 28, 'h' => 'Catégorie'],
-            ['w' => 25, 'h' => 'Début'],       ['w' => 25, 'h' => 'Fin'],
-            ['w' => 38, 'h' => 'Employé'],     ['w' => 14, 'h' => 'Retard'],
+            ['w' => 12, 'h' => 'ID'],        ['w' => 42, 'h' => 'Titre'],
+            ['w' => 50, 'h' => 'Description'],['w' => 25, 'h' => 'Statut'],
+            ['w' => 22, 'h' => 'Priorité'],   ['w' => 28, 'h' => 'Catégorie'],
+            ['w' => 25, 'h' => 'Début'],      ['w' => 25, 'h' => 'Fin'],
+            ['w' => 38, 'h' => 'Employé'],    ['w' => 14, 'h' => 'Retard'],
         ];
         foreach ($cols as $col) {
             $pdf->Cell($col['w'], 8, $col['h'], 1, 0, 'C', true);
         }
         $pdf->Ln();
 
-        // Table body
         $pdf->SetFont('helvetica', '', 8);
         $pdf->SetTextColor(30, 30, 30);
         $pdf->SetDrawColor(200, 220, 200);
         $rowIndex = 0;
 
         foreach ($taches as $tache) {
-            $pdf->SetFillColor($rowIndex % 2 === 0 ? 245 : 255, $rowIndex % 2 === 0 ? 250 : 255, $rowIndex % 2 === 0 ? 245 : 255);
-
+            $pdf->SetFillColor(
+                $rowIndex % 2 === 0 ? 245 : 255,
+                $rowIndex % 2 === 0 ? 250 : 255,
+                $rowIndex % 2 === 0 ? 245 : 255
+            );
             $pdf->Cell(12, 7, $tache->getId(), 1, 0, 'C', true);
             $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre(), 0, 28, '...'), 1, 0, 'L', true);
             $pdf->Cell(50, 7, mb_strimwidth($tache->getDescription() ?? '-', 0, 35, '...'), 1, 0, 'L', true);
 
             $stColor = match($tache->getStatut()) {
-                'En attente' => [100, 160, 120], 'En cours' => [46, 139, 87],
-                'Terminé' => [34, 120, 60], 'Validé' => [26, 188, 156],
-                'Annulé' => [180, 60, 60], default => [100, 100, 100],
+                'En attente' => [100, 160, 120], 'En cours'  => [46, 139, 87],
+                'Terminé'    => [34, 120, 60],   'Validé'    => [26, 188, 156],
+                'Annulé'     => [180, 60, 60],   default     => [100, 100, 100],
             };
             $pdf->SetTextColor($stColor[0], $stColor[1], $stColor[2]);
             $pdf->SetFont('helvetica', 'B', 8);
@@ -350,7 +390,7 @@ class TacheController extends AbstractController
             $pdf->Cell(22, 7, Tache::PRIORITES[$tache->getPriorite()] ?? 'Moyenne', 1, 0, 'C', true);
             $pdf->Cell(28, 7, $tache->getCategorie() ?? '-', 1, 0, 'C', true);
             $pdf->Cell(25, 7, $tache->getDateDebut() ? $tache->getDateDebut()->format('d/m/Y') : '-', 1, 0, 'C', true);
-            $pdf->Cell(25, 7, $tache->getDateFin() ? $tache->getDateFin()->format('d/m/Y') : '-', 1, 0, 'C', true);
+            $pdf->Cell(25, 7, $tache->getDateFin()   ? $tache->getDateFin()->format('d/m/Y')   : '-', 1, 0, 'C', true);
             $pdf->Cell(38, 7, $mapEmployes[$tache->getIdEmploye()] ?? '-', 1, 0, 'L', true);
 
             if ($tache->isEnRetard()) {
@@ -366,7 +406,6 @@ class TacheController extends AbstractController
             $rowIndex++;
         }
 
-        // Footer
         $pdf->Ln(5);
         $pdf->SetFillColor(39, 174, 96);
         $pdf->Rect(8, $pdf->GetY(), 281, 1, 'F');
@@ -391,34 +430,22 @@ class TacheController extends AbstractController
         if ($result instanceof Response) return $result;
         $idAgriculteur = $result;
 
-        $taches = $repo->findByAgriculteur($idAgriculteur);
-
-        $employes    = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        $taches   = $repo->findByAgriculteur($idAgriculteur);
+        $employes = $empRepo->findActifsByAgriculteur($idAgriculteur);
         $mapEmployes = [];
         foreach ($employes as $emp) {
             $mapEmployes[$emp->getId()] = $emp->getNomComplet();
         }
 
-        // Formater les tâches en JSON pour FullCalendar
-        $events = [];
+        $events   = [];
         $colorMap = [
-            4 => '#e74c3c', // Critique — rouge
-            3 => '#f39c12', // Haute    — orange
-            2 => '#3498db', // Moyenne  — bleu
-            1 => '#27ae60', // Basse    — vert
-        ];
-        $statutColorMap = [
-            'En attente' => '#856404',
-            'En cours'   => '#004085',
-            'Terminé'    => '#155724',
-            'Validé'     => '#0c5460',
-            'Annulé'     => '#721c24',
+            4 => '#e74c3c', 3 => '#f39c12',
+            2 => '#3498db', 1 => '#27ae60',
         ];
 
         foreach ($taches as $tache) {
-            $debut = $tache->getDateDebut() ?? new \DateTime('today');
-            $fin   = $tache->getDateFin()   ?? $debut;
-            // FullCalendar all-day : end exclusif → +1 jour
+            $debut     = $tache->getDateDebut() ?? new \DateTime('today');
+            $fin       = $tache->getDateFin()   ?? $debut;
             $finPlusUn = (clone \DateTime::createFromInterface($fin))->modify('+1 day');
 
             $events[] = [
@@ -459,7 +486,6 @@ class TacheController extends AbstractController
         }
         $idAgriculteur = $result;
 
-        // ── GET : vérification de connexion (comme Java checkTask en arrière-plan) ──
         if ($request->isMethod('GET')) {
             $connected = $this->gcal->connecter();
             return new JsonResponse([
@@ -469,7 +495,6 @@ class TacheController extends AbstractController
             ]);
         }
 
-        // ── POST : push des tâches vers Google Calendar ──────────────────
         if (!$this->gcal->connecter()) {
             return new JsonResponse([
                 'success' => false,
@@ -517,8 +542,8 @@ class TacheController extends AbstractController
         if ($result instanceof Response) return $result;
         $idAgriculteur = $result;
 
-        $kpis = $repo->countByStatut($idAgriculteur);
-        $enRetard = $repo->countEnRetard($idAgriculteur);
+        $kpis         = $repo->countByStatut($idAgriculteur);
+        $enRetard     = $repo->countEnRetard($idAgriculteur);
         $nonAssignees = $repo->countNonAssignees($idAgriculteur);
         $tauxCompletion = $kpis['total'] > 0
             ? round(($kpis['terminees'] / $kpis['total']) * 100, 1) : 0;
@@ -526,8 +551,8 @@ class TacheController extends AbstractController
         $statuts   = $repo->countDetailStatut($idAgriculteur);
         $priorites = $repo->countByPriorite($idAgriculteur);
 
-        $empData = $repo->countByEmploye($idAgriculteur);
-        $employes = $empRepo->findActifsByAgriculteur($idAgriculteur);
+        $empData     = $repo->countByEmploye($idAgriculteur);
+        $employes    = $empRepo->findActifsByAgriculteur($idAgriculteur);
         $mapEmployes = [];
         foreach ($employes as $emp) {
             $mapEmployes[$emp->getId()] = $emp->getNomComplet();
@@ -540,12 +565,12 @@ class TacheController extends AbstractController
             ];
         }
 
-        $dateData = $repo->countByDate($idAgriculteur);
+        $dateData  = $repo->countByDate($idAgriculteur);
         $evolution = [];
         foreach ($dateData as $dd) {
             $evolution[] = [
                 'date'  => $dd['dateDebut'] instanceof \DateTimeInterface
-                    ? $dd['dateDebut']->format('d/m/Y') : (string) $dd['dateDebut'],
+                    ? $dd['dateDebut']->format('d/m/Y') : (string)$dd['dateDebut'],
                 'total' => $dd['total'],
             ];
         }

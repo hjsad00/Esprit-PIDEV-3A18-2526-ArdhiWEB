@@ -29,7 +29,6 @@ class TacheRepository extends ServiceEntityRepository
 
     /**
      * Requête principale avec filtres + tri
-     * Identique à la combinaison FilteredList + SortedList + ComboBox du desktop
      */
     public function findFiltreeTrie(
         int     $idAgriculteur,
@@ -47,19 +46,16 @@ class TacheRepository extends ServiceEntityRepository
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur);
 
-        // Recherche texte (titre, description, id_employe)
         if ($search !== '') {
             $qb->andWhere('t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
                ->setParameter('s', '%' . $search . '%');
         }
 
-        // Filtre statut
         if ($statut !== 'Tous') {
             $qb->andWhere('t.statut = :statut')
                ->setParameter('statut', $statut);
         }
 
-        // Filtre priorité (convertit le label en valeur numérique)
         if ($priorite !== 'Toutes') {
             $map = ['Basse' => 1, 'Moyenne' => 2, 'Haute' => 3, 'Critique' => 4];
             if (isset($map[$priorite])) {
@@ -68,7 +64,6 @@ class TacheRepository extends ServiceEntityRepository
             }
         }
 
-        // Filtre catégorie
         if ($categorie !== 'Toutes') {
             $qb->andWhere('t.categorie = :categorie')
                ->setParameter('categorie', $categorie);
@@ -77,6 +72,24 @@ class TacheRepository extends ServiceEntityRepository
         $qb->orderBy($champ, $dir);
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * ✅ NOUVEAU — Compte les tâches actives (En attente ou En cours) d'un employé.
+     * Utilisé par EmployeAutoInactifService pour décider d'activer/désactiver l'employé.
+     */
+    public function countTachesActivesParEmploye(int $idEmploye, int $idAgriculteur): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.idEmploye = :emp')
+            ->andWhere('t.idAgriculteur = :agri')
+            ->andWhere('t.statut IN (:actifs)')
+            ->setParameter('emp', $idEmploye)
+            ->setParameter('agri', $idAgriculteur)
+            ->setParameter('actifs', ['En attente', 'En cours'])
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     /**
@@ -93,31 +106,28 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
 
         $counts = [
-            'total'     => 0,
-            'en_cours'  => 0,
-            'terminees' => 0,
-            'en_attente'=> 0,
-            'annulees'  => 0,
+            'total'      => 0,
+            'en_cours'   => 0,
+            'terminees'  => 0,
+            'en_attente' => 0,
+            'annulees'   => 0,
         ];
 
         foreach ($results as $r) {
             $counts['total'] += $r['total'];
             match($r['statut']) {
-                'En cours'  => $counts['en_cours']   += $r['total'],
-                'Terminé'   => $counts['terminees']  += $r['total'],
-                'Validé'    => $counts['terminees']  += $r['total'],
-                'En attente'=> $counts['en_attente'] += $r['total'],
-                'Annulé'    => $counts['annulees']   += $r['total'],
-                default     => null,
+                'En cours'   => $counts['en_cours']   += $r['total'],
+                'Terminé'    => $counts['terminees']  += $r['total'],
+                'Validé'     => $counts['terminees']  += $r['total'],
+                'En attente' => $counts['en_attente'] += $r['total'],
+                'Annulé'     => $counts['annulees']   += $r['total'],
+                default      => null,
             };
         }
 
         return $counts;
     }
 
-    /**
-     * Récupère toutes les tâches d'un employé spécifique
-     */
     public function findByEmploye(int $idEmploye, int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -130,9 +140,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Toutes les tâches d'un agriculteur (pour PDF)
-     */
     public function findByAgriculteur(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -143,13 +150,10 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Récupère les tâches prévues pour aujourd'hui
-     */
     public function findTachesDuJour(int $idAgriculteur): array
     {
         $today = new \DateTime('today');
-        
+
         return $this->createQueryBuilder('t')
             ->where('t.idAgriculteur = :agri')
             ->andWhere('t.dateDebut <= :today')
@@ -162,9 +166,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Compte les tâches par priorité — pour les statistiques
-     */
     public function countByPriorite(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
@@ -182,9 +183,6 @@ class TacheRepository extends ServiceEntityRepository
         return $counts;
     }
 
-    /**
-     * Compte les tâches par employé — pour les statistiques
-     */
     public function countByEmploye(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -197,9 +195,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Compte les tâches par date de création (dateDebut) — pour l'évolution
-     */
     public function countByDate(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -213,9 +208,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Compte les tâches par catégorie — pour les statistiques
-     */
     public function countByCategorie(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
@@ -233,9 +225,6 @@ class TacheRepository extends ServiceEntityRepository
         return $counts;
     }
 
-    /**
-     * Compte les tâches en retard
-     */
     public function countEnRetard(int $idAgriculteur): int
     {
         return (int) $this->createQueryBuilder('t')
@@ -250,9 +239,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    /**
-     * Compte les tâches non assignées
-     */
     public function countNonAssignees(int $idAgriculteur): int
     {
         return (int) $this->createQueryBuilder('t')
@@ -264,9 +250,6 @@ class TacheRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    /**
-     * Détail des statuts avec comptage individuel — pour les statistiques
-     */
     public function countDetailStatut(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
