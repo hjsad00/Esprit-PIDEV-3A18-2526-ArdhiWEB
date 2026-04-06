@@ -76,11 +76,7 @@
           </a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_review' ? 'active' : '' }}" href="{{ path('admin_review_index') }}">
-            <i class="bi bi-clipboard-check-fill text-success"></i><span>Reviews</span>
-          </a>
-        </li>
+
         <li class="nav-item">
           <a class="nav-link {{ app.request.attributes.get('_route') starts with 'admin_offre' ? 'active' : '' }}" href="{{ path('admin_offre_index') }}">
             <i class="bi bi-tag-fill text-success"></i><span>Offres</span>

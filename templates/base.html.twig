@@ -41,7 +41,7 @@
 
 {% set is_homepage = current_route == 'app_home' %}
 {% set is_premium = is_homepage or is_user_diag_route %}
-<body class="{{ is_premium ? 'premium-header-active index-page' : '' }} {% block body_class %}{% endblock %}" {% if is_user_diag_route %}style="background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;"{% endif %}>
+<body class="{{ is_premium ? 'premium-header-active' : '' }} {{ is_homepage ? 'index-page' : '' }} {% block body_class %}{% endblock %}" {% if is_user_diag_route %}style="background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;"{% endif %}>
 
   <div class="flash-container">
     {% for label, messages in app.flashes %}

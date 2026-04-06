@@ -460,11 +460,16 @@ body.premium-header-active #header {
 body.premium-header-active:not(.index-page) #header,
 .scrolled.index-page #header,
 .index-page.scrolled #header {
-  background: rgba(15, 20, 15, 0.85) !important;
+  background: rgba(10, 10, 10, 0.95) !important;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  padding: 8px 0 !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15) !important;
+  padding: 4px 0 !important;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Compact logo for non-homepage premium pages */
+body.premium-header-active:not(.index-page) #header .logo img {
+  max-height: 34px !important;
 }
 
 .header-premium .logo img,
