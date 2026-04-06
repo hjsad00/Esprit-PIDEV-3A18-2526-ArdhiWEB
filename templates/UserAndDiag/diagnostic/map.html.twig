@@ -267,7 +267,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.isContagious) {
-                    drawSporeCone(lat, lon, data.travelAngle, data.blastRadiusKm);
+                    drawSporeCone(lat, lon, data.travelAngle, data.blastRadiusKm, data.windDirectionLabel);
                     sporeLog.innerHTML = `⚠️ Radar : Propagation vers le ${data.windDirectionLabel}`;
                     sporeLog.style.display = 'block';
                     showStatus(`Alerte : Propagation suspectée (${data.windDirectionLabel})`, 3000);
@@ -278,14 +278,51 @@
             });
     }
 
-    function drawSporeCone(lat, lon, angle, radiusKm) {
-        // Simple visualization with a circle and a segment for now
-        // A real cone would require more complex coordinate math
-        const radiusPoints = radiusKm * 1000;
+    function drawSporeCone(lat, lon, angle, radiusKm, windDirectionLabel) {
+        const points = [];
+        points.push([lat, lon]); // Origin
+        
+        const radiusMeters = radiusKm * 1000;
+        const earthRadius = 6378137;
+        const spreadAngle = 60; // 60 degree cone spread
+        const startAngle = angle - (spreadAngle / 2);
+        
+        // Calculate arc nodes
+        for (let i = 0; i <= 20; i++) {
+            const currentAngle = startAngle + (i * (spreadAngle / 20));
+            const bearing = currentAngle * Math.PI / 180;
+            const latRad = lat * Math.PI / 180;
+            const lonRad = lon * Math.PI / 180;
+            const distRatio = radiusMeters / earthRadius;
+            
+            const destLatRad = Math.asin(Math.sin(latRad) * Math.cos(distRatio) + Math.cos(latRad) * Math.sin(distRatio) * Math.cos(bearing));
+            const destLonRad = lonRad + Math.atan2(Math.sin(bearing) * Math.sin(distRatio) * Math.cos(latRad), Math.cos(distRatio) - Math.sin(latRad) * Math.sin(destLatRad));
+            points.push([destLatRad * 180 / Math.PI, destLonRad * 180 / Math.PI]);
+        }
+        
+        const sectorPolygon = L.polygon(points, {
+            color: '#c0392b',
+            weight: 2,
+            dashArray: '5, 5',
+            fillColor: '#e74c3c',
+            fillOpacity: 0.2
+        });
+
+        const popupHTML = `
+            <div style="font-family: 'Inter', sans-serif; font-size: 0.9rem;">
+                <strong style="color: #c0392b; font-size: 1.1rem;"><i class="bi bi-broadcast"></i> Zone de Risque Épidémique</strong><br>
+                <span>Rayon: ${radiusKm}km</span><br>
+                <span>Propagation par les vents vers le ${windDirectionLabel}</span>
+            </div>
+        `;
+        sectorPolygon.bindPopup(popupHTML);
+
         sporeGraphic = L.layerGroup([
-            L.circle([lat, lon], { radius: radiusPoints, color: '#e74c3c', weight: 1, fillOpacity: 0.1 }),
-            L.circleMarker([lat, lon], { radius: 15, color: '#e74c3c', fillOpacity: 0.4 })
+            sectorPolygon,
+            L.circleMarker([lat, lon], { radius: 12, color: '#e67e22', fillColor: '#e67e22', fillOpacity: 0.5, weight: 3, color: 'white' }) // Highlight origin
         ]).addTo(map);
+
+        sectorPolygon.openPopup([lat, lon]);
     }
 
     function showStatus(text, duration = 0) {
