@@ -32,7 +32,7 @@ class MaintenanceType extends AbstractType
                 'query_builder' => function (EntityRepository $er) use ($userId) {
                     $qb = $er->createQueryBuilder('m');
                     if ($userId) {
-                        $qb->where('m.user_id = :uid')->setParameter('uid', $userId);
+                        $qb->where('m.userId = :uid')->setParameter('uid', $userId);
                     }
                     return $qb->orderBy('m.nom', 'ASC');
                 },
@@ -57,51 +57,21 @@ class MaintenanceType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('statut_maintenance', ChoiceType::class, [
-                'label' => 'Statut',
-                'choices' => [
-                    'Planifiée' => 'planifiee',
-                    'En cours' => 'en_cours',
-                    'Terminée' => 'terminee',
-                    'Annulée' => 'annulee',
-                ],
-                'placeholder' => '-- Sélectionner le statut --',
-                'attr' => ['class' => 'form-select'],
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'Le statut est obligatoire.']),
-                    new Assert\Choice([
-                        'choices' => ['planifiee', 'en_cours', 'terminee', 'annulee'],
-                        'message' => 'Statut invalide.',
-                    ]),
-                ],
-            ])
             ->add('date_maintenance', DateType::class, [
-                'label' => 'Date de maintenance',
+                'label' => 'Date de l\'intervention',
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La date est obligatoire.']),
                 ],
             ])
-            ->add('date_planifiee', DateType::class, [
-                'label' => 'Date planifiée',
-                'widget' => 'single_text',
-                'required' => false,
-                'attr' => ['class' => 'form-control'],
-            ])
-            ->add('date_realisee', DateType::class, [
-                'label' => 'Date réalisée',
-                'widget' => 'single_text',
-                'required' => false,
-                'attr' => ['class' => 'form-control'],
-            ])
             ->add('description', TextareaType::class, [
-                'label' => 'Description',
+                'label' => 'Description (optionnel)',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
                     'rows' => 4,
-                    'placeholder' => 'Décrivez les opérations de maintenance...',
+                    'placeholder' => 'Décrivez les opérations à effectuer...',
                 ],
                 'constraints' => [
                     new Assert\Length([

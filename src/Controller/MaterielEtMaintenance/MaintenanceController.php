@@ -7,11 +7,17 @@ use App\Form\MaterielEtMaintenance\MaintenanceType;
 use App\Repository\MaterielEtMaintenance\MaintenanceRepository;
 use App\Repository\MaterielEtMaintenance\MaterielRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Twig\Environment;
 
 #[Route('/materiel-et-maintenance/maintenance', name: 'app_maintenance_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -41,7 +47,7 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/planifier', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar): Response
+    public function new(Request $request, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar, MailerInterface $mailer, Environment $twig): Response
     {
         $maintenance = new Maintenance();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
@@ -50,6 +56,9 @@ class MaintenanceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Statut automatiquement "planifiée" à la création
+            $maintenance->setStatutMaintenance('planifiee');
+
             $em->persist($maintenance);
 
             // Mettre à jour dernière/prochaine maintenance du matériel
@@ -59,29 +68,86 @@ class MaintenanceController extends AbstractController
                 $materiel->calculerProchaineMaintenance();
             }
 
-            // Google Calendar Sync
-            if ($maintenance->getDateMaintenance() && $this->getUser()->getGoogleAccessToken()) {
-                $eventData = $googleCalendar->createMaintenanceEvent(
-                    $this->getUser(),
-                    $maintenance->getMateriel()->getNom(),
-                    $maintenance->getDescription() ?? 'Intervention planifiée.',
-                    $maintenance->getDateMaintenance()
-                );
-                
-                if ($eventData && isset($eventData['id'])) {
-                    $maintenance->setGoogleCalendarEventId($eventData['id']);
-                    $this->addFlash('success', sprintf(
-                        'Maintenance planifiée et ajoutée à Google Calendar ! <a href="%s" target="_blank" class="fw-bold text-decoration-none ms-2 px-3 py-1 bg-white text-success rounded-pill shadow-sm" style="display:inline-block;"><i class="bi bi-calendar-check"></i> Voir l\'événement</a>',
-                        $eventData['link']
-                    ));
-                } else {
-                    $this->addFlash('warning', 'Maintenance planifiée, mais échec de la synchronisation avec Google Calendar (Token expiré ou erreur).');
+            $em->flush();
+
+            // --- Envoi email de confirmation avec PDF ---
+            try {
+                $user = $this->getUser();
+                $userEmail = method_exists($user, 'getEmail') ? $user->getEmail() : null;
+
+                if ($userEmail) {
+                    // Générer le PDF
+                    $pdfHtml = $twig->render('MaterielEtMaintenance/maintenance/pdf_confirmation.html.twig', [
+                        'maintenance' => $maintenance,
+                        'user'        => $user,
+                    ]);
+
+                    $options = new Options();
+                    $options->set('isHtml5ParserEnabled', true);
+                    $options->set('isRemoteEnabled', false);
+                    $dompdf = new Dompdf($options);
+                    $dompdf->loadHtml($pdfHtml);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    $pdfContent = $dompdf->output();
+
+                    $email = (new TemplatedEmail())
+                        ->from(new Address('rimaffi65@gmail.com', 'Ardhi - Gestion Agricole'))
+                        ->to(new Address($userEmail))
+                        ->subject('Confirmation de votre maintenance planifiée - Ardhi')
+                        ->htmlTemplate('MaterielEtMaintenance/maintenance/email_confirmation.html.twig')
+                        ->context([
+                            'maintenance' => $maintenance,
+                            'user'        => $user,
+                        ])
+                        ->attach($pdfContent, 'confirmation-maintenance.pdf', 'application/pdf');
+
+                    $mailer->send($email);
                 }
-            } else {
-                $this->addFlash('success', 'Maintenance planifiée avec succès !');
+            } catch (\Exception $e) {
+                // Email non bloquant, mais on affiche l'erreur pour débugger
+                $this->addFlash('danger', 'Erreur lors de l\'envoi de l\'email : ' . $e->getMessage());
+            }
+            // --- Fin email ---
+
+            // Notification 1 : Planification + Google Calendar (si connecté)
+            $isGoogleSync = false;
+            if ($maintenance->getDateMaintenance() && $this->getUser()->getGoogleAccessToken()) {
+                try {
+                    $eventData = $googleCalendar->createMaintenanceEvent(
+                        $this->getUser(),
+                        $maintenance->getMateriel()->getNom(),
+                        $maintenance->getDescription() ?? 'Intervention planifiée.',
+                        $maintenance->getDateMaintenance()
+                    );
+
+                    if ($eventData && isset($eventData['id'])) {
+                        $maintenance->setGoogleCalendarEventId($eventData['id']);
+                        $em->flush();
+                        $this->addFlash('success', sprintf(
+                            'Maintenance planifiée et ajoutée à Google Calendar ! <a href="%s" target="_blank" class="btn btn-sm btn-light rounded-pill ms-3 shadow-sm" style="color: #2e7d32; font-weight: 600; border: 1px solid #c3e6cb; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-calendar-check"></i> Voir l\'événement</a>',
+                            $eventData['link']
+                        ));
+                        $isGoogleSync = true;
+                    }
+                } catch (\Exception $e) {
+                    // Erreur Google Calendar non fatale
+                }
             }
 
-            $em->flush();
+            if (!$isGoogleSync) {
+                $this->addFlash('success', 'Maintenance planifiée !');
+            }
+
+            // Notification 2 : Email
+            $userEmail = method_exists($this->getUser(), 'getEmail') ? $this->getUser()->getEmail() : null;
+            if ($userEmail) {
+                $this->addFlash('success', sprintf(
+                    'Un email de confirmation est envoyé à <strong>%s</strong>',
+                    $userEmail
+                ));
+            }
+
             return $this->redirectToRoute('app_maintenance_show', ['id' => $maintenance->getIdMaintenance()]);
         }
 
@@ -91,9 +157,11 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(int $id, MaintenanceRepository $repo): Response
+    public function show(Maintenance $maintenance): Response
     {
-        $maintenance = $this->getMaintenanceOwnedByUser($id, $repo);
+        // Enlever après test d'affichage
+        $this->addFlash('success', 'DEBUG : Affichage des notifications opérationnel.');
+
         return $this->render('MaterielEtMaintenance/maintenance/show.html.twig', [
             'maintenance' => $maintenance,
         ]);

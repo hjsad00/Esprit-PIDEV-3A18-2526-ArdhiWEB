@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmation de Maintenance - Ardhi</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f7f0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7f0; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #2d4a1e 0%, #4a7c3f 100%); padding: 36px 40px; text-align:center;">
+              <h1 style="margin:0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:1px;">🌿 Ardhi</h1>
+              <p style="margin:8px 0 0; color:rgba(255,255,255,0.8); font-size:14px;">Gestion Agricole Intelligente</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="font-size:16px; color:#444; margin-top:0;">Bonjour <strong>{{ user.prenom|default('') }} {{ user.nom|default('') }}</strong>,</p>
+              <p style="font-size:15px; color:#555; line-height:1.7;">
+                Votre intervention de maintenance a bien été <strong style="color:#4a7c3f;">planifiée avec succès</strong>. 
+                Vous trouverez ci-joint un document PDF de confirmation avec tous les détails.
+              </p>
+
+              <!-- Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faf5; border:1px solid #d4e6c3; border-radius:12px; margin:24px 0;">
+                <tr><td style="padding:28px;">
+                  <h2 style="margin:0 0 20px; font-size:16px; text-transform:uppercase; letter-spacing:2px; color:#4a7c3f;">Détails de l'intervention</h2>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; color:#888; width:50%; font-size:14px;">Matériel concerné</td>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; font-weight:bold; font-size:14px; text-align:right;">{{ maintenance.materiel.nom }} ({{ maintenance.materiel.type }})</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; color:#888; font-size:14px;">Type d'intervention</td>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; font-weight:bold; font-size:14px; text-align:right;">
+                        {% set typeLabels = {'preventive':'Préventive','corrective':'Corrective','urgente':'Urgente'} %}
+                        {{ typeLabels[maintenance.typeMaintenance] ?? maintenance.typeMaintenance|capitalize }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; color:#888; font-size:14px;">Date prévue</td>
+                      <td style="padding:10px 0; border-bottom:1px solid #e8f0df; font-weight:bold; font-size:14px; text-align:right; color:#4a7c3f;">
+                        {{ maintenance.dateMaintenance ? maintenance.dateMaintenance|date('d/m/Y') : 'À définir' }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0; color:#888; font-size:14px;">Statut</td>
+                      <td style="padding:10px 0; text-align:right;">
+                        <span style="display:inline-block; background:#e3f2fd; color:#1565c0; padding:4px 12px; border-radius:50px; font-size:13px; font-weight:bold;">
+                          {% set sl = {'planifiee':'Planifiée','en_cours':'En cours','terminee':'Terminée','annulee':'Annulée'} %}
+                          {{ sl[maintenance.statutMaintenance] ?? maintenance.statutMaintenance }}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+
+              {% if maintenance.description %}
+              <p style="font-size:14px; color:#666; background:#f9f9f9; padding:16px; border-radius:8px; border-left:4px solid #4a7c3f;">
+                <strong>Notes :</strong> {{ maintenance.description }}
+              </p>
+              {% endif %}
+
+              <p style="font-size:14px; color:#888; line-height:1.7; margin-top:32px;">
+                Le document PDF joint contient la confirmation officielle de cette intervention. Conservez-le pour vos archives.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f4f7f0; padding:24px 40px; text-align:center; border-top:1px solid #e8f0df;">
+              <p style="margin:0; color:#aaa; font-size:12px;">
+                Cet email a été envoyé automatiquement par la plateforme <strong>Ardhi</strong>.<br>
+                © {{ "now"|date('Y') }} Ardhi - Gestion Agricole Intelligente
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

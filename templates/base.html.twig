@@ -30,6 +30,14 @@
 
 <body class="{% block body_class %}index-page{% endblock %}">
 
+  <script>
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        console.log("Flash detected: {{ label }} - {{ message|striptags }}");
+      {% endfor %}
+    {% endfor %}
+  </script>
+
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
@@ -41,7 +49,7 @@
         <ul>
           <li><a href="/">Diagnostic IA</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
-          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
+          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'show') ? 'active' : '' }}">Matériel & Maintenance</a></li>
           <li><a href="#">Cultures</a></li>
           <li><a href="#">Évènements</a></li>
           <li><a href="#">Employés</a></li>
@@ -66,17 +74,21 @@
     </div>
   </header>
 
-  <main class="main" style="min-height: 70vh;">
-      {% for label, messages in app.flashes %}
-          <div class="container mt-4">
-              {% for message in messages %}
-                  <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
-                      {{ message|raw }}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-              {% endfor %}
-          </div>
-      {% endfor %}
+  <main class="main" style="min-height: 70vh; margin-top: 100px;">
+      {% if app.flashes|length > 0 %}
+      <div class="container mt-3">
+        {% for label, messages in app.flashes %}
+          {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show shadow border-start border-4 py-3" role="alert"
+                 style="border-left-color: {% if label == 'success' %}#2ecc71{% else %}#e74c3c{% endif %} !important; background: white; z-index: 1000000;">
+              <i class="bi bi-{% if label == 'success' %}check-circle-fill text-success{% else %}exclamation-triangle-fill text-danger{% endif %} me-2"></i>
+              {{ message|raw }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
 
       {% block body %}{% endblock %}
   </main>
