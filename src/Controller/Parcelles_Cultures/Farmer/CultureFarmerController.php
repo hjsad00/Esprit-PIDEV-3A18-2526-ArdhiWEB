@@ -47,7 +47,7 @@ class CultureFarmerController extends AbstractController
         // Quick Stats for the header
         $stats = $this->cultureRepository->createQueryBuilder('c')
             ->join('c.parcelle', 'p')
-            ->select('COUNT(c.id) as count, SUM(c.surface_utilisee) as surface, SUM(c.production_estimee) as production')
+            ->select('COUNT(c.id) as count, SUM(c.surface_utilisee) as surface')
             ->where('p.agriculteur = :user')
             ->setParameter('user', $user)
             ->getQuery()
