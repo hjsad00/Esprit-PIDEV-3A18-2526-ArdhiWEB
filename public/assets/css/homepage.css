@@ -2,12 +2,176 @@
    HOMEPAGE — Glassmorphism & Enterprise Design
    ================================================================ */
 
-/* --- CSS Variables (Moved to main.css for global use) --- */
+/* --- Google Font Import (Inter for modern feel) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* --- CSS Variables --- */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-bg-strong: rgba(255, 255, 255, 0.18);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --glass-blur: blur(16px);
+    --ardhi-green: #4a8c3f;
+    --ardhi-green-light: #5ea851;
+    --ardhi-green-dark: #3a7030;
+    --ardhi-green-glow: rgba(74, 140, 63, 0.4);
+    --hero-gradient: linear-gradient(135deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.1) 100%);
+    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
 /* ================================================================
    TRANSPARENT NAVBAR (HOME PAGE ONLY)
    ================================================================ */
-/* Header styles moved to main.css for global use in UserAndDiag module */
+.index-page .header,
+.event-page .header {
+    background: transparent !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 12px 0;
+    transition: var(--transition-smooth);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.index-page.event-page header.header,
+body.event-page header.header,
+.event-page .header {
+    background: transparent !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.event-page .hero.section {
+    margin-top: 0 !important;
+}
+
+.event-page .hero-content-wrapper {
+    padding-top: 120px !important;
+}
+
+.event-page.scrolled .header {
+    background: rgba(15, 20, 15, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 0;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+}
+
+.event-page .header .navmenu ul>li>a {
+    color: #fff !important;
+}
+
+.event-page .header .navmenu ul>li>a:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.index-page .header .logo img {
+    max-height: 44px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    transition: var(--transition-smooth);
+}
+
+.index-page .header .navmenu ul>li>a {
+    color: #fff !important;
+    font-family: 'Inter', var(--nav-font), sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: var(--transition-smooth);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.index-page .header .navmenu ul>li>a:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.12);
+    text-shadow: none;
+}
+
+/* "Se connecter" CTA Button in Nav */
+.nav-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ardhi-green) !important;
+    color: #fff !important;
+    padding: 10px 24px !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.3px;
+    text-shadow: none !important;
+    box-shadow: 0 4px 15px var(--ardhi-green-glow);
+    transition: var(--transition-smooth) !important;
+    border: none;
+    text-decoration: none !important;
+}
+
+.nav-cta-btn:hover {
+    background: var(--ardhi-green-light) !important;
+    box-shadow: 0 6px 25px var(--ardhi-green-glow) !important;
+    transform: translateY(-2px);
+}
+
+/* Scrolled state — solid glass header */
+.scrolled.index-page .header,
+.index-page.scrolled .header {
+    background: rgba(15, 20, 15, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 0;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* User dropdown icon on home */
+.index-page .header .nav-user-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.index-page .header .nav-user-circle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Dropdown menu fix — dark text on white background */
+.index-page .header .navmenu .dropdown ul {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.index-page .header .navmenu .dropdown ul a {
+    color: #333 !important;
+    text-shadow: none !important;
+    font-size: 14px;
+    padding: 10px 20px;
+    background: transparent;
+    border-radius: 0;
+}
+
+.index-page .header .navmenu .dropdown ul a:hover {
+    background: #f0f7ee !important;
+    color: #2d5a27 !important;
+}
 
 /* ================================================================
    HERO SECTION — Full Viewport with Left Content + Right Sidebar
@@ -173,10 +337,6 @@
 }
 
 .hero-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.22);
-}
-
-.hero-btn-secondary:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: #fff;
     color: #fff;
@@ -206,7 +366,7 @@
     }
 }
 
-..services-glass-panel {
+.services-glass-panel {
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;

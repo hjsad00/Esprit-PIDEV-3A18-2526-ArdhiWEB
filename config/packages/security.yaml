@@ -26,23 +26,23 @@ security:
         enable_csrf: true
         success_handler: App\Security\LoginSuccessHandler
 
-            two_factor:
-                auth_form_path: 2fa_login
-                check_path: 2fa_login_check
+      two_factor:
+        auth_form_path: 2fa_login
+        check_path: 2fa_login_check
 
-            logout:
-                path: app_logout
-                # where to redirect after logout
-                # target: app_any_route
+      logout:
+        path: app_logout
+        # where to redirect after logout
+        # target: app_any_route
 
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
-    access_control:
-        - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
-        - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+  # Easy way to control access for large sections of your site
+  # Note: Only the *first* access control that matches will be used
+  access_control:
+    - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+    - { path: ^/login, roles: PUBLIC_ACCESS }
+    - { path: ^/register, roles: PUBLIC_ACCESS }
+    - { path: ^/admin, roles: ROLE_ADMIN }
+    # - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
   security:
