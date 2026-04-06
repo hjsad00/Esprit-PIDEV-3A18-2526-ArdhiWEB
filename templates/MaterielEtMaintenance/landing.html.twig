@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Matériel & Maintenance{% endblock %}
+
+{% block body_class %}marketplace-page{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <section class="marketplace-hero" style="min-height: 100vh;">
+      <div class="hero-bg">
+        <img src="{{ asset('assets/img/materiel.jpg') }}" alt="Matériel et Maintenance Ardhi">
+      </div>
+
+      <div class="container">
+        <div class="hero-inner">
+
+          {# --- Left Content --- #}
+          <div class="hero-left">
+            <a href="{{ path('app_home') }}" class="btn btn-outline-light btn-sm rounded-pill mb-4" style="border-color: rgba(255,255,255,0.4); color: white; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="bi bi-arrow-left"></i> Retour à l'accueil
+            </a>
+            <div class="hero-label">ARDHI SERVICES</div>
+            <h1 class="hero-headline">Gérez votre<br>Matériel<br>en toute simplicité.</h1>
+            <p class="hero-description">
+              Suivez l'état de votre matériel agricole, planifiez les maintenances préventives et évitez les pannes en pleine saison grâce à notre outil intelligent.
+            </p>
+          </div>
+
+          {# --- Right: Categories Panel --- #}
+          <div class="hero-right">
+            <div class="categories-glass-panel">
+              <div class="categories-panel-title">Service Matériel & Maintenance</div>
+
+              <a href="{{ path('app_materiel_index') }}" class="category-item py-4 my-2">
+                <div class="category-icon" style="font-size: 24px; width: 56px; height: 56px;"><i class="bi bi-truck-front"></i></div>
+                <div class="category-text">
+                  <h4 style="font-size: 16px;">Gérer mon Matériel</h4>
+                  <span style="font-size: 13px;">Tracteurs, moissonneuses...</span>
+                </div>
+              </a>
+
+              <a href="{{ path('app_maintenance_index') }}" class="category-item py-4 my-2">
+                <div class="category-icon" style="font-size: 24px; width: 56px; height: 56px;"><i class="bi bi-tools"></i></div>
+                <div class="category-text">
+                  <h4 style="font-size: 16px;">Gérer les Maintenances</h4>
+                  <span style="font-size: 13px;">Planifier les interventions</span>
+                </div>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+{% endblock %}

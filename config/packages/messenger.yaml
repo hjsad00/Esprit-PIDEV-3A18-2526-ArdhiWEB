@@ -11,6 +11,7 @@ framework:
                     multiplier: 2
             failed: 'doctrine://default?queue_name=failed'
             sync: 'sync://'
+            sync: 'sync://'
 
         default_bus: messenger.bus.default
 

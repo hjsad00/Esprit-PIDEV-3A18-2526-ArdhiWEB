@@ -1,0 +1,231 @@
+<?php
+
+namespace App\Entity\MaterielEtMaintenance;
+
+use App\Repository\MaterielEtMaintenance\MaterielRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+#[ORM\Entity(repositoryClass: MaterielRepository::class)]
+#[ORM\Table(name: 'materiel')]
+class Materiel
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id_materiel', type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(name: 'user_id', type: 'integer')]
+    private ?int $userId = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Oups, n'oubliez pas le nom.")]
+    private ?string $nom = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Assert\LessThanOrEqual('today', message: "Tu ne peux pas mettre une date d'achat au futur.")]
+    private ?\DateTimeInterface $dateAchat = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $derniereMaintenance = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $dateProchaineMaintenance = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Veuillez choisir un type de matériel.")]
+    #[Assert\Choice(choices: ['Tracteur', 'Moissonneuse', 'Semoir', 'Pulvérisateur', 'Charrue', 'Herse', 'Autre'], message: "Type invalide.")]
+    private ?string $type = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Veuillez indiquer l'état du matériel.")]
+    #[Assert\Choice(choices: ['Neuf', 'Bon', 'Moyen', 'En panne', 'En maintenance'], message: "État invalide.")]
+    private ?string $etat = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
+    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, orphanRemoval: true)]
+    private Collection $maintenances;
+
+    public function __construct()
+    {
+        $this->maintenances = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    public function setUserId(int $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(?string $nom): self
+    {
+        $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getDateAchat(): ?\DateTimeInterface
+    {
+        return $this->dateAchat;
+    }
+
+    public function setDateAchat(?\DateTimeInterface $dateAchat): self
+    {
+        $this->dateAchat = $dateAchat;
+
+        return $this;
+    }
+
+    public function calculerProchaineMaintenance(): void
+    {
+        $baseDate = $this->getDerniereMaintenance() ?: clone $this->getDateAchat();
+        if (!$baseDate) {
+            $baseDate = new \DateTime();
+        } else {
+            $baseDate = clone $baseDate;
+        }
+        $baseDate->modify('+6 months');
+        $this->setDateProchaineMaintenance($baseDate);
+    }
+
+    public function getSituationMaintenance(): string
+    {
+        // S'il y a déjà une intervention en cours/planifiée, on indique "planifiee" sans marquer de retard
+        foreach ($this->getMaintenances() as $m) {
+            if (in_array($m->getStatutMaintenance(), ['planifiee', 'en_attente', 'en_cours'])) {
+                return 'planifiee';
+            }
+        }
+
+        if (!$this->dateProchaineMaintenance) {
+            return 'non_planifie';
+        }
+
+        $now = new \DateTime();
+        $now->setTime(0, 0, 0);
+        $prochaine = clone $this->dateProchaineMaintenance;
+        $prochaine->setTime(0, 0, 0);
+
+        if ($prochaine < $now) {
+            return 'en_retard';
+        }
+
+        $diff = $now->diff($prochaine)->days;
+        if ($diff <= 7) {
+            return 'bientot';
+        }
+
+        return 'ok';
+    }
+
+    public function getDerniereMaintenance(): ?\DateTimeInterface
+    {
+        return $this->derniereMaintenance;
+    }
+
+    public function setDerniereMaintenance(?\DateTimeInterface $derniereMaintenance): self
+    {
+        $this->derniereMaintenance = $derniereMaintenance;
+
+        return $this;
+    }
+
+    public function getDateProchaineMaintenance(): ?\DateTimeInterface
+    {
+        return $this->dateProchaineMaintenance;
+    }
+
+    public function setDateProchaineMaintenance(?\DateTimeInterface $dateProchaineMaintenance): self
+    {
+        $this->dateProchaineMaintenance = $dateProchaineMaintenance;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(?string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getEtat(): ?string
+    {
+        return $this->etat;
+    }
+
+    public function setEtat(?string $etat): self
+    {
+        $this->etat = $etat;
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Maintenance>
+     */
+    public function getMaintenances(): Collection
+    {
+        return $this->maintenances;
+    }
+
+    public function addMaintenance(Maintenance $maintenance): self
+    {
+        if (!$this->maintenances->contains($maintenance)) {
+            $this->maintenances->add($maintenance);
+            $maintenance->setMateriel($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMaintenance(Maintenance $maintenance): self
+    {
+        if ($this->maintenances->removeElement($maintenance)) {
+            // set the owning side to null (unless already changed)
+            if ($maintenance->getMateriel() === $this) {
+                $maintenance->setMateriel(null);
+            }
+        }
+
+        return $this;
+    }
+}

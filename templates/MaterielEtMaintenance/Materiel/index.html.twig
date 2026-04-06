@@ -1,0 +1,348 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes Matériels Agricoles{% endblock %}
+
+{% block body_class %}materiel-theme{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<style>
+  body {
+    background: url('{{ asset("assets/img/materiel.jpg") }}') center/cover fixed no-repeat !important;
+  }
+  .page-hero {
+    background: linear-gradient(to right, rgba(45, 74, 30, 0.85), rgba(45, 74, 30, 0.5)), url('{{ asset("assets/img/materiel.jpg") }}') center/cover no-repeat;
+    color: #fff;
+    padding: 1.2rem 1.8rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.5rem;
+  }
+  .page-hero h1 { font-size: 1.7rem; font-weight: 700; margin-bottom: 0.3rem; color: #fff; }
+  .page-hero p { color: rgba(255,255,255,0.9); margin: 0; font-size: 0.95rem; }
+
+  .stats-cards { display: flex; gap: 1.2rem; flex-wrap: wrap; margin: 1.5rem 0; }
+  .stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.2rem 1.8rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    min-width: 150px;
+    text-align: center;
+    border-top: 4px solid #375331;
+  }
+  .stat-card.danger { border-top-color: #e74c3c; }
+  .stat-card.warning { border-top-color: #f39c12; }
+  .stat-number { font-size: 2rem; font-weight: 800; color: #375331; }
+  .stat-card.danger .stat-number { color: #e74c3c; }
+  .stat-card.warning .stat-number { color: #f39c12; }
+  .stat-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: 600; }
+
+  .filter-bar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 1.6rem 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    margin-bottom: 2.5rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+  }
+  .filter-bar .form-control, .filter-bar .form-select {
+    border-radius: 10px;
+    border: 1.5px solid #e0e0e0;
+    font-size: 0.95rem;
+    padding: 0.7rem 1.2rem;
+  }
+  .filter-bar .form-control:focus, .filter-bar .form-select:focus {
+    border-color: #375331;
+    box-shadow: 0 0 0 4px rgba(74,124,63,0.12);
+  }
+  .btn-search {
+    background: #375331;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.8rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+  }
+  .btn-search:hover { background: #3a6030; color: #fff; }
+  .btn-reset {
+    background: #f8f9fa;
+    color: #666;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0.7rem 1.4rem;
+    font-size: 0.95rem;
+  }
+
+  .materiel-table {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .materiel-table thead {
+    background: #375331;
+    color: #fff;
+  }
+  .materiel-table thead th { padding: 0.9rem 1rem; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; border: none; }
+  .materiel-table tbody tr { transition: background 0.15s; }
+  .materiel-table tbody tr:hover { background: rgba(74,124,63,0.05); }
+  .materiel-table td { padding: 0.85rem 1rem; vertical-align: middle; font-size: 0.9rem; border-color: #f0f0f0; }
+
+  .badge-etat {
+    padding: 0.35rem 0.9rem;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .badge-neuf { background: #e8f5e9; color: #2e7d32; }
+  .badge-bon { background: #e3f2fd; color: #1565c0; }
+  .badge-moyen { background: #fff8e1; color: #e65100; }
+  .badge-panne { background: #ffebee; color: #c62828; }
+  .badge-maintenance { background: #f3e5f5; color: #6a1b9a; }
+
+  .maintenance-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.83rem;
+    font-weight: 600;
+  }
+  .status-ok { color: #2e7d32; }
+  .status-bientot { color: #e65100; }
+  .status-retard { color: #c62828; }
+  .status-non-planifie { color: #888; }
+
+  .action-btns { display: flex; gap: 0.4rem; }
+  .btn-action {
+    padding: 0.35rem 0.7rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    border: none;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .btn-action:hover { opacity: 0.85; }
+  .btn-voir { background: #e3f2fd; color: #1565c0; }
+  .btn-edit { background: #fff8e1; color: #e65100; }
+  .btn-del { background: #ffebee; color: #c62828; }
+
+  .page-actions {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    justify-content: flex-end;
+  }
+  .btn-add { background: #4a7c3f; color: #fff; border-radius: 10px; padding: 0.6rem 1.4rem; font-weight: 600; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-add:hover { background: #3a6030; color: #fff; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="materiel-page-wrapper">
+<div class="container">
+<!-- Page Hero -->
+<div class="page-hero mt-3" data-aos="fade-down">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3">
+      <div>
+        <h1><i class="bi bi-tractor me-2"></i>Mes Matériels Agricoles</h1>
+        <p>Gérez vos équipements et suivez leur état de maintenance</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ path('app_materiel_et_maintenance') }}" class="btn btn-outline-light btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+        <a href="{{ path('app_maintenance_index') }}" class="btn btn-light btn-sm rounded-pill" style="color:#4a7c3f;font-weight:600;">
+          <i class="bi bi-wrench me-1"></i> Maintenances
+        </a>
+      </div>
+    </div>
+    
+    <div class="row pt-2 pb-1">
+      <div class="col-6 col-md-3 ps-md-0">
+        <div style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 1rem; text-align: center; backdrop-filter: blur(10px);">
+          <div style="font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1;">{{ stats.total }}</div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; color: rgba(255,255,255,0.9); margin-top: 6px;">Total Équipements</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div style="background: rgba(231, 76, 60, 0.25); border: 1px solid rgba(231, 76, 60, 0.4); border-radius: 12px; padding: 1rem; text-align: center; backdrop-filter: blur(10px);">
+          <div style="font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1;">{{ stats.en_panne }}</div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; color: rgba(255,255,255,0.9); margin-top: 6px;">En Panne</div>
+        </div>
+      </div>
+    </div>
+</div>
+</div>
+
+<div class="container pb-4">
+
+  <!-- Filters -->
+  <form id="filter-form" method="GET" action="{{ path('app_materiel_index') }}" class="filter-bar">
+    <div>
+      <label class="form-label fw-semibold small mb-1">Rechercher</label>
+      <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Nom du matériel..." style="min-width:200px;" id="filter-search">
+    </div>
+    <div>
+      <label class="form-label fw-semibold small mb-1">Type</label>
+      <select name="type" class="form-select" style="min-width:160px;">
+        <option value="">Tous les types</option>
+        {% for t in types %}
+          <option value="{{ t }}" {% if type == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label fw-semibold small mb-1">État</label>
+      <select name="etat" class="form-select" style="min-width:160px;">
+        <option value="">Tous les états</option>
+        {% for e in etats %}
+          <option value="{{ e }}" {% if etat == e %}selected{% endif %}>{{ e }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="d-flex gap-2 align-items-end">
+      <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Rechercher</button>
+      <a href="{{ path('app_materiel_index') }}" class="btn-reset btn">Réinitialiser</a>
+    </div>
+    <div class="ms-auto d-flex align-items-end">
+      <span class="badge bg-secondary rounded-pill" id="materiel-count">{{ materiels|length }} matériel(s)</span>
+    </div>
+  </form>
+
+  <!-- Actions -->
+  <div class="page-actions">
+    <a href="{{ path('app_materiel_new') }}" class="btn-add">
+      <i class="bi bi-plus-lg"></i> Ajouter un matériel
+    </a>
+  </div>
+
+  <!-- Grid -->
+  <div class="mat-grid" id="materiel-table-container">
+    {% for m in materiels %}
+    <div class="mat-card">
+      <div class="mat-card-img" style="height: 220px; background-size: cover; background-position: center; position: relative;
+           {% if m.image %}background-image: url('{{ asset('uploads/materiel/' ~ m.image) }}');{% else %}background-color: #e9f2e9;{% endif %}">
+         {% if not m.image %}
+             <i class="bi bi-tractor"></i>
+         {% endif %}
+         
+         {% set etatClass = {'Neuf':'success','Bon':'info','Moyen':'warning','En panne':'danger','En maintenance':'primary'} %}
+         <span class="mat-badge bg-{{ etatClass[m.etat] ?? 'secondary' }} text-white" style="position: absolute; top: 15px; right: 15px;">
+           {{ m.etat }}
+         </span>
+      </div>
+      
+      <div class="mat-card-body">
+         <h3 class="mat-card-title">{{ m.nom }}</h3>
+         <p class="mat-card-subtitle mb-3 text-muted">
+           <span class="badge bg-light text-dark border">{{ m.type }}</span>
+           &nbsp;•&nbsp; 
+           Achat: {{ m.dateAchat ? m.dateAchat|date('d/m/Y') : '—' }}
+         </p>
+         
+         <ul class="mat-details-list">
+             <li>
+               <i class="bi bi-calendar-check" style="color: var(--mat-primary);"></i>
+               Maintenance : 
+                {% if m.dateProchaineMaintenance %}
+                   {% set daysLeft = ((m.dateProchaineMaintenance.timestamp - 'now'|date('U')) / 86400)|round(0, 'floor') %}
+                   {% if daysLeft < 0 %}
+                     <strong class="text-danger ms-1">En retard ({{ daysLeft|abs }} j)</strong>
+                   {% elseif daysLeft <= 7 %}
+                     <strong class="text-warning ms-1">Bientôt ({{ daysLeft }} j)</strong>
+                   {% else %}
+                     <strong class="text-success ms-1">À jour</strong>
+                   {% endif %}
+                {% else %}
+                   <span class="text-muted ms-1">Non planifiée</span>
+                {% endif %}
+             </li>
+         </ul>
+         
+         <div class="mat-card-footer mt-4 d-flex align-items-center gap-2">
+             <a href="{{ path('app_materiel_show', {id: m.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 50px; padding: 10px 0;" title="Voir"><i class="bi bi-eye fs-5"></i></a>
+             <a href="{{ path('app_materiel_edit', {id: m.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 50px; padding: 10px 0;" title="Modifier"><i class="bi bi-pencil fs-5"></i></a>
+             <form method="POST" action="{{ path('app_materiel_delete', {id: m.id}) }}" style="display:flex; flex:1;"
+                   onsubmit="return confirm('Confirmer la suppression de cet équipement ?')">
+               <input type="hidden" name="_token" value="{{ csrf_token('delete_materiel_' ~ m.id) }}">
+               <button type="submit" class="btn-mat-action w-100 d-flex align-items-center justify-content-center gap-2 text-danger" style="border-color: #ffcccc; background: #fff5f5;" title="Supprimer">
+                   <i class="bi bi-trash"></i> Supprimer
+               </button>
+             </form>
+         </div>
+      </div>
+    </div>
+    {% else %}
+      <div class="col-12 py-5 w-100" style="grid-column: 1 / -1; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;">
+        <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
+        <h4 class="text-dark">Votre Flotte est vide</h4>
+        <p class="text-muted">Aucun équipement ne correspond à vos critères.</p>
+        <a href="{{ path('app_materiel_new') }}" class="btn-mat-primary mt-3">Ajouter votre premier équipement</a>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('filter-form');
+        const inputs = form.querySelectorAll('input, select');
+        const searchInput = document.getElementById('filter-search');
+        
+        // Placer le curseur à la fin si recherche
+        if (searchInput && searchInput.value) {
+            const val = searchInput.value;
+            searchInput.focus();
+            searchInput.setSelectionRange(val.length, val.length);
+        }
+
+        let debounceTimeout;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    const url = new URL(form.action, window.location.origin);
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams(formData);
+                    url.search = params.toString();
+
+                    window.history.pushState({}, '', url);
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            
+                            const newTable = doc.getElementById('materiel-table-container');
+                            const newCount = doc.getElementById('materiel-count');
+                            
+                            if (newTable) {
+                                document.getElementById('materiel-table-container').innerHTML = newTable.innerHTML;
+                            }
+                            if (newCount) {
+                                document.getElementById('materiel-count').innerText = newCount.innerText;
+                            }
+                        })
+                        .catch(error => console.error("Filter error: ", error));
+                }, 400); // 400ms debounce
+            });
+        });
+    });
+</script>
+{% endblock %}

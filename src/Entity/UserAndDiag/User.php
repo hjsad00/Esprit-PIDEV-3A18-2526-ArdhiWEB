@@ -327,6 +327,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this;
     }
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $googleAccessToken = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $googleRefreshToken = null;
+
+    public function getGoogleAccessToken(): ?string
+    {
+        return $this->googleAccessToken;
+    }
+
+    public function setGoogleAccessToken(?string $googleAccessToken): static
+    {
+        $this->googleAccessToken = $googleAccessToken;
+        return $this;
+    }
+
+    public function getGoogleRefreshToken(): ?string
+    {
+        return $this->googleRefreshToken;
+    }
+
+    public function setGoogleRefreshToken(?string $googleRefreshToken): static
+    {
+        $this->googleRefreshToken = $googleRefreshToken;
+        return $this;
+    }
+
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here

@@ -1,0 +1,418 @@
+/* ================================================================
+   ARDHI - MATÉRIEL & MAINTENANCE — PREMIUM WEB DESIGN
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
+:root {
+    --mat-primary:       #2d4e2f;
+    --mat-primary-light: #3d6b40;
+    --mat-accent:        #4a8a3e;
+    --mat-accent-glow:   rgba(74, 138, 62, 0.25);
+    --mat-danger:        #e53e3e;
+    --mat-warning:       #f6ad55;
+    --mat-success:       #38a169;
+    --mat-info:          #3182ce;
+
+    --mat-glass:         rgba(255, 255, 255, 0.92);
+    --mat-glass-border:  rgba(255, 255, 255, 0.35);
+    --mat-shadow-sm:     0 2px 8px rgba(0, 0, 0, 0.06);
+    --mat-shadow:        0 8px 32px rgba(0, 0, 0, 0.10);
+    --mat-shadow-lg:     0 20px 60px rgba(0, 0, 0, 0.14);
+    --mat-shadow-hover:  0 24px 64px rgba(45, 78, 47, 0.18);
+
+    --mat-border:        #d4e6ce;
+    --mat-bg:            #f4f6f4;
+    --mat-surface:       #ffffff;
+    --mat-title:         #1a3320;
+    --mat-text:          #374151;
+    --mat-muted:         #6b7280;
+    --mat-panne:         #c95a0f;
+
+    --radius-sm:    8px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+    --radius-xl:    28px;
+    --radius-pill:  999px;
+
+    --transition-fast:   0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition:        0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ================================================================
+   BASE
+   ================================================================ */
+body.materiel-theme {
+    background-color: var(--mat-bg);
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Fix navbar overlap */
+.materiel-page-wrapper {
+    padding-top: 110px;
+    padding-bottom: 60px;
+}
+
+/* Glassmorphism Stats Header */
+.mat-stats-header {
+    background: linear-gradient(135deg, var(--mat-primary) 0%, var(--mat-accent) 100%);
+    border-radius: 20px;
+    padding: 10px 30px;
+    margin-bottom: 25px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(74, 140, 63, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.mat-stats-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 60%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.05);
+    transform: rotate(25deg);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mat-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.mat-stat-box {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.mat-stat-box:hover {
+    transform: translateY(-5px);
+}
+
+.mat-stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.mat-stat-label {
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+/* Action Bar */
+.mat-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: var(--mat-shadow);
+    margin-bottom: 25px;
+}
+
+/* Buttons */
+.btn-mat-primary {
+    background: var(--mat-primary);
+    color: white !important;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(45, 90, 39, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+}
+
+.btn-mat-primary:hover {
+    background: var(--mat-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 90, 39, 0.4);
+}
+
+/* Filtering Form */
+.mat-filters form {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.mat-input {
+    border: 1px solid var(--mat-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: inherit;
+    background: #f8fcf8;
+    transition: all 0.3s ease;
+}
+
+.mat-input:focus {
+    border-color: var(--mat-accent);
+    box-shadow: 0 0 0 3px rgba(74, 140, 63, 0.1);
+    outline: none;
+}
+
+/* Cards Grid */
+.mat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 30px;
+}
+
+.mat-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 4px solid #ffffff;
+}
+
+.mat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    border-color: #ffffff;
+}
+
+.mat-card-img {
+    height: 220px;
+    background: #e9f2e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    color: var(--mat-accent);
+    position: relative;
+}
+
+.mat-card-body {
+    padding: 24px;
+}
+
+.mat-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.badge-success { background: #10ac84; color: white; }
+.badge-warning { background: #feca57; color: #333; }
+.badge-danger { background: var(--mat-panne); color: white; }
+
+.mat-card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--mat-title);
+}
+
+.mat-card-subtitle {
+    color: var(--mat-text);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.mat-details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.mat-details-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
+    color: #4a4a4a;
+    font-size: 0.95rem;
+}
+
+.mat-details-list li:last-child {
+    border-bottom: none;
+}
+
+.mat-details-list i {
+    color: var(--mat-accent);
+    font-size: 1.1rem;
+}
+
+.mat-card-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-mat-outline {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border: 1.5px solid var(--mat-border);
+    border-radius: 12px;
+    color: #2d3436;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-mat-outline:hover {
+    background: var(--mat-bg);
+    border-color: var(--mat-primary);
+    color: var(--mat-primary);
+}
+
+.btn-mat-action {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    background: var(--mat-bg);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    color: var(--mat-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-mat-action:hover {
+    background: var(--mat-primary);
+    color: white;
+}
+
+/* ================================================================
+   TRANSPARENT NAVBAR (MARKETPLACE / MATERIEL PAGE)
+   ================================================================ */
+.materiel-theme .header {
+    background: #ffffff !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 12px 0;
+    transition: all 0.4s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.materiel-theme .header .navmenu ul>li>a {
+    color: #333333 !important;
+    text-shadow: none;
+    font-weight: 500;
+}
+
+.materiel-theme .header .navmenu ul>li>a:hover,
+.materiel-theme .header .navmenu ul>li>a.active {
+    background: rgba(19, 78, 59, 0.08); /* fond accent avec vert émeraude */
+    color: var(--mat-primary) !important;
+    text-shadow: none;
+    border-radius: 8px;
+}
+
+/* Scrolled state */
+.scrolled.materiel-theme .header,
+.materiel-theme.scrolled .header {
+    background: #ffffff !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+/* ================================================================
+   TIMELINE COMPONENT
+   ================================================================ */
+.maintenance-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    width: 80px;
+}
+
+.timeline-step .step-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 0 5px white;
+    color: #a0a0a0;
+}
+
+.timeline-step.active .step-icon {
+    background: var(--mat-primary);
+    box-shadow: 0 0 0 5px rgba(19, 78, 59, 0.15);
+}
+
+.timeline-step .step-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.timeline-step.active .step-label {
+    color: var(--mat-primary);
+}
+
+.timeline-line {
+    flex-grow: 1;
+    height: 6px;
+    background: #e0e0e0;
+    margin: 0 -15px; /* Pull it slightly under the icons */
+    margin-bottom: 30px; /* Align with center of the icon roughly */
+    z-index: 1;
+    position: relative;
+    transition: background 0.4s ease;
+    border-radius: 10px;
+}
+
+.timeline-line.active {
+    background: var(--mat-primary);
+}
