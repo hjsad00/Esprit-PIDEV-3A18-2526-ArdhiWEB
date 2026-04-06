@@ -36,6 +36,26 @@
       .mp-flash-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
       .mp-flash-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
       .mp-flash-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+      
+      /* Styles pour les sélecteurs de filtres */
+      .mp-filter-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e0e6e0;
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        color: #2d3436;
+        background: #f8faf7;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .mp-filter-group select:focus {
+        border-color: #4a8c3f;
+        box-shadow: 0 0 0 3px rgba(74, 140, 63, 0.1);
+        background: #fff;
+      }
     </style>
 {% endblock %}
 
@@ -170,7 +190,12 @@
           </div>
           <div class="mp-filter-group">
             <label>CATÉGORIE</label>
-            <input type="text" id="filter-cat" placeholder="Catégorie..." oninput="filterTable()">
+            <select id="filter-cat" onchange="filterTable()">
+              <option value="">Toutes les catégories</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
           </div>
         </div>
       </div>
@@ -615,11 +640,35 @@ function addNewCategory() {
   const input = document.getElementById('new-categorie');
   const val = input.value.trim();
   if (!val) return;
-  const select = document.getElementById('form-categorie');
-  for (let opt of select.options) {
-    if (opt.value.toLowerCase() === val.toLowerCase()) { select.value = opt.value; input.value = ''; return; }
+  const selectForm = document.getElementById('form-categorie');
+  const selectFilter = document.getElementById('filter-cat');
+  
+  // Vérifier si elle existe déjà dans le formulaire
+  let exists = false;
+  for (let opt of selectForm.options) {
+    if (opt.value.toLowerCase() === val.toLowerCase()) { 
+      selectForm.value = opt.value; 
+      exists = true;
+      break;
+    }
   }
-  select.add(new Option(val, val, true, true));
+  
+  if (!exists) {
+    // Ajouter au formulaire
+    selectForm.add(new Option(val, val, true, true));
+    // Ajouter au filtre si pas déjà présent
+    let filterExists = false;
+    for (let opt of selectFilter.options) {
+      if (opt.value.toLowerCase() === val.toLowerCase()) {
+        filterExists = true;
+        break;
+      }
+    }
+    if (!filterExists) {
+      selectFilter.add(new Option(val, val));
+    }
+  }
+  
   input.value = '';
 }
 

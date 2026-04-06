@@ -95,17 +95,35 @@ public function ajouterAuPanier(
         $panier = $panierRepository->getOrCreatePanier($user);
         $produit = $produitsRepository->find($id);
 
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest' || $request->headers->get('Accept') === 'application/json';
+
         if (!$produit) {
+            if ($isAjax) return $this->json(['success' => false, 'message' => 'Produit introuvable.'], 404);
             return $this->redirectToRoute('app_marketplace_panier');
         }
 
         $quantite = (int) $request->request->get('quantite');
         if ($quantite > $produit->getQuantiteStock()) {
+            if ($isAjax) return $this->json(['success' => false, 'message' => 'Stock insuffisant pour ce produit.'], 400);
             $this->addFlash('warning', 'Stock insuffisant pour ce produit.');
             return $this->redirectToRoute('app_marketplace_panier');
         }
 
         $ppRepository->modifierQuantite($panier, $produit, $quantite);
+
+        // Recharger pour recalculer les totaux
+        $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+        $ligne = $ppRepository->findOneBy(['panier' => $panierFrais, 'produit' => $produit]);
+
+        if ($isAjax) {
+            return $this->json([
+                'success'       => true,
+                'message'       => 'Quantité mise à jour.',
+                'rowSubTotal'   => $ligne ? number_format($ligne->getSousTotal(), 2, '.', ' ') : '0.00',
+                'cartCount'     => $panierFrais->getTotalProduits(),
+                'cartTotal'     => number_format($panierFrais->getTotalMontant(), 2, '.', ' ')
+            ]);
+        }
 
         $this->addFlash('success', 'Panier mis à jour.');
         return $this->redirectToRoute('app_marketplace_panier');
@@ -114,6 +132,7 @@ public function ajouterAuPanier(
     #[Route('/marketplace/panier/delete/{id}', name: 'app_marketplace_panier_delete', methods: ['POST'])]
     public function supprimerLigne(
         int $id,
+        Request $request,
         PanierRepository $panierRepository,
         PanierProduitRepository $ppRepository,
         ProduitsRepository $produitsRepository
@@ -123,22 +142,48 @@ public function ajouterAuPanier(
         $user = $this->getUser();
         $panier = $panierRepository->getOrCreatePanier($user);
         $produit = $produitsRepository->find($id);
+        
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
 
         if ($produit) {
             $ppRepository->supprimerLigne($panier, $produit);
+            
+            if ($isAjax) {
+                // Recharger
+                $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+                return $this->json([
+                    'success'   => true,
+                    'message'   => 'Produit retiré.',
+                    'cartCount' => $panierFrais->getTotalProduits(),
+                    'cartTotal' => number_format($panierFrais->getTotalMontant(), 2, '.', ' ')
+                ]);
+            }
+            
             $this->addFlash('success', 'Produit retiré du panier.');
+        } else if ($isAjax) {
+           return $this->json(['success' => false, 'message' => 'Produit introuvable.'], 404);
         }
 
         return $this->redirectToRoute('app_marketplace_panier');
     }
 
     #[Route('/marketplace/panier/clear', name: 'app_marketplace_panier_clear', methods: ['POST'])]
-    public function viderPanier(PanierRepository $panierRepository): Response
+    public function viderPanier(Request $request, PanierRepository $panierRepository): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
         $panierRepository->viderPanierUser($user);
+
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax) {
+            return $this->json([
+                'success'   => true,
+                'message'   => 'Le panier a été vidé.',
+                'cartCount' => 0,
+                'cartTotal' => '0.00'
+            ]);
+        }
 
         $this->addFlash('success', 'Le panier a été vidé.');
         return $this->redirectToRoute('app_marketplace_panier');

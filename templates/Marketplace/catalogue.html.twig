@@ -550,8 +550,8 @@ function initCartListeners() {
                 const data = await response.json();
                 if (data.success) {
                     document.querySelectorAll('.cart-badge').forEach(el => el.textContent = data.cartCount);
-                    document.querySelectorAll('.cart-info span').forEach(el => el.textContent = data.cartCount + ' article(s)');
-                    document.querySelectorAll('.cart-info strong').forEach(el => el.textContent = data.cartTotal + ' DT');
+                    document.querySelectorAll('a.cart-indicator .cart-info span').forEach(el => el.textContent = data.cartCount + ' article(s)');
+                    document.querySelectorAll('a.cart-indicator .cart-info strong').forEach(el => el.textContent = data.cartTotal + ' DT');
                     showToast(data.message);
                     const cartIcon = document.querySelector('.cart-icon-wrapper');
                     if (cartIcon) {
