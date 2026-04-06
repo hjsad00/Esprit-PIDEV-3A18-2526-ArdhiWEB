@@ -129,69 +129,37 @@
               </div>
 
               {# ── Plage de Prix ── #}
-              <div class="sidebar-group">
-                <label class="sidebar-label">
-                  <i class="bi bi-currency-dollar"></i> Prix (TND)
-                </label>
-                <div class="sidebar-range-inputs">
-                  <div class="range-input-field">
-                    <span class="range-input-label">Min</span>
-                    <input
-                      type="number"
-                      name="prix_min"
-                      class="sidebar-input"
-                      placeholder="{{ priceRange.pMin|default(0)|number_format(0) }}"
-                      value="{{ filters.prix_min }}"
-                      min="0"
-                      step="0.01"
-                    >
+              <div class="sidebar-group range-container">
+                  <div class="range-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                      <label class="sidebar-label mb-0"><i class="bi bi-currency-dollar"></i> Prix (TND)</label>
                   </div>
-                  <div class="range-separator"><i class="bi bi-dash"></i></div>
-                  <div class="range-input-field">
-                    <span class="range-input-label">Max</span>
-                    <input
-                      type="number"
-                      name="prix_max"
-                      class="sidebar-input"
-                      placeholder="{{ priceRange.pMax|default(9999)|number_format(0) }}"
-                      value="{{ filters.prix_max }}"
-                      min="0"
-                      step="0.01"
-                    >
+                  <div style="display:flex; flex-direction:column; gap:12px;">
+                      <div>
+                          <small class="text-muted" style="font-size:0.7rem;">Min: <span id="v-min-p">{{ filters.prix_min ?: 0 }}</span> DT</small>
+                          <input type="range" name="prix_min" id="filter-prix-min" class="custom-range-slider" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="if(parseFloat(this.value) > parseFloat(document.getElementById('filter-prix-max').value)){this.value = document.getElementById('filter-prix-max').value;} document.getElementById('v-min-p').innerText = this.value;">
+                      </div>
+                      <div>
+                          <small class="text-muted" style="font-size:0.7rem;">Max: <span id="v-max-p">{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}</span> DT</small>
+                          <input type="range" name="prix_max" id="filter-prix-max" class="custom-range-slider" value="{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="if(parseFloat(this.value) < parseFloat(document.getElementById('filter-prix-min').value)){this.value = document.getElementById('filter-prix-min').value;} document.getElementById('v-max-p').innerText = this.value;">
+                      </div>
                   </div>
-                </div>
               </div>
 
               {# ── Plage de Stock ── #}
-              <div class="sidebar-group">
-                <label class="sidebar-label">
-                  <i class="bi bi-boxes"></i> Stock (Qté)
-                </label>
-                <div class="sidebar-range-inputs">
-                  <div class="range-input-field">
-                    <span class="range-input-label">Min</span>
-                    <input
-                      type="number"
-                      name="stock_min"
-                      class="sidebar-input"
-                      placeholder="0"
-                      value="{{ filters.stock_min }}"
-                      min="0"
-                    >
+              <div class="sidebar-group range-container">
+                  <div class="range-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                      <label class="sidebar-label mb-0"><i class="bi bi-boxes"></i> Stock (Qté)</label>
                   </div>
-                  <div class="range-separator"><i class="bi bi-dash"></i></div>
-                  <div class="range-input-field">
-                    <span class="range-input-label">Max</span>
-                    <input
-                      type="number"
-                      name="stock_max"
-                      class="sidebar-input"
-                      placeholder="∞"
-                      value="{{ filters.stock_max }}"
-                      min="0"
-                    >
+                  <div style="display:flex; flex-direction:column; gap:12px;">
+                      <div>
+                          <small class="text-muted" style="font-size:0.7rem;">Mini: <span id="v-min-s">{{ filters.stock_min ?: 0 }}</span></small>
+                          <input type="range" name="stock_min" id="filter-stock-min" class="custom-range-slider" value="{{ filters.stock_min ?: 0 }}" min="0" max="10000" step="1" oninput="if(parseInt(this.value) > parseInt(document.getElementById('filter-stock-max').value)){this.value = document.getElementById('filter-stock-max').value;} document.getElementById('v-min-s').innerText = this.value;">
+                      </div>
+                      <div>
+                          <small class="text-muted" style="font-size:0.7rem;">Maxi: <span id="v-max-s">{{ filters.stock_max ?: 10000 }}</span></small>
+                          <input type="range" name="stock_max" id="filter-stock-max" class="custom-range-slider" value="{{ filters.stock_max ?: 10000 }}" min="0" max="10000" step="1" oninput="if(parseInt(this.value) < parseInt(document.getElementById('filter-stock-min').value)){this.value = document.getElementById('filter-stock-min').value;} document.getElementById('v-max-s').innerText = this.value;">
+                      </div>
                   </div>
-                </div>
               </div>
 
               {# ── En Solde ── #}
@@ -521,7 +489,7 @@ if (filterForm) {
     filterForm.querySelectorAll('input, select').forEach(element => {
         if (element.id === 'filter-en-solde') return;
         
-        if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'number')) {
+        if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'number' || element.type === 'range')) {
             element.addEventListener('input', () => {
                 clearTimeout(timeout);
                 timeout = setTimeout(applyFiltersAjax, 600);
@@ -640,6 +608,12 @@ async function toggleWishlist(productId, btn) {
 
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
+.range-container { background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; padding: 12px; }
+input[type=range].custom-range-slider { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+input[type=range].custom-range-slider:focus { outline: none; }
+input[type=range].custom-range-slider::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 10px; }
+input[type=range].custom-range-slider::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #116530; cursor: pointer; -webkit-appearance: none; margin-top: -6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: scale(1.1); }
 </style>
 {% endblock %}
 {% endblock %}
