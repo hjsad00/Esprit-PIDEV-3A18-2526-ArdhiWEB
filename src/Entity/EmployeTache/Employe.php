@@ -9,12 +9,13 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: EmployeRepository::class)]
 #[ORM\Table(name: 'employe')]
-#[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')]
+#[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')] // controle saisie de mail
 class Employe
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_employe')]
+    #[ORM\GeneratedValue]// (AUTO_INCREMENT)
+
+    #[ORM\Column(name: 'id_employe')] // nom exacte dans la base
     private ?int $id = null;
 
     #[ORM\Column(name: 'nom', length: 100)]
@@ -23,7 +24,7 @@ class Employe
     private ?string $nom = null;
 
     #[ORM\Column(name: 'prenom', length: 100)]
-    #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
+    #[Assert\NotBlank(message: 'Le prénom est obligatoire.')] //vérifiées avant d'enregistrer 
     #[Assert\Length(max: 100)]
     private ?string $prenom = null;
 
@@ -38,8 +39,8 @@ class Employe
     #[ORM\Column(name: 'telephone', length: 20, nullable: true)]
     private ?string $telephone = null;
 
-    #[ORM\Column(name: 'actif', options: ['default' => true])]
-    private bool $actif = true;
+    #[ORM\Column(name: 'actif', options: ['default' => true])] //au niveau bdd
+    private bool $actif = true; //au niveau PHP
 
     // Clé étrangère vers l'agriculteur (pas de relation ORM — géré par UserAndDiag)
     #[ORM\Column(name: 'id_agriculteur', nullable: true)]
