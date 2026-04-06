@@ -36,7 +36,7 @@ class CommunityController extends AbstractController
         $posts = $keyword
             ? $postRepo->searchByKeyword($keyword)
             : $postRepo->findAllOrderedByDate();
-
+        
         $feedData = [];
         foreach ($posts as $post) {
             $commentCount = $commentRepo->countByPost($post);

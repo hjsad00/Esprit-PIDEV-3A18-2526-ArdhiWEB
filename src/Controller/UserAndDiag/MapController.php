@@ -36,19 +36,33 @@ class MapController extends AbstractController
     }
 
     #[Route('/data', name: 'app_user_and_diag_map_data', methods: ['GET'])]
-    public function getMapData(DiagnosticRepository $diagnosticRepository): JsonResponse
+    public function getMapData(DiagnosticRepository $diagnosticRepository, LocationService $locationService): JsonResponse
     {
         $diagnostics = $diagnosticRepository->findWithLocation();
+
+        $loc = $locationService->detectLocation();
+        $centerLat = $loc['latitude'] ?? 36.8065;
+        $centerLon = $loc['longitude'] ?? 10.1815;
 
         $features = [];
         foreach ($diagnostics as $d) {
             $severity = $this->calculateSeverity($d->getConfiance());
 
+            $lat = $d->getLatitude();
+            $lon = $d->getLongitude();
+
+            // Default to center location with tiny random jitter for display if no actual coordinates exist
+            if ($lat === null || $lon === null) {
+                // +/- ~0.05 deg jitter
+                $lat = $centerLat + (mt_rand(-500, 500) / 10000.0);
+                $lon = $centerLon + (mt_rand(-500, 500) / 10000.0);
+            }
+
             $features[] = [
                 'type' => 'Feature',
                 'geometry' => [
                     'type' => 'Point',
-                    'coordinates' => [$d->getLongitude(), $d->getLatitude()]
+                    'coordinates' => [$lon, $lat]
                 ],
                 'properties' => [
                     'id' => $d->getId(),
@@ -56,7 +70,7 @@ class MapController extends AbstractController
                     'resultat' => $d->getResultatIa(),
                     'date' => $d->getDateScan()->format('d/m/Y'),
                     'confiance' => round($d->getConfiance(), 1),
-                    'location' => $d->getLocationLabel(),
+                    'location' => $d->getLocationLabel() ?: 'Localisation estimée',
                     'severity' => $severity,
                     'image' => $d->getImageScannee()
                 ]

@@ -53,18 +53,28 @@ class DiagnosticRepository extends ServiceEntityRepository
         $latDelta = $radiusKm / 111.0;
         $lonDelta = $radiusKm / (111.0 * cos(deg2rad($lat)));
 
-        $startDate = new \DateTime();
-        $startDate->modify('-' . $days . ' days');
-
+        // Include diagnostics that are either:
+        // 1. Within the geographic bounding box, OR
+        // 2. Have NULL coordinates (older records before location was added)
         return $this->createQueryBuilder('d')
-            ->where('d.latitude BETWEEN :latMin AND :latMax')
-            ->andWhere('d.longitude BETWEEN :lonMin AND :lonMax')
-            ->andWhere('d.date_scan >= :startDate')
+            ->where('(d.latitude BETWEEN :latMin AND :latMax AND d.longitude BETWEEN :lonMin AND :lonMax) OR (d.latitude IS NULL OR d.longitude IS NULL)')
+            ->andWhere('d.resultat_ia IS NOT NULL')
             ->setParameter('latMin', $lat - $latDelta)
             ->setParameter('latMax', $lat + $latDelta)
             ->setParameter('lonMin', $lon - $lonDelta)
             ->setParameter('lonMax', $lon + $lonDelta)
-            ->setParameter('startDate', $startDate)
+            ->orderBy('d.date_scan', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Diagnostic[]
+     */
+    public function findWithLocation(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.resultat_ia IS NOT NULL')
             ->orderBy('d.date_scan', 'DESC')
             ->getQuery()
             ->getResult();

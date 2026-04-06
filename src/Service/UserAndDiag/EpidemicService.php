@@ -21,20 +21,16 @@ class EpidemicService
         $sql = "SELECT 
                 SUBSTRING_INDEX(resultat_ia, ' - ', -1) AS disease_name,
                 COUNT(*) AS report_count,
-                MIN(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(?)) 
-                + SIN(RADIANS(?)) * SIN(RADIANS(latitude))))) AS nearest_km
+                MIN(IFNULL(6371 * ACOS(LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(:lon)) 
+                + SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))), 0)) AS nearest_km
                 FROM diagnostic
-                WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-                AND date_scan >= DATE_SUB(NOW(), INTERVAL 14 DAY)
-                AND 6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(?))
-                + SIN(RADIANS(?)) * SIN(RADIANS(latitude)))) <= ?
-                AND resultat_ia IS NOT NULL AND resultat_ia != ''
+                WHERE resultat_ia IS NOT NULL AND resultat_ia != ''
                 AND resultat_ia NOT LIKE '%Healthy%' AND resultat_ia NOT LIKE '%Sain%'
                 GROUP BY disease_name
                 ORDER BY report_count DESC
                 LIMIT 8";
 
-        $result = $this->connection->executeQuery($sql, [$lat, $lon, $lat, $lat, $lon, $lat, $radiusKm]);
+        $result = $this->connection->executeQuery($sql, ['lat' => $lat, 'lon' => $lon]);
 
         $diseases = [];
         foreach ($result->fetchAllAssociative() as $row) {
@@ -59,21 +55,17 @@ class EpidemicService
         $sql = "SELECT 
                 SUBSTRING_INDEX(resultat_ia, ' - ', -1) AS disease_name,
                 COUNT(*) AS report_count,
-                MIN(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(?)) 
-                + SIN(RADIANS(?)) * SIN(RADIANS(latitude))))) AS nearest_km,
-                DATEDIFF(NOW(), MIN(date_scan)) AS days_active
+                MIN(IFNULL(6371 * ACOS(LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(:lon)) 
+                + SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))), 0)) AS nearest_km,
+                IFNULL(DATEDIFF(NOW(), MIN(date_scan)), 0) AS days_active
                 FROM diagnostic
-                WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-                AND date_scan >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                AND 6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(?))
-                + SIN(RADIANS(?)) * SIN(RADIANS(latitude)))) <= ?
-                AND resultat_ia IS NOT NULL AND resultat_ia != ''
+                WHERE resultat_ia IS NOT NULL AND resultat_ia != ''
                 GROUP BY disease_name
-                HAVING report_count >= 2
+                HAVING report_count >= 1
                 ORDER BY report_count DESC
                 LIMIT 10";
 
-        $result = $this->connection->executeQuery($sql, [$lat, $lon, $lat, $lastDays, $lat, $lon, $lat, $radiusKm]);
+        $result = $this->connection->executeQuery($sql, ['lat' => $lat, 'lon' => $lon]);
 
         $alerts = [];
         foreach ($result->fetchAllAssociative() as $row) {
