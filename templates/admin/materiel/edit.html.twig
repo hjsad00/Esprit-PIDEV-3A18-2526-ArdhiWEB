@@ -1,0 +1,65 @@
+{% extends 'admin/materiel/admin_materiel_base.html.twig' %}
+
+{% block title %}Modifier un Matériel - Ardhi Admin{% endblock %}
+{% block page_title %}Modifier {{ materiel.nom }}{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <a href="{{ path('admin_materiel_index') }}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+                <h5 class="mb-0 fw-bold">Modification du Matériel #{{ materiel.id }}</h5>
+            </div>
+            <div class="card-body p-4">
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div class="row">
+
+                        {% if materiel.image %}
+                            <div class="col-12 mb-4 text-center">
+                                <img src="{{ asset('uploads/materiel/' ~ materiel.image) }}" alt="{{ materiel.nom }}" class="img-thumbnail shadow-sm" style="max-height: 150px; border-radius: 12px; object-fit: cover;">
+                            </div>
+                        {% endif %}
+
+                        <div class="col-12 mb-4">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <i class="bi bi-person-check-fill text-primary me-2"></i>
+                                {{ form_row(form.userEntity) }}
+                                <div class="form-text mt-1 text-muted small">Vous pouvez changer ici le propriétaire de ce matériel.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            {{ form_row(form.nom) }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ form_row(form.type) }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_row(form.etat) }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form_row(form.dateAchat) }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-group mb-4">
+                                {{ form_label(form.image, "Changer l'image") }}
+                                {{ form_widget(form.image) }}
+                                {{ form_errors(form.image) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save me-2"></i> Enregistrer les Modifications
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

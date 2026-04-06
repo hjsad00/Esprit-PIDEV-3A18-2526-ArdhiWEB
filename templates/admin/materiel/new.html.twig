@@ -1,0 +1,58 @@
+{% extends 'admin/materiel/admin_materiel_base.html.twig' %}
+
+{% block title %}Ajouter un Matériel - Ardhi Admin{% endblock %}
+{% block page_title %}Nouveau Matériel Agricole{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <a href="{{ path('admin_materiel_index') }}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+                <h5 class="mb-0 fw-bold">Détails du Matériel</h5>
+            </div>
+            <div class="card-body p-4">
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="p-3 bg-light rounded-3 border" style="background-color: #f8f9fa;">
+                                <i class="bi bi-person-fill-add text-success me-2"></i>
+                                {{ form_row(form.userEntity) }}
+                                <div class="form-text mt-1 text-muted small">C'est ici que vous assignez cette machine à un agriculteur spécifique.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            {{ form_row(form.nom) }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ form_row(form.type) }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_row(form.etat) }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form_row(form.dateAchat) }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-group mb-4">
+                                {{ form_label(form.image) }}
+                                {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.image) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle me-2"></i> Créer le Matériel
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

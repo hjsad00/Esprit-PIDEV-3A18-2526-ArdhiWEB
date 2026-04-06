@@ -1,34 +1,202 @@
 {% extends 'base.html.twig' %}
-
-{% block title %}Ajouter un matériel{% endblock %}
+{% block title %}{% if materiel.id %}Modifier{% else %}Ajouter{% endif %} un Matériel{% endblock %}
 
 {% block body_class %}materiel-theme{% endblock %}
 
 {% block stylesheets %}
-    <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<style>
+  .form-page-hero {
+    background: linear-gradient(135deg, rgba(45,74,30,0.9) 0%, rgba(74,124,63,0.9) 100%), url('{{ asset("assets/img/materiel.jpg") }}') center/cover;
+    color: #fff;
+    padding: 1.5rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .form-page-hero h1 { font-size: 1.7rem; font-weight: 700; margin-bottom: 0.3rem; }
+
+  .form-card {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(5px);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+    padding: 2.5rem;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+  .form-label { font-weight: 600; color: #333; font-size: 0.9rem; margin-bottom: 0.4rem; }
+  .form-control, .form-select {
+    border-radius: 10px;
+    border: 1.5px solid #e0e0e0;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #4a7c3f;
+    box-shadow: 0 0 0 3px rgba(74,124,63,0.12);
+    outline: none;
+  }
+  .is-invalid { border-color: #e74c3c !important; }
+  .invalid-feedback { color: #e74c3c; font-size: 0.82rem; margin-top: 4px; }
+  .form-hint { color: #888; font-size: 0.8rem; margin-top: 4px; }
+
+  .btn-submit {
+    background: #4a7c3f;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-submit:hover { background: #3a6030; color: #fff; }
+  .btn-cancel {
+    background: #f8f9fa;
+    color: #555;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-cancel:hover { background: #eee; color: #333; }
+
+  .section-divider {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #4a7c3f;
+    font-weight: 700;
+    border-bottom: 2px solid #e8f5e9;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.5rem;
+  }
+  .info-box {
+    background: #e8f5e9;
+    border-left: 4px solid #4a7c3f;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+    color: #2e7d32;
+    margin-bottom: 1.5rem;
+  }
+</style>
 {% endblock %}
 
 {% block body %}
 <div class="materiel-page-wrapper">
-    <div class="container py-4">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-lg" style="border-radius: 20px; border: none; overflow: hidden;">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #2d5a27 0%, #4a8c3f 100%); padding: 25px 30px;">
-                        <h4 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>Ajouter un nouveau matériel</h4>
-                    </div>
-                    <div class="card-body p-5">
-                        {{ form_start(form) }}
-                            {{ form_widget(form) }}
-                            <div class="d-flex justify-content-between mt-5 pt-3 border-top">
-                                <a href="{{ path('app_materiel_index') }}" class="btn-mat-outline px-4"><i class="bi bi-arrow-left"></i> Annuler</a>
-                                <button class="btn-mat-primary px-5" type="submit"><i class="bi bi-check-circle"></i> Enregistrer</button>
-                            </div>
-                        {{ form_end(form) }}
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container">
+<div class="form-page-hero mt-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>
+        <i class="bi bi-{% if materiel.id %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+        {% if materiel.id %}Modifier{% else %}Ajouter{% endif %} un Matériel
+      </h1>
+      <p style="color:rgba(255,255,255,0.75);margin:0;">
+        {% if materiel.id %}Mettre à jour les informations de {{ materiel.nom }}{% else %}Enregistrer un nouvel équipement agricole{% endif %}
+      </p>
     </div>
+    <a href="{{ path('app_materiel_index') }}" class="btn btn-outline-light btn-sm rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+    </a>
+  </div>
+</div>
+
+<div class="py-4">
+  <div class="form-card">
+
+    {% if not materiel.id %}
+    <div class="info-box">
+      <i class="bi bi-info-circle me-2"></i>
+      Une date de prochaine maintenance sera calculée automatiquement selon la fréquence choisie.
+    </div>
+    {% endif %}
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'needs-validation'}}) }}
+
+    <div class="section-divider">Informations générales</div>
+
+    <div class="mb-3">
+      {{ form_label(form.nom) }}
+      {{ form_widget(form.nom) }}
+      {% if form.nom.vars.errors|length > 0 %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.nom.vars.errors %}{{ error.message }}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-sm-6">
+        {{ form_label(form.type) }}
+        {{ form_widget(form.type) }}
+        {% if form.type.vars.errors|length > 0 %}
+          <div class="invalid-feedback d-block">
+            {% for error in form.type.vars.errors %}{{ error.message }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-sm-6">
+        {{ form_label(form.etat) }}
+        {{ form_widget(form.etat) }}
+        {% if form.etat.vars.errors|length > 0 %}
+          <div class="invalid-feedback d-block">
+            {% for error in form.etat.vars.errors %}{{ error.message }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form_label(form.image) }}
+      {{ form_widget(form.image) }}
+      {% if form.image.vars.errors|length > 0 %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.image.vars.errors %}{{ error.message }}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="section-divider">Maintenance</div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-12">
+        {{ form_label(form.dateAchat) }}
+        {{ form_widget(form.dateAchat) }}
+        {% if form.dateAchat.vars.errors|length > 0 %}
+          <div class="invalid-feedback d-block">
+            {% for error in form.dateAchat.vars.errors %}{{ error.message }}{% endfor %}
+          </div>
+        {% endif %}
+        <div class="form-hint">La prochaine maintenance sera automatiquement fixée à 6 mois après cette date.</div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+      <button type="submit" class="btn-submit">
+        <i class="bi bi-check-lg"></i>
+        {% if materiel.id %}Enregistrer les modifications{% else %}Ajouter le matériel{% endif %}
+      </button>
+      <a href="{{ path('app_materiel_index') }}" class="btn-cancel">
+        <i class="bi bi-x"></i> Annuler
+      </a>
+    </div>
+
+    {{ form_end(form) }}
+  </div>
+</div>
+</div>
 </div>
 {% endblock %}

@@ -26,10 +26,8 @@ class Materiel
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Assert\LessThanOrEqual('today', message: 'La date d\'achat ne peut pas être au futur.')]
     private ?\DateTimeInterface $dateAchat = null;
-
-    #[ORM\Column(type: Types::INTEGER, nullable: true)]
-    private ?int $frequenceMaintenanceMois = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $derniereMaintenance = null;
@@ -95,16 +93,46 @@ class Materiel
         return $this;
     }
 
-    public function getFrequenceMaintenanceMois(): ?int
+    public function calculerProchaineMaintenance(): void
     {
-        return $this->frequenceMaintenanceMois;
+        $baseDate = $this->getDerniereMaintenance() ?: clone $this->getDateAchat();
+        if (!$baseDate) {
+            $baseDate = new \DateTime();
+        } else {
+            $baseDate = clone $baseDate;
+        }
+        $baseDate->modify('+6 months');
+        $this->setDateProchaineMaintenance($baseDate);
     }
 
-    public function setFrequenceMaintenanceMois(?int $frequenceMaintenanceMois): self
+    public function getSituationMaintenance(): string
     {
-        $this->frequenceMaintenanceMois = $frequenceMaintenanceMois;
+        // S'il y a déjà une intervention en cours/planifiée, on indique "planifiee" sans marquer de retard
+        foreach ($this->getMaintenances() as $m) {
+            if (in_array($m->getStatutMaintenance(), ['planifiee', 'en_attente', 'en_cours'])) {
+                return 'planifiee';
+            }
+        }
 
-        return $this;
+        if (!$this->dateProchaineMaintenance) {
+            return 'non_planifie';
+        }
+
+        $now = new \DateTime();
+        $now->setTime(0, 0, 0);
+        $prochaine = clone $this->dateProchaineMaintenance;
+        $prochaine->setTime(0, 0, 0);
+
+        if ($prochaine < $now) {
+            return 'en_retard';
+        }
+
+        $diff = $now->diff($prochaine)->days;
+        if ($diff <= 7) {
+            return 'bientot';
+        }
+
+        return 'ok';
     }
 
     public function getDerniereMaintenance(): ?\DateTimeInterface

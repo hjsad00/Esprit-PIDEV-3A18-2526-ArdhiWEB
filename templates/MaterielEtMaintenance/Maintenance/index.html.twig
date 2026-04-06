@@ -13,9 +13,14 @@
     <div class="container">
         
         {# Glassmorphism Stats Header #}
-        <div class="mat-stats-header" data-aos="fade-down" style="background: linear-gradient(135deg, var(--mat-primary) 0%, var(--mat-accent) 100%);">
-            <h1 class="display-5 fw-bold mb-3"><i class="bi bi-tools me-3"></i>Calendrier des Interventions</h1>
-            <p class="fs-5 opacity-75 mb-0">Suivez l'historique et la progression des réparations.</p>
+        <div class="mat-stats-header" data-aos="fade-down" style="background: linear-gradient(to right, rgba(45, 74, 30, 0.85), rgba(45, 74, 30, 0.5)), url('{{ asset("assets/img/maintenance.webp") }}') center/cover no-repeat; padding: 1.5rem 2rem; border-radius: 15px; color: #fff;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h1 class="display-6 fw-bold mb-0 text-white"><i class="bi bi-tools me-3"></i>Calendrier des Interventions</h1>
+                <a href="{{ path('app_materiel_et_maintenance') }}" class="btn btn-outline-light btn-sm rounded-pill" style="border-color: rgba(255,255,255,0.4); color: white; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+            <p class="fs-6 opacity-75 mb-0 text-white">Suivez l'historique et la progression des réparations.</p>
             
             <div class="mat-stats-grid">
                 <div class="mat-stat-box">
@@ -46,15 +51,15 @@
         {# Action Bar & Filters #}
         <div class="mat-action-bar flex-wrap gap-4" data-aos="fade-up" data-aos-delay="100">
             <div class="mat-filters flex-grow-1">
-                <form id="filter-form-maintenance" method="get" class="w-100 d-flex gap-3 align-items-center">
-                    <input type="text" name="search" class="mat-input flex-grow-1" placeholder="Rechercher (ex: Tracteur John Deere...)" value="{{ search }}" oninput="clearTimeout(window.searchTimeout); window.searchTimeout = setTimeout(() => { document.getElementById('filter-form-maintenance').submit(); }, 600);">
-                    <select name="type" class="mat-input" onchange="document.getElementById('filter-form-maintenance').submit();">
+                <form id="filter-form-maintenance" method="get" action="{{ path('app_maintenance_index') }}" class="w-100 d-flex gap-3 align-items-center">
+                    <input type="text" name="search" id="filter-search-maint" class="mat-input flex-grow-1" placeholder="Rechercher (ex: Tracteur John Deere...)" value="{{ search }}">
+                    <select name="type" class="mat-input">
                         <option value="">Types d'intervention</option>
                         <option value="preventive" {% if type == 'preventive' %}selected{% endif %}>Préventive</option>
                         <option value="corrective" {% if type == 'corrective' %}selected{% endif %}>Corrective</option>
                         <option value="urgente" {% if type == 'urgente' %}selected{% endif %}>Urgente</option>
                     </select>
-                    <select name="statut" class="mat-input" onchange="document.getElementById('filter-form-maintenance').submit();">
+                    <select name="statut" class="mat-input">
                         <option value="">Tous les statuts</option>
                         <option value="planifiee" {% if statut == 'planifiee' %}selected{% endif %}>Planifié (Rendez-vous)</option>
                         <option value="en_attente" {% if statut == 'en_attente' %}selected{% endif %}>En attente</option>
@@ -82,7 +87,7 @@
         </div>
 
         {# Grid #}
-        <div class="mat-grid">
+        <div class="mat-grid" id="maintenance-grid-container">
             {% for m in maintenances %}
                 <div class="mat-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="{% if m.statutMaintenance == 'urgente' %}border-top: 5px solid #ff6b6b;{% endif %}">
                     <div class="mat-card-body">
@@ -160,4 +165,51 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('filter-form-maintenance');
+        const inputs = form.querySelectorAll('input, select');
+        const searchInput = document.getElementById('filter-search-maint');
+        
+        if (searchInput && searchInput.value) {
+            const val = searchInput.value;
+            searchInput.focus();
+            searchInput.setSelectionRange(val.length, val.length);
+        }
+
+        let debounceTimeout;
+
+        inputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    const url = new URL(form.action, window.location.origin);
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams(formData);
+                    url.search = params.toString();
+
+                    window.history.pushState({}, '', url);
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            
+                            const newGrid = doc.getElementById('maintenance-grid-container');
+                            
+                            if (newGrid) {
+                                document.getElementById('maintenance-grid-container').innerHTML = newGrid.innerHTML;
+                            }
+                        })
+                        .catch(error => console.error("Filter error: ", error));
+                }, 400); // 400ms debounce
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -29,6 +29,11 @@ class Maintenance
 
     #[ORM\Column(name: 'date_maintenance', type: 'date')]
     #[Assert\NotBlank(message: 'La date de maintenance est obligatoire.')]
+    #[Assert\GreaterThanOrEqual('today', message: 'La date de maintenance ne peut pas être dans le passé.')]
+    #[Assert\Expression(
+        "value == null or value.format('w') != 0",
+        message: "La date de maintenance ne peut pas être prévue un dimanche."
+    )]
     private ?\DateTimeInterface $date_maintenance = null;
 
     #[ORM\Column(name: 'google_calendar_event_id', type: 'string', length: 255, nullable: true)]

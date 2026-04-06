@@ -56,11 +56,7 @@ class MaintenanceController extends AbstractController
             $materiel = $maintenance->getMateriel();
             if ($maintenance->getStatutMaintenance() === 'terminee') {
                 $materiel->setDerniereMaintenance($maintenance->getDateMaintenance());
-                if ($materiel->getFrequenceMaintenanceMois()) {
-                    $prochaine = clone $maintenance->getDateMaintenance();
-                    $prochaine->modify('+' . $materiel->getFrequenceMaintenanceMois() . ' months');
-                    $materiel->setDateProchaineMaintenance($prochaine);
-                }
+                $materiel->calculerProchaineMaintenance();
             }
 
             // Google Calendar Sync
@@ -117,11 +113,7 @@ class MaintenanceController extends AbstractController
             $materiel = $maintenance->getMateriel();
             if ($maintenance->getStatutMaintenance() === 'terminee' && $maintenance->getDateMaintenance()) {
                 $materiel->setDerniereMaintenance($maintenance->getDateMaintenance());
-                if ($materiel->getFrequenceMaintenanceMois()) {
-                    $prochaine = clone $maintenance->getDateMaintenance();
-                    $prochaine->modify('+' . $materiel->getFrequenceMaintenanceMois() . ' months');
-                    $materiel->setDateProchaineMaintenance($prochaine);
-                }
+                $materiel->calculerProchaineMaintenance();
             }
 
             $em->flush();

@@ -1,0 +1,179 @@
+{% extends 'admin/materiel/admin_materiel_base.html.twig' %}
+
+{% block title %}Gestion du Matériel - Ardhi Admin{% endblock %}
+{% block page_title %}Gestion du Matériel & Maintenance{% endblock %}
+
+{% block body %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">🔎 Rechercher une machine</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="adminSearchInput" name="search" class="form-control border-start-0" placeholder="Nom du matériel..." value="{{ search }}" oninput="debounceSearch()">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">⚙️ Type d'équipement</label>
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les types</option>
+                    {% for t in types %}
+                        <option value="{{ t }}" {% if type == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">🛠️ État de santé</label>
+                <select name="etat" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les états</option>
+                    {% for e in etats %}
+                        <option value="{{ e }}" {% if etat == e %}selected{% endif %}>{{ e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex">
+                <a href="{{ path('admin_materiel_index') }}" class="btn btn-outline-secondary w-100 shadow-sm"><i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="mb-0 fw-bold text-success"><i class="bi bi-cpu-fill me-2"></i>Gestion de la Flotte Matérielle ({{ materiels|length }})</h5>
+        <a href="{{ path('admin_materiel_new') }}" class="btn btn-success btn-sm px-3 shadow-sm">
+            <i class="bi bi-plus-circle-fill me-1"></i> Ajouter un Matériel
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-uppercase small fw-bold text-muted">
+                        <th class="ps-4">📦 Équipement</th>
+                        <th>🩺 État de Santé</th>
+                        <th>⏳ Prochaine Maintenance</th>
+                        <th>👤 Propriétaire</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in materiels %}
+                    {% set m = item.obj %}
+                    {% set owner = userMap[m.userId] ?? null %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success-subtle rounded p-2 me-3 text-success">
+                                    <i class="bi bi-gear-wide-connected fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">{{ m.nom }}</div>
+                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.7rem;">{{ m.type }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if m.etat == 'En panne' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>En panne</span>
+                            {% elseif m.etat == 'En maintenance' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1"><i class="bi bi-hammer me-1"></i>Maintenance</span>
+                            {% elseif m.etat == 'Neuf' or m.etat == 'Bon' %}
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="bi bi-shield-check me-1"></i>{{ m.etat }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border px-2 py-1">{{ m.etat }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <div class="small fw-bold">
+                                    <i class="bi bi-calendar3 me-1 text-primary"></i>
+                                    {{ m.dateProchaineMaintenance ? m.dateProchaineMaintenance|date('d M Y') : 'Non planifiée' }}
+                                </div>
+                                {% if item.daysLeft is not null %}
+                                    <div class="mt-1">
+                                        {% if item.daysLeft < 0 %}
+                                            <span class="badge bg-danger rounded-pill" style="font-size: 0.75rem;">
+                                                <i class="bi bi-alarm-fill me-1"></i> Retard de {{ item.daysLeft|abs }} j
+                                            </span>
+                                        {% elseif item.daysLeft == 0 %}
+                                            <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.75rem;">
+                                                <i class="bi bi-exclamation-circle me-1"></i> Aujourd'hui !
+                                            </span>
+                                        {% elseif item.daysLeft <= 7 %}
+                                            <span class="badge bg-warning-subtle text-dark border border-warning rounded-pill" style="font-size: 0.75rem;">
+                                                <i class="bi bi-hourglass-split me-1"></i> Dans {{ item.daysLeft }} j
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success border border-success rounded-pill" style="font-size: 0.75rem;">
+                                                <i class="bi bi-check-circle me-1"></i> Dans {{ item.daysLeft }} j
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if owner %}
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ owner.profilePicture ?? 'https://ui-avatars.com/api/?name=' ~ owner.prenom ~ '+' ~ owner.nom ~ '&background=f0f2f5&color=000' }}" class="rounded-circle me-2" width="24" height="24">
+                                    <span class="small text-muted">{{ owner.prenom }} {{ owner.nom }}</span>
+                                </div>
+                            {% else %}
+                                <span class="text-danger small">Inconnu ({{ m.userId }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle border shadow-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><a class="dropdown-item py-2" href="{{ path('admin_materiel_edit', {id: m.id}) }}"><i class="bi bi-pencil me-2 text-primary"></i> Modifier</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="post" action="{{ path('admin_materiel_delete', {id: m.id}) }}" onsubmit="return confirm('Confirmer la suppression ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_materiel_' ~ m.id) }}">
+                                            <button class="dropdown-item py-2 text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox display-1 text-light d-block mb-3"></i>
+                            <p class="text-muted">Aucun équipement trouvé dans la flotte.</p>
+                            <a href="{{ path('admin_materiel_new') }}" class="btn btn-outline-success btn-sm">Ajouter le premier matériel</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    let searchTimeout;
+    function debounceSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            document.getElementById('adminSearchInput').form.submit();
+        }, 400);
+    }
+
+    window.onload = function() {
+        const input = document.getElementById('adminSearchInput');
+        if (input && input.value.length > 0) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    };
+</script>
+{% endblock %}

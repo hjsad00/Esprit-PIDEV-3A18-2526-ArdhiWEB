@@ -1,18 +1,51 @@
 /* ================================================================
-   PREMIUM MATERIEL & MAINTENANCE PAGE
+   ARDHI - MATÉRIEL & MAINTENANCE — PREMIUM WEB DESIGN
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
 
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
 :root {
-    --mat-primary: #134e3b; /* Vert émeraude foncé */
-    --mat-accent: #197b5a; /* Émeraude vif */
-    --mat-glass: rgba(255, 255, 255, 0.85);
-    --mat-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-    --mat-border: rgba(19, 78, 59, 0.1);
-    --mat-bg: #f2f7f5; /* Blanc cassé légèrement bleuté/vert froid */
+    --mat-primary:       #2d4e2f;
+    --mat-primary-light: #3d6b40;
+    --mat-accent:        #4a8a3e;
+    --mat-accent-glow:   rgba(74, 138, 62, 0.25);
+    --mat-danger:        #e53e3e;
+    --mat-warning:       #f6ad55;
+    --mat-success:       #38a169;
+    --mat-info:          #3182ce;
+
+    --mat-glass:         rgba(255, 255, 255, 0.92);
+    --mat-glass-border:  rgba(255, 255, 255, 0.35);
+    --mat-shadow-sm:     0 2px 8px rgba(0, 0, 0, 0.06);
+    --mat-shadow:        0 8px 32px rgba(0, 0, 0, 0.10);
+    --mat-shadow-lg:     0 20px 60px rgba(0, 0, 0, 0.14);
+    --mat-shadow-hover:  0 24px 64px rgba(45, 78, 47, 0.18);
+
+    --mat-border:        #d4e6ce;
+    --mat-bg:            #f4f6f4;
+    --mat-surface:       #ffffff;
+    --mat-title:         #1a3320;
+    --mat-text:          #374151;
+    --mat-muted:         #6b7280;
+    --mat-panne:         #c95a0f;
+
+    --radius-sm:    8px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+    --radius-xl:    28px;
+    --radius-pill:  999px;
+
+    --transition-fast:   0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition:        0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* ================================================================
+   BASE
+   ================================================================ */
 body.materiel-theme {
     background-color: var(--mat-bg);
     font-family: 'Outfit', sans-serif;
@@ -28,7 +61,7 @@ body.materiel-theme {
 .mat-stats-header {
     background: linear-gradient(135deg, var(--mat-primary) 0%, var(--mat-accent) 100%);
     border-radius: 20px;
-    padding: 20px 30px;
+    padding: 10px 30px;
     margin-bottom: 25px;
     color: white;
     box-shadow: 0 10px 20px rgba(74, 140, 63, 0.2);
@@ -154,15 +187,15 @@ body.materiel-theme {
     background: white;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: var(--mat-shadow);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid transparent;
+    border: 4px solid #ffffff;
 }
 
 .mat-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-    border-color: var(--mat-accent);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    border-color: #ffffff;
 }
 
 .mat-card-img {
@@ -195,17 +228,17 @@ body.materiel-theme {
 
 .badge-success { background: #10ac84; color: white; }
 .badge-warning { background: #feca57; color: #333; }
-.badge-danger { background: #ff6b6b; color: white; }
+.badge-danger { background: var(--mat-panne); color: white; }
 
 .mat-card-title {
     font-size: 1.4rem;
     font-weight: 700;
     margin-bottom: 5px;
-    color: #2d3436;
+    color: var(--mat-title);
 }
 
 .mat-card-subtitle {
-    color: #636e72;
+    color: var(--mat-text);
     font-size: 0.9rem;
     margin-bottom: 20px;
     font-weight: 500;

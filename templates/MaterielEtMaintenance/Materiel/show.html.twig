@@ -1,115 +1,165 @@
 {% extends 'base.html.twig' %}
-
-{% block title %}Détails du Matériel{% endblock %}
+{% block title %}{{ materiel.nom }} - Détail{% endblock %}
 
 {% block body_class %}materiel-theme{% endblock %}
 
 {% block stylesheets %}
-    <link href="{{ asset('assets/css/materiel/materiel.css') }}?v={{ random() }}" rel="stylesheet">
+<link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<style>
+  .detail-hero {
+    background: linear-gradient(135deg, rgba(45,74,30,0.9) 0%, rgba(74,124,63,0.9) 100%), url('{{ asset("assets/img/materiel.jpg") }}') center/cover;
+    color: #fff;
+    padding: 1.5rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .detail-card {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(5px);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .detail-card h3 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #4a7c3f;
+    font-weight: 700;
+    border-bottom: 2px solid #e8f5e9;
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+  .info-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; font-size: 0.9rem; }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: #888; font-weight: 500; }
+  .info-val { font-weight: 600; text-align: right; color: #1a1a1a; }
+  .badge-etat { padding: 0.35rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 600; }
+  .badge-neuf { background: #e8f5e9; color: #2e7d32; }
+  .badge-bon { background: #e3f2fd; color: #1565c0; }
+  .badge-moyen { background: #fff8e1; color: #e65100; }
+  .badge-panne { background: #ffebee; color: #c62828; }
+  .badge-maintenance { background: #f3e5f5; color: #6a1b9a; }
+
+  .hist-table th { background: #f5f5f5; font-size: 0.82rem; }
+  .hist-table td { font-size: 0.88rem; vertical-align: middle; }
+  .badge-statut-planifiee { background: #e3f2fd; color: #1565c0; }
+  .badge-statut-en_cours { background: #fff8e1; color: #e65100; }
+  .badge-statut-terminee { background: #e8f5e9; color: #2e7d32; }
+  .badge-statut-annulee { background: #f5f5f5; color: #888; }
+</style>
 {% endblock %}
 
 {% block body %}
 <div class="materiel-page-wrapper">
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h1 class="display-6 fw-bold text-dark">{{ materiel.nom }} <span class="badge bg-secondary ms-2 align-middle" style="font-size: 0.9rem;">{{ materiel.type }}</span></h1>
-            <div>
-                <a href="{{ path('app_materiel_edit', {'id': materiel.id}) }}" class="btn-mat-action shadow-sm border-0 me-2" style="background: #e67e22; color: white;"><i class="bi bi-pencil"></i> Modifier</a>
-                <a href="{{ path('app_materiel_index') }}" class="btn-mat-outline shadow-sm bg-white"><i class="bi bi-arrow-left"></i> Retour</a>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-5">
-                {% if materiel.image %}
-                <div class="card shadow-sm mb-4" style="border-radius: 20px; border: none; overflow: hidden;">
-                    <img src="{{ asset('uploads/materiel/' ~ materiel.image) }}" class="card-img-top" alt="{{ materiel.nom }}" style="max-height: 250px; object-fit: cover;">
-                </div>
-                {% endif %}
-                <div class="card shadow-sm h-100" style="border-radius: 20px; border: none;">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle text-success me-2"></i>Informations générales</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <ul class="mat-details-list">
-                            <li>
-                                <strong>État :</strong> 
-                                <span class="ms-auto mat-badge shadow-none position-static {{ materiel.etat == 'En panne' ? 'badge-danger' : (materiel.etat == 'Bon' or materiel.etat == 'Neuf' ? 'badge-success' : 'badge-warning') }}">{{ materiel.etat }}</span>
-                            </li>
-                            <li><strong>Date d'achat :</strong> <span class="ms-auto">{{ materiel.dateAchat ? materiel.dateAchat|date('d/m/Y') : 'Non renseignée' }}</span></li>
-                            <li><strong>Fréquence de maintenance :</strong> <span class="ms-auto fw-bold text-dark">{{ materiel.frequenceMaintenanceMois ? materiel.frequenceMaintenanceMois ~ ' mois' : 'Non renseignée' }}</span></li>
-                            <li><strong>Dernière maintenance :</strong> <span class="ms-auto">{{ materiel.derniereMaintenance ? materiel.derniereMaintenance|date('d/m/Y') : 'Aucune' }}</span></li>
-                            <li class="align-items-start flex-column pb-0">
-                                <strong>Prochaine maintenance prévue :</strong> 
-                                {% if materiel.dateProchaineMaintenance %}
-                                    {% set isRetard = date(materiel.dateProchaineMaintenance) < date() %}
-                                    <div class="mt-2 w-100 p-3 rounded" style="background: {{ isRetard ? '#ffeaa7' : '#e9f2e9' }};">
-                                        <span class="fs-5 fw-bold {{ isRetard ? 'text-danger' : 'text-success' }}">
-                                            {{ materiel.dateProchaineMaintenance|date('d/m/Y') }}
-                                        </span>
-                                        {% if isRetard %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-triangle-fill"></i> Maintenance en retard</div>{% endif %}
-                                    </div>
-                                {% else %}
-                                    <span class="mt-2 text-muted">Non planifiée</span>
-                                {% endif %}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-7">
-                <div class="card shadow-sm h-100" style="border-radius: 20px; border: none;">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>Historique des maintenances</h5>
-                        {% if not app.user.googleAccessToken %}
-                            <a href="{{ path('app_google_connect') }}" class="btn-mat-outline py-1 px-3" style="font-size: 0.85rem;"><i class="bi bi-google"></i> Lier & Planifier</a>
-                        {% else %}
-                            <a href="{{ path('app_maintenance_new', {'materiel': materiel.id}) }}" class="btn-mat-outline py-1 px-3" style="font-size: 0.85rem;"><i class="bi bi-calendar-plus"></i> Planifier</a>
-                        {% endif %}
-                    </div>
-                    <div class="card-body p-4">
-                        {% if materiel.maintenances|length > 0 %}
-                        <div class="list-group list-group-flush rounded border p-2">
-                            {% for maint in materiel.maintenances %}
-                                <div class="list-group-item d-flex justify-content-between align-items-start border-0 border-bottom mb-2 pb-3">
-                                    <div>
-                                        <strong class="d-block mb-1 fs-5">{{ maint.dateMaintenance ? maint.dateMaintenance|date('d/m/Y') : 'Date inconnue' }}</strong>
-                                        <p class="mb-1 text-muted small">{{ maint.description ?: 'Aucune description fournie.' }}</p>
-                                    </div>
-                                    <div class="d-flex flex-column align-items-end ms-3">
-                                        <span class="badge {{ maint.typeMaintenance == 'urgente' ? 'bg-danger' : (maint.typeMaintenance == 'preventive' ? 'bg-info text-dark' : 'bg-secondary') }} mb-1 opacity-75 rounded-pill">{{ maint.typeMaintenance }}</span>
-                                        <span class="badge border text-dark bg-light rounded-pill">{{ maint.statutMaintenance|capitalize|replace({'_': ' '}) }}</span>
-                                        <div class="mt-2 d-flex gap-2">
-                                            <a href="https://calendar.google.com/calendar/r/day/{{ maint.dateMaintenance|date('Y/m/d') }}" target="_blank" class="text-decoration-none small fw-bold" style="color:#4285F4;"><i class="bi bi-google"></i> Agenda</a>
-                                            <a href="{{ path('app_maintenance_show', {id: maint.idMaintenance}) }}" class="text-decoration-none small text-primary fw-bold">Détails <i class="bi bi-arrow-right"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                            <div class="p-5 text-center text-muted bg-light rounded">
-                                <i class="bi bi-clipboard fs-1 d-block mb-3 opacity-50"></i>
-                                <p>Aucun historique de maintenance enregistré.</p>
-                                {% if not app.user.googleAccessToken %}
-                                    <a href="{{ path('app_google_connect') }}" class="btn-mat-primary mt-2"><i class="bi bi-google"></i> Lier Google & Planifier</a>
-                                {% else %}
-                                    <a href="{{ path('app_maintenance_new', {'materiel': materiel.id}) }}" class="btn-mat-primary mt-2"><i class="bi bi-calendar-plus"></i> Planifier la première intervention</a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-5 pt-4 border-top">
-            <form method="post" action="{{ path('app_materiel_delete', {'id': materiel.id}) }}" onsubmit="return confirm('Attention ! La suppression de ce matériel entraînera la suppression de tout son historique de maintenance. Êtes-vous sûr de vouloir continuer ?');">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete_materiel_' ~ materiel.id) }}">
-                <button class="btn btn-outline-danger shadow-sm py-2 px-4 rounded-pill fw-bold"><i class="bi bi-trash"></i> Supprimer définitivement ce matériel</button>
-            </form>
-        </div>
+<div class="container">
+<div class="detail-hero mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:0.2rem;">
+          <i class="bi bi-tractor me-2"></i>{{ materiel.nom }}
+        </h1>
+        <p style="color:rgba(255,255,255,0.75);margin:0;">{{ materiel.type }} — {{ materiel.etat }}</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ path('app_materiel_index') }}" class="btn btn-outline-light btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
     </div>
+</div>
+
+<div class="py-4">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="detail-card">
+        <h3>Informations</h3>
+        <div class="info-row"><span class="info-key">Nom</span><span class="info-val">{{ materiel.nom }}</span></div>
+        <div class="info-row"><span class="info-key">Type</span><span class="info-val">{{ materiel.type }}</span></div>
+        <div class="info-row">
+          <span class="info-key">État</span>
+          <span class="info-val">
+            {% set ec = {'Neuf':'neuf','Bon':'bon','Moyen':'moyen','En panne':'panne','En maintenance':'maintenance'} %}
+            <span class="badge-etat badge-{{ ec[materiel.etat] ?? 'bon' }}">{{ materiel.etat }}</span>
+          </span>
+        </div>
+        <div class="info-row"><span class="info-key">Date d'achat</span><span class="info-val">{{ materiel.dateAchat ? materiel.dateAchat|date('d/m/Y') : '—' }}</span></div>
+        <div class="info-row"><span class="info-key">Fréquence maintenance</span><span class="info-val">Tous les 6 mois (automatique)</span></div>
+      </div>
+
+      <div class="detail-card">
+        <h3>Maintenance</h3>
+        <div class="info-row"><span class="info-key">Dernière maintenance</span><span class="info-val">{{ materiel.derniereMaintenance ? materiel.derniereMaintenance|date('d/m/Y') : '—' }}</span></div>
+        <div class="info-row">
+          <span class="info-key">Prochaine maintenance</span>
+          <span class="info-val">
+            {% if materiel.dateProchaineMaintenance %}
+               {% set daysLeft = ((materiel.dateProchaineMaintenance.timestamp - 'now'|date('U')) / 86400)|round(0, 'floor') %}
+               {% if daysLeft < 0 %}
+                 <span class="text-danger fw-bold">{{ materiel.dateProchaineMaintenance|date('d/m/Y') }} (RETARD)</span>
+               {% elseif daysLeft <= 7 %}
+                 <span class="text-warning fw-bold">{{ materiel.dateProchaineMaintenance|date('d/m/Y') }} (Bientôt)</span>
+               {% else %}
+                 {{ materiel.dateProchaineMaintenance|date('d/m/Y') }}
+               {% endif %}
+            {% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="info-row"><span class="info-key">Nb. maintenances</span><span class="info-val">{{ materiel.maintenances|length }}</span></div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="detail-card">
+        <h3>Historique des maintenances</h3>
+        {% if materiel.maintenances|length > 0 %}
+        <table class="table hist-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Statut</th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for maint in materiel.maintenances %}
+            <tr>
+              <td>{{ maint.dateMaintenance|date('d/m/Y') }}</td>
+              <td>
+                {% set typeLabels = {'preventive':'Préventive','corrective':'Corrective','urgente':'Urgente'} %}
+                {{ typeLabels[maint.typeMaintenance] ?? maint.typeMaintenance }}
+              </td>
+              <td>
+                <span class="badge badge-statut-{{ maint.statutMaintenance }} px-2 py-1 rounded-pill small fw-semibold">
+                  {% set sl = {'planifiee':'Planifiée','en_cours':'En cours','terminee':'Terminée','annulee':'Annulée'} %}
+                  {{ sl[maint.statutMaintenance] ?? maint.statutMaintenance }}
+                </span>
+              </td>
+              <td class="text-muted small">{{ maint.description ? maint.description|slice(0,60) ~ '...' : '—' }}</td>
+              <td>
+                <a href="{{ path('app_maintenance_show', {id: maint.idMaintenance}) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-calendar-x display-5 d-block mb-2"></i>
+          Aucune maintenance enregistrée.
+          <a href="{{ path('app_maintenance_new') }}" class="d-block mt-2 text-success">Planifier la première →</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
 </div>
 {% endblock %}
