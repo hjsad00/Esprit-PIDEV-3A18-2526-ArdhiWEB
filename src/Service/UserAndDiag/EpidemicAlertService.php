@@ -18,7 +18,7 @@ class EpidemicAlertService
      */
     public function getActiveDiseases(float $lat, float $lon, float $radiusKm = 25.0): array
     {
-        $diagnostics = $this->diagnosticRepository->findNearby($lat, $lon, $radiusKm, 14);
+        $diagnostics = $this->diagnosticRepository->findNearby($lat, $lon, $radiusKm);
 
         $diseases = [];
         foreach ($diagnostics as $d) {
@@ -79,9 +79,9 @@ class EpidemicAlertService
     /**
      * Returns stats: [unique_diseases_count, total_reports_count]
      */
-    public function getRegionalStats(float $lat, float $lon, float $radiusKm = 25.0, int $days = 14): array
+    public function getRegionalStats(float $lat, float $lon, float $radiusKm = 25.0): array
     {
-        $diagnostics = $this->diagnosticRepository->findNearby($lat, $lon, $radiusKm, $days);
+        $diagnostics = $this->diagnosticRepository->findNearby($lat, $lon, $radiusKm);
 
         $uniqueDiseases = [];
         foreach ($diagnostics as $d) {

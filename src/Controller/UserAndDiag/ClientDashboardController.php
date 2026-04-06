@@ -88,9 +88,9 @@ class ClientDashboardController extends AbstractController
         $weatherRisks = [];
         $treatmentTiming = ['overallAdvice' => 'Analyse en cours...'];
 
-        $regionalDiseases = [];
-        $regionalAlerts = [];
-        $regionalStats = [0, 0];
+        $regionalDiseases = $epidemicService->getActiveDiseases($lat, $lon, 25.0);
+        $regionalAlerts = $epidemicService->getRegionalAlerts($lat, $lon, 25.0);
+        $regionalStats = $epidemicService->getRegionalStats($lat, $lon, 25.0);
 
         return $this->render('UserAndDiag/client_dashboard/index.html.twig', [
             'user' => $user,

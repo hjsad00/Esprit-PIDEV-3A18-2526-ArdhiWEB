@@ -10,7 +10,7 @@ class SporeCastService
     public function analyzeSourceLocation(float $lat, float $lon, string $diseaseName): array
     {
         // For simulation, we assume some diseases are airborne
-        $airborneDiseases = ['Late Blight', 'Rust', 'Mildew', 'Mildiou', 'Rouille'];
+        $airborneDiseases = ['Late Blight', 'Rust', 'Mildew', 'Mildiou', 'Rouille', 'Puceron', 'Chenille', 'Virus', 'Bactérie', 'Pourriture Alternaire'];
 
         $isAirborne = false;
         foreach ($airborneDiseases as $a) {

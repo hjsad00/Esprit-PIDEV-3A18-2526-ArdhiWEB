@@ -3,6 +3,7 @@
 {% block title %}Ardhi - Cartographie des Maladies{% endblock %}
 
 {% block stylesheets %}
+    {{ parent() }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     body {
@@ -158,12 +159,13 @@
 {% endblock %}
 
 {% block javascripts %}
+    {{ parent() }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const map = L.map('map', {
         zoomControl: false,
         attributionControl: false
-    }).setView([{{ centerLat }}, {{ centerLon }}], 10);
+    }).setView([{{ centerLat|number_format(6, '.', '') }}, {{ centerLon|number_format(6, '.', '') }}], 10);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19
@@ -230,7 +232,7 @@
         }
 
         showStatus("Fétchage des données satellite...");
-        fetch("{{ path('app_user_and_diag_map_ndvi', {lat: centerLat, lon: centerLon}) }}")
+        fetch("{{ path('app_user_and_diag_map_ndvi') }}?lat={{ centerLat|number_format(6, '.', '') }}&lon={{ centerLon|number_format(6, '.', '') }}")
             .then(res => res.json())
             .then(cells => {
                 cells.forEach(cell => {
