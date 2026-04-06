@@ -22,7 +22,10 @@ class AdminUserType extends AbstractType
         $builder
             ->add('nom', TextType::class, ['label' => 'Nom'])
             ->add('prenom', TextType::class, ['label' => 'Prénom'])
-            ->add('email', TextType::class, ['label' => 'Email'])
+            ->add('email', TextType::class, [
+                'label' => 'Email',
+                'attr' => ['autocomplete' => 'off']
+            ])
             ->add('role', ChoiceType::class, [
                 'label' => 'Rôle',
                 'choices' => [
@@ -42,7 +45,10 @@ class AdminUserType extends AbstractType
                 'label' => 'Mot de passe' . ($isEdit ? ' (laisser vide pour ne pas changer)' : ''),
                 'mapped' => false,
                 'required' => !$isEdit,
-                'attr' => ['placeholder' => $isEdit ? 'Laisser vide pour garder le mot de passe actuel' : ''],
+                'attr' => [
+                    'placeholder' => $isEdit ? 'Laisser vide pour garder le mot de passe actuel' : '',
+                    'autocomplete' => 'new-password'
+                ],
                 'constraints' => [
                     new Length([
                         'min' => 6,
