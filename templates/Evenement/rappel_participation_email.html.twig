@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rappel evenement</title>
+</head>
+<body style="margin:0;padding:0;background:#f4efe7;font-family:Arial,Helvetica,sans-serif;color:#1f3128;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4efe7;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(35,51,40,0.12);">
+          <tr>
+            <td style="padding:18px 28px;background:linear-gradient(135deg,#ab6b2e 0%,#d0a349 100%);color:#ffffff;">
+              <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">Rappel Ardhi</div>
+              <div style="margin-top:10px;font-size:30px;line-height:1.2;font-weight:700;">J-{{ daysBefore }} avant l'evenement</div>
+              <div style="margin-top:8px;font-size:15px;line-height:1.6;max-width:520px;">
+                Il est temps de preparer votre participation a <strong>{{ evenement.titre }}</strong>.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 28px 20px;">
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+                Bonjour {{ participation.utilisateur.prenom }} {{ participation.utilisateur.nom }},
+              </p>
+              <p style="margin:0 0 22px;font-size:15px;line-height:1.8;color:#495d52;">
+                Ce message vous rappelle que votre evenement commence dans <strong>{{ daysBefore }} jour(s)</strong>. Voici l'essentiel en un coup d'oeil.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:12px;">
+                <tr>
+                  <td style="padding:18px;background:#faf5ea;border:1px solid #ecd9b5;border-radius:18px;">
+                    <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6a3f;font-weight:700;">Date debut</div>
+                    <div style="margin-top:8px;font-size:20px;font-weight:700;color:#2d3329;">{{ evenement.dateDebut|date('d/m/Y') }}</div>
+                  </td>
+                  <td style="padding:18px;background:#eef5ec;border:1px solid #d2e5cc;border-radius:18px;">
+                    <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#5a765c;font-weight:700;">Lieu</div>
+                    <div style="margin-top:8px;font-size:20px;font-weight:700;color:#2d3329;">{{ evenement.lieu }}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="margin-top:10px;padding:20px;border-radius:20px;background:#f8faf7;border:1px solid #e4ece0;">
+                <div style="font-size:14px;line-height:1.8;color:#3f564a;">
+                  <strong>Evenement :</strong> {{ evenement.titre }}<br>
+                  <strong>Date fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}<br>
+                  <strong>Statut de votre participation :</strong> {{ participation.statut }}
+                </div>
+              </div>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:26px;">
+                <tr>
+                  <td style="border-radius:999px;background:#ab6b2e;">
+                    <a href="{{ eventUrl }}" style="display:inline-block;padding:14px 24px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Consulter l'evenement</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 28px;">
+              <div style="padding:18px 20px;border-radius:18px;background:#f2f7ef;color:#567060;font-size:14px;line-height:1.7;">
+                Conseil : prevez votre deplacement et gardez cet email sous la main pour retrouver rapidement le lieu et les dates.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

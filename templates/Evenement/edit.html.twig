@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+{% block title %}{% if evenement.id %}Modifier{% else %}Créer{% endif %} un événement - Ardhi{% endblock %}
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+.form-card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); padding:32px 36px; }
+.form-control, .form-select { border-radius:8px; border:1.5px solid #e2e8f0; padding:10px 14px; font-size:.94rem; }
+.form-control:focus, .form-select:focus { border-color:#667A3F; box-shadow:0 0 0 3px rgba(102,122,63,.15); outline:none; }
+.form-label { font-size:.88rem; color:#374151; font-weight:600; }
+.btn-save { background:linear-gradient(135deg,#8BC34A,#667A3F); color:#fff; border:none; border-radius:10px; padding:12px 28px; font-weight:700; font-size:.95rem; cursor:pointer; transition:opacity .2s; }
+.btn-save:hover { opacity:.88; }
+.btn-cancel { background:#f1f5f9; color:#64748b; border:none; border-radius:10px; padding:12px 22px; font-weight:600; font-size:.95rem; text-decoration:none; transition:background .2s; }
+.btn-cancel:hover { background:#e2e8f0; color:#374151; }
+.invalid-msg { color:#dc2626; font-size:.82rem; margin-top:4px; }
+</style>
+{% endblock %}
+{% block body %}
+{% set isEdit = evenement.id is not null %}
+
+<section class="hero section dark-background"
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.5),rgba(10,15,8,.2)),url('{{ asset('assets/img/hero_4.jpg') }}');
+         background-size:cover;background-position:center;padding-top:120px;padding-bottom:60px;min-height:40ch;display:flex;align-items:center;">
+  <div class="hero-content-wrapper" style="position:relative;width:100%;padding-top:0;align-items:center;justify-content:flex-start;">
+    <div class="hero-left" style="max-width:760px;padding:20px 40px;">
+      <span class="hero-label" style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.6); font-weight: 800; font-size: 15px; letter-spacing: 2px;">{{ isEdit ? 'MODIFIER UN ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT' }}</span>
+      <h1 class="hero-headline">{{ isEdit ? evenement.titre : 'Publiez un événement agricole' }}</h1>
+      <p class="hero-description">{{ isEdit ? 'Mettez à jour les informations et enregistrez vos modifications.' : 'Ajoutez un événement, invitez des participants et développez votre réseau.' }}</p>
+      <div class="hero-actions-row">
+        {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services section" style="padding-top:40px;">
+  <div class="container section-title" data-aos="fade-up">
+    <h2>{{ isEdit ? 'Modifier l\'événement' : 'Créer un événement' }}</h2>
+    <p>{{ isEdit ? 'Modifiez les champs ci-dessous.' : 'Remplissez les informations de votre événement.' }}</p>
+  </div>
+  <div class="container py-2 pb-5">
+    <div class="form-card">
+
+      {{ form_start(form, {'attr': {'novalidate': 'novalidate'}, 'multipart': true}) }}
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="mb-3">
+            {{ form_label(form.titre, form.titre.vars.label ~ (form.titre.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.titre) }}
+            {% if form.titre.vars.errors|length %}<div class="invalid-msg">{% for e in form.titre.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form_label(form.description, form.description.vars.label ~ ' *', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.description) }}
+            {% if form.description.vars.errors|length %}<div class="invalid-msg">{% for e in form.description.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form_label(form.lieu, form.lieu.vars.label ~ ' *', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.lieu) }}
+            {% if form.lieu.vars.errors|length %}<div class="invalid-msg">{% for e in form.lieu.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              {{ form_label(form.dateDebut, form.dateDebut.vars.label ~ (form.dateDebut.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}
+              {{ form_widget(form.dateDebut) }}
+              {% if form.dateDebut.vars.errors|length %}<div class="invalid-msg">{% for e in form.dateDebut.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              {{ form_label(form.dateFin, form.dateFin.vars.label ~ (form.dateFin.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}
+              {{ form_widget(form.dateFin) }}
+              {% if form.dateFin.vars.errors|length %}<div class="invalid-msg">{% for e in form.dateFin.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="mb-3">{{ form_label(form.type, form.type.vars.label ~ (form.type.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}{{ form_widget(form.type) }}{% if form.type.vars.errors|length %}<div class="invalid-msg">{% for e in form.type.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}</div>
+          <div class="mb-3">{{ form_label(form.statut, form.statut.vars.label ~ (form.statut.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}{{ form_widget(form.statut) }}</div>
+          <div class="mb-3">{{ form_label(form.organisateur, form.organisateur.vars.label ~ (form.organisateur.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}{{ form_widget(form.organisateur) }}{% if form.organisateur.vars.errors|length %}<div class="invalid-msg">{% for e in form.organisateur.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}</div>
+          <div class="mb-3">{{ form_label(form.imageFile, form.imageFile.vars.label ~ (form.imageFile.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}{{ form_widget(form.imageFile) }}{% if form.imageFile.vars.errors|length %}<div class="invalid-msg">{% for e in form.imageFile.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}</div>
+          <div class="mb-3">{{ form_label(form.nombrePlacesMax, form.nombrePlacesMax.vars.label ~ (form.nombrePlacesMax.vars.required ? ' *' : ''), {'label_attr': {'class': 'form-label'}}) }}{{ form_widget(form.nombrePlacesMax) }}{% if form.nombrePlacesMax.vars.errors|length %}<div class="invalid-msg">{% for e in form.nombrePlacesMax.vars.errors %}{{ e.message }}{% endfor %}</div>{% endif %}</div>
+        </div>
+      </div>
+      <div class="d-flex gap-3 mt-2">
+        <button type="submit" class="btn-save"><i class="bi bi-check-circle-fill me-2"></i>{{ isEdit ? 'Enregistrer les modifications' : 'Publier l\'événement' }}</button>
+        <a href="{{ path('app_evenement_index') }}" class="btn-cancel"><i class="bi bi-x-circle me-1"></i>Annuler</a>
+      </div>
+      {{ form_end(form) }}
+
+    </div>
+  </div>
+</section>
+{% endblock %}

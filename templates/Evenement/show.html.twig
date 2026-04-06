@@ -1,0 +1,352 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ evenement.titre }} - Ardhi{% endblock %}
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+/* Layout */
+.detail-card {
+  background:#fff; border-radius:16px;
+  box-shadow:0 4px 24px rgba(0,0,0,.07);
+  padding:28px 32px; margin-bottom:24px;
+}
+.detail-card h4 {
+  font-size:1rem; font-weight:700; color:#667A3F;
+  border-bottom:2px solid #f0f4e8; padding-bottom:10px; margin-bottom:18px;
+  display:flex; align-items:center; gap:8px;
+}
+.info-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.info-icon {
+  width:38px; height:38px; background:#f0f4e8; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  color:#667A3F; font-size:1rem; flex-shrink:0;
+}
+.info-label { font-size:.76rem; color:#9ca3af; margin-bottom:1px; }
+.info-value { font-weight:600; color:#374151; font-size:.95rem; }
+/* Places bar */
+.places-bar { height:10px; border-radius:10px; background:#f1f5f9; overflow:hidden; }
+.places-fill { height:100%; border-radius:10px; transition:width .4s; }
+/* Action card */
+.action-card {
+  background:#fff; border-radius:16px;
+  box-shadow:0 4px 24px rgba(0,0,0,.08);
+  padding:26px; position:sticky; top:90px;
+}
+.btn-inscrire {
+  width:100%; border:none; border-radius:10px; padding:12px;
+  background:linear-gradient(135deg,#8BC34A,#667A3F);
+  color:#fff; font-weight:700; font-size:.95rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:opacity .2s;
+}
+.btn-inscrire:hover { opacity:.88; }
+.btn-desinscrire {
+  width:100%; border:2px solid #E74C3C; border-radius:10px; padding:11px;
+  background:#fff; color:#E74C3C; font-weight:700; font-size:.93rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;
+}
+.btn-desinscrire:hover { background:#E74C3C; color:#fff; }
+.btn-edit-ev {
+  width:100%; border:2px solid #667A3F; border-radius:10px; padding:11px;
+  background:#f0f4e8; color:#667A3F; font-weight:700; font-size:.93rem;
+  text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;
+}
+.btn-edit-ev:hover { background:#667A3F; color:#fff; }
+.btn-del-ev {
+  width:100%; border:2px solid #E74C3C; border-radius:10px; padding:11px;
+  background:#fff5f5; color:#E74C3C; font-weight:700; font-size:.93rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;
+}
+.btn-del-ev:hover { background:#E74C3C; color:#fff; }
+.btn-fav-lg {
+  width:100%; border:2px solid #e2e8f0; border-radius:10px; padding:11px;
+  background:#fff; font-weight:600; font-size:.9rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;
+}
+.btn-fav-lg.on { border-color:#E74C3C; color:#E74C3C; }
+.btn-fav-lg:hover { border-color:#E74C3C; color:#E74C3C; }
+/* Badges */
+.b-type,.b-stat { font-size:.75rem; font-weight:700; padding:5px 14px; border-radius:50px; text-transform:uppercase; }
+.b-FOIRE{background:#3498DB;color:#fff;} .b-FORMATION{background:#9B59B6;color:#fff;}
+.b-CONFERENCE{background:#F39C12;color:#fff;} .b-ATELIER{background:#2ECC71;color:#fff;}
+.b-A_VENIR{background:#8BC34A;color:#fff;} .b-EN_COURS{background:#3498DB;color:#fff;}
+.b-TERMINE{background:#95a5a6;color:#fff;} .b-ANNULE{background:#E74C3C;color:#fff;}
+/* Avis */
+.avis-card {
+  border-radius:12px; border:1.5px solid #f0f4e8; padding:18px 20px; margin-bottom:14px;
+}
+.star-filled { color:#F39C12; }
+.star-empty  { color:#d1d5db; }
+.avis-form-wrap {
+  background:#f0f4e8; border-radius:14px; padding:24px;
+  border:2px dashed #8BC34A;
+}
+</style>
+{% endblock %}
+{% block body %}
+
+<!-- HERO BANNER -->
+<div style="margin-top:0;position:relative;min-height:340px;display:flex;align-items:flex-end;overflow:hidden;
+            background:linear-gradient(135deg,#667A3F,#3498DB);">
+  {% if evenement.imageUrl %}
+    <img src="{{ asset(evenement.imageUrl) }}" alt="{{ evenement.titre }}"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.32;"
+         onerror="this.style.display='none'">
+  {% endif %}
+  <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,.08));"></div>
+  <div class="container" style="position:relative;z-index:2;padding:110px 0 36px 0;">
+    <nav style="font-size:.84rem;color:rgba(255,255,255,.65);margin-bottom:12px;">
+      <a href="{{ path('app_evenement_index') }}" style="color:rgba(255,255,255,.8);text-decoration:none;">Événements</a>
+      <span style="margin:0 8px;color:rgba(255,255,255,.35)">›</span>
+      <span>{{ evenement.titre|slice(0,50) }}</span>
+    </nav>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <span class="b-type b-{{ evenement.type }}">{{ evenement.type }}</span>
+      <span class="b-stat b-{{ evenement.statut }}">
+        {% if evenement.statut=='A_VENIR' %}À venir{% elseif evenement.statut=='EN_COURS' %}En cours{% elseif evenement.statut=='TERMINE' %}Terminé{% else %}Annulé{% endif %}
+      </span>
+    </div>
+    <h1 style="font-size:2.2rem;font-weight:800;color:#fff;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.5);">{{ evenement.titre }}</h1>
+    <div class="hero-actions-row mt-3">
+      {% include 'Evenement/_retour_button.html.twig' with { back_path: path('app_evenement_index'), back_label: 'Retour aux événements' } %}
+    </div>
+  </div>
+</div>
+
+<section class="services section" style="padding-top:40px;">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- LEFT -->
+      <div class="col-lg-8">
+
+        <!-- Infos -->
+        <div class="detail-card">
+          <h4><i class="bi bi-info-circle-fill"></i>Informations</h4>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div><div class="info-label">Lieu</div><div class="info-value">{{ evenement.lieu }}</div></div>
+              </div>
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-calendar3"></i></div>
+                <div><div class="info-label">Date début</div><div class="info-value">{{ evenement.dateDebut|date('d/m/Y') }}</div></div>
+              </div>
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-calendar-check"></i></div>
+                <div><div class="info-label">Date fin</div><div class="info-value">{{ evenement.dateFin|date('d/m/Y') }}</div></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-person-badge-fill"></i></div>
+                <div><div class="info-label">Organisateur</div><div class="info-value">{{ evenement.organisateur }}</div></div>
+              </div>
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-people-fill"></i></div>
+                <div><div class="info-label">Inscriptions</div><div class="info-value">{{ evenement.nombreParticipants }} / {{ evenement.nombrePlacesMax }}</div></div>
+              </div>
+              <div class="info-row">
+                <div class="info-icon"><i class="bi bi-calendar-plus"></i></div>
+                <div><div class="info-label">Créé le</div><div class="info-value">{{ evenement.dateCreation|date('d/m/Y') }}</div></div>
+              </div>
+            </div>
+          </div>
+          {% set pct = evenement.nombrePlacesMax > 0 ? ((evenement.nombreParticipants / evenement.nombrePlacesMax)*100)|round : 0 %}
+          <div class="d-flex justify-content-between mb-1" style="font-size:.83rem;color:#6b7280;">
+            <span><strong>{{ evenement.nombreParticipants }}</strong> inscrits</span>
+            <span><strong>{{ evenement.placesRestantes }}</strong> place(s) restante(s)</span>
+          </div>
+          <div class="places-bar">
+            <div class="places-fill" style="width:{{ pct > 100 ? 100 : pct }}%;background:{{ pct>=90 ? '#E74C3C' : (pct>=60 ? '#F39C12' : '#8BC34A') }}"></div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        {% if evenement.description %}
+        <div class="detail-card">
+          <h4><i class="bi bi-file-text-fill"></i>Description</h4>
+          <p style="color:#4b5563;line-height:1.75;font-size:.97rem;">{{ evenement.description|nl2br }}</p>
+        </div>
+        {% endif %}
+
+        <!-- ── AVIS SECTION ── -->
+        <div class="detail-card">
+          <h4><i class="bi bi-star-fill"></i>Avis et évaluations
+            {% if avis|length > 0 %}
+              <span style="font-size:.8rem;font-weight:500;color:#9ca3af;">({{ avis|length }} avis)</span>
+            {% endif %}
+          </h4>
+
+          {# Form: add new avis #}
+          {% if avisForm %}
+          <div class="avis-form-wrap mb-4">
+            <h6 class="fw-bold mb-3" style="color:#667A3F;"><i class="bi bi-pencil-square me-1"></i>Laisser un avis</h6>
+            <form method="post" action="{{ path('app_evenement_avis', {id: evenement.id}) }}">
+              {{ form_errors(avisForm) }}
+              <div class="mb-3">
+                {{ form_label(avisForm.note) }}
+                {{ form_widget(avisForm.note) }}
+                {{ form_errors(avisForm.note) }}
+              </div>
+              <div class="mb-3">
+                {{ form_label(avisForm.avis) }}
+                {{ form_widget(avisForm.avis) }}
+              </div>
+              {{ form_rest(avisForm) }}
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-send-fill me-1"></i>Publier mon avis
+              </button>
+            </form>
+          </div>
+          {% elseif app.user and userParticipation and userParticipation.statut == 'PRESENT' and userParticipation.note > 0 %}
+          <div class="alert alert-success py-2 mb-3">
+            <i class="bi bi-check-circle-fill me-1"></i>Vous avez déjà laissé un avis pour cet événement.
+          </div>
+          {% endif %}
+
+          {# List of avis #}
+          {% if avis|length == 0 %}
+            <p class="text-muted" style="font-size:.9rem;">Aucun avis pour l'instant. Soyez le premier à partager votre expérience !</p>
+          {% else %}
+            {% for p in avis %}
+            <div class="avis-card">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width:36px;height:36px;border-radius:50%;background:#667A3F22;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-person-fill" style="color:#667A3F;font-size:.9rem;"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight:700;font-size:.9rem;color:#1a2e05;">
+                      {{ p.utilisateur.prenom }} {{ p.utilisateur.nom }}
+                    </div>
+                    <div style="font-size:.75rem;color:#9ca3af;">{{ p.dateInscription|date('d/m/Y') }}</div>
+                  </div>
+                </div>
+                <div>
+                  {% for i in 1..5 %}
+                    <i class="bi bi-star-fill {{ i <= p.note ? 'star-filled' : 'star-empty' }}" style="font-size:.9rem;"></i>
+                  {% endfor %}
+                  <span style="font-size:.82rem;font-weight:700;color:#F39C12;margin-left:4px;">{{ p.note }}/5</span>
+                </div>
+              </div>
+              {% if p.avis %}
+                <p style="margin:0;font-size:.9rem;color:#4b5563;line-height:1.6;">{{ p.avis }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Participants list (creator/admin) -->
+        {% if app.user and (app.user == evenement.createur or is_granted('ROLE_ADMIN')) %}
+        <div class="detail-card">
+          <h4><i class="bi bi-people-fill"></i>Participants inscrits</h4>
+          {% if evenement.participations is empty %}
+            <p class="text-muted">Aucun participant pour l'instant.</p>
+          {% else %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead class="table-light">
+                  <tr><th>Nom</th><th>Statut</th><th>Inscrit le</th></tr>
+                </thead>
+                <tbody>
+                  {% for p in evenement.participations %}
+                  {% if p.statut != 'ANNULE' %}
+                  <tr>
+                    <td>{{ p.utilisateur.prenom }} {{ p.utilisateur.nom }}</td>
+                    <td><span class="badge bg-{{ p.statut=='CONFIRME' ? 'success' : p.statut=='PRESENT' ? 'info' : 'warning text-dark' }}">{{ p.statut }}</span></td>
+                    <td>{{ p.dateInscription|date('d/m/Y') }}</td>
+                  </tr>
+                  {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- RIGHT: Actions -->
+      <div class="col-lg-4">
+        <div class="action-card">
+
+          {% if not app.user %}
+            <a href="{{ path('app_login') }}" class="btn-inscrire mb-3">
+              <i class="bi bi-box-arrow-in-right"></i>Connectez-vous pour s'inscrire
+            </a>
+
+          {% elseif app.user == evenement.createur or is_granted('ROLE_ADMIN') %}
+            <div class="mb-3 p-3 text-center" style="background:#f0f4e8;border-radius:10px;">
+              <i class="bi bi-person-badge-fill text-success" style="font-size:1.5rem;"></i>
+              <div class="fw-bold mt-1" style="color:#667A3F;">Vous êtes organisateur</div>
+            </div>
+            <a href="{{ path('app_evenement_edit', {id: evenement.id}) }}" class="btn-edit-ev mb-3">
+              <i class="bi bi-pencil-fill"></i>Modifier l'événement
+            </a>
+            <form method="post" action="{{ path('app_evenement_delete', {id: evenement.id}) }}"
+                  onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
+              <input type="hidden" name="_token" value="{{ csrf_token('delete'~evenement.id) }}">
+              <button type="submit" class="btn-del-ev mb-3">
+                <i class="bi bi-trash3-fill"></i>Supprimer
+              </button>
+            </form>
+
+          {% elseif userParticipation and userParticipation.statut != 'ANNULE' %}
+            <div class="mb-3 p-3 text-center" style="background:#f0f9e8;border-radius:10px;border:2px solid #8BC34A;">
+              <i class="bi bi-check-circle-fill text-success" style="font-size:1.6rem;"></i>
+              <div class="fw-bold text-success mt-1">Vous êtes inscrit !</div>
+              <div style="font-size:.8rem;color:#6b7280;">Statut : {{ userParticipation.statut }}</div>
+            </div>
+            {% if evenement.statut not in ['TERMINE','ANNULE'] %}
+            <form method="post" action="{{ path('app_evenement_desinscrire', {id: evenement.id}) }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('desinscrire'~evenement.id) }}">
+              <button type="submit" class="btn-desinscrire mb-3"
+                      onclick="return confirm('Annuler votre inscription ?')">
+                <i class="bi bi-x-circle-fill"></i>Se désinscrire
+              </button>
+            </form>
+            {% endif %}
+
+          {% elseif evenement.statut in ['TERMINE','ANNULE'] %}
+            <button class="btn-inscrire mb-3" disabled style="opacity:.6;">
+              <i class="bi bi-lock-fill"></i>Inscriptions fermées
+            </button>
+
+          {% elseif evenement.placesRestantes <= 0 %}
+            <button class="btn-inscrire mb-3" disabled style="opacity:.6;background:#E74C3C;">
+              <i class="bi bi-exclamation-circle-fill"></i>Événement complet
+            </button>
+
+          {% else %}
+            <form method="post" action="{{ path('app_evenement_inscrire', {id: evenement.id}) }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('inscrire'~evenement.id) }}">
+              <button type="submit" class="btn-inscrire mb-3">
+                <i class="bi bi-person-plus-fill"></i>S'inscrire à l'événement
+              </button>
+            </form>
+          {% endif %}
+
+          <!-- Favori -->
+          {% if app.user and app.user.role != 'ADMIN' %}
+          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}" class="mb-4">
+            <input type="hidden" name="_token" value="{{ csrf_token('favori'~evenement.id) }}">
+            <button type="submit" class="btn-fav-lg {{ isFavori ? 'on' : '' }}">
+              <i class="bi bi-heart{{ isFavori ? '-fill' : '' }}"></i>
+              {{ isFavori ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+            </button>
+          </form>
+          {% endif %}
+
+          <!-- Quick stats -->
+          <div class="pt-3 border-top" style="font-size:.82rem;color:#9ca3af;text-align:center;">
+            <i class="bi bi-shield-check me-1 text-success"></i>Inscription sécurisée via Ardhi
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

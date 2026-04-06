@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes Favoris - Ardhi{% endblock %}
+{% block stylesheets %}<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+.ev-grid-card{background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.07);overflow:hidden;transition:transform .22s,box-shadow .22s;height:100%;}
+.ev-grid-card:hover{transform:translateY(-5px);box-shadow:0 12px 32px rgba(0,0,0,.13);}
+.ev-grid-img{height:165px;object-fit:cover;width:100%;display:block;}
+.ev-grid-placeholder{height:165px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,#E74C3C11,#E74C3C22);}
+.ev-body{padding:18px;}
+.ev-meta{font-size:.83rem;color:#6b7280;display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.ev-meta i{color:#667A3F;}
+.ev-foot{padding:12px 18px;background:#f9fafb;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
+.b-type{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;}
+.b-FOIRE{background:#3498DB22;color:#2980b9;}.b-FORMATION{background:#9B59B622;color:#8e44ad;}
+.b-CONFERENCE{background:#F39C1222;color:#e67e22;}.b-ATELIER{background:#2ECC7122;color:#27ae60;}
+.btn-voir{background:#667A3F;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:.87rem;font-weight:600;text-decoration:none;transition:background .2s;}
+.btn-voir:hover{background:#4a5c2a;color:#fff;}
+.btn-retirer{background:none;border:1.5px solid #E74C3C;color:#E74C3C;border-radius:8px;padding:6px 14px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-retirer:hover{background:#E74C3C;color:#fff;}
+/* Filter bar: same style as liste des evenements */
+.filter-wrap {
+  background:#fff; border-radius:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+  padding:20px 24px; margin-top:-28px;
+  position:relative; z-index:10;
+}
+.filter-wrap .form-control,
+.filter-wrap .form-select {
+  border-radius:8px; border:1.5px solid #e2e8f0; font-size:.93rem;
+}
+.filter-wrap .form-control:focus,
+.filter-wrap .form-select:focus {
+  border-color:#667A3F; box-shadow:0 0 0 3px rgba(102,122,63,.15);
+}
+.btn-filtrer { background:#667A3F;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-weight:700; }
+.btn-filtrer:hover { background:#4a5c2a;color:#fff; }
+.btn-reset { border:1.5px solid #667A3F;color:#667A3F;background:transparent;border-radius:8px;padding:9px 14px;font-weight:600; transition:all .2s; }
+.btn-reset:hover { background:#667A3F;color:#fff; }
+.hero-fav { min-height:520px !important; overflow:visible; }
+.hero-fav .hero-left { padding:90px 40px 70px 40px !important; }
+</style>{% endblock %}
+{% block body %}
+<section class="hero section dark-background hero-fav"
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.6),rgba(10,15,8,.12)),url('{{ asset('assets/img/hero_3.jpg') }}');
+         background-size:cover;background-position:center;margin-top:70px;">
+  <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
+    <div class="hero-left" style="max-width:820px;">
+      <span class="hero-label">MES FAVORIS</span>
+      <h1 class="hero-headline">Vos événements sauvegardés</h1>
+      <p class="hero-description">{{ favoris|length }} événement(s) dans vos favoris.</p>
+      <div class="hero-cta-group">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Voir tous les événements</a>
+        {% if app.user.role != 'ADMIN' %}
+        <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary">Mes inscriptions</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+<section class="services section" style="padding-top:36px;">
+  <div class="container">
+    {% if favoris is empty %}
+      <div class="text-center py-5" style="color:#9ca3af;">
+        <i class="bi bi-heart" style="font-size:4rem;color:#d1d5db;display:block;margin-bottom:16px;"></i>
+        <h5 class="fw-bold">Aucun favori pour l'instant</h5>
+        <p>Explorez les événements et cliquez sur ❤️ pour sauvegarder.</p>
+        <a href="{{ path('app_evenement_index') }}" class="btn-voir mt-2">Voir les événements</a>
+      </div>
+    {% else %}
+    <div class="filter-wrap mt-0 mb-4" style="margin-top:0!important">
+      <form id="fav-filter-form">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small text-muted mb-1">Rechercher</label>
+            <input id="fav-search" type="text" class="form-control" placeholder="Événement, lieu, type...">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small text-muted mb-1">Type</label>
+            <select id="fav-type" class="form-select">
+              <option value="">-- Tous les types --</option>
+              <option value="FOIRE">Foire</option>
+              <option value="FORMATION">Formation</option>
+              <option value="CONFERENCE">Conférence</option>
+              <option value="ATELIER">Atelier</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small text-muted mb-1">Statut</label>
+            <select id="fav-statut" class="form-select">
+              <option value="">-- Tous les statuts --</option>
+              <option value="A_VENIR">À venir</option>
+              <option value="EN_COURS">En cours</option>
+              <option value="TERMINE">Terminé</option>
+              <option value="ANNULE">Annulé</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex gap-2">
+            <button id="fav-apply" type="button" class="btn-filtrer flex-fill"><i class="bi bi-search me-1"></i>Filtrer</button>
+            <button id="fav-reset" type="button" class="btn-reset"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="row g-4 pb-5" id="favoris-list">
+      {% for fav in favoris %}{% set e = fav.evenement %}
+      <div class="col-lg-4 col-md-6"
+           data-favori-item
+           data-title="{{ e.titre|lower|e('html_attr') }}"
+           data-lieu="{{ e.lieu|lower|e('html_attr') }}"
+           data-type="{{ e.type|lower|e('html_attr') }}"
+           data-statut="{{ e.statut|default('')|lower|e('html_attr') }}"
+           data-added-date="{{ fav.dateAjout ? fav.dateAjout|date('Y-m-d H:i:s') : '' }}"
+           data-event-date="{{ e.dateDebut ? e.dateDebut|date('Y-m-d') : '' }}">
+        <div class="ev-grid-card">
+          {% if e.imageUrl %}<img src="{{ asset(e.imageUrl) }}" class="ev-grid-img" alt="{{ e.titre }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="ev-grid-placeholder" style="display:none;">{% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}</div>
+          {% else %}<div class="ev-grid-placeholder">{% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}</div>{% endif %}
+          <div class="ev-body">
+            <span class="b-type b-{{ e.type }}">{{ e.type }}</span>
+            <h6 class="fw-bold mt-2 mb-2" style="color:#1a2e05;">{{ e.titre }}</h6>
+            <div class="ev-meta"><i class="bi bi-geo-alt-fill"></i>{{ e.lieu }}</div>
+            <div class="ev-meta"><i class="bi bi-calendar3"></i>{{ e.dateDebut|date('d/m/Y') }}</div>
+            <div class="ev-meta"><i class="bi bi-heart-fill" style="color:#E74C3C;"></i>Ajouté le {{ fav.dateAjout|date('d/m/Y') }}</div>
+          </div>
+          <div class="ev-foot">
+            <a href="{{ path('app_evenement_show', {id: e.id}) }}" class="btn-voir">Voir</a>
+            <form method="post" action="{{ path('app_evenement_toggle_favori', {id: e.id}) }}" class="m-0">
+              <input type="hidden" name="_token" value="{{ csrf_token('favori'~e.id) }}">
+              <button type="submit" class="btn-retirer" onclick="return confirm('Retirer des favoris ?')">Retirer ❤️</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p id="fav-empty-filter" class="text-center text-muted py-3 d-none">Aucun résultat pour ce filtre.</p>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+{% block javascripts %}
+{{ parent() }}
+<script>
+  (() => {
+    const searchInput = document.getElementById('fav-search');
+    const typeSelect = document.getElementById('fav-type');
+    const statutSelect = document.getElementById('fav-statut');
+    const list = document.getElementById('favoris-list');
+    if (!searchInput || !typeSelect || !statutSelect || !list) return;
+
+    const emptyMsg = document.getElementById('fav-empty-filter');
+    const items = Array.from(list.querySelectorAll('[data-favori-item]'));
+
+    const apply = () => {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const type = (typeSelect.value || '').toLowerCase();
+      const statut = (statutSelect.value || '').toLowerCase();
+
+      const filtered = items.filter((el) => {
+        const haystack = [el.dataset.title, el.dataset.lieu, el.dataset.type, el.dataset.statut].join(' ');
+        const textOk = !q || haystack.includes(q);
+        const typeOk = !type || (el.dataset.type || '') === type;
+        const statutOk = !statut || (el.dataset.statut || '') === statut;
+        const ok = textOk && typeOk && statutOk;
+        el.style.display = ok ? '' : 'none';
+        return ok;
+      });
+
+      if (emptyMsg) emptyMsg.classList.toggle('d-none', filtered.length > 0);
+    };
+
+    const applyBtn = document.getElementById('fav-apply');
+    const resetBtn = document.getElementById('fav-reset');
+    let timeoutId;
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(apply, 450);
+    });
+    typeSelect.addEventListener('change', apply);
+    statutSelect.addEventListener('change', apply);
+    if (applyBtn) applyBtn.addEventListener('click', apply);
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        typeSelect.value = '';
+        statutSelect.value = '';
+        apply();
+      });
+    }
+  })();
+</script>
+{% endblock %}

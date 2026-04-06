@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block body %}
+    {% set currentRoute = app.request.attributes.get('_route') %}
 
     <!-- Hero Section -->
     <section id="hero" class="hero section dark-background">
@@ -88,7 +89,10 @@
                 </div>
               </a>
 
-              <a href="#" class="service-sidebar-item">
+              {# ── ÉVÈNEMENTS ── lien actif vers le module #}
+              <a href="{{ path('app_evenement_index') }}"
+                 class="service-sidebar-item{{ currentRoute starts with('app_evenement') ? ' active' : '' }}"
+                 aria-current="{{ currentRoute starts with('app_evenement') ? 'page' : '' }}">
                 <div class="service-sidebar-icon">
                   <i class="bi bi-calendar2-event"></i>
                 </div>
@@ -198,6 +202,10 @@
                 <div class="service-item-content">
                   <h3 class="service-heading">Évènements</h3>
                   <p>Découvrez et participez aux événements, foires et formations agricoles pour enrichir vos connaissances et votre réseau.</p>
+                  <a href="{{ path('app_evenement_index') }}"
+                     style="display:inline-block;margin-top:10px;color:#667A3F;font-weight:600;font-size:.9rem;">
+                    Voir les événements →
+                  </a>
                 </div>
               </div>
             </div>

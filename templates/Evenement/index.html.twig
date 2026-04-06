@@ -1,0 +1,279 @@
+{% extends 'base.html.twig' %}
+{% block title %}Événements Agricoles - Ardhi{% endblock %}
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+.ev-card {
+  background: #fff; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.07);
+  transition: transform .25s, box-shadow .25s;
+  display: flex; flex-direction: column; height: 100%;
+}
+.ev-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(0,0,0,.13); }
+.ev-card-img { height: 190px; object-fit: cover; width: 100%; display: block; }
+.ev-card-placeholder {
+  height: 190px; display: flex; align-items: center;
+  justify-content: center; font-size: 3.5rem;
+  background: linear-gradient(135deg,#667A3F22,#8BC34A11);
+}
+.ev-card-body { padding: 20px; flex: 1; }
+.ev-card-title {
+  font-weight: 700; font-size: 1rem; color: #1a2e05; margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ev-meta { font-size: .84rem; color: #6b7280; display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.ev-meta i { color: #667A3F; }
+.ev-card-foot {
+  padding: 12px 20px; background: #f9fafb; border-top: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.b-type,.b-stat { font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase; }
+.b-FOIRE{background:#3498DB22;color:#2980b9;} .b-FORMATION{background:#9B59B622;color:#8e44ad;}
+.b-CONFERENCE{background:#F39C1222;color:#e67e22;} .b-ATELIER{background:#2ECC7122;color:#27ae60;}
+.b-A_VENIR{background:#8BC34A;color:#fff;} .b-EN_COURS{background:#3498DB;color:#fff;}
+.b-TERMINE{background:#95a5a6;color:#fff;} .b-ANNULE{background:#E74C3C;color:#fff;}
+.ev-bar { height:6px;border-radius:10px;background:#f1f5f9;overflow:hidden;margin:8px 0 3px; }
+.ev-bar-fill { height:100%;border-radius:10px; }
+.btn-voir { background:#667A3F;color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:.88rem;font-weight:600;text-decoration:none;transition:background .2s; }
+.btn-voir:hover { background:#4a5c2a;color:#fff; }
+.btn-fav { background:none;border:none;cursor:pointer;font-size:1.2rem;transition:transform .2s; }
+.btn-fav:hover { transform:scale(1.3); }
+.btn-fav.on i { color:#E74C3C; } .btn-fav:not(.on) i { color:#cbd5e1; }
+.filter-wrap {
+  background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:20px 24px;margin-top:18px;
+}
+.filter-wrap .form-control,.filter-wrap .form-select { border-radius:8px;border:1.5px solid #e2e8f0;font-size:.93rem; }
+.filter-wrap .form-control:focus,.filter-wrap .form-select:focus { border-color:#667A3F;box-shadow:0 0 0 3px rgba(102,122,63,.15); }
+.btn-filtrer { background:#667A3F;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-weight:700; }
+.btn-filtrer:hover { background:#4a5c2a;color:#fff; }
+.btn-reset { border:1.5px solid #667A3F;color:#667A3F;background:transparent;border-radius:8px;padding:9px 14px;font-weight:600;transition:all .2s; }
+.btn-reset:hover { background:#667A3F;color:#fff; }
+</style>
+{% endblock %}
+
+{% block body %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+
+{#
+  KEY FIX: Use the EXACT same <section class="hero section dark-background">
+  that the homepage uses. The homepage CSS sets this to min-height:100vh
+  and the fixed header overlays it — no margin-top needed here.
+  We replicate the carousel item structure so background fills identically.
+#}
+<section id="hero" class="hero section dark-background">
+
+  {# Fake carousel item — gives identical CSS treatment as homepage slides #}
+  <div class="carousel-item active" style="position:absolute;inset:0;">
+    <img id="ev-bg-img" src="{{ asset('assets/img/hero_1.jpg') }}" alt=""
+         style="width:100%;height:100%;object-fit:cover;object-position:center;
+                display:block;transition:opacity .5s ease;">
+  </div>
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,15,8,.42),rgba(10,15,8,.10));z-index:1;"></div>
+
+  {# Content wrapper — exact same class as homepage #}
+  <div class="hero-content-wrapper" style="position:relative;z-index:2;">
+
+    <div class="hero-left">
+      <div class="hero-label">MODULE ÉVÉNEMENTS</div>
+      {% if app.user and app.user.role == 'AGRICULTEUR' %}
+        <h1 class="hero-headline">Vos événements<br>agricoles</h1>
+        <p class="hero-description">Créez, modifiez et suivez vos événements en un seul endroit.</p>
+      {% elseif app.user and app.user.role == 'ADMIN' %}
+        <h1 class="hero-headline">Administration<br>des événements</h1>
+        <p class="hero-description">Gérez tous les événements de la plateforme Ardhi.</p>
+      {% else %}
+        <h1 class="hero-headline">Découvrez les<br>événements agricoles</h1>
+        <p class="hero-description">Foires, formations, conférences et ateliers — participez et développez votre réseau.</p>
+      {% endif %}
+      <div class="hero-cta-group">
+        {% if app.user and app.user.role in ['AGRICULTEUR','ADMIN'] %}
+          <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
+        {% endif %}
+        <a href="#events" class="hero-btn-secondary">Voir les événements</a>
+      </div>
+    </div>
+
+    {# Glassmorphic sidebar — exact same class as homepage #}
+    <div class="hero-services-sidebar">
+      <div class="services-glass-panel">
+        <div class="services-panel-title">Navigation</div>
+
+        <a href="{{ path('app_evenement_index') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_index' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar-event-fill"></i></div>
+          <div class="service-sidebar-text"><h4>Tous les événements</h4><span>Explorer et filtrer</span></div>
+        </a>
+
+        {% if app.user and app.user.role != 'ADMIN' %}
+        <a href="{{ path('app_evenement_inscriptions') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_inscriptions' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-journal-check"></i></div>
+          <div class="service-sidebar-text"><h4>Mes inscriptions</h4><span>Gérer mes participations</span></div>
+        </a>
+        <a href="{{ path('app_evenement_favoris') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_favoris' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-heart-fill"></i></div>
+          <div class="service-sidebar-text"><h4>Mes favoris</h4><span>Événements sauvegardés</span></div>
+        </a>
+        {% endif %}
+
+        {% if app.user %}
+        <a href="{{ path('app_evenement_calendrier') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_calendrier' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
+          <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
+        </a>
+
+        {% if app.user.role in ['AGRICULTEUR','ADMIN'] %}
+        <a href="{{ path('app_evenement_statistics') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_statistics' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-graph-up"></i></div>
+          <div class="service-sidebar-text"><h4>Statistiques</h4><span>Tableaux de bord</span></div>
+        </a>
+        <a href="{{ path('app_evenement_participations') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_participations' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+          <div class="service-sidebar-text"><h4>Participations</h4><span>Gérer les inscriptions</span></div>
+        </a>
+        {% endif %}
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  {# Dots — visual parity with homepage carousel #}
+  <ol class="carousel-indicators" style="z-index:3;">
+    <li class="active"></li><li></li><li></li>
+  </ol>
+
+</section>
+
+{# Background image rotation — matches homepage carousel timing #}
+<script>
+(function(){
+  var img  = document.getElementById('ev-bg-img');
+  var dots = document.querySelectorAll('#hero .carousel-indicators li');
+  if (!img) return;
+  var srcs = [
+    "{{ asset('assets/img/hero_1.jpg') }}",
+    "{{ asset('assets/img/hero_3.jpg') }}",
+    "{{ asset('assets/img/hero_4.jpg') }}"
+  ];
+  var i = 0;
+  setInterval(function(){
+    img.style.opacity = '0';
+    setTimeout(function(){
+      i = (i + 1) % srcs.length;
+      img.src = srcs[i];
+      img.style.opacity = '1';
+      dots.forEach(function(d,k){ d.classList.toggle('active', k===i); });
+    }, 350);
+  }, 5000);
+})();
+</script>
+
+{# ── FILTER + GRID ── #}
+<div class="container" id="events">
+  <div class="filter-wrap">
+    <form method="get" action="{{ path('app_evenement_index') }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small text-muted mb-1">Rechercher</label>
+          <input type="text" name="search" value="{{ search ?? '' }}" class="form-control" placeholder="Titre, lieu, organisateur...">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small text-muted mb-1">Type</label>
+          <select name="type" class="form-select">
+            <option value="">-- Tous les types --</option>
+            {% for lbl,val in {'Foire':'FOIRE','Formation':'FORMATION','Conférence':'CONFERENCE','Atelier':'ATELIER'} %}
+              <option value="{{ val }}" {% if (type??'')==val %}selected{% endif %}>{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small text-muted mb-1">Statut</label>
+          <select name="statut" class="form-select">
+            <option value="">-- Tous les statuts --</option>
+            {% for lbl,val in {'À venir':'A_VENIR','En cours':'EN_COURS','Terminé':'TERMINE','Annulé':'ANNULE'} %}
+              <option value="{{ val }}" {% if (statut??'')==val %}selected{% endif %}>{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn-filtrer flex-fill"><i class="bi bi-search me-1"></i>Filtrer</button>
+          <a href="{{ path('app_evenement_index') }}" class="btn-reset"><i class="bi bi-x-lg"></i></a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <p class="text-muted mt-3 mb-4 small">
+    <i class="bi bi-calendar3 me-1 text-success"></i>
+    <strong>{{ evenements|length }}</strong> événement(s){% if (type??'') or (statut??'') or (search??'') %} — filtrés{% endif %}
+  </p>
+
+  {% if evenements is empty %}
+    <div class="text-center py-5" style="color:#9ca3af;">
+      <i class="bi bi-calendar-x" style="font-size:4rem;color:#d1d5db;display:block;margin-bottom:16px;"></i>
+      <h5 class="fw-bold">Aucun événement trouvé</h5>
+      <p>Modifiez vos filtres ou créez un événement.</p>
+      {% if app.user %}<a href="{{ path('app_evenement_new') }}" class="btn-voir mt-2">Créer un événement</a>{% endif %}
+    </div>
+  {% else %}
+  <div class="row g-4 pb-5">
+    {% for e in evenements %}
+    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index0%3)*100 }}">
+      <div class="ev-card">
+        {% if e.imageUrl %}
+          <img src="{{ asset(e.imageUrl) }}" class="ev-card-img" alt="{{ e.titre }}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="ev-card-placeholder" style="display:none;">
+            {% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}
+          </div>
+        {% else %}
+          <div class="ev-card-placeholder">
+            {% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}
+          </div>
+        {% endif %}
+
+        <div class="ev-card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="b-type b-{{ e.type }}">{{ e.type }}</span>
+            <span class="b-stat b-{{ e.statut }}">
+              {% if e.statut=='A_VENIR' %}À venir{% elseif e.statut=='EN_COURS' %}En cours{% elseif e.statut=='TERMINE' %}Terminé{% else %}Annulé{% endif %}
+            </span>
+          </div>
+          <h5 class="ev-card-title">{{ e.titre }}</h5>
+          <div class="ev-meta"><i class="bi bi-geo-alt-fill"></i>{{ e.lieu }}</div>
+          <div class="ev-meta"><i class="bi bi-calendar3"></i>{{ e.dateDebut|date('d/m/Y') }}{% if e.dateFin != e.dateDebut %} → {{ e.dateFin|date('d/m/Y') }}{% endif %}</div>
+          <div class="ev-meta"><i class="bi bi-person-fill"></i>{{ e.organisateur }}</div>
+          {% set pct = e.nombrePlacesMax>0 ? ((e.nombreParticipants/e.nombrePlacesMax)*100)|round : 0 %}
+          <div class="ev-bar">
+            <div class="ev-bar-fill" style="width:{{ pct>100?100:pct }}%;background:{{ pct>=90?'#E74C3C':(pct>=60?'#F39C12':'#8BC34A') }}"></div>
+          </div>
+          <div class="d-flex justify-content-between" style="font-size:.76rem;color:#9ca3af;">
+            <span>{{ e.nombreParticipants }} inscrits</span>
+            <span>{{ e.placesRestantes }} restantes</span>
+          </div>
+        </div>
+
+        <div class="ev-card-foot">
+          <a href="{{ path('app_evenement_show', {id: e.id}) }}" class="btn-voir">Voir les détails</a>
+          {% if app.user and app.user.role != 'ADMIN' %}
+          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: e.id}) }}" class="m-0">
+            <input type="hidden" name="_token" value="{{ csrf_token('favori'~e.id) }}">
+            <button type="submit" class="btn-fav {{ e.id in favorisIds ? 'on' : '' }}"
+                    title="{{ e.id in favorisIds ? 'Retirer des favoris' : 'Ajouter aux favoris' }}">
+              <i class="bi bi-heart-fill"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
