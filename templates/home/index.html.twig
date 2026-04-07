@@ -59,7 +59,7 @@
                 </div>
               </a>
 
-              <a href="#" class="service-sidebar-item">
+              <a href="{{ path('app_marketplace') }}" class="service-sidebar-item{{ currentRoute == 'app_marketplace' ? ' active' : '' }}">
                 <div class="service-sidebar-icon">
                   <i class="bi bi-shop"></i>
                 </div>
@@ -69,7 +69,7 @@
                 </div>
               </a>
 
-              <a href="#" class="service-sidebar-item">
+              <a href="{{ path('app_materiel_et_maintenance') }}" class="service-sidebar-item{{ (currentRoute == 'app_materiel_et_maintenance') or (currentRoute starts with 'app_materiel_') or (currentRoute starts with 'app_maintenance_') ? ' active' : '' }}">
                 <div class="service-sidebar-icon">
                   <i class="bi bi-wrench-adjustable"></i>
                 </div>
