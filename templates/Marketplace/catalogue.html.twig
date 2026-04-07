@@ -136,11 +136,11 @@
                   <div style="display:flex; flex-direction:column; gap:12px;">
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Min: <span id="v-min-p">{{ filters.prix_min ?: 0 }}</span> DT</small>
-                          <input type="range" name="prix_min" id="filter-prix-min" class="custom-range-slider" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="if(parseFloat(this.value) > parseFloat(document.getElementById('filter-prix-max').value)){this.value = document.getElementById('filter-prix-max').value;} document.getElementById('v-min-p').innerText = this.value;">
+                          <input type="range" name="prix_min" id="filter-prix-min" class="custom-range-slider" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="document.getElementById('v-min-p').innerText = this.value;">
                       </div>
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Max: <span id="v-max-p">{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}</span> DT</small>
-                          <input type="range" name="prix_max" id="filter-prix-max" class="custom-range-slider" value="{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="if(parseFloat(this.value) < parseFloat(document.getElementById('filter-prix-min').value)){this.value = document.getElementById('filter-prix-min').value;} document.getElementById('v-max-p').innerText = this.value;">
+                          <input type="range" name="prix_max" id="filter-prix-max" class="custom-range-slider" value="{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="document.getElementById('v-max-p').innerText = this.value;">
                       </div>
                   </div>
               </div>
@@ -153,11 +153,11 @@
                   <div style="display:flex; flex-direction:column; gap:12px;">
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Mini: <span id="v-min-s">{{ filters.stock_min ?: 0 }}</span></small>
-                          <input type="range" name="stock_min" id="filter-stock-min" class="custom-range-slider" value="{{ filters.stock_min ?: 0 }}" min="0" max="10000" step="1" oninput="if(parseInt(this.value) > parseInt(document.getElementById('filter-stock-max').value)){this.value = document.getElementById('filter-stock-max').value;} document.getElementById('v-min-s').innerText = this.value;">
+                          <input type="range" name="stock_min" id="filter-stock-min" class="custom-range-slider" value="{{ filters.stock_min ?: 0 }}" min="0" max="10000" step="1" oninput="document.getElementById('v-min-s').innerText = this.value;">
                       </div>
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Maxi: <span id="v-max-s">{{ filters.stock_max ?: 10000 }}</span></small>
-                          <input type="range" name="stock_max" id="filter-stock-max" class="custom-range-slider" value="{{ filters.stock_max ?: 10000 }}" min="0" max="10000" step="1" oninput="if(parseInt(this.value) < parseInt(document.getElementById('filter-stock-min').value)){this.value = document.getElementById('filter-stock-min').value;} document.getElementById('v-max-s').innerText = this.value;">
+                          <input type="range" name="stock_max" id="filter-stock-max" class="custom-range-slider" value="{{ filters.stock_max ?: 10000 }}" min="0" max="10000" step="1" oninput="document.getElementById('v-max-s').innerText = this.value;">
                       </div>
                   </div>
               </div>

@@ -327,16 +327,6 @@ function updateLabels() {
     const sSmin = document.getElementById('filter-stock-min');
     const sSmax = document.getElementById('filter-stock-max');
 
-    // Prix Validation
-    if (parseFloat(sPmin.value) > parseFloat(sPmax.value)) {
-        sPmin.value = sPmax.value;
-    }
-
-    // Stock Validation
-    if (parseFloat(sSmin.value) > parseFloat(sSmax.value)) {
-        sSmin.value = sSmax.value;
-    }
-
     const pMin = sPmin.value;
     const pMax = sPmax.value;
     const sMin = sSmin.value;

@@ -291,12 +291,8 @@
 
 <script>
 function updateDateMin() {
-    const start = document.getElementById('filter-date-start').value;
-    const endInput = document.getElementById('filter-date-end');
-    endInput.min = start;
-    if (endInput.value && endInput.value < start) {
-        endInput.value = start;
-    }
+    // On ne fait plus de blocage JS, on laisse le PHP gérer la validation finale.
+    // Cette fonction peut être supprimée ou vidée si elle n'est plus utile pour le style.
 }
 
 // ── FILTRAGE SERVEUR (AJAX) ──
