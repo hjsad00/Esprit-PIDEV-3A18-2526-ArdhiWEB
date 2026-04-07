@@ -63,6 +63,7 @@
                 </div>
               </a>
 
+              {% if not is_granted('ROLE_CLIENT') %}
               <a href="{{ path('app_marketplace_mes_produits') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-shop-window"></i></div>
                 <div class="category-text">
@@ -70,21 +71,24 @@
                   <span>Gérer mes produits</span>
                 </div>
               </a>
+              {% endif %}
 
-              <a href="#" class="category-item">
+              <a href="{{ path('app_marketplace_statistiques') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-bar-chart-fill"></i></div>
                 <div class="category-text">
                   <h4>Mes Statistiques</h4>
                   <span>Performances & ventes</span>
                 </div>
               </a>
-                 <a href="{{ path('app_marketplace_commandes_recues') }}" class="category-item">
+                 {% if not is_granted('ROLE_CLIENT') %}
+              <a href="{{ path('app_marketplace_commandes_recues') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-box-arrow-in-down"></i></div>
                 <div class="category-text">
                   <h4>Commandes reçues</h4>
                   <span>Gérer les commandes</span>
                 </div>
               </a>
+              {% endif %}
 
               <a href="{{ path('app_marketplace_reclamations') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-chat-left-dots-fill"></i></div>
