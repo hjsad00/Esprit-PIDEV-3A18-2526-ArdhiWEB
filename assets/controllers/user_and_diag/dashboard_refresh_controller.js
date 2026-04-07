@@ -107,34 +107,46 @@ export default class extends Controller {
             if (this.hasWeatherHumidityTarget) this.weatherHumidityTarget.textContent = `${data.weather.humidity}%`;
             if (this.hasWeatherWindTarget) this.weatherWindTarget.textContent = `${data.weather.windSpeed} km/h`;
             if (this.hasWeatherAdviceTarget) this.weatherAdviceTarget.textContent = data.weather.advice;
+        } else {
+            if (this.hasWeatherIconTarget) this.weatherIconTarget.textContent = '❌';
+            if (this.hasWeatherTempTarget) this.weatherTempTarget.textContent = '--';
+            if (this.hasWeatherAdviceTarget) this.weatherAdviceTarget.textContent = "Données météo indisponibles actuellement.";
         }
 
         // Alerts & Risks
-        if (data.diseaseAlerts && this.hasAlertsTarget) {
-            this.alertsTarget.innerHTML = data.diseaseAlerts.length > 0
-                ? data.diseaseAlerts.map(d => `
-                    <div class="disease-row">
-                        <div class="d-name"><span>${d.icon}</span> ${d.diseaseName}</div>
-                        <div class="d-sev ${d.severityLevel === 'Élevé' || d.severityLevel === 'CRITICAL' ? 'high' : 'mod'}">${d.severityLevel}</div>
-                    </div>
-                `).join('')
-                : `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Aucune alerte en cours dans votre zone.</p>`;
+        if (this.hasAlertsTarget) {
+            if (data.diseaseAlerts) {
+                this.alertsTarget.innerHTML = data.diseaseAlerts.length > 0
+                    ? data.diseaseAlerts.map(d => `
+                        <div class="disease-row">
+                            <div class="d-name"><span>${d.icon}</span> ${d.diseaseName}</div>
+                            <div class="d-sev ${d.severityLevel === 'Élevé' || d.severityLevel === 'CRITICAL' ? 'high' : 'mod'}">${d.severityLevel}</div>
+                        </div>
+                    `).join('')
+                    : `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Aucune alerte en cours dans votre zone.</p>`;
+            } else {
+                this.alertsTarget.innerHTML = `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Service d'alertes indisponible.</p>`;
+            }
         }
 
-        if (data.predictiveRisks && this.hasPredictiveRisksTarget) {
-            this.predictiveRisksTarget.innerHTML = data.predictiveRisks.length > 0
-                ? data.predictiveRisks.map(r => `
-                    <div class="risk-item">
-                        <div class="r-head"><span>${r.icon}</span> ${r.diseaseType} — ${r.riskLevel}</div>
-                        <div class="r-desc">${r.reason}</div>
-                        <div class="r-adv">💡 ${r.advice}</div>
-                    </div>
-                `).join('')
-                : `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Faible risque détecté pour les 72h à venir.</p>`;
+        if (this.hasPredictiveRisksTarget) {
+            if (data.predictiveRisks) {
+                this.predictiveRisksTarget.innerHTML = data.predictiveRisks.length > 0
+                    ? data.predictiveRisks.map(r => `
+                        <div class="risk-item">
+                            <div class="r-head"><span>${r.icon}</span> ${r.diseaseType} — ${r.riskLevel}</div>
+                            <div class="r-desc">${r.reason}</div>
+                            <div class="r-adv">💡 ${r.advice}</div>
+                        </div>
+                    `).join('')
+                    : `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Faible risque détecté pour les 72h à venir.</p>`;
+            } else {
+                this.predictiveRisksTarget.innerHTML = `<p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-align: center; margin: 10px 0;">Prévisions indisponibles.</p>`;
+            }
         }
 
-        if (this.hasTreatmentTimingTarget && data.treatmentTiming) {
-            this.treatmentTimingTarget.textContent = data.treatmentTiming;
+        if (this.hasTreatmentTimingTarget) {
+            this.treatmentTimingTarget.textContent = data.treatmentTiming || "Analyse indisponible.";
         }
     }
 }

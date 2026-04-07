@@ -22,6 +22,9 @@ class EpidemicAlertService
 
         $diseases = [];
         foreach ($diagnostics as $d) {
+            if ($d->getLatitude() === null || $d->getLongitude() === null) {
+                continue;
+            }
             $result = $d->getResultatIa();
             if (!$result)
                 continue;
