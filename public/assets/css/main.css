@@ -1,4 +1,4 @@
-/**
+﻿/**
 * Template Name: AgriCulture
 * Template URL: https://bootstrapmade.com/agriculture-bootstrap-website-template/
 * Updated: Aug 07 2024 with Bootstrap v5.3.3
@@ -2579,3 +2579,87 @@ section,
   color: color-mix(in srgb, var(--default-color), transparent 60%);
   font-size: 14px;
 }
+ / *   - - -   N o n - A d m i n   H e a d e r   S t y l e s   ( A r d h i   G r e e n   T h e m e )   - - -   * / 
+ . h e a d e r - n o n - a d m i n   { 
+         b a c k g r o u n d - c o l o r :   # 1 1 6 5 3 0   ! i m p o r t a n t ; 
+         b o r d e r - b o t t o m :   2 p x   s o l i d   r g b a ( 2 5 5 , 2 5 5 , 2 5 5 , 0 . 1 )   ! i m p o r t a n t ; 
+         t r a n s i t i o n :   a l l   0 . 4 s   e a s e   ! i m p o r t a n t ; 
+ } 
+ 
+ . h e a d e r - n o n - a d m i n   . s i t e n a m e ,   
+ . h e a d e r - n o n - a d m i n   . l o g o   h 1 , 
+ . h e a d e r - n o n - a d m i n   . n a v m e n u   u l   l i   a   { 
+         c o l o r :   # f f f f f f   ! i m p o r t a n t ; 
+ } 
+ 
+ . h e a d e r - n o n - a d m i n   . n a v m e n u   u l   l i   a : h o v e r , 
+ . h e a d e r - n o n - a d m i n   . n a v m e n u   u l   l i   a . a c t i v e   { 
+         c o l o r :   # a 8 e 6 c f   ! i m p o r t a n t ; 
+ } 
+ 
+ . h e a d e r - n o n - a d m i n   . n a v - u s e r - c i r c l e   { 
+         b a c k g r o u n d :   r g b a ( 2 5 5 ,   2 5 5 ,   2 5 5 ,   0 . 1 5 )   ! i m p o r t a n t ; 
+         b o r d e r :   1 p x   s o l i d   r g b a ( 2 5 5 ,   2 5 5 ,   2 5 5 ,   0 . 3 )   ! i m p o r t a n t ; 
+ } 
+ 
+ . h e a d e r - n o n - a d m i n   . m o b i l e - n a v - t o g g l e   { 
+         c o l o r :   # f f f f f f   ! i m p o r t a n t ; 
+ } 
+ 
+ 
+ 
+/* --- Non-Admin Header Styles (Ardhi Green Theme) --- */
+.header-non-admin {
+    background-color: #116530 !important;
+    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    transition: all 0.4s ease !important;
+}
+
+.header-non-admin .sitename, 
+.header-non-admin .logo h1,
+.header-non-admin .navmenu ul li a {
+    color: #ffffff !important;
+}
+
+.header-non-admin .navmenu ul li a:hover,
+.header-non-admin .navmenu ul li a.active {
+    color: #a8e6cf !important;
+}
+
+.header-non-admin .nav-user-circle {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.header-non-admin .mobile-nav-toggle {
+    color: #ffffff !important;
+}
+
+
+/* --- Non-Admin Header Styles (Ardhi Green Theme) --- */
+.header-non-admin {
+    background-color: #116530 !important;
+    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    transition: all 0.4s ease !important;
+}
+
+.header-non-admin .sitename, 
+.header-non-admin .logo h1,
+.header-non-admin .navmenu ul li a {
+    color: #ffffff !important;
+}
+
+.header-non-admin .navmenu ul li a:hover,
+.header-non-admin .navmenu ul li a.active {
+    color: #a8e6cf !important;
+}
+
+.header-non-admin .nav-user-circle {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.header-non-admin .mobile-nav-toggle {
+    color: #ffffff !important;
+}
+

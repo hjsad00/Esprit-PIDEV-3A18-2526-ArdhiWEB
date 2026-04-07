@@ -53,7 +53,13 @@
             {% endif %}
           </li>
           <li><a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a></li>
-          <li><a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">Employés</a></li>
+          <li>
+            {% if is_granted('ROLE_AGRICULTEUR') %}
+              <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">Employés</a>
+            {% else %}
+              <a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">Employés</a>
+            {% endif %}
+          </li>
           
           {% if app.user %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
