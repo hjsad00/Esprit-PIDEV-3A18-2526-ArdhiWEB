@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -16,16 +16,20 @@
 </head>
 {% set currentRoute = app.request.attributes.get('_route') %}
 {% set isEvenementPath = app.request.pathInfo starts with('/evenement') %}
-<body class="index-page {{ (currentRoute starts with('app_evenement') or isEvenementPath) ? 'event-page' : '' }}">
+<body class="{% if app.request.pathInfo == '/' %}index-page{% endif %} {{ (currentRoute starts with('app_evenement') or isEvenementPath) ? 'event-page' : '' }} {{ currentRoute == 'app_evenement_index' ? 'event-index-page' : '' }}">
   <style>
     /* Keep evenement pages visually consistent (including scrolled state) */
     body.event-page .header,
-    body.event-page.scrolled .header,
-    .event-page .header,
-    .scrolled .event-page .header {
-      background: rgba(15, 20, 15, 0.65) !important;
+    .event-page .header {
+      background: transparent !important;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
+    }
+    body.event-page.scrolled .header,
+    .scrolled .event-page .header {
+      background: rgba(15, 20, 15, 0.85) !important;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
     }
     body.event-page .header .navmenu ul > li > a,
     body.event-page .header .nav-user-circle,
@@ -35,6 +39,28 @@
     body.event-page .header .navmenu ul > li > a:hover {
       background: rgba(255, 255, 255, 0.12) !important;
       border-radius: 8px;
+    }
+    /* Fixed User Dropdown Legibility */
+    body.event-page .header .navmenu .dropdown ul,
+    .event-page .header .navmenu .dropdown ul {
+      background-color: #ffffff !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      border: 1px solid rgba(0,0,0,0.1) !important;
+    }
+    body.event-page .header .navmenu .dropdown ul a,
+    .event-page .header .navmenu .dropdown ul a {
+      color: #212529 !important;
+      font-weight: 600 !important;
+    }
+    body.event-page .header .navmenu .dropdown ul a i,
+    .event-page .header .navmenu .dropdown ul a i {
+      color: #116530 !important;
+    }
+    body.event-page .header .navmenu .dropdown ul a:hover,
+    .event-page .header .navmenu .dropdown ul a:hover {
+      background-color: #f8f9fa !important;
+      color: #116530 !important;
     }
   </style>
   <header id="header" class="header d-flex align-items-center fixed-top">
@@ -59,27 +85,9 @@
               <i class="bi bi-person-fill" style="font-size: 1.3rem;"></i>
             </div></a>
             <ul>
-              <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              {% if app.user.role == 'ADMIN' %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Admin Dashboard</strong></li>
-                <li><a href="{{ path('app_evenement_admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard admin</a></li>
-                <li><a href="{{ path('app_evenement_participations') }}"><i class="bi bi-clipboard-check"></i> Participations</a></li>
-                <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% elseif app.user.role == 'AGRICULTEUR' %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Tableau de Bord</strong></li>
-                <li><a href="{{ path('app_evenement_participations') }}"><i class="bi bi-clipboard-check"></i> Mes Participations</a></li>
-                <li><a href="{{ path('app_evenement_statistics') }}"><i class="bi bi-graph-up"></i> Statistiques</a></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% else %}
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="ps-3 text-muted" style="font-size: 0.9rem;">Mon Espace</strong></li>
-                <li><a href="{{ path('app_evenement_calendrier') }}"><i class="bi bi-calendar3"></i> Calendrier</a></li>
-              {% endif %}
+              <li><a href="{{ path('app_profile') }}"><i class="bi bi-person me-2"></i>Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
+              <li><a href="{{ path('app_logout') }}" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
             </ul>
           </li>
           {% else %}
