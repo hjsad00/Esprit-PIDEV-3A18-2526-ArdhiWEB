@@ -43,9 +43,17 @@
           <li><a href="/">Diagnostic IA</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
           <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
-          <li><a href="#">Cultures</a></li>
-          <li><a href="#">Évènements</a></li>
-          <li><a href="#">Employés</a></li>
+          <li>
+            {% if is_granted('ROLE_AGRICULTEUR') %}
+              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
+            {% elseif is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
+            {% else %}
+              <a href="#">Cultures</a>
+            {% endif %}
+          </li>
+          <li><a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a></li>
+          <li><a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">Employés</a></li>
           
           {% if app.user %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">

@@ -79,6 +79,27 @@
                 </div>
               </a>
 
+              {% if is_granted('ROLE_AGRICULTEUR') %}
+              <a href="{{ path('farmer_agriculture_index') }}" class="service-sidebar-item{{ currentRoute == 'farmer_agriculture_index' ? ' active' : '' }}">
+                <div class="service-sidebar-icon">
+                  <i class="bi bi-flower1"></i>
+                </div>
+                <div class="service-sidebar-text">
+                  <h4>Cultures</h4>
+                  <span>Suivi parcellaire</span>
+                </div>
+              </a>
+              {% elseif is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_parcelle_index') }}" class="service-sidebar-item{{ currentRoute starts with 'admin_parcelle' ? ' active' : '' }}">
+                <div class="service-sidebar-icon">
+                  <i class="bi bi-flower1"></i>
+                </div>
+                <div class="service-sidebar-text">
+                  <h4>Cultures</h4>
+                  <span>Suivi parcellaire</span>
+                </div>
+              </a>
+              {% else %}
               <a href="#" class="service-sidebar-item">
                 <div class="service-sidebar-icon">
                   <i class="bi bi-flower1"></i>
@@ -88,6 +109,7 @@
                   <span>Suivi parcellaire</span>
                 </div>
               </a>
+              {% endif %}
 
               {# ── ÉVÈNEMENTS ── lien actif vers le module #}
               <a href="{{ path('app_evenement_index') }}"
