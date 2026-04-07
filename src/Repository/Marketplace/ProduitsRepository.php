@@ -122,12 +122,15 @@ class ProduitsRepository extends ServiceEntityRepository
     /**
      * Filtrage avancé du catalogue avec tous les critères combinés.
      */
-    public function findAllWithFilters(array $filters, ?int $excludeUserId): array
+    public function findAllWithFilters(array $filters, ?int $excludeUserId, bool $isAdmin = false): array
     {
-        $qb = $this->createQueryBuilder('p')
-            ->andWhere('p.visible = :true')
-            ->andWhere('p.visibleAdmin = :true')
-            ->setParameter('true', true);
+        $qb = $this->createQueryBuilder('p');
+
+        if (!$isAdmin) {
+            $qb->andWhere('p.visible = :true')
+               ->andWhere('p.visibleAdmin = :true')
+               ->setParameter('true', true);
+        }
 
         if ($excludeUserId) {
             $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);
@@ -167,6 +170,22 @@ class ProduitsRepository extends ServiceEntityRepository
             $qb->andWhere('p.remise > 0');
         }
 
+        if ($isAdmin && isset($filters['visible']) && $filters['visible'] !== 'ALL') {
+            $qb->andWhere('p.visible = :vis')
+               ->setParameter('vis', (bool)$filters['visible']);
+        }
+
+        if ($isAdmin && isset($filters['admin']) && $filters['admin'] !== 'ALL') {
+            $qb->andWhere('p.visibleAdmin = :adm')
+               ->setParameter('adm', (bool)$filters['admin']);
+        }
+
+        if ($isAdmin && !empty($filters['vendeur'])) {
+            $qb->join('p.user', 'v')
+               ->andWhere('(v.nom LIKE :vdr OR v.prenom LIKE :vdr OR v.email LIKE :vdr)')
+               ->setParameter('vdr', '%' . $filters['vendeur'] . '%');
+        }
+
         // Tri
         $tri = $filters['tri'] ?? 'recent';
         match($tri) {
@@ -184,13 +203,16 @@ class ProduitsRepository extends ServiceEntityRepository
     /**
      * Récupère le prix minimum et maximum de tous les produits visibles.
      */
-    public function findPriceRange(?int $excludeUserId): array
+    public function findPriceRange(?int $excludeUserId, bool $isAdmin = false): array
     {
         $qb = $this->createQueryBuilder('p')
-            ->select('MIN(p.prix) as pMin, MAX(p.prix) as pMax')
-            ->andWhere('p.visible = :true')
-            ->andWhere('p.visibleAdmin = :true')
-            ->setParameter('true', true);
+            ->select('MIN(p.prix) as pMin, MAX(p.prix) as pMax');
+
+        if (!$isAdmin) {
+            $qb->andWhere('p.visible = :true')
+               ->andWhere('p.visibleAdmin = :true')
+               ->setParameter('true', true);
+        }
 
         if ($excludeUserId) {
             $qb->andWhere('p.user != :uid')->setParameter('uid', $excludeUserId);

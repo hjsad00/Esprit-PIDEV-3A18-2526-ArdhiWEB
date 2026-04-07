@@ -108,4 +108,56 @@ class CommandeRepository extends ServiceEntityRepository
             'totalGagne'  => round((float) $result['totalGagne'], 2),
         ];
     }
+
+    /**
+     * Filtrage avancé pour l'administration des commandes.
+     */
+    public function findAllWithFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->leftJoin('c.details', 'd')
+            ->leftJoin('d.produit', 'p')
+            ->leftJoin('p.user', 'v')
+            ->addSelect('u', 'd', 'p', 'v');
+
+        if (!empty($filters['id'])) {
+            $qb->andWhere('c.id = :id')
+               ->setParameter('id', (int) $filters['id']);
+        }
+
+        if (!empty($filters['client'])) {
+            $qb->andWhere('(u.nom LIKE :client OR u.prenom LIKE :client)')
+               ->setParameter('client', '%' . $filters['client'] . '%');
+        }
+
+        if (!empty($filters['vendeur'])) {
+            $qb->andWhere('(v.nom LIKE :vendeur OR v.prenom LIKE :vendeur)')
+               ->setParameter('vendeur', '%' . $filters['vendeur'] . '%');
+        }
+
+        if (!empty($filters['status'])) {
+            $qb->andWhere('c.etat = :status')
+               ->setParameter('status', $filters['status']);
+        }
+
+        if (!empty($filters['mode'])) {
+            $qb->andWhere('c.modeLivraison = :mode')
+               ->setParameter('mode', $filters['mode']);
+        }
+
+        if (!empty($filters['date_debut'])) {
+            $qb->andWhere('c.dateCommande >= :debut')
+               ->setParameter('debut', $filters['date_debut'] . ' 00:00:00');
+        }
+
+        if (!empty($filters['date_fin'])) {
+            $qb->andWhere('c.dateCommande <= :fin')
+               ->setParameter('fin', $filters['date_fin'] . ' 23:59:59');
+        }
+
+        return $qb->orderBy('c.dateCommande', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

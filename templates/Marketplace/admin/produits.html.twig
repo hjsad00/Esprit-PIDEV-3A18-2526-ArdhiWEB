@@ -114,72 +114,78 @@
             <div class="filter-sidebar">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0" style="font-size: 0.85rem;"><i class="bi bi-search me-2"></i>Recherche</h5>
-                    <button class="btn p-0 text-success fw-bold" onclick="resetFilters()" style="font-size: 0.7rem;">Effacer</button>
+                    <a href="{{ path('admin_marketplace_produits') }}" class="btn p-0 text-success fw-bold" style="font-size: 0.7rem; text-decoration: none;">Effacer</a>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Nom Produit</label>
-                    <input type="text" id="filter-nom" class="filter-input" placeholder="Ex: Fraises..." onkeyup="filterProducts()">
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">Vendeur</label>
-                    <input type="text" id="filter-vendeur" class="filter-input" placeholder="Nom ou email..." onkeyup="filterProducts()">
-                </div>
-
-                {# ── SLIDERS PRIX ── #}
-                <div class="range-container">
-                    <div class="range-header">
-                        <label class="filter-label mb-0">Intervalle de Prix (DT)</label>
-                        <span class="range-val" id="val-prix-max">∞</span>
+                <form method="GET" action="{{ path('admin_marketplace_produits') }}" id="filterForm">
+                    <div class="filter-group">
+                        <label class="filter-label">Nom Produit</label>
+                        <input type="text" name="nom" id="filter-nom" class="filter-input" placeholder="Ex: Fraises..." value="{{ filters.nom }}">
                     </div>
-                    <div class="d-flex flex-column gap-3 mt-2">
-                        <div>
-                            <small class="text-muted" style="font-size:0.6rem;">Min: <span id="v-min-p">0</span> DT</small>
-                            <input type="range" id="filter-prix-min" value="0" min="0" step="1" oninput="updateLabels(); filterProducts()">
-                        </div>
-                        <div>
-                            <small class="text-muted" style="font-size:0.6rem;">Max: <span id="v-max-p">1000</span> DT</small>
-                            <input type="range" id="filter-prix-max" value="1000" min="0" step="1" oninput="updateLabels(); filterProducts()">
-                        </div>
-                    </div>
-                </div>
 
-                {# ── SLIDERS STOCK ── #}
-                <div class="range-container">
-                    <div class="range-header">
-                        <label class="filter-label mb-0">Quantité en Stock</label>
-                        <span class="range-val" id="val-stock-max">∞</span>
+                    <div class="filter-group">
+                        <label class="filter-label">Vendeur</label>
+                        <input type="text" name="vendeur" id="filter-vendeur" class="filter-input" placeholder="Nom ou email..." value="{{ filters.vendeur }}">
                     </div>
-                    <div class="d-flex flex-column gap-3 mt-2">
-                        <div>
-                            <small class="text-muted" style="font-size:0.6rem;">Mini: <span id="v-min-s">0</span></small>
-                            <input type="range" id="filter-stock-min" value="0" min="0" step="1" oninput="updateLabels(); filterProducts()">
+
+                    {# ── SLIDERS PRIX ── #}
+                    <div class="range-container">
+                        <div class="range-header">
+                            <label class="filter-label mb-0">Intervalle de Prix (DT)</label>
+                            <span class="range-val" id="val-prix-max">{{ filters.prix_min ?: 0 }} - {{ filters.prix_max ?: (priceRange.pMax|default(1000)|round(0, 'ceil')) }} DT</span>
                         </div>
-                        <div>
-                            <small class="text-muted" style="font-size:0.6rem;">Maxi: <span id="v-max-s">5000</span></small>
-                            <input type="range" id="filter-stock-max" value="5000" min="0" step="1" oninput="updateLabels(); filterProducts()">
+                        <div class="d-flex flex-column gap-3 mt-2">
+                            <div>
+                                <small class="text-muted" style="font-size:0.6rem;">Min: <span id="v-min-p">{{ filters.prix_min ?: 0 }}</span> DT</small>
+                                <input type="range" name="prix_min" id="filter-prix-min" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(1000)|round(0, 'ceil') }}" step="1" oninput="updateLabels()">
+                            </div>
+                            <div>
+                                <small class="text-muted" style="font-size:0.6rem;">Max: <span id="v-max-p">{{ filters.prix_max ?: (priceRange.pMax|default(1000)|round(0, 'ceil')) }}</span> DT</small>
+                                <input type="range" name="prix_max" id="filter-prix-max" value="{{ filters.prix_max ?: (priceRange.pMax|default(1000)|round(0, 'ceil')) }}" min="0" max="{{ priceRange.pMax|default(1000)|round(0, 'ceil') }}" step="1" oninput="updateLabels()">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">État Vendeur</label>
-                    <select id="filter-visible" class="filter-input" onchange="filterProducts()">
-                        <option value="ALL">Tous les produits</option>
-                        <option value="1">Visibles (Public)</option>
-                        <option value="0">Cachés (Privé)</option>
-                    </select>
-                </div>
+                    {# ── SLIDERS STOCK ── #}
+                    <div class="range-container">
+                        <div class="range-header">
+                            <label class="filter-label mb-0">Quantité en Stock</label>
+                            <span class="range-val" id="val-stock-max">{{ filters.stock_min ?: 0 }} - {{ filters.stock_max ?: 5000 }}</span>
+                        </div>
+                        <div class="d-flex flex-column gap-3 mt-2">
+                            <div>
+                                <small class="text-muted" style="font-size:0.6rem;">Mini: <span id="v-min-s">{{ filters.stock_min ?: 0 }}</span></small>
+                                <input type="range" name="stock_min" id="filter-stock-min" value="{{ filters.stock_min ?: 0 }}" min="0" max="5000" step="1" oninput="updateLabels()">
+                            </div>
+                            <div>
+                                <small class="text-muted" style="font-size:0.6rem;">Maxi: <span id="v-max-s">{{ filters.stock_max ?: 5000 }}</span></small>
+                                <input type="range" name="stock_max" id="filter-stock-max" value="{{ filters.stock_max ?: 5000 }}" min="0" max="5000" step="1" oninput="updateLabels()">
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Modération Admin</label>
-                    <select id="filter-admin" class="filter-input" onchange="filterProducts()">
-                        <option value="ALL">Tous les statuts</option>
-                        <option value="1">Autorisés</option>
-                        <option value="0">Bloqués</option>
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">État Vendeur</label>
+                        <select name="visible" id="filter-visible" class="filter-input">
+                            <option value="ALL" {{ filters.visible == 'ALL' ? 'selected' : '' }}>Tous les produits</option>
+                            <option value="1" {{ filters.visible == '1' ? 'selected' : '' }}>Visibles (Public)</option>
+                            <option value="0" {{ filters.visible == '0' ? 'selected' : '' }}>Cachés (Privé)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Modération Admin</label>
+                        <select name="admin" id="filter-admin" class="filter-input">
+                            <option value="ALL" {{ filters.admin == 'ALL' ? 'selected' : '' }}>Tous les statuts</option>
+                            <option value="1" {{ filters.admin == '1' ? 'selected' : '' }}>Autorisés</option>
+                            <option value="0" {{ filters.admin == '0' ? 'selected' : '' }}>Bloqués</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold" style="font-size: 0.8rem;">
+                        <i class="bi bi-funnel me-1"></i> Filtrer
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -345,61 +351,79 @@ function updateLabels() {
     document.getElementById('val-stock-max').innerText = `${sMin} - ${sMax}`;
 }
 
-// ── FILTRAGE DYNAMIQUE ──
-function filterProducts() {
-    const nomVal = document.getElementById('filter-nom').value.toLowerCase();
-    const vendeurVal = document.getElementById('filter-vendeur').value.toLowerCase();
+// ── FILTRAGE SERVEUR (AJAX) ──
+const filterForm = document.getElementById('filterForm');
+let timeout = null;
+
+const applyFiltersAjax = async () => {
+    if (!filterForm) return;
     
-    // Sliders
-    const pMin = parseFloat(document.getElementById('filter-prix-min').value);
-    const pMax = parseFloat(document.getElementById('filter-prix-max').value);
-    const sMin = parseFloat(document.getElementById('filter-stock-min').value);
-    const sMax = parseFloat(document.getElementById('filter-stock-max').value);
+    // Feedback visuel
+    const productList = document.getElementById('product-list');
+    const mainContent = document.querySelector('main');
+    if (mainContent) mainContent.style.opacity = '0.5';
 
-    const visibleVal = document.getElementById('filter-visible').value;
-    const adminVal = document.getElementById('filter-admin').value;
+    const url = new URL(filterForm.action);
+    const formData = new FormData(filterForm);
+    const searchParams = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        if (value !== '' && value !== 'ALL') {
+            searchParams.append(key, value);
+        }
+    }
+    url.search = searchParams.toString();
 
-    let count = 0;
-    document.querySelectorAll('.prod-row').forEach(row => {
-        const nom = row.dataset.nom;
-        const vendeur = row.dataset.vendeur;
-        const prix = parseFloat(row.dataset.prix);
-        const stock = parseFloat(row.dataset.stock);
-        const vis = row.dataset.visible;
-        const adm = row.dataset.admin;
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const html = await response.text();
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Mettre à jour la liste des produits
+        const newTableBody = doc.getElementById('product-list');
+        if (newTableBody && productList) {
+            productList.innerHTML = newTableBody.innerHTML;
+        }
 
-        const matchNom = !nomVal || nom.includes(nomVal);
-        const matchVendeur = !vendeurVal || vendeur.includes(vendeurVal);
-        const matchPrix = prix >= pMin && prix <= pMax;
-        const matchStock = stock >= sMin && stock <= sMax;
-        const matchVis = visibleVal === 'ALL' || vis === visibleVal;
-        const matchAdm = adminVal === 'ALL' || adm === adminVal;
+        // Mettre à jour le compteur
+        const newCount = doc.getElementById('count-display');
+        const currentCount = document.getElementById('count-display');
+        if (newCount && currentCount) {
+            currentCount.innerText = newCount.innerText;
+        }
 
-        if (matchNom && matchVendeur && matchPrix && matchStock && matchVis && matchAdm) {
-            row.style.display = '';
-            count++;
+        if (mainContent) mainContent.style.opacity = '1';
+        window.history.pushState({}, '', url);
+
+    } catch (err) {
+        console.error('Erreur AJAX filtre:', err);
+        if (mainContent) mainContent.style.opacity = '1';
+    }
+};
+
+if (filterForm) {
+    // Désactiver le bouton submit si on veut du temps réel
+    filterForm.querySelector('button[type="submit"]').style.display = 'none';
+
+    filterForm.querySelectorAll('input, select').forEach(element => {
+        if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'range')) {
+            element.addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(applyFiltersAjax, 600);
+            });
         } else {
-            row.style.display = 'none';
+            element.addEventListener('change', applyFiltersAjax);
         }
     });
-    
-    document.getElementById('count-display').innerText = count;
-}
 
-function resetFilters() {
-    document.getElementById('filter-nom').value = '';
-    document.getElementById('filter-vendeur').value = '';
-    
-    document.getElementById('filter-prix-min').value = 0;
-    document.getElementById('filter-prix-max').value = absPriceMax;
-    document.getElementById('filter-stock-min').value = 0;
-    document.getElementById('filter-stock-max').value = absStockMax;
-
-    document.getElementById('filter-visible').value = 'ALL';
-    document.getElementById('filter-admin').value = 'ALL';
-    
-    updateLabels();
-    filterProducts();
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        applyFiltersAjax();
+    });
 }
 
 // ── ACTIONS AJAX ──
