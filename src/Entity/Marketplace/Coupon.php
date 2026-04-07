@@ -5,6 +5,8 @@ namespace App\Entity\Marketplace;
 use App\Repository\Marketplace\CouponRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: CouponRepository::class)]
 #[ORM\Table(name: 'coupon')]
@@ -16,18 +18,26 @@ class Coupon
     private ?int $id = null;
 
     #[ORM\Column(length: 50, unique: true)]
+    #[Assert\NotBlank(message: 'Le code promo est obligatoire.')]
+    #[Assert\Length(min: 3, max: 50, minMessage: 'Le code doit faire au moins {{ limit }} caractères.')]
     private ?string $code = null;
 
     #[ORM\Column(name: 'typeReduction', type: Types::STRING, length: 20, columnDefinition: "ENUM('POURCENTAGE', 'FIXE') NOT NULL")]
+    #[Assert\NotBlank(message: 'Le type de réduction est obligatoire.')]
+    #[Assert\Choice(choices: ['POURCENTAGE', 'FIXE'], message: 'Type de réduction invalide.')]
     private ?string $typeReduction = null;
 
     #[ORM\Column(type: Types::FLOAT)]
+    #[Assert\NotBlank(message: 'La valeur est obligatoire.')]
+    #[Assert\GreaterThan(value: 0, message: 'La valeur doit être supérieure à 0.')]
     private ?float $valeur = null;
 
     #[ORM\Column(name: 'dateDebut', type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: 'La date de début est obligatoire.')]
     private ?\DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(name: 'dateFin', type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: 'La date de fin est obligatoire.')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(name: 'utilisationMax', options: ['default' => 0])]
@@ -158,5 +168,28 @@ class Coupon
     {
         $this->limiteParUser = $limiteParUser;
         return $this;
+    }
+
+    /**
+     * Validation personnalisée pour les dates et les pourcentages.
+     */
+    #[Assert\Callback]
+    public function validate(ExecutionContextInterface $context): void
+    {
+        // 1. Validation des dates
+        if ($this->dateDebut && $this->dateFin) {
+            if ($this->dateFin < $this->dateDebut) {
+                $context->buildViolation('La date de fin doit être postérieure ou égale à la date de début.')
+                    ->atPath('dateFin')
+                    ->addViolation();
+            }
+        }
+
+        // 2. Validation du pourcentage
+        if ($this->typeReduction === 'POURCENTAGE' && $this->valeur > 100) {
+            $context->buildViolation('Une réduction en pourcentage ne peut pas dépasser 100%.')
+                ->atPath('valeur')
+                ->addViolation();
+        }
     }
 }

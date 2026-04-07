@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/marketplace/admin')]
 #[IsGranted('ROLE_ADMIN')]
@@ -26,13 +27,9 @@ class AdminCouponController extends AbstractController
     }
 
     #[Route('/coupon/save', name: 'admin_marketplace_coupon_save', methods: ['POST'])]
-    public function save(Request $request, EntityManagerInterface $em, CouponRepository $couponRepo): JsonResponse
+    public function save(Request $request, EntityManagerInterface $em, CouponRepository $couponRepo, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
-        if (empty($data['code']) || empty($data['valeur'])) {
-            return $this->json(['success' => false, 'message' => 'Le code et la valeur sont obligatoires.'], 400);
-        }
 
         $id = $data['id'] ?? null;
         if ($id) {
@@ -40,44 +37,44 @@ class AdminCouponController extends AbstractController
             if (!$coupon) {
                 return $this->json(['success' => false, 'message' => 'Coupon introuvable.'], 404);
             }
-            // Check explicit uniqueness if code changed
-            if ($coupon->getCode() !== $data['code']) {
-                $existing = $couponRepo->findOneBy(['code' => $data['code']]);
-                if ($existing) {
-                    return $this->json(['success' => false, 'message' => 'Ce code existe déjà.'], 400);
-                }
-            }
         } else {
-            $existing = $couponRepo->findOneBy(['code' => $data['code']]);
-            if ($existing) {
-                return $this->json(['success' => false, 'message' => 'Ce code existe déjà.'], 400);
-            }
             $coupon = new Coupon();
             $em->persist($coupon);
         }
 
-        $typeReduction = $data['typeReduction'];
-        $valeur = floatval($data['valeur']);
-
-        if ($typeReduction === 'POURCENTAGE' && ($valeur < 1 || $valeur > 100)) {
-            return $this->json(['success' => false, 'message' => 'Pour un pourcentage, la valeur doit être entre 1 et 100.'], 400);
+        // Hydratation
+        $coupon->setCode(strtoupper($data['code'] ?? ''));
+        $coupon->setTypeReduction($data['typeReduction'] ?? '');
+        $coupon->setValeur(isset($data['valeur']) ? floatval($data['valeur']) : null);
+        
+        try {
+            if (!empty($data['dateDebut'])) $coupon->setDateDebut(new \DateTime($data['dateDebut']));
+            if (!empty($data['dateFin'])) $coupon->setDateFin(new \DateTime($data['dateFin']));
+        } catch (\Exception $e) {
+            // Les erreurs de format de date seront capturées par le Validateur (NotBlank ou autre)
+            // ou on peut laisser l'objet avec ses valeurs précédentes/nulles.
         }
 
-        $dateDebut = new \DateTime($data['dateDebut']);
-        $dateFin = new \DateTime($data['dateFin']);
+        $coupon->setUtilisationMax(isset($data['utilisationMax']) ? (int)$data['utilisationMax'] : 0);
+        $coupon->setMontantMin(isset($data['montantMin']) ? floatval($data['montantMin']) : 0.0);
+        $coupon->setLimiteParUser(isset($data['limiteParUser']) ? (int)$data['limiteParUser'] : 1);
 
-        if ($dateDebut > $dateFin) {
-            return $this->json(['success' => false, 'message' => 'La date de début doit être avant la date de fin.']);
+        // Validation Symfony
+        $violations = $validator->validate($coupon);
+
+        // Vérification unicité manuelle pour le code (si changé ou nouveau)
+        $existing = $couponRepo->findOneBy(['code' => $coupon->getCode()]);
+        if ($existing && $existing->getId() !== $coupon->getId()) {
+            return $this->json(['success' => false, 'message' => 'Ce code promo existe déjà.'], 400);
         }
 
-        $coupon->setCode(strtoupper($data['code']));
-        $coupon->setTypeReduction($typeReduction);
-        $coupon->setValeur($valeur);
-        $coupon->setDateDebut($dateDebut);
-        $coupon->setDateFin($dateFin);
-        $coupon->setUtilisationMax((int) $data['utilisationMax']);
-        $coupon->setMontantMin(floatval($data['montantMin']));
-        $coupon->setLimiteParUser((int) $data['limiteParUser']);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+            return $this->json(['success' => false, 'message' => implode(' ', $errors)], 400);
+        }
 
         $em->flush();
 
