@@ -24,7 +24,7 @@
    TRANSPARENT NAVBAR (HOME PAGE ONLY)
    ================================================================ */
 .index-page .header,
-.event-page .header {
+.event-index-page .header {
     background: transparent !important;
     position: fixed !important;
     top: 0;
@@ -36,24 +36,24 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-body.index-page.event-page header.header,
-body.event-page header.header,
-.event-page .header {
+body.index-page header.header,
+body.event-index-page header.header,
+.event-index-page .header {
     background: transparent !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.event-page .hero.section {
+.event-index-page .hero.section {
     margin-top: 0 !important;
 }
 
-.event-page .hero-content-wrapper {
+.event-index-page .hero-content-wrapper {
     padding-top: 120px !important;
 }
 
-.event-page.scrolled .header {
+.event-index-page.scrolled .header {
     background: rgba(15, 20, 15, 0.85) !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -62,21 +62,23 @@ body.event-page header.header,
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
-.event-page .header .navmenu ul>li>a {
+.event-index-page .header .navmenu ul>li>a {
     color: #fff !important;
 }
 
-.event-page .header .navmenu ul>li>a:hover {
+.event-index-page .header .navmenu ul>li>a:hover {
     background: rgba(255, 255, 255, 0.12) !important;
 }
 
-.index-page .header .logo img {
+.index-page .header .logo img,
+.event-index-page .header .logo img {
     max-height: 44px;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     transition: var(--transition-smooth);
 }
 
-.index-page .header .navmenu ul>li>a {
+.index-page .header .navmenu ul>li>a,
+.event-index-page .header .navmenu ul>li>a {
     color: #fff !important;
     font-family: 'Inter', var(--nav-font), sans-serif;
     font-weight: 500;
@@ -88,7 +90,8 @@ body.event-page header.header,
     border-radius: 8px;
 }
 
-.index-page .header .navmenu ul>li>a:hover {
+.index-page .header .navmenu ul>li>a:hover,
+.event-index-page .header .navmenu ul>li>a:hover {
     color: #fff !important;
     background: rgba(255, 255, 255, 0.12);
     text-shadow: none;
@@ -132,7 +135,8 @@ body.event-page header.header,
 }
 
 /* User dropdown icon on home */
-.index-page .header .nav-user-circle {
+.index-page .header .nav-user-circle,
+.event-index-page .header .nav-user-circle {
     width: 38px;
     height: 38px;
     border-radius: 50%;
@@ -145,32 +149,49 @@ body.event-page header.header,
     backdrop-filter: blur(8px);
 }
 
-.index-page .header .nav-user-circle:hover {
+.index-page .header .nav-user-circle:hover,
+.event-index-page .header .nav-user-circle:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.6);
 }
 
-/* Dropdown menu fix — dark text on white background */
-.index-page .header .navmenu .dropdown ul {
-    background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+/* Dropdown menu fix — white theme with dark text */
+.index-page .header .navmenu .dropdown ul,
+.event-page .header .navmenu .dropdown ul,
+.event-index-page .header .navmenu .dropdown ul {
+    background: #ffffff !important;
+    backdrop-filter: none;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
     border-radius: 12px;
     overflow: hidden;
+    padding: 8px 0;
 }
 
-.index-page .header .navmenu .dropdown ul a {
-    color: #333 !important;
+.index-page .header .navmenu .dropdown ul a,
+.event-page .header .navmenu .dropdown ul a,
+.event-index-page .header .navmenu .dropdown ul a {
+    color: #212529 !important;
     text-shadow: none !important;
     font-size: 14px;
     padding: 10px 20px;
     background: transparent;
     border-radius: 0;
+    font-weight: 600;
+}
+.index-page .header .navmenu .dropdown ul a i,
+.event-page .header .navmenu .dropdown ul a i,
+.event-index-page .header .navmenu .dropdown ul a i {
+    color: #116530 !important;
+    font-size: 1.1rem;
+    margin-right: 8px;
 }
 
-.index-page .header .navmenu .dropdown ul a:hover {
-    background: #f0f7ee !important;
-    color: #2d5a27 !important;
+.index-page .header .navmenu .dropdown ul a:hover,
+.event-page .header .navmenu .dropdown ul a:hover,
+.event-index-page .header .navmenu .dropdown ul a:hover {
+    background: #f8f9fa !important;
+    color: #116530 !important;
 }
 
 /* ================================================================

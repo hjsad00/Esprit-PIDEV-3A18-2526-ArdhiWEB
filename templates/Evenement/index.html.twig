@@ -60,8 +60,7 @@
   and the fixed header overlays it — no margin-top needed here.
   We replicate the carousel item structure so background fills identically.
 #}
-<section id="hero" class="hero section dark-background">
-
+<section id="hero" class="hero section dark-background" style="min-height: 100vh; overflow: hidden; display: flex; align-items: stretch;">
   {# Fake carousel item — gives identical CSS treatment as homepage slides #}
   <div class="carousel-item active" style="position:absolute;inset:0;">
     <img id="ev-bg-img" src="{{ asset('assets/img/hero_1.jpg') }}" alt=""
