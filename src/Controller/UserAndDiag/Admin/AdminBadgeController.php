@@ -4,6 +4,7 @@ namespace App\Controller\UserAndDiag\Admin;
 use App\Entity\UserAndDiag\Badge;
 use App\Form\UserAndDiag\Admin\AdminBadgeType;
 use App\Repository\UserAndDiag\BadgeRepository;
+use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,9 +23,9 @@ class AdminBadgeController extends AbstractController
             'items' => $repo->findAll(),
             'columns' => [
                 ['label' => 'ID', 'field' => 'id'],
+                ['label' => 'Icône', 'field' => 'icon', 'type' => 'image'],
                 ['label' => 'Nom', 'field' => 'name'],
                 ['label' => 'Description', 'field' => 'description', 'type' => 'truncate'],
-                ['label' => 'Icône', 'field' => 'icon'],
                 ['label' => 'Condition', 'field' => 'conditionType', 'type' => 'badge', 'color' => '#d63384'],
                 ['label' => 'Seuil', 'field' => 'threshold'],
             ],
@@ -35,13 +36,22 @@ class AdminBadgeController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_badge_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, ImgBBService $imgBBService): Response
     {
         $item = new Badge();
         $form = $this->createForm(AdminBadgeType::class, $item);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                $url = $imgBBService->uploadImage($iconFile);
+                if ($url) {
+                    $item->setIcon($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'icône sur ImgBB.');
+                }
+            }
             $em->persist($item);
             $em->flush();
             $this->addFlash('success', 'Badge créé.');
@@ -56,7 +66,7 @@ class AdminBadgeController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'admin_badge_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, BadgeRepository $repo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, BadgeRepository $repo, ImgBBService $imgBBService): Response
     {
         $item = $repo->find($id);
         if (!$item) {
@@ -67,6 +77,15 @@ class AdminBadgeController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                $url = $imgBBService->uploadImage($iconFile);
+                if ($url) {
+                    $item->setIcon($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'icône sur ImgBB.');
+                }
+            }
             $em->flush();
             $this->addFlash('success', 'Badge modifié.');
             return $this->redirectToRoute('admin_badge_index');

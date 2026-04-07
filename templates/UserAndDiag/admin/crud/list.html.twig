@@ -14,15 +14,50 @@
     {% endif %}
   </div>
 
+  <div class="admin-filters mb-4">
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <div class="input-group" style="max-width: 400px;">
+        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="Rechercher..." value="{{ app.request.get('q') }}">
+      </div>
+      
+      {% if app.request.get('sort') %}
+        <input type="hidden" name="sort" value="{{ app.request.get('sort') }}">
+        <input type="hidden" name="direction" value="{{ app.request.get('direction') }}">
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary px-4">Filtrer</button>
+      
+      {% if app.request.get('q') or app.request.get('sort') %}
+        <a href="{{ path(app.request.attributes.get('_route')) }}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg me-1"></i>Réinitialiser
+        </a>
+      {% endif %}
+    </form>
+  </div>
+
   {% if items|length > 0 %}
   <div class="table-responsive">
     <table class="table">
       <thead>
         <tr>
           {% for col in columns %}
-            <th>{{ col.label }}</th>
+            <th>
+              {% set current_sort = app.request.get('sort') %}
+              {% set current_dir = app.request.get('direction', 'asc') %}
+              {% set next_dir = (current_sort == col.field and current_dir == 'asc') ? 'desc' : 'asc' %}
+              
+              <a href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({'sort': col.field, 'direction': next_dir})) }}" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                {{ col.label }}
+                {% if current_sort == col.field %}
+                  <i class="bi bi-sort-alpha-{{ current_dir == 'asc' ? 'down' : 'up' }} text-primary"></i>
+                {% else %}
+                  <i class="bi bi-arrow-down-up text-muted small" style="opacity: 0.3"></i>
+                {% endif %}
+              </a>
+            </th>
           {% endfor %}
-          <th>Actions</th>
+          <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -43,8 +78,28 @@
                 {{ value ? value.id ~ (col.display is defined and col.display ? ' - ' ~ attribute(value, col.display) : '') : '-' }}
               {% elseif col.type|default('text') == 'badge' %}
                 <span class="badge badge-admin" style="background: {{ col.color|default('#6c757d') }}22; color: {{ col.color|default('#6c757d') }};">{{ value ?? '-' }}</span>
-              {% elseif col.type|default('text') == 'truncate' %}
-                {{ value|length > 50 ? value|slice(0, 50) ~ '...' : value ?? '-' }}
+              {% elseif col.type|default('text') == 'image' %}
+                {% if value %}
+                  {% if value|slice(0, 4) == 'http' or '.' in value or '/' in value %}
+                    <div class="admin-img-wrapper" style="width:60px !important; height:45px !important; overflow:hidden !important; border-radius:4px !important; cursor:pointer;" onclick="window.open('{{ value }}')">
+                      {% if value|slice(0, 4) == 'http' %}
+                          <img src="{{ value }}" alt="Image" class="admin-crud-thumb" style="width:100% !important; height:100% !important; object-fit:cover !important;">
+                      {% else %}
+                          <img src="{{ asset(value) }}" alt="Image" class="admin-crud-thumb" style="width:100% !important; height:100% !important; object-fit:cover !important;">
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <div class="admin-icon-preview" style="font-size: 1.5rem;">
+                      {% if value|slice(0, 3) == 'bi-' or value|slice(0, 3) == 'fa-' %}
+                        <i class="{{ value }}"></i>
+                      {% else %}
+                        {{ value }}
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted small">Aucune</span>
+                {% endif %}
               {% else %}
                 {{ value ?? '-' }}
               {% endif %}
