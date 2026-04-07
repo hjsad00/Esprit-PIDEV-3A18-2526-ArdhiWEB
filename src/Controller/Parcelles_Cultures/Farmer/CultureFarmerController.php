@@ -87,15 +87,19 @@ class CultureFarmerController extends AbstractController
             $parcelle = $dto->parcelle;
 
             if (!$parcelle || $parcelle->getAgriculteur() !== $user) {
-                throw $this->createAccessDeniedException();
+                $form->get('parcelle')->addError(new \Symfony\Component\Form\FormError(
+                    'Veuillez sélectionner une parcelle valide qui vous appartient.'
+                ));
             }
 
-            // Check surface constraint
-            $remaining = $remainingSurfaces[$parcelle->getId()];
-            if (!$this->cultureService->verifierContrainteSurface($parcelle->getId(), (float)$dto->surface_utilisee)) {
-                $form->get('surface_utilisee')->addError(new \Symfony\Component\Form\FormError(
-                    sprintf('Surface insuffisante sur cette parcelle. Restant: %s ha', round($remaining, 2))
-                ));
+            // Check surface constraint only when parcelle is valid
+            if ($parcelle && $parcelle->getAgriculteur() === $user) {
+                $remaining = $remainingSurfaces[$parcelle->getId()];
+                if (!$this->cultureService->verifierContrainteSurface($parcelle->getId(), (float)$dto->surface_utilisee)) {
+                    $form->get('surface_utilisee')->addError(new \Symfony\Component\Form\FormError(
+                        sprintf('Surface insuffisante sur cette parcelle. Restant: %s ha', round($remaining, 2))
+                    ));
+                }
             }
 
             if ($form->isValid()) {

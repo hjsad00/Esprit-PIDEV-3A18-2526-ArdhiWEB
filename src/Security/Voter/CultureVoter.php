@@ -43,12 +43,17 @@ class CultureVoter extends Voter
             return true;
         }
 
+        if (!$user instanceof User) {
+            return false;
+        }
+
         // Farmers can only access cultures on their own parcelles
         $parcelle = $culture->getParcelle();
         if (!$parcelle) {
             return false;
         }
 
-        return $parcelle->getAgriculteur() === $user;
+        $owner = $parcelle->getAgriculteur();
+        return $owner && $owner->getId() === $user->getId();
     }
 }
