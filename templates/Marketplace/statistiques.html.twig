@@ -2,6 +2,8 @@
 
 {% block title %}Mes Statistiques - Marketplace Ardhi{% endblock %}
 
+{% block body_class %}marketplace-page{% endblock %}
+
 {% block stylesheets %}
     <link href="{{ asset('assets/css/marketplace/marketplace.css') }}" rel="stylesheet">
     <style>
@@ -36,17 +38,22 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container py-5" style="margin-top: 80px;">
-        <div class="section-header">
-            <nav aria-label="breadcrumb" class="mb-4 d-inline-block">
-                <ol class="breadcrumb" style="background:transparent; padding:0;">
-                    <li class="breadcrumb-item"><a href="{{ path('app_marketplace') }}" class="text-success text-decoration-none fw-bold">Marketplace</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Statistiques</li>
+    {# Header sombre pour la visibilité de la navbar #}
+    <section class="marketplace-hero" style="min-height: 250px; padding-top: 120px; background: linear-gradient(135deg, #116530 0%, #1a8a44 100%);">
+        <div class="container text-center">
+            <h1 class="text-white fw-bold mb-2">Tableau de Bord Statistiques</h1>
+            <p class="text-white-50">Analysez vos performances de vente et d'achat en temps réel.</p>
+            
+            <nav aria-label="breadcrumb" class="d-inline-block mt-3">
+                <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                    <li class="breadcrumb-item"><a href="{{ path('app_marketplace') }}" class="text-white-50 text-decoration-none">Marketplace</a></li>
+                    <li class="breadcrumb-item active text-white fw-bold" aria-current="page">Statistiques</li>
                 </ol>
             </nav>
-            <h2>Tableau de Bord Statistiques</h2>
-            <p class="text-muted">Analysez vos performances de vente et d'achat en temps réel.</p>
         </div>
+    </section>
+
+    <div class="container py-5">
 
         {# KPIs Section #}
         <div class="row g-4 mb-5">
