@@ -26,9 +26,58 @@
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
   
   {% block stylesheets %}{% endblock %}
+
+  <style>
+    /* Correction Ultime Header - Priorité Maximale */
+    body.premium-header-active #header.header {
+      background: transparent !important;
+      background-color: transparent !important;
+      transition: all 0.4s ease-in-out !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    /* Texte et titres en Blanc pur */
+    body.premium-header-active #header.header .sitename,
+    body.premium-header-active #header.header .navmenu ul li a {
+      color: #ffffff !important;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+      opacity: 1 !important;
+      font-weight: 700 !important;
+    }
+
+    /* État au scroll : Effet verre foncé très classe pour Ardhi */
+    body.premium-header-active.scrolled #header.header {
+      background: rgba(26, 45, 27, 0.95) !important; /* Vert Noir Ardhi Premium */
+      backdrop-filter: blur(25px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+      padding: 10px 0 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.4) !important;
+    }
+
+    /* Sécurité pour le logo et les icônes */
+    body.premium-header-active #header.header .mobile-nav-toggle,
+    body.premium-header-active #header.header i {
+      color: #ffffff !important;
+    }
+
+    /* Liens du menu déroulant (Dropdown) en noir/sombre pour lisibilité sur fond blanc */
+    body.premium-header-active #header.header .navmenu .dropdown ul li a {
+      color: #212529 !important;
+      text-shadow: none !important;
+      font-weight: 500 !important;
+    }
+
+    body.premium-header-active #header.header .navmenu .dropdown ul li a:hover {
+      color: #116530 !important; /* Vert Ardhi au survol */
+      background: #f8f9fa !important;
+    }
+  </style>
 </head>
 
-<body class="{% block body_class %}index-page{% endblock %}">
+<body class="{% block body_class %}index-page{% endblock %} premium-header-active">
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
@@ -81,7 +130,7 @@
     </div>
   </header>
 
-  <main class="main" style="min-height: 70vh; margin-top: 100px;">
+  <main class="main" style="min-height: 70vh;">
     {% if app.flashes|length > 0 %}
       <div class="container mt-3">
         {% for label, messages in app.flashes %}
