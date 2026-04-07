@@ -2579,3 +2579,28 @@ section,
   color: color-mix(in srgb, var(--default-color), transparent 60%);
   font-size: 14px;
 }
+
+/* --- Admin CRUD Thumbnails --- */
+.admin-img-wrapper {
+  width: 60px;
+  height: 45px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-crud-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.admin-img-wrapper:hover .admin-crud-thumb {
+  transform: scale(1.1);
+}

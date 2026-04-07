@@ -4,6 +4,7 @@ namespace App\Controller\UserAndDiag\Admin;
 use App\Entity\UserAndDiag\CommunityPost;
 use App\Form\UserAndDiag\Admin\AdminCommunityPostType;
 use App\Repository\UserAndDiag\CommunityPostRepository;
+use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class AdminCommunityPostController extends AbstractController
             'items' => $repo->findAll(),
             'columns' => [
                 ['label' => 'ID', 'field' => 'id'],
+                ['label' => 'Image', 'field' => 'imageUrl', 'type' => 'image'],
                 ['label' => 'Titre', 'field' => 'title'],
                 ['label' => 'User', 'field' => 'user', 'type' => 'relation', 'display' => 'email'],
                 ['label' => 'Likes', 'field' => 'likes'],
@@ -35,13 +37,22 @@ class AdminCommunityPostController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_community_post_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, ImgBBService $imgBBService): Response
     {
         $item = new CommunityPost();
         $form = $this->createForm(AdminCommunityPostType::class, $item);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $url = $imgBBService->uploadImage($imageFile);
+                if ($url) {
+                    $item->setImageUrl($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'image sur ImgBB.');
+                }
+            }
             $em->persist($item);
             $em->flush();
             $this->addFlash('success', 'Post créé.');
@@ -56,7 +67,7 @@ class AdminCommunityPostController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'admin_community_post_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityPostRepository $repo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, CommunityPostRepository $repo, ImgBBService $imgBBService): Response
     {
         $item = $repo->find($id);
         if (!$item) {
@@ -67,6 +78,15 @@ class AdminCommunityPostController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $url = $imgBBService->uploadImage($imageFile);
+                if ($url) {
+                    $item->setImageUrl($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'image sur ImgBB.');
+                }
+            }
             $em->flush();
             $this->addFlash('success', 'Post modifié.');
             return $this->redirectToRoute('admin_community_post_index');

@@ -4,6 +4,7 @@ namespace App\Controller\UserAndDiag\Admin;
 use App\Entity\UserAndDiag\Diagnostic;
 use App\Form\UserAndDiag\Admin\AdminDiagnosticType;
 use App\Repository\UserAndDiag\DiagnosticRepository;
+use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class AdminDiagnosticController extends AbstractController
             'items' => $repo->findAll(),
             'columns' => [
                 ['label' => 'ID', 'field' => 'id'],
+                ['label' => 'Image', 'field' => 'imageScannee', 'type' => 'image'],
                 ['label' => 'Date', 'field' => 'dateScan', 'type' => 'date'],
                 ['label' => 'Résultat IA', 'field' => 'resultatIa'],
                 ['label' => 'Confiance', 'field' => 'confiance'],
@@ -35,13 +37,22 @@ class AdminDiagnosticController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_diagnostic_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, ImgBBService $imgBBService): Response
     {
         $item = new Diagnostic();
         $form = $this->createForm(AdminDiagnosticType::class, $item);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $url = $imgBBService->uploadImage($imageFile);
+                if ($url) {
+                    $item->setImageScannee($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'image sur ImgBB. Le post sera sauvegardé sans nouvelle image.');
+                }
+            }
             $em->persist($item);
             $em->flush();
             $this->addFlash('success', 'Diagnostic créé.');
@@ -56,7 +67,7 @@ class AdminDiagnosticController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'admin_diagnostic_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, DiagnosticRepository $repo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, DiagnosticRepository $repo, ImgBBService $imgBBService): Response
     {
         $item = $repo->find($id);
         if (!$item) {
@@ -67,6 +78,15 @@ class AdminDiagnosticController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $url = $imgBBService->uploadImage($imageFile);
+                if ($url) {
+                    $item->setImageScannee($url);
+                } else {
+                    $this->addFlash('danger', 'Échec de l\'upload de l\'image sur ImgBB.');
+                }
+            }
             $em->flush();
             $this->addFlash('success', 'Diagnostic modifié.');
             return $this->redirectToRoute('admin_diagnostic_index');

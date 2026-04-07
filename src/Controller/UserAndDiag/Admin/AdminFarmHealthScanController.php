@@ -4,6 +4,7 @@ namespace App\Controller\UserAndDiag\Admin;
 use App\Entity\UserAndDiag\FarmHealthScan;
 use App\Form\UserAndDiag\Admin\AdminFarmHealthScanType;
 use App\Repository\UserAndDiag\FarmHealthScanRepository;
+use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class AdminFarmHealthScanController extends AbstractController
             'items' => $repo->findAll(),
             'columns' => [
                 ['label' => 'ID', 'field' => 'id'],
+                ['label' => 'Aperçu', 'field' => 'photoCrops', 'type' => 'image'],
                 ['label' => 'Culture', 'field' => 'cropType'],
                 ['label' => 'Croissance', 'field' => 'growthStage'],
                 ['label' => 'Date', 'field' => 'scanDate', 'type' => 'date'],
@@ -35,13 +37,36 @@ class AdminFarmHealthScanController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_farm_health_scan_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, ImgBBService $imgBBService): Response
     {
         $item = new FarmHealthScan();
         $form = $this->createForm(AdminFarmHealthScanType::class, $item);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $photoFields = [
+                'photoCropsFile' => 'setPhotoCrops',
+                'photoSoilFile' => 'setPhotoSoil',
+                'photoEdgesFile' => 'setPhotoEdges',
+                'photoInsectsFile' => 'setPhotoInsects',
+                'photoSpacingFile' => 'setPhotoSpacing',
+                'photoOverviewFile' => 'setPhotoOverview'
+            ];
+            $uploadError = false;
+            foreach ($photoFields as $fField => $setter) {
+                $file = $form->get($fField)->getData();
+                if ($file) {
+                    $u = $imgBBService->uploadImage($file);
+                    if ($u) {
+                        $item->$setter($u);
+                    } else {
+                        $uploadError = true;
+                    }
+                }
+            }
+            if ($uploadError) {
+                $this->addFlash('danger', 'Certaines photos n\'ont pas pu être uploadées sur ImgBB.');
+            }
             $em->persist($item);
             $em->flush();
             $this->addFlash('success', 'Scan créé.');
@@ -56,7 +81,7 @@ class AdminFarmHealthScanController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'admin_farm_health_scan_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, EntityManagerInterface $em, FarmHealthScanRepository $repo): Response
+    public function edit(int $id, Request $request, EntityManagerInterface $em, FarmHealthScanRepository $repo, ImgBBService $imgBBService): Response
     {
         $item = $repo->find($id);
         if (!$item) {
@@ -67,6 +92,30 @@ class AdminFarmHealthScanController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Photos
+            $photoFields = [
+                'photoCropsFile' => 'setPhotoCrops',
+                'photoSoilFile' => 'setPhotoSoil',
+                'photoEdgesFile' => 'setPhotoEdges',
+                'photoInsectsFile' => 'setPhotoInsects',
+                'photoSpacingFile' => 'setPhotoSpacing',
+                'photoOverviewFile' => 'setPhotoOverview'
+            ];
+            $uploadError = false;
+            foreach ($photoFields as $fField => $setter) {
+                $file = $form->get($fField)->getData();
+                if ($file) {
+                    $u = $imgBBService->uploadImage($file);
+                    if ($u) {
+                        $item->$setter($u);
+                    } else {
+                        $uploadError = true;
+                    }
+                }
+            }
+            if ($uploadError) {
+                $this->addFlash('danger', 'Certaines photos n\'ont pas pu être uploadées sur ImgBB.');
+            }
             $em->flush();
             $this->addFlash('success', 'Scan modifié.');
             return $this->redirectToRoute('admin_farm_health_scan_index');
