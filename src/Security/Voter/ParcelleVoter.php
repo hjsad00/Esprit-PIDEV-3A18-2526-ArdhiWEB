@@ -44,6 +44,11 @@ class ParcelleVoter extends Voter
         }
 
         // Farmers can only access their own parcelles
-        return $parcelle->getAgriculteur() === $user;
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        $owner = $parcelle->getAgriculteur();
+        return $owner && $owner->getId() === $user->getId();
     }
 }

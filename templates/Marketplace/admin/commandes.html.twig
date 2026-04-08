@@ -118,67 +118,63 @@
             <div class="filter-sidebar">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <h5 class="fw-bold mb-0" style="font-size: 1rem; color: #1e293b;"><i class="bi bi-filter me-2 text-success"></i>Filtres</h5>
-                    <button class="btn btn-link p-0 text-muted small fw-bold text-decoration-none" onclick="resetFilters()">Effacer</button>
+                    <a href="{{ path('admin_marketplace_commandes') }}" class="btn btn-link p-0 text-muted small fw-bold text-decoration-none">Effacer</a>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Référence ID</label>
-                    <input type="text" id="filter-id" class="filter-input" placeholder="Ex: #45" onkeyup="filterTable()">
-                </div>
+                <form method="GET" action="{{ path('admin_marketplace_commandes') }}" id="filterForm">
+                    <div class="filter-group">
+                        <label class="filter-label">Référence ID</label>
+                        <input type="text" name="id" id="filter-id" class="filter-input" placeholder="Ex: 45" value="{{ filters.id }}">
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Statut</label>
-                    <select id="filter-status" class="filter-input" onchange="filterTable()">
-                        <option value="">Tous les statuts</option>
-                        <option value="en_attente">En Attente</option>
-                        <option value="en_cours">En Cours</option>
-                        <option value="payee">Payée</option>
-                        <option value="expediee">Expédiée</option>
-                        <option value="livree">Livrée</option>
-                        <option value="annulee">Annulée</option>
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Statut</label>
+                        <select name="status" id="filter-status" class="filter-input">
+                            <option value="">Tous les statuts</option>
+                            <option value="en_attente" {{ filters.status == 'en_attente' ? 'selected' : '' }}>En Attente</option>
+                            <option value="en_cours" {{ filters.status == 'en_cours' ? 'selected' : '' }}>En Cours</option>
+                            <option value="payee" {{ filters.status == 'payee' ? 'selected' : '' }}>Payée</option>
+                            <option value="expediee" {{ filters.status == 'expediee' ? 'selected' : '' }}>Expédiée</option>
+                            <option value="livree" {{ filters.status == 'livree' ? 'selected' : '' }}>Livrée</option>
+                            <option value="annulee" {{ filters.status == 'annulee' ? 'selected' : '' }}>Annulée</option>
+                        </select>
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Livraison</label>
-                    <select id="filter-mode" class="filter-input" onchange="filterTable()">
-                        <option value="">Tous les modes</option>
-                        <option value="LIVRAISON">LIVRAISON</option>
-                        <option value="RECUPERATION">RECUPERATION</option>
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Livraison</label>
+                        <select name="mode" id="filter-mode" class="filter-input">
+                            <option value="">Tous les modes</option>
+                            <option value="LIVRAISON" {{ filters.mode == 'LIVRAISON' ? 'selected' : '' }}>LIVRAISON</option>
+                            <option value="RECUPERATION" {{ filters.mode == 'RECUPERATION' ? 'selected' : '' }}>RECUPERATION</option>
+                        </select>
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Acheteur (Client)</label>
-                    <select id="filter-client" class="filter-input" onchange="filterTable()">
-                        <option value="">Tous les clients</option>
-                        {% for u in clients %}
-                            <option value="{{ u.nom|lower }} {{ u.prenom|lower }}">{{ u.nom }} {{ u.prenom }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Acheteur (Client)</label>
+                        <input type="text" name="client" id="filter-client" class="filter-input" placeholder="Nom du client..." value="{{ filters.client }}">
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Vendeur</label>
-                    <select id="filter-vendeur" class="filter-input" onchange="filterTable()">
-                        <option value="">Tous les vendeurs</option>
-                        {% for v in vendeurs %}
-                            <option value="{{ v.nom|lower }} {{ v.prenom|lower }}">{{ v.nom }} {{ v.prenom }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Vendeur</label>
+                        <input type="text" name="vendeur" id="filter-vendeur" class="filter-input" placeholder="Nom du vendeur..." value="{{ filters.vendeur }}">
+                    </div>
 
-                <hr class="text-light my-4">
+                    <hr class="text-light my-4">
 
-                <div class="filter-group">
-                    <label class="filter-label">Date Début</label>
-                    <input type="date" id="filter-date-start" class="filter-input" onchange="updateDateMin(); filterTable()">
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Date Début</label>
+                        <input type="date" name="date_debut" id="filter-date-start" class="filter-input" value="{{ filters.date_debut }}" onchange="updateDateMin()">
+                    </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Date Fin</label>
-                    <input type="date" id="filter-date-end" class="filter-input" onchange="filterTable()">
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Date Fin</label>
+                        <input type="date" name="date_fin" id="filter-date-end" class="filter-input" value="{{ filters.date_fin }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold mt-3">
+                        <i class="bi bi-funnel me-1"></i> Filtrer
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -295,53 +291,83 @@
 
 <script>
 function updateDateMin() {
-    const start = document.getElementById('filter-date-start').value;
-    const endInput = document.getElementById('filter-date-end');
-    endInput.min = start;
-    if (endInput.value && endInput.value < start) {
-        endInput.value = start;
-    }
+    // On ne fait plus de blocage JS, on laisse le PHP gérer la validation finale.
+    // Cette fonction peut être supprimée ou vidée si elle n'est plus utile pour le style.
 }
 
-function filterTable() {
-    const clientVal  = document.getElementById('filter-client').value.toLowerCase();
-    const vendeurVal = document.getElementById('filter-vendeur').value.toLowerCase();
-    const statusVal  = document.getElementById('filter-status').value;
-    const modeVal    = document.getElementById('filter-mode').value;
-    const idVal      = document.getElementById('filter-id').value.toLowerCase();
-    const dateStart  = document.getElementById('filter-date-start').value;
-    const dateEnd    = document.getElementById('filter-date-end').value;
-    let count = 0;
+// ── FILTRAGE SERVEUR (AJAX) ──
+const filterForm = document.getElementById('filterForm');
+let timeout = null;
 
-    document.querySelectorAll('.order-row').forEach(row => {
-        const clientMatch  = !clientVal  || row.dataset.client.includes(clientVal);
-        const vendeurMatch = !vendeurVal || row.dataset.vendeur.includes(vendeurVal);
-        const statusMatch  = !statusVal  || row.dataset.status === statusVal;
-        const modeMatch    = !modeVal    || row.dataset.mode === modeVal;
-        const idMatch      = !idVal      || row.dataset.id.includes(idVal.replace('#', ''));
-        
-        let dateMatch = true;
-        const rowDate = row.dataset.date;
-        if (dateStart && rowDate < dateStart) dateMatch = false;
-        if (dateEnd && rowDate > dateEnd) dateMatch = false;
-
-        const isVisible = clientMatch && vendeurMatch && statusMatch && modeMatch && idMatch && dateMatch;
-        row.style.display = isVisible ? '' : 'none';
-        if (isVisible) count++;
-    });
+const applyFiltersAjax = async () => {
+    if (!filterForm) return;
     
-    document.getElementById('total-count').innerText = count;
-}
+    // Feedback visuel
+    const ordersTable = document.querySelector('tbody');
+    const mainContent = document.querySelector('main');
+    if (mainContent) mainContent.style.opacity = '0.5';
 
-function resetFilters() {
-    document.getElementById('filter-client').value = '';
-    document.getElementById('filter-vendeur').value = '';
-    document.getElementById('filter-status').value = '';
-    document.getElementById('filter-mode').value = '';
-    document.getElementById('filter-id').value = '';
-    document.getElementById('filter-date-start').value = '';
-    document.getElementById('filter-date-end').value = '';
-    filterTable();
+    const url = new URL(filterForm.action);
+    const formData = new FormData(filterForm);
+    const searchParams = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        if (value !== '') {
+            searchParams.append(key, value);
+        }
+    }
+    url.search = searchParams.toString();
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const html = await response.text();
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Mettre à jour le corps du tableau
+        const newTableBody = doc.querySelector('tbody');
+        if (newTableBody && ordersTable) {
+            ordersTable.innerHTML = newTableBody.innerHTML;
+        }
+
+        // Mettre à jour le compteur
+        const newCount = doc.getElementById('total-count');
+        const currentCount = document.getElementById('total-count');
+        if (newCount && currentCount) {
+            currentCount.innerText = newCount.innerText;
+        }
+
+        if (mainContent) mainContent.style.opacity = '1';
+        window.history.pushState({}, '', url);
+
+    } catch (err) {
+        console.error('Erreur AJAX filtre:', err);
+        if (mainContent) mainContent.style.opacity = '1';
+    }
+};
+
+if (filterForm) {
+    // Masquer le bouton de recherche (on utilise l'auto-submit)
+    filterForm.querySelector('button[type="submit"]').style.display = 'none';
+
+    filterForm.querySelectorAll('input, select').forEach(element => {
+        if (element.tagName === 'INPUT' && (element.type === 'text')) {
+            element.addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(applyFiltersAjax, 600);
+            });
+        } else {
+            element.addEventListener('change', applyFiltersAjax);
+        }
+    });
+
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        applyFiltersAjax();
+    });
 }
 
 async function openDetails(id) {
