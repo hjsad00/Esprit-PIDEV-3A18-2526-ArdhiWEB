@@ -16,6 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use App\Service\EmployeTache\QrCodeService;
 use App\Service\EmployeTache\FicheEmployePdfService;
 use App\Service\EmployeTache\EmployeAutoInactifService;
+use App\Service\EmployeTache\PerformanceService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[Route('/employes')]
@@ -26,6 +27,7 @@ class EmployeController extends AbstractController
     public function __construct(
         private AgriculteurContextService $ctx,
         private EmployeAutoInactifService $autoInactif,
+        private PerformanceService        $performanceService,
     ) {}
 
     // ── Garde d'accès commune ─────────────────────────────────────────
@@ -77,6 +79,10 @@ class EmployeController extends AbstractController
 
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
+        // ✅ Calcul du Top 3 pour la topbar (identique à updateTopPerformers() Java)
+        $classement = $this->performanceService->getClassement($idAgriculteur);
+        $top3        = array_slice($classement, 0, 3);
+
         return $this->render('EmployeTache/employe/index.html.twig', [
             'employes'          => $employes,
             'search'            => $search,
@@ -84,6 +90,7 @@ class EmployeController extends AbstractController
             'direction'         => $direction,
             'total'             => count($employes),
             'total_actifs'      => count(array_filter($employes, fn($e) => $e->isActif())),
+            'top3'              => $top3,   // ✅ NOUVEAU : Top 3 performeurs
             // Contexte admin pour bannière
             'supervision_mode'  => $this->ctx->isSupervisionMode(),
             'nom_supervise'     => $this->ctx->getNomAgriculteurSupervise(),

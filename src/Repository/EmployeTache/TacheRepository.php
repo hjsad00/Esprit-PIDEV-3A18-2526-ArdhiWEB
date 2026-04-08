@@ -274,4 +274,20 @@ class TacheRepository extends ServiceEntityRepository
         }
         return $counts;
     }
+     /**
+     * Récupère toutes les tâches d'un employé pour le calcul de performance.
+     * Identique à la requête SQL du PerformanceService.java :
+     *   "SELECT statut, date_debut, date_fin FROM tache WHERE id_employe = ?"
+     *
+     * Utilisé UNIQUEMENT par PerformanceService::calculatePerformance()
+     */
+    public function findTachesParEmployePourPerformance(int $idEmploye): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t')
+            ->where('t.idEmploye = :emp')
+            ->setParameter('emp', $idEmploye)
+            ->getQuery()
+            ->getResult();
+    }
 }

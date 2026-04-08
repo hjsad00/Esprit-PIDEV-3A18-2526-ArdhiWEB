@@ -1,0 +1,469 @@
+<style>
+/* Chatbot Button */
+#rh-chatbot-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #27ae60, #1e8449);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+    z-index: 9999;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#rh-chatbot-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.6);
+}
+
+/* Chatbot Panel */
+#rh-chatbot-panel {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 380px;
+    height: 600px;
+    max-height: 85vh;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: none; /* hidden by default */
+    flex-direction: column;
+    z-index: 10000;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#rh-chatbot-panel.open {
+    display: flex;
+    animation: slideUpFade 0.3s ease-out;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.rh-chatbot-header {
+    background: linear-gradient(135deg, #27ae60, #1e8449);
+    color: white;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rh-chatbot-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rh-chatbot-avatar {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.rh-chatbot-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin: 0;
+}
+
+.rh-chatbot-status {
+    font-size: 12px;
+    opacity: 0.9;
+    font-weight: 400;
+    margin: 0;
+}
+
+.rh-chatbot-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.rh-chatbot-close:hover {
+    opacity: 1;
+}
+
+/* Body */
+.rh-chatbot-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Messages */
+.rh-msg-row {
+    display: flex;
+    max-width: 90%;
+}
+
+.rh-row-bot { align-self: flex-start; }
+.rh-row-user { align-self: flex-end; justify-content: flex-end; }
+
+.rh-msg-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.rh-bubble-bot {
+    background: white;
+    color: #2c3e50;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.rh-bubble-user {
+    background: #e8f5e9;
+    color: #1e8449;
+    border-bottom-right-radius: 4px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    width: fit-content;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #27ae60;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Chat Input */
+.rh-chatbot-footer {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.rh-chatbot-input {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    height: 44px; /* single line height */
+    max-height: 100px;
+}
+
+.rh-chatbot-input:focus {
+    border-color: #27ae60;
+}
+
+.rh-chatbot-send {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #27ae60;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.rh-chatbot-send:hover {
+    background: #1e8449;
+}
+
+/* Dynamic Cards */
+.rh-employee-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rh-emp-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e8f5e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.rh-emp-info {
+    flex: 1;
+}
+
+.rh-emp-name { margin: 0; font-size: 14px; font-weight: 600; color: #2c3e50; }
+.rh-emp-poste { margin: 2px 0 0; font-size: 12px; color: #7f8c8d; }
+.rh-emp-meta { margin: 4px 0 0; font-size: 12px; font-weight: 600; }
+
+/* Suggestions Chips */
+.rh-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.rh-chip {
+    background: white;
+    border: 1px solid #27ae60;
+    color: #27ae60;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rh-chip:hover {
+    background: #27ae60;
+    color: white;
+}
+</style>
+
+<!-- Floating Button -->
+<div id="rh-chatbot-btn" onclick="toggleRhChatbot()">
+    🤖
+</div>
+
+<!-- Chat Panel -->
+<div id="rh-chatbot-panel">
+    <div class="rh-chatbot-header">
+        <div class="rh-chatbot-header-info">
+            <div class="rh-chatbot-avatar">🤖</div>
+            <div>
+                <p class="rh-chatbot-title">Assistant RH Ardhi</p>
+                <p class="rh-chatbot-status">• En ligne</p>
+            </div>
+        </div>
+        <button class="rh-chatbot-close" onclick="toggleRhChatbot()">&times;</button>
+    </div>
+    
+    <div class="rh-chatbot-body" id="rh-chatbot-body">
+        <!-- Initial Message -->
+        <div class="rh-msg-row rh-row-bot">
+            <div class="rh-msg-bubble rh-bubble-bot">
+                Bonjour ! Je suis votre assistant RH local. Je peux vous aider avec ces tâches :
+                <div class="rh-chips-container">
+                    <button class="rh-chip" onclick="sendRhMessage('🎯 Recommander le meilleur employé')">🎯 Recommander</button>
+                    <button class="rh-chip" onclick="sendRhMessage('🏆 Comparer Top 3')">🏆 Comparer Top 3</button>
+                    <button class="rh-chip" onclick="sendRhMessage('📅 Disponibilités')">📅 Disponibilités</button>
+                    <button class="rh-chip" onclick="sendRhMessage('📊 Performances')">📊 Performances</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="rh-chatbot-footer">
+        <input type="text" id="rh-chatbot-input" class="rh-chatbot-input" placeholder="Demandez une recommandation..." onkeypress="handleRhEnter(event)">
+        <button class="rh-chatbot-send" onclick="submitRhMessage()">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    function toggleRhChatbot() {
+        const panel = document.getElementById('rh-chatbot-panel');
+        if (panel.classList.contains('open')) {
+            panel.classList.remove('open');
+        } else {
+            panel.classList.add('open');
+            scrollToBottom();
+        }
+    }
+
+    function scrollToBottom() {
+        const body = document.getElementById('rh-chatbot-body');
+        body.scrollTop = body.scrollHeight;
+    }
+
+    function handleRhEnter(event) {
+        if (event.key === 'Enter') {
+            submitRhMessage();
+        }
+    }
+
+    function submitRhMessage() {
+        const input = document.getElementById('rh-chatbot-input');
+        const message = input.value.trim();
+        if (message) {
+            sendRhMessage(message);
+            input.value = '';
+        }
+    }
+
+    function sendRhMessage(message) {
+        // Append user bubble
+        const body = document.getElementById('rh-chatbot-body');
+        const userRow = document.createElement('div');
+        userRow.className = 'rh-msg-row rh-row-user';
+        userRow.innerHTML = `<div class="rh-msg-bubble rh-bubble-user">${message}</div>`;
+        body.appendChild(userRow);
+        scrollToBottom();
+
+        // Append typing indicator
+        const typingRow = document.createElement('div');
+        typingRow.className = 'rh-msg-row rh-row-bot';
+        typingRow.id = 'rh-typing-indicator';
+        typingRow.innerHTML = `
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        body.appendChild(typingRow);
+        scrollToBottom();
+
+        // Wait a bit to simulate thinking, then fetch
+        setTimeout(() => {
+            fetch("{{ path('app_rh_chatbot_send') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('rh-typing-indicator').remove();
+                renderBotResponse(data);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('rh-typing-indicator').remove();
+                const errRow = document.createElement('div');
+                errRow.className = 'rh-msg-row rh-row-bot';
+                errRow.innerHTML = `<div class="rh-msg-bubble rh-bubble-bot" style="color:red;">Erreur de connexion à l'assistant.</div>`;
+                body.appendChild(errRow);
+                scrollToBottom();
+            });
+        }, 600); // 600ms latency simulation
+    }
+
+    function renderBotResponse(data) {
+        const body = document.getElementById('rh-chatbot-body');
+        const botRow = document.createElement('div');
+        botRow.className = 'rh-msg-row rh-row-bot';
+        
+        let innerHTML = `<div class="rh-msg-bubble rh-bubble-bot">`;
+        
+        // Parse markdown bold text
+        let formattedText = data.text ? data.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '';
+        // Parse newlines
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        
+        innerHTML += formattedText;
+
+        if (data.type === 'employee_card' || data.type === 'employee_list') {
+            data.employees.forEach(emp => {
+                let imgHtml = emp.photo 
+                    ? `<img src="/uploads/photos/${emp.photo}" class="rh-emp-img" onerror="this.outerHTML='<div class=\\'rh-emp-img\\'>${emp.name.charAt(0)}</div>'">` 
+                    : `<div class="rh-emp-img">${emp.name.charAt(0)}</div>`;
+                
+                innerHTML += `
+                    <div class="rh-employee-card">
+                        ${imgHtml}
+                        <div class="rh-emp-info">
+                            <h4 class="rh-emp-name">${emp.name}</h4>
+                            <p class="rh-emp-poste">${emp.poste || 'Employé'}</p>
+                            <p class="rh-emp-meta" style="color:${emp.color}">${emp.appreciation} - ${emp.score}/100</p>
+                        </div>
+                    </div>
+                `;
+            });
+        } 
+        else if (data.type === 'availability_list') {
+            data.employees.forEach(emp => {
+                let imgHtml = emp.photo 
+                    ? `<img src="/uploads/photos/${emp.photo}" class="rh-emp-img" onerror="this.outerHTML='<div class=\\'rh-emp-img\\'>${emp.name.charAt(0)}</div>'">` 
+                    : `<div class="rh-emp-img">${emp.name.charAt(0)}</div>`;
+                    
+                innerHTML += `
+                    <div class="rh-employee-card">
+                        ${imgHtml}
+                        <div class="rh-emp-info">
+                            <h4 class="rh-emp-name">${emp.name}</h4>
+                            <p class="rh-emp-poste">${emp.poste || 'Employé'}</p>
+                            <p class="rh-emp-meta" style="color:${emp.color}">${emp.statusLabel}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        else if (data.type === 'performance_summary' && data.stats) {
+            innerHTML += `
+                <div class="rh-employee-card" style="flex-direction:column; align-items:flex-start;">
+                    <p style="margin:0; width:100%; display:flex; justify-content:space-between;">
+                        <span>Moyenne d'équipe:</span> <strong>${data.stats.moyenne}/100</strong>
+                    </p>
+                    <p style="margin:4px 0 0; width:100%; display:flex; justify-content:space-between;">
+                        <span>Meilleur élément:</span> <strong>${data.stats.meilleur}</strong>
+                    </p>
+                    <p style="margin:4px 0 0; width:100%; display:flex; justify-content:space-between;">
+                        <span>Total Tâches:</span> <strong>${data.stats.totalTaches}</strong>
+                    </p>
+                </div>
+            `;
+        }
+
+        innerHTML += `</div>`;
+        botRow.innerHTML = innerHTML;
+        body.appendChild(botRow);
+        scrollToBottom();
+    }
+</script>
