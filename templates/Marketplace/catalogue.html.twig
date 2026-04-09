@@ -81,7 +81,7 @@
         <div class="cat-main-layout">
 
           {# ── SIDEBAR FILTRES ─────────────────────────────── #}
-          <aside class="filter-sidebar">
+          <aside class="filter-sidebar custom-sidebar-scroll">
             <div class="sidebar-header">
               <i class="bi bi-sliders"></i>
               <span>Filtres & Tri</span>
@@ -136,11 +136,11 @@
                   <div style="display:flex; flex-direction:column; gap:12px;">
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Min: <span id="v-min-p">{{ filters.prix_min ?: 0 }}</span> DT</small>
-                          <input type="range" name="prix_min" id="filter-prix-min" class="custom-range-slider" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="document.getElementById('v-min-p').innerText = this.value;">
+                          <input type="range" name="prix_min" id="filter-prix-min" class="custom-range-slider" value="{{ filters.prix_min ?: 0 }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="let maxVal = parseInt(document.getElementById('filter-prix-max').value); if(parseInt(this.value) > maxVal) this.value = maxVal; document.getElementById('v-min-p').innerText = this.value;">
                       </div>
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Max: <span id="v-max-p">{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}</span> DT</small>
-                          <input type="range" name="prix_max" id="filter-prix-max" class="custom-range-slider" value="{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="document.getElementById('v-max-p').innerText = this.value;">
+                          <input type="range" name="prix_max" id="filter-prix-max" class="custom-range-slider" value="{{ filters.prix_max ?: priceRange.pMax|default(5000)|round(0, 'ceil') }}" min="0" max="{{ priceRange.pMax|default(5000)|round(0, 'ceil') }}" step="1" oninput="let minVal = parseInt(document.getElementById('filter-prix-min').value); if(parseInt(this.value) < minVal) this.value = minVal; document.getElementById('v-max-p').innerText = this.value;">
                       </div>
                   </div>
               </div>
@@ -153,11 +153,11 @@
                   <div style="display:flex; flex-direction:column; gap:12px;">
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Mini: <span id="v-min-s">{{ filters.stock_min ?: 0 }}</span></small>
-                          <input type="range" name="stock_min" id="filter-stock-min" class="custom-range-slider" value="{{ filters.stock_min ?: 0 }}" min="0" max="10000" step="1" oninput="document.getElementById('v-min-s').innerText = this.value;">
+                          <input type="range" name="stock_min" id="filter-stock-min" class="custom-range-slider" value="{{ filters.stock_min ?: 0 }}" min="0" max="10000" step="1" oninput="let maxVal = parseInt(document.getElementById('filter-stock-max').value); if(parseInt(this.value) > maxVal) this.value = maxVal; document.getElementById('v-min-s').innerText = this.value;">
                       </div>
                       <div>
                           <small class="text-muted" style="font-size:0.7rem;">Maxi: <span id="v-max-s">{{ filters.stock_max ?: 10000 }}</span></small>
-                          <input type="range" name="stock_max" id="filter-stock-max" class="custom-range-slider" value="{{ filters.stock_max ?: 10000 }}" min="0" max="10000" step="1" oninput="document.getElementById('v-max-s').innerText = this.value;">
+                          <input type="range" name="stock_max" id="filter-stock-max" class="custom-range-slider" value="{{ filters.stock_max ?: 10000 }}" min="0" max="10000" step="1" oninput="let minVal = parseInt(document.getElementById('filter-stock-min').value); if(parseInt(this.value) < minVal) this.value = minVal; document.getElementById('v-max-s').innerText = this.value;">
                       </div>
                   </div>
               </div>
@@ -196,6 +196,21 @@
                     <option value="nom_az"   {{ filters.tri == 'nom_az'   ? 'selected' : '' }}>Nom A → Z</option>
                     <option value="nom_za"   {{ filters.tri == 'nom_za'   ? 'selected' : '' }}>Nom Z → A</option>
                     <option value="solde"    {{ filters.tri == 'solde'    ? 'selected' : '' }}>En solde en premier</option>
+                  </select>
+                  <i class="bi bi-chevron-down sidebar-select-arrow"></i>
+                </div>
+              </div>
+
+              {# ── Devise ── #}
+              <div class="sidebar-group">
+                <label class="sidebar-label" for="filter-currency">
+                  <i class="bi bi-currency-exchange"></i> Devise du prix
+                </label>
+                <div class="sidebar-select-wrap">
+                  <select id="filter-currency" name="currency" class="sidebar-select">
+                    <option value="TND" selected>TND (Dinar Tunisien)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="USD">USD (Dollar US)</option>
                   </select>
                   <i class="bi bi-chevron-down sidebar-select-arrow"></i>
                 </div>
@@ -321,21 +336,21 @@
                       {% endif %}
                     </p>
                     <div class="product-card-footer">
-                      <div class="product-price">
+                      <div class="product-price" data-base-price="{{ produit.prixFinal }}" data-original-price="{{ produit.prix }}">
                         {% if produit.remise > 0 %}
-                          <small style="text-decoration:line-through;color:#b2bec3;">{{ produit.prix|number_format(2, '.', ' ') }} TND</small>
-                          <span style="font-size:11px;color:#e17055;font-weight:600;">
+                          <small class="old-price" style="text-decoration:line-through;color:#b2bec3;"><span class="old-price-value">{{ produit.prix|number_format(2, '.', ' ') }}</span> <span class="currency-label">TND</span></small>
+                          <span class="discount-badge" style="font-size:11px;color:#e17055;font-weight:600;">
                             {% if produit.typeRemise == 'POURCENTAGE' %}
                               (-{{ produit.remise|number_format(0) }}%)
                             {% else %}
-                              (-{{ produit.remise|number_format(2, '.', ' ') }} TND)
+                              (-<span class="discount-value">{{ produit.remise|number_format(2, '.', ' ') }}</span> <span class="currency-label">TND</span>)
                             {% endif %}
                           </span><br>
-                          {{ produit.prixFinal|number_format(2, '.', ' ') }}
+                          <span class="current-price-value">{{ produit.prixFinal|number_format(2, '.', ' ') }}</span>
                         {% else %}
-                          {{ produit.prix|number_format(2, '.', ' ') }}
+                          <span class="current-price-value">{{ produit.prix|number_format(2, '.', ' ') }}</span>
                         {% endif %}
-                        <small>TND/{{ produit.uniteMesure }}</small>
+                        <span class="currency-label">TND</span><small>/{{ produit.uniteMesure }}</small>
                       </div>
                       <a href="{{ path('app_marketplace_produit_show', {id: produit.id}) }}" class="product-btn"><i class="bi bi-eye"></i> Détails</a>
                     </div>
@@ -449,6 +464,12 @@ const applyFiltersAjax = async () => {
             
             // Réinitialiser les événements (ex: panier et favoris) après remplacement du DOM
             initCartListeners();
+
+            // Mettre à jour les prix si une devise est sélectionnée
+            const savedCurrency = localStorage.getItem('marketplace_currency');
+            if (savedCurrency && savedCurrency !== 'TND') {
+                updatePrices(savedCurrency);
+            }
         }
 
         // Mettre à jour le badge Filtres Actifs
@@ -464,8 +485,8 @@ const applyFiltersAjax = async () => {
             currentBadge.remove();
         }
 
-        // Mettre à jour l'URL du navigateur (pratique pour le partage)
-        window.history.pushState({}, '', url);
+        // On garde l'URL propre dans le navigateur (on masque les paramètres)
+        window.history.replaceState({}, '', window.location.pathname);
 
     } catch (err) {
         console.error('Erreur AJAX filtre:', err);
@@ -487,7 +508,7 @@ if (filterForm) {
     if (applyBtn) applyBtn.style.display = 'none';
 
     filterForm.querySelectorAll('input, select').forEach(element => {
-        if (element.id === 'filter-en-solde') return;
+        if (element.id === 'filter-en-solde' || element.id === 'filter-currency') return;
         
         if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'number' || element.type === 'range')) {
             element.addEventListener('input', () => {
@@ -604,6 +625,105 @@ async function toggleWishlist(productId, btn) {
         btn.disabled = false;
     }
 }
+
+// ── Currency Conversion ─────────────────────────────────────────────
+const currencySelect = document.getElementById('filter-currency');
+
+/**
+ * Met à jour tous les prix affichés sur la page en fonction de la devise choisie.
+ */
+const updatePrices = async (targetCurrency) => {
+    const pricesElements = document.querySelectorAll('.product-price');
+    if (pricesElements.length === 0) return;
+
+    // Collecter tous les montants à convertir
+    let amountsToConvert = [];
+    pricesElements.forEach(el => {
+        if (el.dataset.basePrice) amountsToConvert.push(parseFloat(el.dataset.basePrice));
+        if (el.dataset.originalPrice) amountsToConvert.push(parseFloat(el.dataset.originalPrice));
+    });
+
+    // Éviter les doublons pour optimiser l'API
+    amountsToConvert = [...new Set(amountsToConvert)];
+
+    try {
+        // Feed-back visuel (opacité réduite pendant le calcul)
+        pricesElements.forEach(el => el.style.opacity = '0.5');
+
+        const response = await fetch('/marketplace/api/convert-currency', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amounts: amountsToConvert, targetCurrency: targetCurrency })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Créer une map [montant_original] -> [montant_converti]
+            const conversionMap = {};
+            amountsToConvert.forEach((amt, index) => {
+                conversionMap[amt] = data.convertedAmounts[index];
+            });
+
+            // Mettre à jour le DOM
+            pricesElements.forEach(el => {
+                const basePrice = parseFloat(el.dataset.basePrice);
+                const originalPrice = parseFloat(el.dataset.originalPrice);
+
+                // Prix final
+                if (el.querySelector('.current-price-value')) {
+                    el.querySelector('.current-price-value').textContent = conversionMap[basePrice].toFixed(2);
+                }
+                
+                // Ancien prix (si solde)
+                if (el.querySelector('.old-price-value')) {
+                    el.querySelector('.old-price-value').textContent = conversionMap[originalPrice].toFixed(2);
+                }
+
+                // Symboles
+                el.querySelectorAll('.currency-label').forEach(lbl => lbl.textContent = data.symbol);
+                
+                el.style.opacity = '1';
+            });
+
+            // Sauvegarder la préférence
+            localStorage.setItem('marketplace_currency', targetCurrency);
+        }
+    } catch (err) {
+        console.error('Erreur conversion devise:', err);
+        pricesElements.forEach(el => el.style.opacity = '1');
+    }
+};
+
+if (currencySelect) {
+    // Restaurer la devise sauvegardée
+    const savedCurrency = localStorage.getItem('marketplace_currency');
+    if (savedCurrency && savedCurrency !== 'TND') {
+        currencySelect.value = savedCurrency;
+        // Laisser un petit délai pour être sûr que le DOM est prêt
+        setTimeout(() => updatePrices(savedCurrency), 300);
+    }
+
+    currencySelect.addEventListener('change', (e) => {
+        const selectedCurrency = e.target.value;
+        if (selectedCurrency === 'TND') {
+            // Revert to original prices
+            const pricesElements = document.querySelectorAll('.product-price');
+            pricesElements.forEach(el => {
+                if (el.querySelector('.current-price-value') && el.dataset.basePrice) {
+                    el.querySelector('.current-price-value').textContent = parseFloat(el.dataset.basePrice).toFixed(2);
+                }
+                if (el.querySelector('.old-price-value') && el.dataset.originalPrice) {
+                    el.querySelector('.old-price-value').textContent = parseFloat(el.dataset.originalPrice).toFixed(2);
+                }
+                el.querySelectorAll('.currency-label').forEach(lbl => lbl.textContent = 'TND');
+            });
+            localStorage.setItem('marketplace_currency', 'TND');
+        } else {
+            updatePrices(selectedCurrency);
+        }
+    });
+}
 </script>
 
 <style>
@@ -614,6 +734,13 @@ input[type=range].custom-range-slider:focus { outline: none; }
 input[type=range].custom-range-slider::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 10px; }
 input[type=range].custom-range-slider::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #116530; cursor: pointer; -webkit-appearance: none; margin-top: -6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: scale(1.1); }
+
+/* Sidebar Scrollbar */
+.custom-sidebar-scroll { max-height: calc(100vh - 120px); overflow-y: auto; overflow-x: hidden; padding-right: 8px; }
+.custom-sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-sidebar-scroll::-webkit-scrollbar-thumb { background: #e0e6e0; border-radius: 10px; }
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #c3cfc3; }
 </style>
 {% endblock %}
 {% endblock %}
