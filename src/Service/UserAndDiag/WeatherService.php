@@ -59,11 +59,11 @@ class WeatherService
             $next1h = $currentData['next_1_hours'] ?? $currentData['next_6_hours'] ?? null;
 
             $data = [
-                'temperature' => $instant['air_temperature'],
+                'temperature' => round($instant['air_temperature'], 1),
                 'humidity' => $instant['relative_humidity'],
                 'precipitation' => $next1h['details']['precipitation_amount'] ?? 0,
                 'symbolCode' => $next1h['summary']['symbol_code'] ?? 'clearsky_day',
-                'windSpeed' => $instant['wind_speed'] * 3.6, // m/s to km/h
+                'windSpeed' => round($instant['wind_speed'] * 3.6, 1), // m/s to km/h
                 'windDirection' => $instant['wind_from_direction'],
                 'apparentTemperature' => $this->calculateApparentTemperature($instant['air_temperature'], $instant['wind_speed']),
                 'latitude' => $lat,
@@ -138,7 +138,7 @@ class WeatherService
     private function calculateApparentTemperature(float $temp, float $windSpeedMs): float
     {
         // Simple approximation
-        return $temp - ($windSpeedMs * 0.7);
+        return round($temp - ($windSpeedMs * 0.7), 1);
     }
 
     private function getWindDirectionString(float $direction): string
