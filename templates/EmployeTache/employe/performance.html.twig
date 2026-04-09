@@ -1,0 +1,737 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Performance des Employés — Ardhi{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ══════════════════════════════════════════════════════════
+   PAGE PERFORMANCE — styles identiques au desktop Java
+   ══════════════════════════════════════════════════════════ */
+
+.perf-page {
+    padding: 100px 0 60px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f5e9 100%);
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── En-tête ────────────────────────────────────────────── */
+.perf-header {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32, #388E3C);
+    border-radius: 20px;
+    padding: 32px 36px;
+    color: white;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 8px 32px rgba(27,94,32,.3);
+}
+.perf-header-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.perf-header-sub {
+    font-size: .95rem;
+    opacity: .85;
+    margin-top: 4px;
+}
+.btn-retour {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: rgba(255,255,255,.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    transition: all .2s;
+}
+.btn-retour:hover {
+    background: rgba(255,255,255,.25);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* ── KPI Cards (identiques aux lblMoyenneScore / lblMeilleurEmploye Java) */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.kpi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.05);
+    transition: transform .2s;
+}
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+.kpi-label {
+    font-size: .85rem;
+    color: #777;
+    font-weight: 500;
+}
+
+/* ── Top 3 (identique à updateTopPerformers() Java) ──────── */
+.top3-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+.top3-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1B5E20;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.top3-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.top3-card {
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
+}
+.top3-card.gold   { background: linear-gradient(135deg,#FFF8DC,#FFD700); border: 2px solid #FFD700; }
+.top3-card.silver { background: linear-gradient(135deg,#F5F5F5,#C0C0C0); border: 2px solid #C0C0C0; }
+.top3-card.bronze { background: linear-gradient(135deg,#FFF0E6,#CD7F32); border: 2px solid #CD7F32; }
+.top3-medal { font-size: 2rem; margin-bottom: 6px; }
+.top3-name  { font-size: .95rem; font-weight: 700; color: #333; }
+.top3-score { font-size: .85rem; color: #555; margin-top: 4px; }
+
+/* ── Tableau de classement ──────────────────────────────── */
+.perf-table-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+.perf-table-header {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    padding: 18px 24px;
+    color: white;
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.perf-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.perf-table thead th {
+    background: #f8faf8;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 2px solid #e8f5e9;
+}
+.perf-table thead th.center { text-align: center; }
+.perf-table tbody tr {
+    border-bottom: 1px solid #f0f7f0;
+    transition: background .15s;
+    cursor: pointer;
+}
+.perf-table tbody tr:hover { background: #f8fdf8; }
+.perf-table tbody tr:last-child { border-bottom: none; }
+.perf-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+.perf-table td.center { text-align: center; }
+
+/* ── Rang ──────────────────────────────────────────────── */
+.rang-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: .9rem;
+}
+.rang-1 { background: #FFD700; color: #7a5900; }
+.rang-2 { background: #C0C0C0; color: #444; }
+.rang-3 { background: #CD7F32; color: white; }
+.rang-n { background: #e8f5e9; color: #2E7D32; }
+
+/* ── Nom employé ────────────────────────────────────────── */
+.emp-name { font-weight: 700; color: #1B5E20; font-size: .95rem; }
+
+/* ── Score (barre de progression, identique à ProgressBar Java) */
+.score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.score-bar {
+    flex: 1;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+.score-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width .4s ease;
+}
+.score-value {
+    font-weight: 800;
+    font-size: .9rem;
+    min-width: 32px;
+    text-align: right;
+}
+
+/* ── Badge appréciation (identique au badge Java) ─────── */
+.badge-apprec {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* ── Statut tâches (identique à colStatut Java T:x | R:x) */
+.statut-taches {
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+/* ── Bouton détails ─────────────────────────────────────── */
+.btn-details {
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+}
+.btn-details:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,94,32,.3); }
+
+/* Ligne vide */
+.perf-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 1rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODAL DÉTAILS (identique à handleVoirDetails() Java + fiche)
+   ══════════════════════════════════════════════════════════ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* En-tête modal coloré (comme le header rose/bleu du desktop) */
+.modal-header {
+    padding: 28px 28px 20px;
+    border-radius: 20px 20px 0 0;
+    color: white;
+}
+.modal-header-top {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+.modal-score-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,.4);
+}
+.modal-emp-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+.modal-apprec {
+    font-size: .95rem;
+    opacity: .9;
+    margin-top: 4px;
+}
+.modal-taux {
+    font-size: .85rem;
+    opacity: .75;
+}
+
+/* Corps modal */
+.modal-body { padding: 24px 28px; }
+
+.modal-section-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #1B5E20;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 14px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8f5e9;
+}
+.modal-section-title:first-child { margin-top: 0; }
+
+.modal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.modal-stat-item {
+    background: #f8fdf8;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e8f5e9;
+}
+.modal-stat-icon { font-size: 1.1rem; }
+.modal-stat-label { font-size: .78rem; color: #777; }
+.modal-stat-value { font-size: 1.1rem; font-weight: 800; }
+
+/* Barre de score dans modal */
+.modal-score-bar-wrap {
+    margin: 8px 0 16px;
+}
+.modal-score-bar {
+    height: 14px;
+    background: #e0e0e0;
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+.modal-score-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+}
+.modal-score-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: .75rem;
+    color: #999;
+}
+
+.modal-footer {
+    padding: 16px 28px 24px;
+    display: flex;
+    justify-content: flex-end;
+}
+.btn-fermer {
+    padding: 10px 28px;
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: all .2s;
+}
+.btn-fermer:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,94,32,.3); }
+
+/* Spinner chargement */
+.spinner {
+    border: 3px solid #e0e0e0;
+    border-top-color: #2E7D32;
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    animation: spin .7s linear infinite;
+    margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="perf-page">
+<div class="container">
+
+    {# ── En-tête #}
+    <div class="perf-header">
+        <div>
+            <div class="perf-header-title">
+                📊 Performance des Employés
+            </div>
+            <div class="perf-header-sub">
+                Classement basé sur les tâches terminées, les retards et le taux de réussite
+            </div>
+        </div>
+        <a href="{{ path('employe_index') }}" class="btn-retour">
+            <i class="bi bi-arrow-left"></i> Retour aux employés
+        </a>
+    </div>
+
+    {# ── KPI Cards (identiques à lblMoyenneScore, lblMeilleurEmploye, lblTotalTaches Java) #}
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value" style="color:#2E7D32">{{ stats.moyenneScore }}</div>
+            <div class="kpi-label">Score moyen</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color:#f39c12">{{ classement|length }}</div>
+            <div class="kpi-label">Employés évalués</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color:#3498db">{{ stats.totalTaches }}</div>
+            <div class="kpi-label">Total tâches</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color:#8e44ad">{{ stats.meilleurEmploye }}</div>
+            <div class="kpi-label">🏆 Meilleur employé</div>
+        </div>
+    </div>
+
+    {# ── Top 3 (identique à updateTopPerformers() + handleShowTopPerformeurs() Java) #}
+    {% if top3|length > 0 %}
+    <div class="top3-section">
+        <div class="top3-title">🏆 Top Performeurs</div>
+        <div class="top3-grid">
+            {% for i, perf in top3 %}
+            <div class="top3-card {{ i == 0 ? 'gold' : (i == 1 ? 'silver' : 'bronze') }}">
+                <div class="top3-medal">{{ i == 0 ? '🥇' : (i == 1 ? '🥈' : '🥉') }}</div>
+                <div class="top3-name">{{ perf.nomEmploye }}</div>
+                <div class="top3-score">{{ perf.score }} pts — {{ perf.appreciation }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Tableau de classement (identique à tablePerformance Java) #}
+    <div class="perf-table-card">
+        <div class="perf-table-header">
+            📋 Classement complet
+            <span style="font-size:.85rem;font-weight:400;opacity:.8;margin-left:8px">
+                {{ classement|length }} employé(s)
+            </span>
+        </div>
+
+        {% if classement|length == 0 %}
+        <div class="perf-empty">
+            Aucun employé actif trouvé.<br>
+            <small>Ajoutez des employés et assignez-leur des tâches pour voir leurs performances.</small>
+        </div>
+        {% else %}
+        <table class="perf-table">
+            <thead>
+                <tr>
+                    <th class="center">#</th>
+                    <th>Employé</th>
+                    <th class="center">Total</th>
+                    <th class="center">✅ Terminées</th>
+                    <th class="center">⚠️ Retard</th>
+                    <th>Score</th>
+                    <th class="center">Appréciation</th>
+                    <th class="center">Tâches</th>
+                    <th class="center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for i, perf in classement %}
+            <tr onclick="voirDetails({{ perf.idEmploye }})">
+
+                {# Rang #}
+                <td class="center">
+                    <span class="rang-badge rang-{{ i < 3 ? i+1 : 'n' }}">
+                        {{ i < 3 ? ['🥇','🥈','🥉'][i] : i+1 }}
+                    </span>
+                </td>
+
+                {# Nom employé #}
+                <td>
+                    <span class="emp-name">{{ perf.nomEmploye }}</span>
+                </td>
+
+                {# Total tâches (colTotalTaches Java) #}
+                <td class="center">
+                    <strong>{{ perf.totalTaches }}</strong>
+                </td>
+
+                {# Tâches terminées (colTerminees Java) #}
+                <td class="center" style="color:#27ae60;font-weight:700">
+                    {{ perf.tachesTerminees }}
+                </td>
+
+                {# En retard (colEnRetard Java) #}
+                <td class="center" style="color:{{ perf.tachesEnRetard > 0 ? '#e74c3c' : '#27ae60' }};font-weight:700">
+                    {{ perf.tachesEnRetard }}
+                </td>
+
+                {# Score avec barre (colScore Java — ProgressBar + Label) #}
+                <td style="min-width:160px">
+                    <div class="score-bar-wrap">
+                        <div class="score-bar">
+                            <div class="score-bar-fill"
+                                 style="width:{{ perf.score }}%;background:{{ perf.couleur }}">
+                            </div>
+                        </div>
+                        <span class="score-value" style="color:{{ perf.couleur }}">
+                            {{ perf.score }}
+                        </span>
+                    </div>
+                </td>
+
+                {# Badge appréciation (colAppreciation Java) #}
+                <td class="center">
+                    <span class="badge-apprec" style="background:{{ perf.couleur }}">
+                        {{ perf.emoji }} {{ perf.appreciation }}
+                    </span>
+                </td>
+
+                {# Statut T:x | R:x (colStatut Java) #}
+                <td class="center">
+                    <span class="statut-taches" style="color:{{ perf.couleur }}">
+                        T:{{ perf.tachesTerminees }} | R:{{ perf.tachesEnRetard }}
+                    </span>
+                </td>
+
+                {# Bouton détails (handleVoirDetails Java) #}
+                <td class="center">
+                    <button class="btn-details" onclick="event.stopPropagation();voirDetails({{ perf.idEmploye }})">
+                        👁 Détails
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+</div>{# /container #}
+</div>{# /perf-page #}
+
+{# ══════════════════════════════════════════════════════════
+   MODAL DÉTAILS — identique à handleVoirDetails() Java
+   ══════════════════════════════════════════════════════════ #}
+<div class="modal-overlay" id="modalOverlay" onclick="fermerModal(event)">
+    <div class="modal-box" id="modalBox">
+        <div id="modalContent">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const detailsUrl = "{{ path('employe_performance_detail', {id: '__ID__'}) }}";
+
+/**
+ * Ouvrir la modal et charger les détails via AJAX.
+ * Identique à handleVoirDetails() + Alert Java, mais en modal web.
+ */
+function voirDetails(idEmploye) {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+
+    // Afficher spinner pendant le chargement
+    content.innerHTML = '<div class="spinner"></div>';
+    overlay.classList.add('active');
+
+    // Appel AJAX vers PerformanceController::detail()
+    const url = detailsUrl.replace('__ID__', idEmploye);
+    fetch(url)
+        .then(r => r.json())
+        .then(perf => {
+            content.innerHTML = buildModalHTML(perf);
+        })
+        .catch(() => {
+            content.innerHTML = '<div style="padding:40px;text-align:center;color:#e74c3c">❌ Erreur de chargement</div>';
+        });
+}
+
+/**
+ * Construire le HTML de la modal.
+ * Identique aux données affichées dans l'Alert Java de handleVoirDetails() :
+ *   Score, Appréciation, Tâches (Total / Terminées / En retard / En cours / Annulées)
+ *   Taux de réussite, Temps moyen
+ */
+function buildModalHTML(p) {
+    const headerBg = p.score >= 75
+        ? 'linear-gradient(135deg,#1B5E20,#2E7D32)'
+        : (p.score >= 50
+            ? 'linear-gradient(135deg,#e67e22,#f39c12)'
+            : 'linear-gradient(135deg,#c0392b,#e74c3c)');
+
+    return `
+    <div class="modal-header" style="background:${headerBg}">
+        <div class="modal-header-top">
+            <div class="modal-score-circle">${Math.round(p.score)}</div>
+            <div>
+                <div class="modal-emp-name">${p.nomEmploye}</div>
+                <div class="modal-apprec">${p.emoji} ${p.appreciation}</div>
+                <div class="modal-taux">Taux de réussite : ${p.tauxReussite}%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-body">
+
+        <div class="modal-section-title">📋 Statistiques des Tâches</div>
+        <div class="modal-stats-grid">
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">📊</span>
+                <div>
+                    <div class="modal-stat-label">Total</div>
+                    <div class="modal-stat-value">${p.totalTaches} tâche(s)</div>
+                </div>
+            </div>
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">✅</span>
+                <div>
+                    <div class="modal-stat-label">Terminées</div>
+                    <div class="modal-stat-value" style="color:#27ae60">${p.tachesTerminees} tâche(s)</div>
+                </div>
+            </div>
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">🔄</span>
+                <div>
+                    <div class="modal-stat-label">En cours</div>
+                    <div class="modal-stat-value" style="color:#3498db">${p.tachesEnCours} tâche(s)</div>
+                </div>
+            </div>
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">⏰</span>
+                <div>
+                    <div class="modal-stat-label">En retard</div>
+                    <div class="modal-stat-value" style="color:#e74c3c">${p.tachesEnRetard} tâche(s)</div>
+                </div>
+            </div>
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">❌</span>
+                <div>
+                    <div class="modal-stat-label">Annulées</div>
+                    <div class="modal-stat-value" style="color:#95a5a6">${p.tachesAnnulees} tâche(s)</div>
+                </div>
+            </div>
+            <div class="modal-stat-item">
+                <span class="modal-stat-icon">⏳</span>
+                <div>
+                    <div class="modal-stat-label">En attente</div>
+                    <div class="modal-stat-value" style="color:#f39c12">${p.tachesEnAttente} tâche(s)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-section-title">✅ Score de Performance</div>
+        <div class="modal-score-bar-wrap">
+            <div class="modal-score-bar">
+                <div class="modal-score-bar-fill"
+                     style="width:${p.score}%;background:${p.couleur}">
+                </div>
+            </div>
+            <div class="modal-score-labels">
+                <span>0</span>
+                <span style="color:${p.couleur};font-weight:700">${p.score}/100</span>
+                <span>100</span>
+            </div>
+        </div>
+
+        <div class="modal-section-title">⏱ Temps de Réalisation</div>
+        <div class="modal-stat-item" style="max-width:260px">
+            <span class="modal-stat-icon">📅</span>
+            <div>
+                <div class="modal-stat-label">Durée moyenne par tâche</div>
+                <div class="modal-stat-value">
+                    ${p.tempsRealisationMoyen > 0
+                        ? p.tempsRealisationMoyen + ' jours'
+                        : 'Aucune tâche terminée'}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn-fermer" onclick="fermerModal()">Fermer</button>
+    </div>`;
+}
+
+/**
+ * Fermer la modal
+ */
+function fermerModal(event) {
+    if (!event || event.target === document.getElementById('modalOverlay')) {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+}
+
+// Fermer avec Échap
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fermerModal();
+});
+</script>
+{% endblock %}
