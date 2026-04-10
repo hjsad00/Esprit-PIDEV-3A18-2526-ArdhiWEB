@@ -38,7 +38,7 @@
 /* Label tri */
 .tri-label { font-size: .82rem; font-weight: 600; color: #777; white-space: nowrap; }
 
-/* Sélecteur de tri — identique au ComboBox desktop */
+/* Sélecteur de tri */
 .tri-select {
     border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px;
     font-size: .88rem; background: white; cursor: pointer; transition: .2s;
@@ -46,7 +46,7 @@
 }
 .tri-select:focus { border-color: #27ae60; outline: none; }
 
-/* Boutons direction ↑ ↓ — identiques aux boutons desktop */
+/* Boutons direction ↑ ↓ */
 .btn-dir {
     width: 34px; height: 34px; border: 1.5px solid #ccc; border-radius: 8px;
     background: white; cursor: pointer; font-size: 1rem; display: flex;
@@ -75,7 +75,6 @@
     letter-spacing: .3px; padding: 12px 13px; text-align: left; border: none;
     white-space: nowrap; user-select: none;
 }
-/* En-tête cliquable pour le tri */
 .emp-table thead th.sortable { cursor: pointer; }
 .emp-table thead th.sortable:hover { background: #3d6b4b; }
 .emp-table thead th.sorted-asc::after  { content: ' ↑'; opacity: .9; }
@@ -100,15 +99,27 @@
 .st-actif   { background:#d4edda; color:#155724; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
 .st-inactif { background:#f8d7da; color:#721c24; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
 
+/* ── Score performance inline ──────────────────────────────────── */
+.perf-mini {
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.perf-mini-bar {
+    width: 45px; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;
+}
+.perf-mini-fill { height: 100%; border-radius: 3px; }
+.perf-mini-val { font-size: .75rem; font-weight: 700; }
+
 /* ── Boutons action ligne ──────────────────────────────────────── */
 .btn-voir  { background:#e8f5e9; color:#1B5E20; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
 .btn-modif { background:#fff3cd; color:#856404; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
 .btn-suppr { background:#f8d7da; color:#842029; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
 .btn-tog-on  { background:#d1ecf1; color:#0c5460; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
 .btn-tog-off { background:#e2e3e5; color:#41464b; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
+.btn-perf  { background:#e8eaf6; color:#283593; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
 .btn-voir:hover  { background:#27ae60; color:white; }
 .btn-modif:hover { background:#ffc107; color:#000; }
 .btn-suppr:hover { background:#dc3545; color:white; }
+.btn-perf:hover  { background:#3949ab; color:white; }
 
 /* ── Barre du bas ──────────────────────────────────────────────── */
 .emp-bottombar {
@@ -116,7 +127,7 @@
     box-shadow: 0 2px 12px rgba(0,0,0,.08);
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.btn-add   { background:#27ae60; color:white; border:none; border-radius:10px; padding:10px 22px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-add    { background:#27ae60; color:white; border:none; border-radius:10px; padding:10px 22px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
 .btn-add:hover { background:#219150; color:white; transform:translateY(-1px); }
 .btn-orange { background:#f39c12; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
 .btn-orange:hover { background:#d68910; color:white; }
@@ -124,11 +135,40 @@
 .btn-red:hover { background:#c0392b; color:white; }
 .btn-dark   { background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
 .btn-dark:hover { background:#1a252f; color:white; }
+.btn-purple { background:#8e44ad; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
+.btn-purple:hover { background:#6c3483; color:white; transform:translateY(-1px); }
 .bottom-info { margin-left:auto; color:#aaa; font-size:.83rem; font-style:italic; }
 
 /* ── Empty ─────────────────────────────────────────────────────── */
 .emp-empty { text-align:center; padding:55px 20px; color:#bbb; }
 .emp-empty i { font-size:3.5rem; margin-bottom:12px; display:block; }
+
+/* ── Top 3 banner ──────────────────────────────────────────────── */
+.top3-banner {
+    background: linear-gradient(135deg,#1B5E20,#2E7D32);
+    border-radius: 12px; padding: 12px 20px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: 0 3px 14px rgba(27,94,32,.25);
+}
+.top3-banner-title { color:rgba(255,255,255,.75); font-size:.82rem; font-weight:700; white-space:nowrap; }
+.top3-item {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,.15); border-radius: 20px;
+    padding: 5px 14px; color: white; font-size: .83rem; font-weight: 700;
+}
+.top3-item .medal { font-size: 1rem; }
+.top3-item .score-pill {
+    background: rgba(255,255,255,.25); border-radius: 10px;
+    padding: 1px 8px; font-size: .75rem;
+}
+.top3-btn {
+    margin-left: auto; background: rgba(255,255,255,.2); color: white;
+    border: 1px solid rgba(255,255,255,.4); border-radius: 8px;
+    padding: 7px 16px; font-size: .82rem; font-weight: 700;
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+    transition: .2s;
+}
+.top3-btn:hover { background: rgba(255,255,255,.35); color: white; }
 </style>
 {% endblock %}
 
@@ -136,7 +176,7 @@
 <div class="emp-page">
 <div class="container-fluid px-4">
 
-    {# ── Top bar : titre + compteurs + Top 3 ─────────────────────── #}
+    {# ── Top bar : titre + compteurs ─────────────────────────────── #}
     <div class="emp-topbar">
         <div class="emp-topbar-title">
             <i class="bi bi-people-fill"></i> Gestion des Employés
@@ -144,16 +184,30 @@
         <span class="emp-badge badge-total">{{ total }} Total</span>
         <span class="emp-badge badge-actif">{{ total_actifs }} Actifs</span>
         <span class="emp-badge badge-inactif">{{ total - total_actifs }} Inactifs</span>
-        {% for emp in employes|slice(0, 3) %}
-            <span class="emp-badge badge-top">🏅 {{ emp.nomComplet }}</span>
-        {% endfor %}
     </div>
 
-    {# ── Toolbar : recherche + tri ──────────────────────────────────── #}
+    {# ── Bandeau Top 3 Performance (identique à updateTopPerformers() Java) #}
+    {% if top3 is defined and top3|length > 0 %}
+    <div class="top3-banner">
+        <span class="top3-banner-title">🏆 Top Performeurs :</span>
+        {% set medals = ['🥇','🥈','🥉'] %}
+        {% for i, p in top3 %}
+        <div class="top3-item">
+            <span class="medal">{{ medals[i] }}</span>
+            <span>{{ p.nomEmploye }}</span>
+            <span class="score-pill">{{ p.score }} pts</span>
+        </div>
+        {% endfor %}
+        <a href="{{ path('employe_performance') }}" class="top3-btn">
+            <i class="bi bi-bar-chart-line-fill"></i> Voir le classement
+        </a>
+    </div>
+    {% endif %}
+
+    {# ── Toolbar : recherche + tri ──────────────────────────────── #}
     <form method="GET" action="{{ path('employe_index') }}">
     <div class="emp-toolbar">
 
-        {# Recherche #}
         <i class="bi bi-search text-muted"></i>
         <input type="text" name="search" value="{{ search }}" class="emp-search"
                placeholder="Rechercher par nom, prénom, email, poste...">
@@ -167,7 +221,6 @@
 
         <div class="toolbar-sep"></div>
 
-        {# Tri : label + sélecteur ─ identique au ComboBox "Trier par" desktop #}
         <span class="tri-label">Trier par :</span>
         <select name="tri" class="tri-select" onchange="this.form.submit()">
             <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
@@ -179,7 +232,6 @@
             <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>Actif</option>
         </select>
 
-        {# Boutons direction ↑ ↓ — identiques aux boutons desktop #}
         <input type="hidden" name="direction" id="directionInput" value="{{ direction }}">
 
         <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
@@ -189,19 +241,19 @@
 
         <div class="toolbar-sep"></div>
 
-        {# Bouton Actualiser #}
         <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
             <i class="bi bi-arrow-clockwise"></i> Actualiser
         </a>
-        {# Pdf#}
         <a href="{{ path('employe_pdf') }}" class="btn btn-danger" style="border-radius:8px">
             <i class="bi bi-file-earmark-pdf"></i> PDF
         </a>
-        {# Statistiques #}
         <a href="{{ path('employe_statistiques') }}" class="btn btn-success" style="border-radius:8px;background:#1B5E20;border-color:#1B5E20;">
             <i class="bi bi-bar-chart-line-fill"></i> Statistiques
         </a>
-        {# Bouton rechercher explicite #}
+        {# ✅ NOUVEAU — Bouton Performance (identique au bouton "Top Performeurs" du desktop Java) #}
+        <a href="{{ path('employe_performance') }}" class="btn" style="border-radius:8px;background:#8e44ad;border-color:#8e44ad;color:white;font-weight:700;">
+            <i class="bi bi-graph-up-arrow"></i> Performance
+        </a>
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
             <i class="bi bi-search me-1"></i>Rechercher
         </button>
@@ -209,7 +261,7 @@
     </div>
     </form>
 
-    {# ── Table ──────────────────────────────────────────────────────── #}
+    {# ── Table ──────────────────────────────────────────────────── #}
     <div class="emp-table-wrap">
         {% if employes|length > 0 %}
         <div class="table-responsive">
@@ -217,7 +269,6 @@
             <thead>
             <tr>
                 <th>Photo</th>
-                {# En-têtes cliquables pour tri — identique aux colonnes du tableau desktop #}
                 <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
                     <a href="{{ path('employe_index', {tri: 'id', direction: (tri == 'id' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
                        style="color:white;text-decoration:none">QR</a>
@@ -250,11 +301,23 @@
                     <a href="{{ path('employe_index', {tri: 'actif', direction: (tri == 'actif' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
                        style="color:white;text-decoration:none">Actif</a>
                 </th>
+                {# ✅ NOUVELLE COLONNE Performance (identique à colPerformance Java) #}
+                <th style="text-align:center">Performance</th>
                 <th class="text-center">Actions</th>
             </tr>
             </thead>
             <tbody>
             {% for emp in employes %}
+            {# Chercher la perf de cet employé dans le top3 (affichage rapide) #}
+            {% set empPerf = null %}
+            {% if top3 is defined %}
+                {% for p in top3 %}
+                    {% if p.idEmploye == emp.id %}
+                        {% set empPerf = p %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
             <tr id="row-{{ emp.id }}">
 
                 {# Photo / Avatar #}
@@ -271,8 +334,11 @@
 
                 {# QR #}
                 <td>
-                    <a href="{{ path('employe_fiche_pdf', {id: emp.id}) }}" target="_blank" title="Cliquer pour générer la fiche PDF de {{ emp.prenom }} {{ emp.nom }}">
-                        <img src="{{ path('employe_qr_image', {id: emp.id}) }}" alt="QR Code" style="width:50px; height:50px; border-radius:4px; border:1px solid #ddd; transition:opacity .2s;" onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
+                    <a href="{{ path('employe_fiche_pdf', {id: emp.id}) }}" target="_blank"
+                       title="Fiche PDF de {{ emp.prenom }} {{ emp.nom }}">
+                        <img src="{{ path('employe_qr_image', {id: emp.id}) }}" alt="QR"
+                             style="width:50px;height:50px;border-radius:4px;border:1px solid #ddd;transition:opacity .2s"
+                             onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
                     </a>
                 </td>
 
@@ -291,6 +357,28 @@
                         <span class="st-actif">✓ Actif</span>
                     {% else %}
                         <span class="st-inactif">✗ Inactif</span>
+                    {% endif %}
+                </td>
+
+                {# ✅ NOUVELLE COLONNE — Score mini (identique à colPerformance Java : cercle coloré + score) #}
+                <td style="text-align:center">
+                    {% if empPerf is not null %}
+                        {# Employé dans le Top 3 → afficher score complet #}
+                        <div class="perf-mini">
+                            <div class="perf-mini-bar">
+                                <div class="perf-mini-fill"
+                                     style="width:{{ empPerf.score }}%;background:{{ empPerf.couleur }}">
+                                </div>
+                            </div>
+                            <span class="perf-mini-val" style="color:{{ empPerf.couleur }}">
+                                {{ empPerf.score }}
+                            </span>
+                        </div>
+                    {% else %}
+                        {# Autres employés → lien vers détails #}
+                        <a href="{{ path('employe_performance') }}" class="btn-perf" title="Voir performance">
+                            <i class="bi bi-graph-up"></i>
+                        </a>
                     {% endif %}
                 </td>
 
@@ -336,7 +424,7 @@
         {% endif %}
     </div>
 
-    {# ── Barre du bas ────────────────────────────────────────────────── #}
+    {# ── Barre du bas ────────────────────────────────────────────── #}
     <div class="emp-bottombar">
         <a href="{{ path('employe_new') }}" class="btn-add">
             <i class="bi bi-plus-lg"></i> Ajouter un Employé
@@ -349,6 +437,10 @@
         </button>
         <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()">
             <i class="bi bi-file-earmark-text"></i> Attestation de Travail
+        </a>
+        {# ✅ NOUVEAU — Bouton Performance dans la barre du bas (identique au bouton "Top Performeurs" Java) #}
+        <a href="{{ path('employe_performance') }}" class="btn-purple">
+            <i class="bi bi-graph-up-arrow"></i> 📊 Performance
         </a>
         <span class="bottom-info" id="selectionInfo">Aucune sélection</span>
     </div>
@@ -364,12 +456,10 @@
 
 {% block javascripts %}
 <script>
-// ── Direction tri ───────────────────────────────────────────────────
 function setDir(d) {
     document.getElementById('directionInput').value = d;
 }
 
-// ── Sélection de ligne (pour boutons du bas) ────────────────────────
 let selId = null, selNom = null, selEdit = null, selDel = null, selTok = null;
 
 document.querySelectorAll('.emp-table tbody tr').forEach(row => {
@@ -379,9 +469,9 @@ document.querySelectorAll('.emp-table tbody tr').forEach(row => {
         document.querySelectorAll('.emp-table tbody tr').forEach(r => r.classList.remove('selected'));
         this.classList.add('selected');
 
-        selId   = this.id.replace('row-', '');
+        selId  = this.id.replace('row-', '');
         const tds = this.querySelectorAll('td');
-        selNom  = (tds[3]?.textContent.trim() ?? '') + ' ' + (tds[4]?.textContent.trim() ?? '');
+        selNom = (tds[3]?.textContent.trim() ?? '') + ' ' + (tds[4]?.textContent.trim() ?? '');
 
         const editBtn = this.querySelector('a.btn-modif');
         const delForm = this.querySelector('form:has(button.btn-suppr)');

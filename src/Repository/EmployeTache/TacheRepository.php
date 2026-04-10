@@ -274,4 +274,14 @@ class TacheRepository extends ServiceEntityRepository
         }
         return $counts;
     }
+      public function findTachesParEmployePourPerformance(int $idEmploye): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t')
+            ->where('t.idEmploye = :emp')
+            ->setParameter('emp', $idEmploye)
+            ->getQuery()
+            ->getResult();
+    }
+ 
 }
