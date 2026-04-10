@@ -79,9 +79,12 @@ class EmployeController extends AbstractController
 
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
-        // ✅ Calcul du Top 3 pour la topbar (identique à updateTopPerformers() Java)
-        $classement = $this->performanceService->getClassement($idAgriculteur);
-        $top3        = array_slice($classement, 0, 3);
+        // ✅ Calcul du score de performance pour chaque employé
+        // Identique à refreshPerformanceCache() dans EmployeController.java desktop
+        $performanceMap = [];
+        foreach ($employes as $emp) {
+            $performanceMap[$emp->getId()] = $this->performanceService->calculatePerformance($emp->getId());
+        }
 
         return $this->render('EmployeTache/employe/index.html.twig', [
             'employes'          => $employes,
@@ -90,7 +93,7 @@ class EmployeController extends AbstractController
             'direction'         => $direction,
             'total'             => count($employes),
             'total_actifs'      => count(array_filter($employes, fn($e) => $e->isActif())),
-            'top3'              => $top3,   // ✅ NOUVEAU : Top 3 performeurs
+            'performanceMap'    => $performanceMap,  // ✅ score par employé
             // Contexte admin pour bannière
             'supervision_mode'  => $this->ctx->isSupervisionMode(),
             'nom_supervise'     => $this->ctx->getNomAgriculteurSupervise(),
