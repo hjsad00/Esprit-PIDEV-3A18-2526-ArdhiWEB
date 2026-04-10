@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TreatmentTaskRepository::class)]
 #[ORM\Table(name: 'treatment_task')]
-class TreatmentTask
+class TreatmentTask 
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

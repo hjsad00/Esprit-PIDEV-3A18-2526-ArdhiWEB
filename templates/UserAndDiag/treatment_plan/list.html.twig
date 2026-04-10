@@ -148,7 +148,7 @@
 
     <div class="plan-grid">
         {% for item in plans %}
-            <div class="plan-card">
+            <a href="{{ path('app_user_and_diag_treatment_plan_show', {id: item.plan.id}) }}" class="plan-card text-decoration-none" style="position: relative;">
                 {% if item.plan.status == 'COMPLETED' %}
                     <span class="status-tag">TERMINÉ</span>
                 {% endif %}
@@ -169,7 +169,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         {% else %}
             <div class="col-12 text-center py-5 text-white bg-white bg-opacity-10 rounded-4">
                 <i class="bi bi-journal-check display-1 opacity-25"></i>
