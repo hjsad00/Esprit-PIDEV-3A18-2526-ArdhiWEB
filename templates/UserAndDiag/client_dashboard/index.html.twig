@@ -515,3 +515,24 @@
     </div>
 </div>
 {% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.intell-card .header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            var card = header.closest('.intell-card');
+            var icon = header.querySelector('.toggle-icon');
+            var body = card.querySelector('.weather-body, .alerts-body, .predict-body');
+            if (body) {
+                var isHidden = body.style.display === 'none';
+                body.style.display = isHidden ? '' : 'none';
+                if (icon) icon.textContent = isHidden ? '▲' : '▼';
+                card.classList.toggle('is-collapsed', !isHidden);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

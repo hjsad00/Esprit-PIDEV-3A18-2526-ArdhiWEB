@@ -72,21 +72,21 @@ class ClientDashboardController extends AbstractController
         $lat = $locationData ? $locationData['latitude'] : 36.8065;
         $lon = $locationData ? $locationData['longitude'] : 10.1815;
 
-        // 4. Real-time Weather & Alerts (Delayed for async load via Stimulus)
-        // We skip synchronous heavy API calls to vastly improve initial page load speed.
-        // The `dashboard_refresh_controller` will immediately fetch and populate these stats via `fetchStats()`.
-
-        $currentWeather = [
-            'icon' => '⏳',
-            'temperature' => '--',
-            'apparentTemperature' => '--',
-            'humidity' => '--',
-            'windSpeed' => '--',
-            'condition' => 'Chargement...',
-            'advice' => 'Veuillez patienter pendant le chargement...'
-        ];
-        $weatherRisks = [];
-        $treatmentTiming = ['overallAdvice' => 'Analyse en cours...'];
+        // 4. Real-time Weather & Alerts
+        $currentWeather = $weatherService->getCurrentWeather($lat, $lon);
+        if (!$currentWeather) {
+            $currentWeather = [
+                'icon' => '❌',
+                'temperature' => '--',
+                'apparentTemperature' => '--',
+                'humidity' => '--',
+                'windSpeed' => '--',
+                'condition' => 'Météo indisponible',
+                'advice' => 'Impossible de charger les données météo.'
+            ];
+        }
+        $weatherRisks = $weatherAlertService->getDiseaseRiskAlerts($lat, $lon);
+        $treatmentTiming = $weatherAlertService->getTreatmentTiming($lat, $lon);
 
         $regionalDiseases = $epidemicService->getActiveDiseases($lat, $lon, 25.0);
         $regionalAlerts = $epidemicService->getRegionalAlerts($lat, $lon, 25.0);
