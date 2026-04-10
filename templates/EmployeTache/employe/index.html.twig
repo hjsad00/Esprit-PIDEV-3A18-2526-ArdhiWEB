@@ -153,9 +153,9 @@
         <a href="{{ path('employe_pdf') }}" class="btn btn-danger" style="border-radius:8px">
             <i class="bi bi-file-earmark-pdf"></i> PDF
         </a>
-        <a href="{{ path('employe_statistiques') }}" class="btn btn-success"
-           style="border-radius:8px;background:#1B5E20;border-color:#1B5E20;">
-            <i class="bi bi-bar-chart-line-fill"></i> Statistiques
+        <a href="{{ path('employe_performance') }}" class="btn btn-warning"
+           style="border-radius:8px; background:#f39c12; border-color:#f39c12; color:white; font-weight:700;">
+            <i class="bi bi-trophy-fill"></i> Top Performance
         </a>
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
             <i class="bi bi-search me-1"></i>Rechercher
@@ -319,7 +319,7 @@ function ouvrirPerf(id, nom) {
 }
 
 function buildModal(p) {
-    const c = p.score >= 75 ? '#27ae60' : p.score >= 50 ? '#f39c12' : '#e74c3c';
+    const c = p.score >= 75 ? '#27ae60' : p.score >= 50 ? '#fdf100' : '#e74c3c';
     return `
     <div class="perf-modal-header">
         <div class="perf-score-circle" style="background:${c}">${Math.round(p.score)}</div>

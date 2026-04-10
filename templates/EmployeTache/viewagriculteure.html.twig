@@ -84,24 +84,7 @@
                 </div>
               </a>
 
-              {# NOTIFICATIONS ✅ #}
-              <a href="{{ path('notification_index') }}" class="category-item">
-                <div class="category-icon">
-                  <i class="bi bi-bell-fill"></i>
-                </div>
-                <div class="category-text">
-                  <h4>
-                    Notifications
-                    {% if nb_notif_non_lues is defined and nb_notif_non_lues > 0 %}
-                      <span class="notif-badge-circle">
-                        {{ nb_notif_non_lues > 99 ? '99+' : nb_notif_non_lues }}
-                      </span>
-                    {% endif %}
-                  </h4>
-                  <span>Alertes retard &amp; météo agricole</span>
-                </div>
-              </a>
-
+              {# GESTION EMPLOYES — FIN DE LISTE #}
             </div>
 
             <!-- Widget Météo Agricole -->

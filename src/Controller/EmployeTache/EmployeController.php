@@ -236,7 +236,7 @@ class EmployeController extends AbstractController
     // ── Fiche ─────────────────────────────────────────────────────────
 
     #[Route('/{id<\d+>}', name: 'employe_show', methods: ['GET'])]
-    public function show(int $id, EmployeRepository $repo): Response
+    public function show(int $id, EmployeRepository $repo, QrCodeService $qrService): Response
     {
         $result = $this->checkAccess();
         if ($result instanceof Response) return $result;
@@ -247,8 +247,13 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException('Employé introuvable.');
         }
 
+        $qrUrl = $qrService->generateFicheUrl($employe->getId());
+        $qrCodeUri = $qrService->generateQrCodeDataUri($qrUrl, 150);
+
         return $this->render('EmployeTache/employe/show.html.twig', [
             'employe'          => $employe,
+            'qr_code_uri'      => $qrCodeUri,
+            'qr_url'           => $qrUrl,
             'supervision_mode' => $this->ctx->isSupervisionMode(),
             'nom_supervise'    => $this->ctx->getNomAgriculteurSupervise(),
         ]);

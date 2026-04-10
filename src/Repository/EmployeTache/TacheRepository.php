@@ -283,5 +283,35 @@ class TacheRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
- 
+
+    /**
+     * ✅ Récupère les tâches terminées pour calculer l'historique de risque.
+     */
+    public function findHistoriquePourRisque(int $idEmploye): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.idEmploye = :emp')
+            ->andWhere('t.statut IN (:finished)')
+            ->setParameter('emp', $idEmploye)
+            ->setParameter('finished', ['Terminé', 'Validé', 'Annulé'])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * ✅ Compte les tâches actives pour évaluer la charge de travail (en excluant la tâche courante).
+     */
+    public function countChargeActuelle(int $idEmploye, int $excludeTacheId): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.idEmploye = :emp')
+            ->andWhere('t.id != :exclude')
+            ->andWhere('t.statut IN (:actives)')
+            ->setParameter('emp', $idEmploye)
+            ->setParameter('exclude', $excludeTacheId)
+            ->setParameter('actives', ['En attente', 'En cours'])
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

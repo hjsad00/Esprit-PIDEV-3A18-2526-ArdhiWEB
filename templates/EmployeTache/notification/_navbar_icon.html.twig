@@ -1,0 +1,31 @@
+{% if count > 0 %}
+    <li class="nav-item" style="margin-right: 20px;">
+        <a href="{{ path('notification_index') }}" class="nav-link nav-notif-link position-relative px-2">
+            <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: #e74c3c; transition: 0.3s ease-in-out;"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; transform: translate(-20%, 20%) !important;">
+                {{ count > 99 ? '99+' : count }}
+            </span>
+        </a>
+    </li>
+{% else %}
+    <li class="nav-item" style="margin-right: 20px;">
+        <a href="{{ path('notification_index') }}" class="nav-link nav-notif-link px-2">
+            <i class="bi bi-bell" style="font-size: 1.2rem; color: rgba(255,255,255,0.7); transition: 0.3s ease-in-out;"></i>
+        </a>
+    </li>
+{% endif %}
+
+<style>
+.nav-notif-link:hover i {
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+.nav-notif-link .bi-bell-fill {
+    animation: pulse-red 2s infinite;
+}
+@keyframes pulse-red {
+    0% { filter: drop-shadow(0 0 0 rgba(231, 76, 60, 0)); }
+    50% { filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.8)); }
+    100% { filter: drop-shadow(0 0 0 rgba(231, 76, 60, 0)); }
+}
+</style>
