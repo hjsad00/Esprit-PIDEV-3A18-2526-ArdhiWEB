@@ -79,8 +79,8 @@ class MatchingService
 
             // 1. Performance
             $perf = $this->performanceService->calculatePerformance($emp->getId());
-            $rec->scorePerformance = $perf->score;
-            $rec->scoreExperience = $perf->totalTaches > 0 ? 80.0 : 40.0;
+            $rec->scorePerformance = $perf['score'];
+            $rec->scoreExperience = $perf['totalTaches'] > 0 ? 80.0 : 40.0;
 
             // 2. Compétences (approximation : poste vs catégorie tache)
             $rec->scoreCompetences = 50.0;

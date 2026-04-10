@@ -145,11 +145,11 @@ class ChatbotService
             
             $r = new RecommandationResult();
             $r->employe = $best;
-            $r->scoreTotal = $perf->score;
-            $r->scorePerformance = $perf->score;
+            $r->scoreTotal = $perf['score'];
+            $r->scorePerformance = $perf['score'];
             $r->scoreCompetences = 100.0;
             $r->scoreDisponibilite = 50.0;
-            $r->scoreExperience = $perf->tauxReussite;
+            $r->scoreExperience = $perf['tauxReussite'];
             $r->indiceConfiance = 90.0;
             $r->raisonRecommandation = "Déjà assigné à cette tâche.";
             
@@ -224,7 +224,7 @@ class ChatbotService
         $response = new ChatbotResponse();
         $classement = $this->performanceService->getClassement($idAgriculteur);
 
-        $avecTaches = array_filter($classement, fn($p) => $p->totalTaches > 0);
+        $avecTaches = array_filter($classement, fn($p) => $p['totalTaches'] > 0);
         $avecTaches = array_slice($avecTaches, 0, 5);
 
         if (!empty($avecTaches)) {
@@ -232,7 +232,7 @@ class ChatbotService
             $medals = ["🥇", "🥈", "🥉", "🏅", "⭐"];
             foreach ($avecTaches as $i => $p) {
                 $medal = $medals[$i] ?? "⭐️";
-                $sb .= sprintf("%s **#%d - %s**\n   💼 Score: %.1f/100 — %s\n", $medal, $i+1, $p->nomEmploye, $p->score, $p->getAppreciation());
+                $sb .= sprintf("%s **#%d - %s**\n   💼 Score: %.1f/100 — %s\n", $medal, $i+1, $p['nomEmploye'], $p['score'], $this->performanceService->getAppreciation($p['score']));
             }
             $response->reponse = $sb;
         } else {
