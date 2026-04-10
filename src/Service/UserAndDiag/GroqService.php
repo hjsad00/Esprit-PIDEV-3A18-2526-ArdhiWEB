@@ -109,4 +109,36 @@ class GroqService
             return "ERREUR_TECHNIQUE: " . $e->getMessage();
         }
     }
+
+    /**
+     * Generates a day-by-day treatment task list based on the disease name.
+     */
+    public function generateTreatmentPlan(string $diseaseName): string
+    {
+        $prompt = "Génère un plan de traitement agricole complet et détaillé pour la maladie : " . $diseaseName . ". " .
+            "Le plan doit s'étendre sur 10 jours. " .
+            "Génère au moins 3 à 5 tâches différentes réparties sur ces 10 jours. " .
+            "Réponds UNIQUEMENT avec une liste de tâches au format : 'JOUR|DESCRIPTION'. " .
+            "Exemple: \n" .
+            "1|Isoler la plante et couper les feuilles infectées.\n" .
+            "3|Appliquer un traitement fongicide ciblé.\n" .
+            "7|Vérifier l'état visuel (sans scanner).\n" .
+            "Ne mets pas de texte avant ou après. Une tâche par ligne.\n" .
+            "INTERDICTION STRICTE : Ne jamais utiliser de blocs de code Markdown (```). Réponds en texte brut seulement.\n" .
+            "INTERDICTION STRICTE : Ne jamais proposer de tâche demandant de scanner, prendre une photo, ou réévaluer la plante via l'application. Ce bouton existe déjà.";
+
+        // In PHP with Symfony's HttpClient, we don't need to manually build the JSON string 
+        // with escaped quotes. We just build a clean PHP array, and Symfony handles the rest!
+        $jsonPayload = [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ]
+        ];
+
+        return $this->sendRequest($jsonPayload);
+    }
 }

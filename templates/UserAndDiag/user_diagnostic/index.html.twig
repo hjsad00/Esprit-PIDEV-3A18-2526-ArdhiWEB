@@ -231,6 +231,31 @@
         gap: 12px;
         margin-top: 25px;
     }
+    /* Sleek Notification Box */
+    .inline-notification {
+        display: none;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    .notif-error {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid rgba(231, 76, 60, 0.5);
+        color: #ffcccc;
+    }
+    .notif-success {
+        background: rgba(39, 174, 96, 0.2);
+        border: 1px solid rgba(39, 174, 96, 0.5);
+        color: #ccffcc;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 {% endblock %}
 
@@ -319,6 +344,12 @@
                 <div class="action-stack">
                     <a href="#" id="btnChatIa" class="btn-glass btn-blue w-100"><i class="bi bi-chat-dots"></i> Discuter avec l'IA</a>
                     <a href="#" class="btn-glass btn-purple w-100"><i class="bi bi-people"></i> Demander à la Communauté</a>
+                    
+                    <button id="btnCreatePlan" class="btn-glass btn-orange w-100" onclick="genererPlanTraitement()">
+                        <i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement
+                    </button>
+                    
+                    <div id="planNotification" class="inline-notification"></div>
                 </div>
             </div>
         </div>
@@ -333,6 +364,8 @@
     let currentUsed = {{ used }};
     const maxLimit = {{ limit }};
     const planName = '{{ planName|escape('js') }}';
+    // NEW: Variable to store the ID of the newly created diagnostic
+    let currentDiagnosticId = null; 
 
     // 1. Image Preview Logic
     function previewImage(event) {
@@ -363,10 +396,12 @@
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(107, 127, 63, 1)';
     });
+    
     dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(0,0,0,0.2)';
     });
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(0,0,0,0.2)';
@@ -379,7 +414,7 @@
     // 2. AJAX Scan Logic
     function lancerScan() {
         if(!selectedFile) return;
-
+        
         // Show loading state
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.style.display = 'flex';
@@ -409,6 +444,21 @@
                 return;
             }
 
+            // --- NEW CODE: Save ID and Reset UI for Treatment Plan ---
+            currentDiagnosticId = data.diagnostic_id;
+            
+            const btnPlan = document.getElementById('btnCreatePlan');
+            const notifPlan = document.getElementById('planNotification');
+            
+            if (btnPlan && notifPlan) {
+                notifPlan.style.display = 'none';
+                btnPlan.disabled = false;
+                btnPlan.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+                // Remove custom click if it was added previously
+                btnPlan.onclick = genererPlanTraitement;
+            }
+            // ---------------------------------------------------------
+
             // Populate Results
             document.getElementById('result-panel').style.display = 'block';
             document.getElementById('lblMaladieTitre').innerText = data.plante + ' : ' + data.maladie;
@@ -425,14 +475,14 @@
             if(data.confiance > 80 && data.severity !== 'CRITICAL') color = '#27ae60'; // Green
 
             document.getElementById('lblConfiance').style.color = color;
-
+            
             document.getElementById('lblTraitement').innerHTML = `
                 <strong>Traitement recommandé : </strong> ${data.traitement.nom}<br>
                 <div class="mt-2 text-warning d-inline-block px-2 py-1 bg-dark bg-opacity-25 rounded"><small>Catégorie : ${data.traitement.type}</small></div>
                 <hr style="opacity:0.2;">
                 <p class="mb-0">${data.traitement.description}</p>
             `;
-
+            
             // Update Chat Button Link
             const chatLink = "{{ path('app_user_and_diag_chatbot', {id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', data.diagnostic_id);
             document.getElementById('btnChatIa').setAttribute('href', chatLink);
@@ -445,10 +495,10 @@
                 const badge = document.getElementById('badgePremium');
                 if (limit !== -1 && currentUsed >= limit) {
                     badge.innerHTML = `❌ Limite atteinte (${planName})`;
+                    
                     // Disable inputs since the limit for the hour is hit
                     document.getElementById('fileInput').disabled = true;
                     document.getElementById('btnImport').disabled = true;
-                    document.getElementById('btnCamera').disabled = true;
                     document.getElementById('btnScan').disabled = true;
                 } else {
                     if (limit === -1) {
@@ -464,6 +514,66 @@
             document.getElementById('btnScan').disabled = false;
             console.error('Error:', error);
             alert("Erreur de connexion lors du scan.");
+        });
+    }
+
+    // --- NEW FUNCTION: Generate Treatment Plan ---
+    function genererPlanTraitement() {
+        if (!currentDiagnosticId) return;
+
+        const btn = document.getElementById('btnCreatePlan');
+        const notif = document.getElementById('planNotification');
+        
+        // UI Loading State
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Vérification...';
+        notif.style.display = 'none';
+
+        // Build the URL dynamically using Twig's path function
+        const url = "{{ path('app_user_and_diag_create_treatment_plan', {id: 'ID_PLACEHOLDER'}) }}".replace('ID_PLACEHOLDER', currentDiagnosticId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            notif.style.display = 'block';
+            
+            if (data.success) {
+                // Success UI
+                notif.className = 'inline-notification notif-success';
+                notif.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                btn.innerHTML = '<i class="bi bi-eye"></i> Voir le Plan';
+                
+                // Change button behavior to redirect to the new plan index
+                // Adjust this URL to match your actual route for viewing plans!
+                btn.onclick = () => window.location.href = `/user-and-diag/treatment-plan/`; 
+                btn.disabled = false;
+            } else {
+                // Error / Access Denied UI
+                notif.className = 'inline-notification notif-error';
+                
+                if (data.upgrade_required) {
+                    notif.innerHTML = `<i class="bi bi-lock-fill"></i> ${data.error} <br><a href="/user-and-diag/subscription" class="text-white text-decoration-underline mt-1 d-inline-block">Mettre à niveau</a>`;
+                } else {
+                    notif.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${data.error}`;
+                }
+                
+                btn.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            notif.style.display = 'block';
+            notif.className = 'inline-notification notif-error';
+            notif.innerHTML = '<i class="bi bi-x-circle-fill"></i> Une erreur réseau est survenue.';
+            btn.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+            btn.disabled = false;
         });
     }
 </script>

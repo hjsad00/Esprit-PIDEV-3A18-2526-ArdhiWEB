@@ -49,7 +49,6 @@ class UserDiagnosticController extends AbstractController
         \App\Service\UserAndDiag\GamificationService $gamificationService,
         \App\Service\UserAndDiag\ImgBBService $imgBBService
     ): Response {
-        // ... (lines 50-156 are unchanged, but I must provide the exact identical content for the replacement to work!)
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
@@ -195,6 +194,101 @@ class UserDiagnosticController extends AbstractController
 
         } catch (\Exception $e) {
             return $this->json(['error' => 'Erreur inattendue : ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/create-treatment-plan', name: 'app_user_and_diag_create_treatment_plan', methods: ['POST'])]
+    public function createTreatmentPlan(
+        Diagnostic $diagnostic,
+        \App\Service\UserAndDiag\SubscriptionFeatureService $featureService,
+        EntityManagerInterface $entityManager,
+        GroqService $groqService
+    ): Response {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // 1. Security Check: Ensure the diagnostic belongs to the logged-in user
+        if ($diagnostic->getUser() !== $user) {
+            return $this->json(['error' => 'Accès refusé. Ce diagnostic ne vous appartient pas.'], 403);
+        }
+
+        // 2. Subscription Check: Verify if the user's plan allows treatment plan creation
+        $features = $featureService->getFeatures($user);
+        
+        if (empty($features['accesPlanTraitement'])) {
+            return $this->json([
+                'error' => 'Votre abonnement actuel ne permet pas la création de plans de traitement.',
+                'upgrade_required' => true
+            ], 403);
+        }
+
+        // 3. Duplicate Check: Ensure a plan doesn't already exist for this diagnostic
+        $existingPlan = $entityManager->getRepository(\App\Entity\UserAndDiag\TreatmentPlan::class)->findOneBy(['diagnostic' => $diagnostic]);
+        if ($existingPlan) {
+            return $this->json(['error' => 'Un plan de traitement est déjà actif pour ce diagnostic.'], 400);
+        }
+
+        try {
+            // 4. Create and Persist the Treatment Plan
+            $plan = new \App\Entity\UserAndDiag\TreatmentPlan();
+            $plan->setDiagnostic($diagnostic);
+            $plan->setStatus('ACTIVE');
+            $plan->setStartDate(new \DateTime()); // Fix for Doctrine constraint
+
+            $entityManager->persist($plan);
+
+            // 5. Ask AI to generate the tasks
+            $aiResponse = $groqService->generateTreatmentPlan($diagnostic->getResultatIa());
+            
+            if (str_starts_with($aiResponse, 'ERREUR')) {
+                throw new \Exception("L'IA n'a pas pu générer les tâches : " . $aiResponse);
+            }
+
+            // 6. Parse the AI response and create TreatmentTask entities
+            $lignes = explode("\n", str_replace('```', '', trim($aiResponse)));
+            
+            $tasksCreated = 0;
+            foreach ($lignes as $ligne) {
+                $parts = explode('|', trim($ligne));
+                
+                if (count($parts) >= 2 && is_numeric(trim($parts[0]))) {
+                    $dayOffset = (int) trim($parts[0]);
+                    $description = trim($parts[1]);
+
+                    $task = new \App\Entity\UserAndDiag\TreatmentTask();
+                    $task->setTreatmentPlan($plan);
+                    $task->setDayOffset($dayOffset);
+                    $task->setTaskDescription(substr($description, 0, 255));
+                    $task->setStatus('PENDING');
+                    $task->setTechX(0); 
+                    $task->setTechY(0); 
+
+                    $entityManager->persist($task);
+                    $tasksCreated++;
+                }
+            }
+
+            // Fallback just in case the AI format was completely broken
+            if ($tasksCreated === 0) {
+                 $defaultTask = new \App\Entity\UserAndDiag\TreatmentTask();
+                 $defaultTask->setTreatmentPlan($plan);
+                 $defaultTask->setDayOffset(0);
+                 $defaultTask->setTaskDescription("Consulter l'agronome concernant le traitement à suivre.");
+                 $defaultTask->setStatus('PENDING');
+                 $entityManager->persist($defaultTask);
+            }
+
+            // 7. Commit everything to the database
+            $entityManager->flush();
+
+            return $this->json([
+                'success' => true,
+                'plan_id' => $plan->getId(),
+                'message' => 'Plan de traitement et tâches générés avec succès !'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur lors de la création du plan: ' . $e->getMessage()], 500);
         }
     }
 }
