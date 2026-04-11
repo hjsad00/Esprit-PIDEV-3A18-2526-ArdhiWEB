@@ -1,0 +1,76 @@
+<style>
+    /* Styles Sélecteur de Langue */
+    .lang-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .lang-circle:hover, .lang-circle.active {
+        background: #116530;
+        border-color: #116530;
+        transform: scale(1.1);
+    }
+
+    /* Support RTL Dynamique */
+    [dir="rtl"] {
+        text-align: right;
+    }
+    [dir="rtl"] .hero-inner, [dir="rtl"] .row, [dir="rtl"] .d-flex {
+        flex-direction: row-reverse;
+    }
+    [dir="rtl"] .ms-auto {
+        margin-right: auto !important;
+        margin-left: 0 !important;
+    }
+    [dir="rtl"] .me-auto {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Injection du sélecteur de langue dans la navbar
+        const navUl = document.querySelector('.navmenu ul');
+        if (navUl && !document.querySelector('.language-switcher-li')) {
+            const switcherLi = document.createElement('li');
+            switcherLi.className = 'ms-lg-3 d-flex align-items-center gap-2 py-2 py-lg-0 language-switcher-li';
+            switcherLi.style.listStyle = 'none';
+            
+            const currentLocale = '{{ app.request.locale }}';
+            
+            switcherLi.innerHTML = `
+                <a href="{{ path('app_change_locale', {locale: 'fr'}) }}" class="lang-circle ${currentLocale === 'fr' ? 'active' : ''}">Fr</a>
+                <a href="{{ path('app_change_locale', {locale: 'en'}) }}" class="lang-circle ${currentLocale === 'en' ? 'active' : ''}">En</a>
+                <a href="{{ path('app_change_locale', {locale: 'ar'}) }}" class="lang-circle ${currentLocale === 'ar' ? 'active' : ''}">Tn</a>
+            `;
+            
+            const lastLi = navUl.querySelector('li:last-child');
+            if (lastLi) {
+                navUl.insertBefore(switcherLi, lastLi);
+            } else {
+                navUl.appendChild(switcherLi);
+            }
+        }
+
+        // 2. Gestion RTL
+        if ('{{ app.request.locale }}' === 'ar') {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.body.classList.add('rtl-mode');
+        } else {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.body.classList.remove('rtl-mode');
+        }
+    });
+</script>
