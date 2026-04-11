@@ -23,6 +23,8 @@
             <div>
                 {% if plan.status == 'ACTIVE' %}
                     <span class="badge bg-success fs-6 px-3 py-2">Plan Actif</span>
+                {% elseif plan.status == 'COMPLETED' %}
+                    <span class="badge bg-success fs-6 px-3 py-2" style="background-color: #2ecc71 !important;">Protocole Terminé</span>
                 {% else %}
                     <span class="badge bg-danger fs-6 px-3 py-2">Abandonné</span>
                 {% endif %}
@@ -42,15 +44,20 @@
                 {% if plan.status == 'ACTIVE' %}
                     <div class="d-flex flex-column gap-2">
                         
-                        <button class="action-btn btn-ai" onclick="document.getElementById('aiReevalInput').click()">
+                        <button type="button" class="action-btn btn-ai" onclick="document.getElementById('aiReevalInput').click()">
                             <i class="bi bi-robot"></i> Réévaluer via IA
                         </button>
+
+                        <input type="file" id="aiReevalInput" style="display:none" accept="image/*" onchange="handleAiReevaluation(this)">
                         
                         <form action="{{ path('app_user_and_diag_treatment_plan_abandon', {id: plan.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir abandonner ce protocole ? Cette action est irréversible.');">
                             <button type="submit" class="action-btn" style="background: rgba(231, 76, 60, 0.85); width: 100%;">
                                 <i class="bi bi-x-circle"></i> Abandonner le protocole
                             </button>
                         </form>
+                        <button class="action-btn" style="background: #25D366; width: 100%;" onclick="triggerWhatsApp({{ plan.id }}, this)">
+                            <i class="bi bi-whatsapp"></i> Envoyer un Rappel WhatsApp
+                        </button>    
                         
                     </div>
                 {% endif %}
@@ -178,6 +185,85 @@
             checkboxElement.checked = false;
             checkboxElement.disabled = false;
             alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+
+    // WhatsApp Reminder Trigger
+    function triggerWhatsApp(planId, buttonElement) {
+        buttonElement.disabled = true;
+        const originalHtml = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_whatsapp', {'id': 'PLAN_ID'}) }}`.replace('PLAN_ID', planId), {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            if (data.success) {
+                alert("✅ " + data.message);
+            } else {
+                alert("❌ Erreur : " + data.error);
+            }
+        })
+        .catch(err => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+    function handleAiReevaluation(inputElement) {
+        if (!inputElement.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', inputElement.files[0]);
+
+        // Show a visual loading indicator (since this uses Vision models, it takes a few seconds)
+        const btn = document.querySelector('.btn-ai');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyse en cours...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_reevaluate', {id: plan.id}) }}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            inputElement.value = ""; // Reset file input
+
+            if (data.error) {
+                alert("Erreur: " + data.error);
+                return;
+            }
+
+            if (data.status === 'MISMATCH') {
+                alert("⚠️ INCOHÉRENCE DÉTECTÉE\n\nL'IA indique que cette image ne correspond pas au suivi de ce protocole.\nDétail : " + data.message);
+            } else if (data.status === 'HEALED') {
+                alert("🎉 FÉLICITATIONS !\n\nL'IA a détecté que votre plante est totalement guérie !\nDétail : " + data.message);
+                window.location.reload();
+            } else if (data.status === 'UNCHANGED' || data.status === 'RECOVERING') {
+                const prefix = data.status === 'RECOVERING' ? "📈 AMÉLIORATION" : "➡️ STATIONNAIRE";
+                alert(prefix + "\n\nL'IA confirme que le plan actuel est approprié. Continuez vos tâches !\nDétail : " + data.message);
+            } else if (data.status === 'PROPOSAL') {
+                // The plant is worsening, show the modal with the new proposed tasks!
+                alert("⚠️ AGGRAVATION DÉTECTÉE\n\nL'IA a constaté une détérioration (" + data.message + "). Un nouveau protocole a été généré.");
+                document.getElementById('aiProposalContent').innerText = data.raw_ai_response;
+                new bootstrap.Modal(document.getElementById('aiProposalModal')).show();
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert("Erreur réseau lors de la communication avec l'IA.");
         });
     }
 </script>

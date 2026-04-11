@@ -141,4 +141,83 @@ class GroqService
 
         return $this->sendRequest($jsonPayload);
     }
+    /**
+     * Etape 1: Vérifie si l'image téléchargée correspond bien à la plante/maladie traitée.
+     */
+    public function checkConsistency(UploadedFile $newImage, string $diseaseName): string
+    {
+        $mimeType = $newImage->getMimeType() ?: 'image/jpeg';
+        $imageBase64 = base64_encode(file_get_contents($newImage->getPathname()));
+
+        $prompt = "Voici une image d'une plante. Le protocole actuel traite la maladie : " . $diseaseName . ". " .
+            "Est-ce que cette image correspond bien à cette plante ou ce fruit ou ce légume et montre des signes liés à cette maladie (même en voie de guérison ou de détérioration) ? " .
+            "Réponds STRICTEMENT par 'MATCH' si c'est cohérent, ou 'MISMATCH|Raison détaillée' si c'est une toute autre plante ou totalement incohérent.";
+
+        $jsonPayload = [
+            'model' => 'meta-llama/llama-4-scout-17b-16e-instruct', // Or your preferred vision model
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => $prompt],
+                        ['type' => 'image_url', 'image_url' => ['url' => "data:{$mimeType};base64,{$imageBase64}"]]
+                    ]
+                ]
+            ]
+        ];
+
+        return $this->sendRequest($jsonPayload);
+    }
+
+    /**
+     * Etape 2: Compare l'ancienne image et la nouvelle pour évaluer la guérison.
+     */
+    public function analyzeRecovery(string $baselineUrl, UploadedFile $newImage, string $diseaseName): string
+    {
+        $mimeType = $newImage->getMimeType() ?: 'image/jpeg';
+        $imageBase64 = base64_encode(file_get_contents($newImage->getPathname()));
+
+        $prompt = "Tu es un expert agronome. Tu dois évaluer l'évolution de la maladie : " . $diseaseName . ". " .
+            "La première image est l'état initial. La deuxième image est l'état ACTUEL après traitement. " .
+            "Évalue la progression de la maladie. " .
+            "Réponds STRICTEMENT avec un seul de ces mots-clés suivi d'un '|' et d'une brève explication : " .
+            "HEALED (totalement guérie), RECOVERING (en nette amélioration), UNCHANGED (stationnaire), WORSENING (aggravation). " .
+            "Exemple: RECOVERING|Les taches brunes ont séché et ne s'étendent plus.";
+
+        $jsonPayload = [
+            'model' => 'meta-llama/llama-4-scout-17b-16e-instruct',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => $prompt],
+                        ['type' => 'image_url', 'image_url' => ['url' => $baselineUrl]], // Image 1: Baseline
+                        ['type' => 'image_url', 'image_url' => ['url' => "data:{$mimeType};base64,{$imageBase64}"]] // Image 2: New
+                    ]
+                ]
+            ]
+        ];
+
+        return $this->sendRequest($jsonPayload);
+    }
+
+    /**
+     * Etape 3: Génère un nouveau plan si la situation s'aggrave.
+     */
+    public function generateUpdatedPlan(string $baselineUrl, UploadedFile $newImage, string $diseaseName): string
+    {
+        // Reuses the text-only generateTreatmentPlan method logic, but informs the AI it's a worsening case
+        $prompt = "La maladie " . $diseaseName . " s'est aggravée malgré un premier traitement. " .
+            "Génère un NOUVEAU plan de traitement de crise sur 10 jours avec des méthodes plus radicales ou alternatives. " .
+            "Génère 3 à 5 tâches réparties sur ces 10 jours. " .
+            "Réponds UNIQUEMENT avec une liste au format : 'JOUR|DESCRIPTION'. Une tâche par ligne. Aucun texte avant ou après. " .
+            "Exemple: 1|Appliquer un fongicide systémique puissant.\n3|Tailler agressivement les parties nécrosées.";
+
+        $jsonPayload = [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => [['role' => 'user', 'content' => $prompt]]
+        ];
+
+        return $this->sendRequest($jsonPayload);
+    }
 }

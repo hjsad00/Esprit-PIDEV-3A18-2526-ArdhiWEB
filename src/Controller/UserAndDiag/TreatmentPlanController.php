@@ -8,7 +8,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
+use App\Entity\UserAndDiag\TreatmentPlan;
+use App\Entity\UserAndDiag\TreatmentTask;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\EntityManagerInterface;
 #[Route('/user-and-diag/treatment-plan')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class TreatmentPlanController extends AbstractController
@@ -49,7 +53,7 @@ class TreatmentPlanController extends AbstractController
         ]);
     }
     #[Route('/{id}/details', name: 'app_user_and_diag_treatment_plan_show', methods: ['GET'])]
-    public function show(\App\Entity\UserAndDiag\TreatmentPlan $plan, \Doctrine\ORM\EntityManagerInterface $em): Response
+    public function show(TreatmentPlan $plan, EntityManagerInterface $em): Response
     {
         // 1. Security check
         if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
@@ -57,7 +61,7 @@ class TreatmentPlanController extends AbstractController
         }
 
         // 2. Fetch tasks ordered chronologically
-        $tasks = $em->getRepository(\App\Entity\UserAndDiag\TreatmentTask::class)->findBy(
+        $tasks = $em->getRepository(TreatmentTask::class)->findBy(
             ['treatmentPlan' => $plan],
             ['day_offset' => 'ASC']
         );
@@ -109,7 +113,7 @@ class TreatmentPlanController extends AbstractController
         ]);
     }
     #[Route('/task/{id}/complete', name: 'app_user_and_diag_treatment_task_complete', methods: ['POST'])]
-    public function completeTask(\App\Entity\UserAndDiag\TreatmentTask $task, \Doctrine\ORM\EntityManagerInterface $em): \Symfony\Component\HttpFoundation\JsonResponse
+    public function completeTask(TreatmentTask $task, EntityManagerInterface $em): JsonResponse
     {
         $plan = $task->getTreatmentPlan();
 
@@ -119,9 +123,9 @@ class TreatmentPlanController extends AbstractController
         }
 
         // Sequential Enforcement Check
-        $previousTasks = $em->getRepository(\App\Entity\UserAndDiag\TreatmentTask::class)->createQueryBuilder('t')
+        $previousTasks = $em->getRepository(TreatmentTask::class)->createQueryBuilder('t')
             ->where('t.treatmentPlan = :plan')
-            ->andWhere('t.dayOffset < :currentOffset')
+            ->andWhere('t.day_offset < :currentOffset')
             ->andWhere('t.status != :completedStatus')
             ->setParameter('plan', $plan)
             ->setParameter('currentOffset', $task->getDayOffset())
@@ -141,7 +145,7 @@ class TreatmentPlanController extends AbstractController
         $em->flush(); // Save task status first
 
         // 2. Check if all tasks are now completed
-        $pendingTasksCount = $em->getRepository(\App\Entity\UserAndDiag\TreatmentTask::class)->count([
+        $pendingTasksCount = $em->getRepository(TreatmentTask::class)->count([
             'treatmentPlan' => $plan,
             'status' => 'PENDING'
         ]);
@@ -163,7 +167,7 @@ class TreatmentPlanController extends AbstractController
     }
 
     #[Route('/{id}/abandon', name: 'app_user_and_diag_treatment_plan_abandon', methods: ['POST'])]
-    public function abandon(\App\Entity\UserAndDiag\TreatmentPlan $plan, \Doctrine\ORM\EntityManagerInterface $em): Response
+    public function abandon(TreatmentPlan $plan, EntityManagerInterface $em): Response
     {
         // Security check
         if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
@@ -176,5 +180,124 @@ class TreatmentPlanController extends AbstractController
         $this->addFlash('success', 'Le protocole a été abandonné.');
 
         return $this->redirectToRoute('app_user_and_diag_treatment_plan_list');
+    }
+
+    #[Route('/{id}/whatsapp', name: 'app_user_and_diag_treatment_plan_whatsapp', methods: ['POST'])]
+    public function whatsappReminder(
+        TreatmentPlan $plan,
+        EntityManagerInterface $em,
+        \App\Service\UserAndDiag\WhatsAppService $whatsAppService
+    ): JsonResponse {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // 1. Security & Phone Check
+        if ($plan->getDiagnostic()->getUser() !== $user) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        $phone = $user->getPhone();
+        if (!$phone) {
+            return $this->json(['error' => 'Veuillez ajouter un numéro de téléphone à votre profil pour utiliser WhatsApp.'], 400);
+        }
+
+        // 2. Fetch pending tasks to build the message
+        $tasks = $em->getRepository(TreatmentTask::class)->findBy(
+            ['treatmentPlan' => $plan, 'status' => 'PENDING'],
+            ['day_offset' => 'ASC']
+        );
+
+        if (empty($tasks)) {
+            return $this->json(['error' => 'Aucune tâche en attente à rappeler.'], 400);
+        }
+
+        // 3. Construct the WhatsApp Message Body
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'votre plante';
+
+        $message = "🌱 *Rappel Ardhi : Protocole de Traitement*\n";
+        $message .= "Voici vos prochaines interventions pour : _" . $diseaseName . "_\n\n";
+
+        foreach ($tasks as $task) {
+            $message .= "🗓️ *Jour " . $task->getDayOffset() . "* : " . $task->getTaskDescription() . "\n";
+        }
+
+        $message .= "\nConnectez-vous sur l'application pour valider vos tâches !";
+
+        // 4. Send the message
+        $success = $whatsAppService->sendWhatsAppMessage($phone, $message);
+
+        if ($success) {
+            return $this->json(['success' => true, 'message' => 'Rappel WhatsApp envoyé avec succès !']);
+        }
+
+        return $this->json([
+            'error' => "L'envoi a échoué. Assurez-vous d'avoir rejoint la Sandbox Twilio (envoyez le code au numéro Sandbox)."
+        ], 500);
+    }
+    #[Route('/{id}/reevaluate', name: 'app_user_and_diag_treatment_plan_reevaluate', methods: ['POST'])]
+    public function reevaluate(
+        TreatmentPlan $plan,
+        Request $request,
+        \App\Service\UserAndDiag\GroqService $groqService,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        $file = $request->files->get('image');
+        if (!$file)
+            return $this->json(['error' => 'Aucune image fournie.'], 400);
+
+        try {
+            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'Maladie inconnue';
+            $baselineUrl = $plan->getDiagnostic()->getImageScannee();
+
+            // STEP 1: Check Consistency
+            $consistency = $groqService->checkConsistency($file, $diseaseName);
+            if (str_starts_with($consistency, 'MISMATCH')) {
+                $reason = explode('|', $consistency)[1] ?? 'L\'image ne correspond pas à la plante traitée.';
+                return $this->json(['status' => 'MISMATCH', 'message' => $reason]);
+            }
+
+            // STEP 2: Analyze Recovery
+            $recoveryStatus = $groqService->analyzeRecovery($baselineUrl, $file, $diseaseName);
+
+            $parts = explode('|', $recoveryStatus);
+            $status = trim($parts[0]);
+            $details = trim($parts[1] ?? '');
+
+            // Upload the new image to ImgBB for record keeping
+            $imgUrl = $imgBBService->uploadImage($file);
+
+            if ($status === 'HEALED') {
+                $plan->setStatus('COMPLETED');
+                $em->flush();
+                return $this->json(['status' => 'HEALED', 'message' => $details]);
+            }
+
+            if ($status === 'UNCHANGED' || $status === 'RECOVERING') {
+                return $this->json(['status' => $status, 'message' => $details]);
+            }
+
+            // STEP 3: If WORSENING, generate a new plan
+            if ($status === 'WORSENING') {
+                $aiResponse = $groqService->generateUpdatedPlan($baselineUrl, $file, $diseaseName);
+
+                return $this->json([
+                    'status' => 'PROPOSAL',
+                    'message' => $details,
+                    'raw_ai_response' => $aiResponse,
+                    'img_url' => $imgUrl
+                ]);
+            }
+
+            // Fallback
+            return $this->json(['error' => 'Réponse IA incompréhensible: ' . $recoveryStatus], 500);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur technique: ' . $e->getMessage()], 500);
+        }
     }
 }
