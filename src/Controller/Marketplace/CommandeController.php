@@ -8,6 +8,7 @@ use App\Repository\Marketplace\CommandeRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
+use App\Service\Marketplace\WishlistNotificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -251,7 +252,13 @@ class CommandeController extends AbstractController
      * Crée une commande par vendeur et applique les remises proportionnelles.
      */
     #[Route('/marketplace/panier/checkout', name: 'app_marketplace_checkout', methods: ['POST'])]
-    public function checkout(Request $request, PanierRepository $panierRepo, CouponRepository $couponRepo, EntityManagerInterface $em): JsonResponse
+    public function checkout(
+        Request $request, 
+        PanierRepository $panierRepo, 
+        CouponRepository $couponRepo, 
+        EntityManagerInterface $em,
+        WishlistNotificationService $notificationService
+    ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -358,6 +365,7 @@ class CommandeController extends AbstractController
             $commande->setPayeeParPoints($paymentMethod === 'points');
 
             $sousTotal = 0.0;
+            $stockUpdates = []; // Pour les notifications
             foreach ($lignes as $ligne) {
                 $detail = new DetailsCommande();
                 $detail->setProduit($ligne->getProduit());
@@ -367,7 +375,9 @@ class CommandeController extends AbstractController
 
                 $produit = $ligne->getProduit();
                 if ($produit) {
-                    $produit->setQuantiteStock($produit->getQuantiteStock() - $ligne->getQuantite());
+                    $oldStock = $produit->getQuantiteStock();
+                    $produit->setQuantiteStock($oldStock - $ligne->getQuantite());
+                    $stockUpdates[] = ['produit' => $produit, 'oldStock' => $oldStock];
                 }
 
                 $sousTotal += $ligne->getProduit()->getPrixFinal() * $ligne->getQuantite();
@@ -416,6 +426,11 @@ class CommandeController extends AbstractController
         $panier->setTotalProduits(0);
 
         $em->flush();
+
+        // Envoi des notifications de stock faible si nécessaire
+        foreach ($stockUpdates ?? [] as $update) {
+            $notificationService->notifyLowStock($update['produit'], $update['oldStock']);
+        }
 
         return $this->json([
             'success' => true,

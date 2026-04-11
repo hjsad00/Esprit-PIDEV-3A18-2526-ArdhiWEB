@@ -4,6 +4,7 @@ namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Produits;
 use App\Repository\Marketplace\ProduitsRepository;
+use App\Service\Marketplace\WishlistNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -44,7 +45,8 @@ class ProduitController extends AbstractController
         ProduitsRepository $produitsRepository,
         EntityManagerInterface $em,
         SluggerInterface $slugger,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        WishlistNotificationService $notificationService
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -63,11 +65,15 @@ class ProduitController extends AbstractController
             }
             $isNew = false;
             $flashMsg = 'Produit modifié avec succès !';
+            $oldPrice = $produit->getPrixFinal(); // Capture du prix avant modif
+            $oldStock = $produit->getQuantiteStock(); // Capture du stock avant modif
         } else {
             $produit = new Produits();
             $produit->setUser($user);
             $isNew = true;
             $flashMsg = 'Produit ajouté avec succès !';
+            $oldPrice = null;
+            $oldStock = 0;
         }
 
         // Hydratation
@@ -132,6 +138,16 @@ class ProduitController extends AbstractController
 
         $em->persist($produit);
         $em->flush();
+
+        // Notification si changement de prix
+        if (!$isNew && $oldPrice !== null) {
+            $notificationService->notifyUpdate($produit, $oldPrice);
+        }
+
+        // Notification si stock faible
+        if (!$isNew) {
+            $notificationService->notifyLowStock($produit, $oldStock);
+        }
 
         if ($isAjax) {
             return $this->json([

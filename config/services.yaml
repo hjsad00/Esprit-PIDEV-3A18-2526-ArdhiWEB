@@ -7,6 +7,9 @@ parameters:
     app.mail_from: '%env(string:MAIL_FROM)%'
     app.marketplace_groq_api_key: '%env(string:MARKETPLACE_GROQ_API_KEY)%'
     app.marketplace_groq_model: '%env(string:MARKETPLACE_GROQ_MODEL)%'
+    app.twilio_sid: '%env(string:TWILIO_ACCOUNT_SID)%'
+    app.twilio_token: '%env(string:TWILIO_AUTH_TOKEN)%'
+    app.twilio_whatsapp_number: '%env(string:TWILIO_WHATSAPP_NUMBER)%'
 
 services:
     # default configuration for services in *this* file
@@ -27,6 +30,12 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Service\TwilioService:
+        arguments:
+            $sid: '%app.twilio_sid%'
+            $token: '%app.twilio_token%'
+            $from: '%app.twilio_whatsapp_number%'
+
     App\Service\EmployeTache\GoogleCalendarService:
         arguments:
             $projectDir: '%kernel.project_dir%'
