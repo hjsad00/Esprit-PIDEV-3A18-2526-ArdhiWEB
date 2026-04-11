@@ -108,7 +108,6 @@ class TreatmentPlanController extends AbstractController
             'tasksWithMarkers' => $tasksWithMarkers
         ]);
     }
-
     #[Route('/task/{id}/complete', name: 'app_user_and_diag_treatment_task_complete', methods: ['POST'])]
     public function completeTask(\App\Entity\UserAndDiag\TreatmentTask $task, \Doctrine\ORM\EntityManagerInterface $em): \Symfony\Component\HttpFoundation\JsonResponse
     {
@@ -119,10 +118,10 @@ class TreatmentPlanController extends AbstractController
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        // Sequential Enforcement Check (Mimicking your Java logic)
+        // Sequential Enforcement Check
         $previousTasks = $em->getRepository(\App\Entity\UserAndDiag\TreatmentTask::class)->createQueryBuilder('t')
             ->where('t.treatmentPlan = :plan')
-            ->andWhere('t.day_offset < :currentOffset')
+            ->andWhere('t.dayOffset < :currentOffset')
             ->andWhere('t.status != :completedStatus')
             ->setParameter('plan', $plan)
             ->setParameter('currentOffset', $task->getDayOffset())
@@ -137,9 +136,45 @@ class TreatmentPlanController extends AbstractController
             ], 400);
         }
 
+        // 1. Complete the task
         $task->setStatus('COMPLETED');
+        $em->flush(); // Save task status first
+
+        // 2. Check if all tasks are now completed
+        $pendingTasksCount = $em->getRepository(\App\Entity\UserAndDiag\TreatmentTask::class)->count([
+            'treatmentPlan' => $plan,
+            'status' => 'PENDING'
+        ]);
+
+        $planCompleted = false;
+
+        // If there are no more pending tasks, finish the plan
+        if ($pendingTasksCount === 0) {
+            $plan->setStatus('COMPLETED');
+            $em->flush(); // Save plan status
+            $planCompleted = true;
+        }
+
+        // 3. Tell the frontend if the whole plan is done
+        return $this->json([
+            'success' => true,
+            'plan_completed' => $planCompleted
+        ]);
+    }
+
+    #[Route('/{id}/abandon', name: 'app_user_and_diag_treatment_plan_abandon', methods: ['POST'])]
+    public function abandon(\App\Entity\UserAndDiag\TreatmentPlan $plan, \Doctrine\ORM\EntityManagerInterface $em): Response
+    {
+        // Security check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Ce protocole ne vous appartient pas.');
+        }
+
+        $plan->setStatus('ABANDONED');
         $em->flush();
 
-        return $this->json(['success' => true]);
+        $this->addFlash('success', 'Le protocole a été abandonné.');
+
+        return $this->redirectToRoute('app_user_and_diag_treatment_plan_list');
     }
 }
