@@ -1,0 +1,219 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planificateur d'Irrigation - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+        .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+        .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; }
+        .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; font-size: 0.9rem; }
+        .form-select, .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; }
+        .form-select:focus, .form-control:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); }
+        .btn-calculate { background: linear-gradient(135deg, #116530, #1e8341); color: white; border-radius: 50px; padding: 12px 35px; border: none; cursor: pointer; font-weight: 700; }
+        
+        .result-card { background: linear-gradient(135deg, #e8f5e9, #f0f5ed); border-left: 4px solid #116530; border-radius: 12px; padding: 25px; margin-top: 25px; }
+        .result-metric { margin: 15px 0; }
+        .result-metric-label { font-weight: 700; color: #116530; font-size: 0.9rem; }
+        .result-metric-value { font-size: 1.8rem; font-weight: 700; color: #1e8341; margin-top: 5px; }
+        
+        .gauge { height: 30px; border-radius: 15px; background: linear-gradient(90deg, #28a745, #ffc107, #dc3545); margin: 15px 0; position: relative; display: flex; align-items: center; }
+        .gauge-fill { height: 100%; border-radius: 15px; background: white; transition: all 0.3s; }
+        
+        .alert-irrigation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .loader { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .hidden { display: none; }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header">
+                <h1 class="page-title">💧 Planificateur d'Irrigation</h1>
+                <p class="text-muted lead mt-2">Calculez vos besoins en irrigation avec les données météo en temps réel.</p>
+            </div>
+
+            <div class="premium-card">
+                <h3 class="mb-4"><i class="bi bi-gear-fill"></i> Paramètres de calcul</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="parcelle-select" class="form-label">Parcelle</label>
+                        <select id="parcelle-select" class="form-select">
+                            <option value="">-- Choisir une parcelle --</option>
+                            {% for parcelle in parcelles %}
+                                <option value="{{ parcelle.id }}">
+                                    #{{ parcelle.id }} - {{ parcelle.localisation }} ({{ parcelle.surface }} ha)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="culture-select" class="form-label">Culture</label>
+                        <select id="culture-select" class="form-select">
+                            <option value="">-- Choisir une culture --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="calculate-btn" class="btn-calculate mt-4">
+                    <i class="bi bi-calculator"></i> Calculer les besoins
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden" style="text-align: center; padding: 40px;">
+                <div class="loader" style="margin: 0 auto; margin-bottom: 15px;"></div>
+                <p style="color: #116530; font-weight: 600;">Calcul en cours...</p>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="hidden">
+                <div class="result-card">
+                    <div class="result-metric">
+                        <div class="result-metric-label">Besoin Brut en Eau (ET0)</div>
+                        <div class="result-metric-value" id="et0-value">-</div>
+                    </div>
+
+                    <div class="result-metric">
+                        <div class="result-metric-label">Précipitations attendues (7 jours)</div>
+                        <div class="result-metric-value" id="precipitation-value">-</div>
+                    </div>
+
+                    <div class="result-metric">
+                        <div class="result-metric-label">Besoin Net en Eau</div>
+                        <div class="result-metric-value" id="net-need-value">-</div>
+                    </div>
+
+                    <div class="result-metric">
+                        <div class="result-metric-label">Volume Total Recommandé</div>
+                        <div class="result-metric-value" id="total-volume-value">-</div>
+                    </div>
+
+                    <div class="result-metric">
+                        <div class="result-metric-label">Niveau d'Urgence</div>
+                        <div class="gauge">
+                            <div id="urgency-gauge" class="gauge-fill" style="width: 0%;"></div>
+                        </div>
+                        <span id="urgency-text" style="font-weight: 600; color: #116530;"></span>
+                    </div>
+                </div>
+
+                <div id="alerts" class="mt-4"></div>
+            </div>
+
+            <!-- Error -->
+            <div id="error-message" class="hidden alert alert-danger mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const button = document.getElementById('calculate-btn');
+    const parcelleSelect = document.getElementById('parcelle-select');
+    const cultureSelect = document.getElementById('culture-select');
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
+    const errorDiv = document.getElementById('error-message');
+
+    // This would need to populate cultures when parcelle changes
+    // For now, it's a simplified version
+
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        if (!parcelleSelect.value || !cultureSelect.value) {
+            alert('Veuillez sélectionner une parcelle et une culture');
+            return;
+        }
+
+        loading.classList.remove('hidden');
+        results.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+
+        fetch('/farmer/recommendations/api/irrigation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                parcelleId: parseInt(parcelleSelect.value),
+                cultureId: parseInt(cultureSelect.value)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+
+            if (data.error) {
+                errorDiv.textContent = 'Erreur: ' + data.error;
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            displayResults(data);
+        })
+        .catch(err => {
+            loading.classList.add('hidden');
+            errorDiv.textContent = 'Erreur réseau: ' + err.message;
+            errorDiv.classList.remove('hidden');
+        });
+    });
+
+    function displayResults(data) {
+        document.getElementById('et0-value').textContent = (data.et0 || 0).toFixed(2) + ' mm';
+        document.getElementById('precipitation-value').textContent = (data.precipitation || 0).toFixed(2) + ' mm';
+        document.getElementById('net-need-value').textContent = (data.net_need || 0).toFixed(2) + ' mm';
+        document.getElementById('total-volume-value').textContent = formatliters(data.total_volume || 0);
+
+        // Set urgency gauge
+        const urgency = Math.min(100, ((data.net_need || 0) / 100) * 100);
+        document.getElementById('urgency-gauge').style.width = urgency + '%';
+
+        let urgencyText = 'Aucun besoin';
+        let urgencyColor = '#28a745';
+        if (urgency > 75) {
+            urgencyText = '🔴 Élevé - Irrigation urgente';
+            urgencyColor = '#dc3545';
+        } else if (urgency > 50) {
+            urgencyText = '🟠 Modéré - Irrigation recommandée';
+            urgencyColor = '#ffc107';
+        } else if (urgency > 25) {
+            urgencyText = '🟡 Faible - Supervision';
+            urgencyColor = '#ffc107';
+        }
+
+        document.getElementById('urgency-text').textContent = urgencyText;
+        document.getElementById('urgency-gauge').style.backgroundColor = urgencyColor;
+
+        // Display alerts
+        let alertsHtml = '';
+        if (data.alerts && Array.isArray(data.alerts)) {
+            data.alerts.forEach(alert => {
+                alertsHtml += `<div class="alert-irrigation"><strong>⚠️ ${alert}</strong></div>`;
+            });
+        }
+        document.getElementById('alerts').innerHTML = alertsHtml;
+
+        results.classList.remove('hidden');
+    }
+
+    function formatliters(liters) {
+        if (liters >= 1000000) {
+            return (liters / 1000000).toFixed(2) + ' MLitres';
+        } else if (liters >= 1000) {
+            return (liters / 1000).toFixed(2) + ' kL';
+        }
+        return liters.toFixed(0) + ' L';
+    }
+});
+</script>
+{% endblock %}

@@ -3,20 +3,40 @@
 {% block title %}Nouvelle Parcelle - Ardhi{% endblock %}
 
 {% block stylesheets %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
         .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
         .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
-        .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; }
+        .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; transition: all 0.3s; }
+        .premium-card:hover { box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
         .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
-        .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; }
-        .form-control:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); }
+        .form-control, .form-select { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; font-size: 0.95rem; }
+        .form-control:focus, .form-select:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); outline: none; }
         .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; font-size: 0.9rem; }
-        .btn-save { background: #116530; color: white; border-radius: 50px; padding: 12px 35px; font-weight: 700; border: none; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(17, 101, 48, 0.2); display: inline-flex; align-items: center; gap: 10px; }
-        .btn-save:hover { background: #1e8341; color: white; transform: translateY(-2px); }
+        .btn-save { background: #116530; color: white; border-radius: 50px; padding: 12px 35px; font-weight: 700; border: none; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(17, 101, 48, 0.2); display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+        .btn-save:hover { background: #1e8341; color: white; transform: translateY(-2px); box-shadow: 0 12px 25px rgba(17, 101, 48, 0.3); }
         .btn-cancel-link { color: #636e72; background: #f0f0f0; border-radius: 50px; padding: 12px 25px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
         .btn-cancel-link:hover { background: #dfe6e9; color: #2d3436; }
         .btn-premium-back { color: #116530; background: #e8f5e9; border-radius: 50px; padding: 10px 20px; font-weight: 600; text-decoration: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; }
         .btn-premium-back:hover { background: #116530; color: white; }
+        
+        /* Map styles */
+        #map { height: 400px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #eee; }
+        
+        /* IA Recommendation Button */
+        .btn-ia-recommend { background: linear-gradient(135deg, #28a745, #20c997); color: white; border-radius: 50px; padding: 10px 20px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; }
+        .btn-ia-recommend:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3); }
+        
+        /* IA Explanation */
+        .ia-explanation { background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border-left: 4px solid #28a745; border-radius: 8px; padding: 15px; margin-top: 15px; display: none; animation: slideIn 0.3s ease; }
+        .ia-explanation.show { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Loader */
+        .loader { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .btn-ia-loading { opacity: 0.7; pointer-events: none; }
     </style>
 {% endblock %}
 
@@ -37,49 +57,77 @@
             </div>
 
             <div class="page-header" data-aos="fade-down">
-                <h1 class="page-title">Créer une Nouvelle Parcelle</h1>
-                <p class="text-muted lead mt-2">Enregistrez les caractéristiques de votre terrain agricole.</p>
+                <h1 class="page-title">🌾 Créer une Nouvelle Parcelle</h1>
+                <p class="text-muted lead mt-2">Enregistrez les caractéristiques de votre terrain agricole et bénéficiez des recommandations IA.</p>
             </div>
 
             {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'data-aos': 'fade-up'}}) }}
 
+            <!-- Localisation Section -->
             <div class="premium-card">
-                <span class="card-label"><i class="bi bi-geo-alt-fill"></i> Identification & Localisation</span>
+                <span class="card-label"><i class="bi bi-geo-alt-fill"></i> Localisation Géographique</span>
+                
+                <!-- Carte Leaflet -->
+                <div id="map"></div>
+                
                 <div class="row g-4">
                     <div class="col-md-6">
-                        {{ form_label(form.surface) }}
-                        {{ form_widget(form.surface, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 5.5'}}) }}
-                        {% if form.surface.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.surface) }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
                         {{ form_label(form.localisation) }}
-                        {{ form_widget(form.localisation, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Région de Kairouan'}}) }}
+                        {{ form_widget(form.localisation, {'attr': {'class': 'form-control', 'placeholder': 'Cliquez sur la carte...', 'data-localisation': 'true'}}) }}
                         {% if form.localisation.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.localisation) }}</div>{% endif %}
                     </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.type_sol) }}
-                        {{ form_widget(form.type_sol, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.type_sol.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.type_sol) }}</div>{% endif %}
+                    <div class="col-md-3">
+                        {{ form_label(form.latitude) }}
+                        {{ form_widget(form.latitude, {'attr': {'class': 'form-control', 'readonly': 'readonly', 'placeholder': 'Auto', 'data-latitude': 'true'}}) }}
                     </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.systeme_irrigation) }}
-                        {{ form_widget(form.systeme_irrigation, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.systeme_irrigation.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.systeme_irrigation) }}</div>{% endif %}
+                    <div class="col-md-3">
+                        {{ form_label(form.longitude) }}
+                        {{ form_widget(form.longitude, {'attr': {'class': 'form-control', 'readonly': 'readonly', 'placeholder': 'Auto', 'data-longitude': 'true'}}) }}
                     </div>
                 </div>
             </div>
 
+            <!-- Surface Section -->
             <div class="premium-card">
-                <span class="card-label"><i class="bi bi-pin-map-fill"></i> Coordonnées GPS (Optionnel)</span>
+                <span class="card-label"><i class="bi bi-rulers"></i> Caractéristiques Géométriques</span>
                 <div class="row g-4">
                     <div class="col-md-6">
-                        {{ form_label(form.latitude) }}
-                        {{ form_widget(form.latitude, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 36.8008'}}) }}
+                        {{ form_label(form.surface) }}
+                        {{ form_widget(form.surface, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 5.5 hectares'}}) }}
+                        {% if form.surface.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.surface) }}</div>{% endif %}
                     </div>
                     <div class="col-md-6">
-                        {{ form_label(form.longitude) }}
-                        {{ form_widget(form.longitude, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 10.1805'}}) }}
+                        {{ form_label(form.statut) }}
+                        {{ form_widget(form.statut, {'attr': {'class': 'form-select'}}) }}
                     </div>
+                </div>
+            </div>
+
+            <!-- Soil & Irrigation Section with IA Recommendations -->
+            <div class="premium-card">
+                <span class="card-label"><i class="bi bi-brightness-high-fill"></i> Sol & Irrigation</span>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        {{ form_label(form.type_sol) }}
+                        {{ form_widget(form.type_sol, {'attr': {'class': 'form-select', 'id': 'typeSol'}}) }}
+                        {% if form.type_sol.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.type_sol) }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.systeme_irrigation) }}
+                        {{ form_widget(form.systeme_irrigation, {'attr': {'class': 'form-select', 'id': 'systemeIrrigation'}}) }}
+                        {% if form.systeme_irrigation.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.systeme_irrigation) }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- IA Recommendation Button -->
+                <button type="button" id="ia-recommend-btn" class="btn-ia-recommend">
+                    <i class="bi bi-robot"></i> Remplissage IA Automatique
+                </button>
+
+                <!-- IA Explanation -->
+                <div id="ia-explanation" class="ia-explanation">
+                    <strong>💡 Recommandation IA :</strong>
+                    <p id="ia-explanation-text"></p>
                 </div>
             </div>
 
@@ -94,4 +142,190 @@
         </div>
     </div>
 </div>
+
+<!-- Leaflet JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Script DOMContentLoaded');
+    
+    // Get form fields using data-* attributes (more reliable)
+    const latInput = document.querySelector('[data-latitude="true"]');
+    const lonInput = document.querySelector('[data-longitude="true"]');
+    const locInput = document.querySelector('[data-localisation="true"]');
+    const typeSolInput = document.querySelector('select[name*="type_sol"]');
+    const systIrrInput = document.querySelector('select[name*="systeme_irrigation"]');
+    const iaBtnElement = document.getElementById('ia-recommend-btn');
+    
+    console.log('✅ Elements found:', {
+        latInput: !!latInput, 
+        lonInput: !!lonInput, 
+        locInput: !!locInput,
+        typeSolInput: !!typeSolInput,
+        systIrrInput: !!systIrrInput,
+        iaBtnElement: !!iaBtnElement
+    });
+    
+    // Initialize map
+    const mapElement = document.getElementById('map');
+    console.log('✅ Map element:', !!mapElement);
+    
+    if (!mapElement) {
+        console.error('❌ Map element not found!');
+        return;
+    }
+    
+    // Initialize Leaflet map with a small delay
+    setTimeout(() => {
+        try {
+            const map = L.map('map').setView([36.8, 10.2], 7);
+            console.log('✅ Map initialized');
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+            }).addTo(map);
+
+            let marker = null;
+
+            // Click on map to select location
+            map.on('click', function(e) {
+                console.log('🗺️ Map clicked at:', e.latlng.lat, e.latlng.lng);
+                
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                // Set form inputs
+                if (latInput) {
+                    latInput.value = lat;
+                    console.log('✅ Latitude set to:', lat);
+                }
+                if (lonInput) {
+                    lonInput.value = lng;
+                    console.log('✅ Longitude set to:', lng);
+                }
+
+                // Update marker
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker([lat, lng]).addTo(map)
+                    .bindPopup(`<b>Localisation sélectionnée</b><br>Lat: ${lat.toFixed(4)}<br>Lon: ${lng.toFixed(4)}`).openPopup();
+
+                // Reverse geocoding with Nominatim
+                reverseGeocode(lat, lng);
+            });
+
+            function reverseGeocode(lat, lng) {
+                console.log('🔍 Reverse geocoding:', lat, lng);
+                
+                fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng, {
+                    headers: {
+                        'User-Agent': 'ArdhiWEB/1.0'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Nominatim response:', data);
+                    const localisation = data.address?.city || data.address?.town || data.address?.village || 
+                                       data.address?.county || 'Localisation';
+                    if (locInput) {
+                        locInput.value = localisation;
+                        console.log('✅ Localisation set to:', localisation);
+                    }
+                })
+                .catch(err => console.error('❌ Nominatim error:', err));
+            }
+
+            // IA Recommendation Button
+            if (iaBtnElement) {
+                iaBtnElement.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🤖 IA button clicked');
+                    
+                    const latitude = latInput?.value;
+                    const longitude = lonInput?.value;
+                    const localisation = locInput?.value;
+
+                    console.log('📝 Form values:', {latitude, longitude, localisation});
+
+                    if (!latitude || !longitude || !localisation) {
+                        alert('Veuillez d\'abord sélectionner une localisation sur la carte.');
+                        return;
+                    }
+
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.classList.add('btn-ia-loading');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loader"></span> Chargement...';
+
+                    console.log('📤 Sending to API...');
+                    fetch('/api/parcelles/field-recommendations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            latitude: parseFloat(latitude),
+                            longitude: parseFloat(longitude),
+                            localisation: localisation,
+                        }),
+                    })
+                    .then(response => {
+                        console.log('📥 Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('✅ API response:', data);
+                        
+                        btn.classList.remove('btn-ia-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+
+                        if (data.error) {
+                            console.error('❌ API Error:', data.error);
+                            alert('Erreur IA: ' + data.error);
+                            return;
+                        }
+
+                        // Auto-fill form with IA recommendations
+                        if (data.type_sol && typeSolInput) {
+                            typeSolInput.value = data.type_sol;
+                            console.log('✅ Type sol changé à:', data.type_sol);
+                        }
+                        if (data.systeme_irrigation && systIrrInput) {
+                            systIrrInput.value = data.systeme_irrigation;
+                            console.log('✅ Système irrigation changé à:', data.systeme_irrigation);
+                        }
+
+                        // Show explanation
+                        const explanation = document.getElementById('ia-explanation');
+                        const explanationText = document.getElementById('ia-explanation-text');
+                        if (explanation && explanationText) {
+                            explanationText.textContent = data.explication || 'Recommandations appliquées.';
+                            explanation.classList.add('show');
+                            console.log('✅ Explication affichée');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('❌ Fetch error:', err);
+                        btn.classList.remove('btn-ia-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        alert('Erreur API: ' + err.message);
+                    });
+                });
+            } else {
+                console.error('❌ IA button not found');
+            }
+        } catch (error) {
+            console.error('❌ Map initialization error:', error);
+        }
+    }, 100);
+});
+</script>
 {% endblock %}
