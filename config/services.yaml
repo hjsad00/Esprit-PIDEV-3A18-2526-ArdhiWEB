@@ -7,9 +7,9 @@ parameters:
     app.mail_from: '%env(string:MAIL_FROM)%'
     app.marketplace_groq_api_key: '%env(string:MARKETPLACE_GROQ_API_KEY)%'
     app.marketplace_groq_model: '%env(string:MARKETPLACE_GROQ_MODEL)%'
-    app.twilio_sid: '%env(string:TWILIO_ACCOUNT_SID)%'
-    app.twilio_token: '%env(string:TWILIO_AUTH_TOKEN)%'
-    app.twilio_whatsapp_number: '%env(string:TWILIO_WHATSAPP_NUMBER)%'
+    app.twilio_sid: '%env(string:MARKETPLACE_TWILIO_SID)%'
+    app.twilio_token: '%env(string:MARKETPLACE_TWILIO_TOKEN)%'
+    app.twilio_whatsapp_number: '%env(string:MARKETPLACE_TWILIO_WHATSAPP_NUMBER)%'
 
 services:
     # default configuration for services in *this* file

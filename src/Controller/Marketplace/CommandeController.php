@@ -9,6 +9,7 @@ use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
 use App\Service\Marketplace\WishlistNotificationService;
+use App\Service\Marketplace\OrderEmailService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -257,7 +258,8 @@ class CommandeController extends AbstractController
         PanierRepository $panierRepo, 
         CouponRepository $couponRepo, 
         EntityManagerInterface $em,
-        WishlistNotificationService $notificationService
+        WishlistNotificationService $notificationService,
+        OrderEmailService $orderEmailService
     ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -402,6 +404,7 @@ class CommandeController extends AbstractController
 
             $commande->setTotal(round(($sousTotal - $remiseSurCetteCommande) + $fraisParVendeur, 2));
             $em->persist($commande);
+            $commandesCreees[] = $commande; // Pour l'envoi des emails après flush
             $nbCommandes++;
         }
 
@@ -427,7 +430,11 @@ class CommandeController extends AbstractController
 
         $em->flush();
 
-        // Envoi des notifications de stock faible si nécessaire
+        // Envoi des notifications (Email aux vendeurs + WhatsApp favoris)
+        foreach ($commandesCreees ?? [] as $cmd) {
+            $orderEmailService->sendNewOrderSellerNotification($cmd);
+        }
+
         foreach ($stockUpdates ?? [] as $update) {
             $notificationService->notifyLowStock($update['produit'], $update['oldStock']);
         }
