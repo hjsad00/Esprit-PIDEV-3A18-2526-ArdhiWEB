@@ -517,6 +517,10 @@
                   <button type="button" class="mp-btn-upload" onclick="document.getElementById('form-image').click()">
                     <i class="bi bi-camera"></i> Choisir une image
                   </button>
+
+                  {# ── BANDEAU IA ── #}
+                  <div id="ai-analysis-banner" style="display:none; margin-top:12px; padding:12px 16px; border-radius:10px; font-size:13px; font-weight:500; animation: flashIn .35s ease;">
+                  </div>
                 </div>
 
                 {# Champ Visibilité #}
@@ -630,9 +634,105 @@ function toggleRemiseField() {
 function previewImage(input) {
   const preview = document.getElementById('upload-preview');
   if (input.files && input.files[0]) {
+    const file = input.files[0];
     const reader = new FileReader();
     reader.onload = e => preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
-    reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
+
+    // Lancer l'analyse IA seulement en mode ajout (pas d'ID = nouveau produit)
+    const formId = document.getElementById('form-id').value;
+    if (!formId) {
+      analyzeWithAI(file);
+    }
+  }
+}
+
+async function analyzeWithAI(file) {
+  const banner = document.getElementById('ai-analysis-banner');
+
+  // État loading
+  banner.style.display = 'block';
+  banner.style.background = '#eff6ff';
+  banner.style.color = '#1e40af';
+  banner.style.border = '1px solid #93c5fd';
+  banner.innerHTML = '<i class="bi bi-stars" style="animation:spin .8s linear infinite;margin-right:8px;"></i> Analyse IA en cours… Identification du produit';
+
+  // Désactiver les champs pendant l'analyse
+  const fieldsToFill = ['form-nom', 'form-description', 'form-categorie', 'form-unite'];
+  fieldsToFill.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = '0.5'; el.disabled = true; }
+  });
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch('{{ path("app_marketplace_produit_analyze") }}', {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Remplir les champs
+      document.getElementById('form-nom').value = data.nom || '';
+      document.getElementById('form-description').value = data.description || '';
+
+      // Gérer la catégorie (ajouter si elle n'existe pas)
+      const catSelect = document.getElementById('form-categorie');
+      const suggestedCat = data.categorie || '';
+      let catFound = false;
+      for (let opt of catSelect.options) {
+        if (opt.value.toLowerCase() === suggestedCat.toLowerCase()) {
+          catSelect.value = opt.value;
+          catFound = true;
+          break;
+        }
+      }
+      if (!catFound && suggestedCat) {
+        catSelect.add(new Option(suggestedCat, suggestedCat, true, true));
+        // Ajouter aussi au filtre
+        const filterCat = document.getElementById('filter-cat');
+        if (filterCat) filterCat.add(new Option(suggestedCat, suggestedCat));
+      }
+
+      // Unité de mesure
+      const uniteSelect = document.getElementById('form-unite');
+      const suggestedUnite = data.unite || 'Kg';
+      for (let opt of uniteSelect.options) {
+        if (opt.value === suggestedUnite) {
+          uniteSelect.value = suggestedUnite;
+          break;
+        }
+      }
+
+      // État succès
+      banner.style.background = '#f0fdf4';
+      banner.style.color = '#166534';
+      banner.style.border = '1px solid #86efac';
+      banner.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right:8px;"></i> Produit identifié par l\'IA : <strong>' + data.nom + '</strong> — Les champs ont été pré-remplis. Vous pouvez les modifier.';
+    } else {
+      // État échec
+      banner.style.background = '#fef3c7';
+      banner.style.color = '#92400e';
+      banner.style.border = '1px solid #fcd34d';
+      banner.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="margin-right:8px;"></i> ' + (data.message || 'Impossible d\'analyser cette image.');
+    }
+  } catch (err) {
+    banner.style.background = '#fee2e2';
+    banner.style.color = '#991b1b';
+    banner.style.border = '1px solid #fca5a5';
+    banner.innerHTML = '<i class="bi bi-x-circle-fill" style="margin-right:8px;"></i> Erreur de connexion à l\'IA. Remplissez les champs manuellement.';
+    console.error('AI Analysis error:', err);
+  } finally {
+    // Réactiver les champs
+    fieldsToFill.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = '1'; el.disabled = false; }
+    });
   }
 }
 
