@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>{% block title %}Administration Parcelles & Cultures - Ardhi{% endblock %}</title>
+
+  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+  {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <a href="{{ path('admin_dashboard') }}" class="sidebar-brand">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" class="sidebar-logo">
+        <span>Ardhi Admin</span>
+      </a>
+      <button class="sidebar-close d-lg-none" id="sidebarClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    {% set current_route = app.request.attributes.get('_route') %}
+
+    <nav class="sidebar-nav">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ path('admin_dashboard') }}">
+            <i class="bi bi-grid-fill"></i><span>Tableau de Bord</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-section-title">Module: Parcelles & Cultures</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link {{ current_route starts with 'admin_parcelle' ? 'active' : '' }}" href="{{ path('admin_parcelle_index') }}">
+            <i class="bi bi-map-fill text-success"></i><span>Parcelles</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route starts with 'admin_culture' ? 'active' : '' }}" href="{{ path('admin_culture_index') }}">
+            <i class="bi bi-flower1 text-success"></i><span>Cultures</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route starts with 'admin_stats' ? 'active' : '' }}" href="{{ path('admin_stats_index') }}">
+            <i class="bi bi-bar-chart-fill text-info"></i><span>Statistiques</span>
+          </a>
+        </li>
+      </ul>
+      
+      <div class="nav-section-title">Compte</div>
+      <ul class="nav flex-column">  
+        <li class="nav-item">
+          <a class="nav-link" href="{{ path('app_logout') }}">
+            <i class="bi bi-box-arrow-left"></i><span>Déconnexion</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <!-- Top Navbar -->
+    <header class="admin-topbar">
+      <button class="sidebar-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">{% block page_title %}Administration{% endblock %}</h1>
+      <div class="topbar-right">
+        <a href="{{ path('app_profile') }}" class="topbar-user text-decoration-none" style="color: inherit;">
+          <i class="bi bi-person-circle"></i>
+          {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
+        </a>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="alert alert-{{ label }} alert-dismissible fade show mx-4 mt-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <!-- Page Content -->
+    <main class="admin-content">
+      {% block body %}{% endblock %}
+    </main>
+  </div>
+
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+    // Sidebar toggle for mobile
+    const toggle = document.getElementById('sidebarToggle');
+    const close = document.getElementById('sidebarClose');
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+
+    if (toggle) toggle.addEventListener('click', openSidebar);
+    if (close) close.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+  </script>
+  {% block javascripts %}{% endblock %}
+</body>
+</html>

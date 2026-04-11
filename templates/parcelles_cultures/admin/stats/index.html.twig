@@ -1,6 +1,7 @@
-{% extends 'base.html.twig' %}
+{% extends 'parcelles_cultures/admin/admin_base.html.twig' %}
 
 {% block title %}Statistiques Agricoles - Administration Ardhi{% endblock %}
+{% block page_title %}Statistiques Agricoles{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -45,33 +46,7 @@
 {% endblock %}
 
 {% block body %}
-{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
-
-<div class="container-fluid py-5 px-lg-5">
-    <div class="row mb-4">
-        <div class="col-12">
-            <a href="{{ path('admin_dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none px-4 py-2 rounded-pill shadow-sm" style="border: 2px solid #116530; color: #116530; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='#116530'; this.style.color='#fff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(17,101,48,0.3)';" onmouseout="this.style.background='transparent'; this.style.color='#116530'; this.style.transform='translateY(0)'; this.style.boxShadow='0 .125rem .25rem rgba(0,0,0,.075)';">
-                <i class="bi bi-arrow-left"></i> Retour
-            </a>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-3 col-xl-2">
-            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
-        </div>
-
-        <div class="col-md-9 col-xl-10">
-            <div class="page-header" data-aos="fade-down">
-                <h1 class="page-title">
-                    Statistiques Agricoles
-                    <span class="admin-badge">Administration</span>
-                </h1>
-                <p class="text-muted lead mt-2">Tableau de bord global de la production et des exploitations.</p>
-            </div>
-
-            {# === KPI Cards === #}
-            <div class="row g-4 mb-5">
+<div class="row g-4 mb-5">
                 <div class="col-6 col-xl-3" data-aos="fade-up" data-aos-delay="50">
                     <div class="stat-card parcelles">
                         <div class="stat-icon parcelles"><i class="bi bi-map-fill"></i></div>
