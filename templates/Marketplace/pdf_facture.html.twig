@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture #{{ commande.id }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --dark:       #1a3a15;
+            --dark2:      #2d5a27;
+            --green:      #4a8c3f;
+            --green-acc:  #5ea851;
+            --green-pale: #f0f7ee;
+            --text:       #2d3436;
+            --muted:      #636e72;
+            --light:      #f8fafc;
+            --white:      #ffffff;
+            --border:     #e0e6e0;
+            --amber:      #d97706;
+            --amber-pale: #fef3c7;
+            --red:        #e74c3c;
+            --red-pale:   #fee2e2;
+        }
+
+        @page { size: A4; margin: 0; }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--white);
+            margin: 0; padding: 0;
+        }
+
+        .page {
+            width: 794px;
+            margin: 0 auto;
+            background: var(--white);
+        }
+        
+        /* Compteur de pages : géré par script PHP DomPDF canvas (voir bas du body) */
+
+        /* ══════════════════════════
+           HEADER SOMBRE
+        ══════════════════════════ */
+        .top-header {
+            background: var(--green);
+            padding: 20px 48px 18px 48px;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .logo-block {
+            display: table-cell;
+            vertical-align: middle;
+            width: 50%;
+        }
+
+        .logo-img {
+            display: inline-block;
+            vertical-align: middle;
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            padding: 6px;
+        }
+
+        .logo-text-block {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 12px;
+        }
+
+        .logo-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -0.3px;
+            display: block;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .header-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 50%;
+        }
+
+        .invoice-label {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--white);
+            white-space: nowrap;
+            margin-right: 12px;
+        }
+
+        /* .invoice-number supprimé — intégré dans .invoice-label */
+
+        /* Status badge dans le header */
+        .status-pill {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .s-livree   { background: var(--green-acc);  color: #fff; }
+        .s-en-cours { background: #f59e0b; color: #fff; }
+        .s-annulee  { background: var(--red); color: #fff; }
+        .s-default  { background: #64748b; color: #fff; }
+
+        /* ══════════════════════════
+           BANDE VERTE ACCENT
+        ══════════════════════════ */
+        .accent-bar {
+            height: 5px;
+            background: linear-gradient(90deg, var(--green) 0%, var(--green-acc) 50%, #a5d6a7 100%);
+        }
+
+        /* ══════════════════════════
+           COMPANY INFO ROW
+        ══════════════════════════ */
+        .company-row {
+            background: var(--light);
+            padding: 16px 48px;
+            display: flex;
+            justify-content: flex-end;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .company-info {
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.7;
+            text-align: right;
+        }
+
+        .company-info a {
+            color: var(--green);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* ══════════════════════════
+           BODY
+        ══════════════════════════ */
+        .body {
+            padding: 36px 48px;
+        }
+
+        /* ── Grille infos ── */
+        .info-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 36px;
+        }
+
+        .info-col {
+            display: table-cell;
+            width: 33.33%;
+            vertical-align: top;
+            padding-right: 24px;
+        }
+
+        .info-col:last-child { padding-right: 0; }
+
+        .info-section-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--green);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--green-acc);
+            display: block;
+        }
+
+        .info-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .info-line {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        .info-line strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* Chip paiement */
+        .chip {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.3px;
+        }
+        .chip-green  { background: var(--green-pale); color: var(--green); }
+        .chip-amber  { background: var(--amber-pale); color: var(--amber); }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0 0 28px 0;
+        }
+
+        /* ══════════════════════════
+           TABLE ARTICLES
+        ══════════════════════════ */
+        .table-wrap { margin-bottom: 28px; }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table thead {
+            background: var(--green);
+        }
+
+        .items-table thead th {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.65);
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .items-table thead th.c { text-align: center; }
+        .items-table thead th.r { text-align: right; }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background: var(--light);
+        }
+
+        .items-table tbody tr:last-child {
+            border-bottom: 2px solid var(--dark);
+        }
+
+        .items-table tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .items-table tbody td.c { text-align: center; }
+        .items-table tbody td.r { text-align: right; }
+
+        .items-table tbody td .prod-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .items-table tbody td .prod-ref {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .qty-badge {
+            display: inline-block;
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .price-cell {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .total-cell {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ══════════════════════════
+           BOTTOM : Paiement + Récap + Cachet
+        ══════════════════════════ */
+        .bottom-section {
+            display: table;
+            width: 100%;
+        }
+
+        .bottom-left {
+            display: table-cell;
+            width: 55%;
+            vertical-align: bottom;
+            padding-right: 32px;
+        }
+
+        .bottom-right {
+            display: table-cell;
+            width: 45%;
+            vertical-align: top;
+        }
+
+        /* Bloc paiement */
+        .pay-block {
+            margin-bottom: 24px;
+        }
+
+        .pay-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--green);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--green-acc);
+            display: inline-block;
+        }
+
+        .pay-method {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .pay-desc {
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .coupon-line {
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* Cachet */
+        .stamp-block {
+            margin-top: 16px;
+        }
+
+        .stamp-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .stamp-img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            opacity: 0.88;
+        }
+
+        /* Récapitulatif */
+        .recap-box {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .recap-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .recap-row:last-child { border-bottom: none; }
+
+        .recap-row .rl { color: var(--muted); font-weight: 500; }
+        .recap-row .rv { color: var(--text);  font-weight: 600; }
+        .recap-row.disc .rv { color: var(--red); }
+        .recap-row.free .rv { color: var(--green); font-weight: 700; }
+
+        .recap-row.total-row {
+            background: var(--green);
+            border-top: none;
+        }
+
+        .recap-row.total-row .rl {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .recap-row.total-row .rv {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--green-acc);
+        }
+
+        /* ══════════════════════════
+           FOOTER
+        ══════════════════════════ */
+        .page-footer {
+            background: var(--light);
+            border-top: 1px solid var(--border);
+            padding: 18px 48px;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .footer-cgv,
+        .footer-gendate {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .footer-cgv {
+            font-size: 10px;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 420px;
+        }
+
+        .footer-cgv strong {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .footer-gendate {
+            font-size: 10px;
+            color: #c0c8d0;
+            text-align: right;
+            line-height: 1.7;
+        }
+
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- Le compteur de pages est injecté via le script PHP DomPDF en bas de page -->
+
+    <!-- ══════════════════════════
+         HEADER SOMBRE
+    ══════════════════════════ -->
+    <div class="top-header">
+        <div class="logo-block">
+            <img class="logo-img" src="{{ absolute_url(asset('assets/img/ardhi_logo.png')) }}" alt="Ardhi Logo">
+            <div class="logo-text-block">
+                <span class="logo-name">Ardhi</span>
+                <span class="logo-sub">Marketplace</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="invoice-label">FACTURE #{{ commande.id }}</span>
+            {% set etatRaw = commande.etat|lower %}
+            {% if 'livr' in etatRaw %}
+                <span class="status-pill s-livree">{{ commande.etat|replace({'_': ' '})|title }}</span>
+            {% elseif 'annul' in etatRaw %}
+                <span class="status-pill s-annulee">{{ commande.etat|replace({'_': ' '})|title }}</span>
+            {% else %}
+                <span class="status-pill s-en-cours">{{ commande.etat|replace({'_': ' '})|title }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bande accent verte -->
+    <div class="accent-bar"></div>
+
+    <!-- Infos société -->
+    <div class="company-row">
+        <div class="company-info">
+            <a href="https://www.ardhi.tn">www.ardhi.tn</a>
+            &nbsp;·&nbsp; contact@ardhi.tn
+            &nbsp;·&nbsp; +216 71 000 000
+            &nbsp;·&nbsp; 123 Avenue de l'Agriculture, Tunis, Tunisie
+        </div>
+    </div>
+
+    <!-- ══════════════════════════
+         BODY
+    ══════════════════════════ -->
+    <div class="body">
+
+        <!-- Grille 3 colonnes : Facture | Client | Vendeur -->
+        <div class="info-grid">
+
+            <div class="info-col">
+                <span class="info-section-title">Détails facture</span>
+                <div class="info-line">
+                    <strong>N° Facture</strong> #{{ commande.id }}<br>
+                    <strong>Date</strong> {{ commande.dateCommande|date('d/m/Y') }}<br>
+                    <strong>Livraison</strong> {{ commande.modeLivraison|replace({'_': ' '})|title }}<br>
+                    <strong>Paiement</strong>
+                    {% if commande.payeeParPoints %}
+                        <span class="chip chip-amber">Points de fidélité</span>
+                    {% else %}
+                        <span class="chip chip-green">Carte bancaire</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="info-col">
+                <span class="info-section-title">Informations client</span>
+                {% if commande.user %}
+                    <div class="info-name">{{ commande.user.nom|upper }} {{ commande.user.prenom }}</div>
+                    <div class="info-line">{{ commande.user.email }}</div>
+                {% else %}
+                    <div class="info-name" style="color:var(--muted);">Utilisateur inconnu</div>
+                {% endif %}
+            </div>
+
+            <div class="info-col">
+                <span class="info-section-title">Vendeur(s)</span>
+                {% set vendeurs = [] %}
+                {% for detail in commande.details %}
+                    {% if detail.produit and detail.produit.user %}
+                        {% set vName = detail.produit.user.nom ~ ' ' ~ detail.produit.user.prenom %}
+                        {% if vName not in vendeurs %}
+                            {% set vendeurs = vendeurs|merge([vName]) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% if vendeurs|length > 0 %}
+                    {% for v in vendeurs %}
+                        <div class="info-name">{{ v }}</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="info-line">—</div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ══ TABLE ARTICLES ══ -->
+        <div class="table-wrap">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width:46%;">Article</th>
+                        <th class="c" style="width:12%;">Qté</th>
+                        <th class="r" style="width:18%;">Prix unit.</th>
+                        <th class="r" style="width:24%;">Sous-total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set totalItems = 0 %}
+                    {% for detail in commande.details %}
+                        {% set totalItems = totalItems + detail.sousTotal %}
+                        <tr>
+                            <td>
+                                <div class="prod-name">{{ detail.produit ? detail.produit.nom : 'Produit retiré' }}</div>
+                            </td>
+                            <td class="c">
+                                <span class="qty-badge">{{ detail.quantite }}</span>
+                            </td>
+                            <td class="r price-cell">{{ detail.prixUnitaire|number_format(2, ',', ' ') }} DT</td>
+                            <td class="r total-cell">{{ detail.sousTotal|number_format(2, ',', ' ') }} DT</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding:24px; color:var(--muted); font-style:italic;">
+                                Aucun article dans cette commande.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══ BOTTOM ══ -->
+        <div class="bottom-section">
+
+            <!-- Gauche : Paiement + Cachet -->
+            <div class="bottom-left">
+
+                <div class="pay-block">
+                    <span class="pay-title">Mode de paiement</span>
+                    {% if commande.payeeParPoints %}
+                        <div class="pay-method">Points de fidélité</div>
+                        <div class="pay-desc">Commande réglée via les points de fidélité<br>cumulés sur le compte client.</div>
+                    {% else %}
+                        <div class="pay-method">Carte bancaire / En ligne</div>
+                    {% endif %}
+                    {% if commande.montantRemise and commande.montantRemise > 0 and commande.coupon %}
+                        <div class="coupon-line">Coupon appliqué : {{ commande.coupon.code }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="stamp-block">
+                    <div class="stamp-label">Cachet &amp; Signature</div>
+                    <img class="stamp-img" src="{{ absolute_url(asset('assets/img/cachet.png')) }}" alt="Cachet Ardhi">
+                </div>
+
+            </div>
+
+            <!-- Droite : Récapitulatif -->
+            <div class="bottom-right">
+                <div class="recap-box">
+                    <div class="recap-row">
+                        <span class="rl">Sous-total articles</span>
+                        <span class="rv">{{ totalItems|number_format(2, ',', ' ') }} DT</span>
+                    </div>
+
+                    {% if commande.montantRemise and commande.montantRemise > 0 %}
+                    <div class="recap-row disc">
+                        <span class="rl">Remise{% if commande.coupon %} · {{ commande.coupon.code }}{% endif %}</span>
+                        <span class="rv">− {{ commande.montantRemise|number_format(2, ',', ' ') }} DT</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="recap-row {% if commande.fraisLivraison <= 0 %}free{% endif %}">
+                        <span class="rl">Frais de livraison</span>
+                        <span class="rv">
+                            {% if commande.fraisLivraison > 0 %}
+                                {{ commande.fraisLivraison|number_format(2, ',', ' ') }} DT
+                            {% else %}
+                                Gratuit
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="recap-row total-row">
+                        <span class="rl">Total TTC</span>
+                        <span class="rv">{{ commande.total|number_format(2, ',', ' ') }} DT</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════
+         FOOTER
+    ══════════════════════════ -->
+    <div class="page-footer">
+        <div class="footer-cgv">
+            <strong>Conditions générales de vente</strong>
+            Ardhi Marketplace s'engage à livrer vos produits dans les meilleurs délais.
+            En cas de litige, contactez-nous à contact@ardhi.tn.
+            Tout retour doit être signalé dans les 48h suivant la réception.
+        </div>
+        <div class="footer-gendate">
+            Document généré le {{ "now"|date("d/m/Y") }}<br>
+            Ardhi Marketplace © 2025
+        </div>
+    </div>
+
+</div>
+
+<script type="text/php">
+    if (isset($pdf)) {
+        $font    = $fontMetrics->getFont("helvetica", "bold");
+        $size    = 9;
+        $color   = [0.39, 0.43, 0.45]; // #636e72 (--muted)
+        $text    = "Page {PAGE_NUM} / {PAGE_COUNT}";
+        $pageW   = $pdf->get_width();
+        $pageH   = $pdf->get_height();
+        /* Calcul position bas-droite : right ≈ 36pt, bottom ≈ 18pt */
+        $textW   = $fontMetrics->getTextWidth($text, $font, $size) * 0.75;
+        $x       = $pageW - 36 - $textW;
+        $y       = $pageH - 22;
+        $pdf->page_text($x, $y, $text, $font, $size, $color);
+    }
+</script>
+</body>
+</html>

@@ -306,10 +306,15 @@
                     </div>
                   {% endif %}
 
-                  {# Bouton détails #}
-                  <button class="cmd-details-btn" onclick="openDetails({{ commande.id }})">
-                    <i class="bi bi-eye-fill"></i> Voir les détails
-                  </button>
+                  {# Actions #}
+                  <div style="display: flex; gap: 10px;">
+                    <button class="cmd-details-btn" onclick="openDetails({{ commande.id }})" style="flex: 1;">
+                      <i class="bi bi-eye-fill"></i> Détails
+                    </button>
+                    <a href="{{ path('app_marketplace_commande_pdf', {id: commande.id}) }}" class="cmd-details-btn" style="flex: 1; text-decoration: none; border-color: #4a8c3f; color: #4a8c3f; background: #f0f7ee;" title="Télécharger la facture PDF">
+                      <i class="bi bi-file-earmark-pdf-fill"></i> Facture
+                    </a>
+                  </div>
                 </div>
               {% endfor %}
             </div>

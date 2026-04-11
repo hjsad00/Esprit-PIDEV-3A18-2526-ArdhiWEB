@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 /**
  * Contrôleur dédié à la gestion des commandes Marketplace.
@@ -422,5 +424,65 @@ class CommandeController extends AbstractController
                 : 'Commande créée avec succès !',
             'nbCommandes' => $nbCommandes,
         ]);
+    }
+
+    /**
+     * Génère et télécharge la facture PDF d'une commande
+     */
+    #[Route('/marketplace/commande/{id}/facture-pdf', name: 'app_marketplace_commande_pdf')]
+    public function facturePdf(Commande $commande): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        
+        // Sécurité : seul le propriétaire, le vendeur ou l'admin peut accéder
+        $isOwner = $commande->getUser()->getId() === $user->getId();
+        $isSeller = false;
+        foreach ($commande->getDetails() as $detail) {
+            if ($detail->getProduit() && $detail->getProduit()->getUser() && $detail->getProduit()->getUser()->getId() === $user->getId()) {
+                $isSeller = true;
+                break;
+            }
+        }
+ 
+        if (!$isOwner && !$isSeller && !$isAdmin) {
+            throw $this->createAccessDeniedException("Accès refusé. Vous ne pouvez pas télécharger cette facture.");
+        }
+
+        // Options PDF
+        $pdfOptions = new Options();
+        $pdfOptions->set('defaultFont', 'Arial');
+        $pdfOptions->set('isRemoteEnabled', true); // Pour autoriser les images externes / liées
+        $pdfOptions->set('isPhpEnabled', true);    // Requis pour <script type="text/php"> (numérotation des pages)
+        
+        // Instanciation de Dompdf
+        $dompdf = new Dompdf($pdfOptions);
+
+        // Récupérer le HTML depuis Twig
+        $html = $this->renderView('Marketplace/pdf_facture.html.twig', [
+            'commande' => $commande
+        ]);
+
+        // Charger le HTML en Dompdf
+        $dompdf->loadHtml($html);
+        
+        // (Optionnel) Format de papier et orientation
+        $dompdf->setPaper('A4', 'portrait');
+
+        // Générer le PDF (en mémoire)
+        $dompdf->render();
+
+        // Renvoyer le PDF pour le saut vers le téléchargement
+        return new Response(
+            $dompdf->output(),
+            200,
+            array(
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => sprintf('attachment; filename="facture_commande_%s.pdf"', $commande->getId())
+            )
+        );
     }
 }
