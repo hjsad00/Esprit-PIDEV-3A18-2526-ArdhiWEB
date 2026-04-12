@@ -223,7 +223,8 @@
                     {% elseif notif.priorite == 'WARNING' %}notif-warning
                     {% endif %}"
                     id="notif-{{ notif.id }}"
-                    style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+                    style="animation-delay: {{ loop.index0 * 0.05 }}s; {{ notif.idTache ? 'cursor:pointer;' : '' }}"
+                    {% if notif.idTache %}onclick="window.location.href='{{ path('tache_index', {'search': notif.idTache}) }}'"{% endif %}>
 
                     <div class="notif-card-header">
                         <span class="notif-icon">{{ notif.icone }}</span>
@@ -268,11 +269,11 @@
 
                     <div class="notif-card-footer">
                         {% if not notif.lue %}
-                        <button class="btn-small btn-read" onclick="markRead({{ notif.id }})">
+                        <button class="btn-small btn-read" onclick="event.stopPropagation(); markRead({{ notif.id }})">
                             ✓ {{ 'notification.mark_read'|trans|default('Marquer comme lu') }}
                         </button>
                         {% endif %}
-                        <button class="btn-small btn-delete" onclick="deleteNotif({{ notif.id }})">
+                        <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteNotif({{ notif.id }})">
                             🗑 {{ 'common.delete'|trans }}
                         </button>
                     </div>

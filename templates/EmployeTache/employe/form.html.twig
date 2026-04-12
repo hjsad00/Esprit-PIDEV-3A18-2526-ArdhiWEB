@@ -58,15 +58,7 @@
 
         <div class="form-body">
 
-            {% if errors is defined and errors|length > 0 %}
-            <div class="alert-errors">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-                    <strong class="text-danger">{{ errors|length }} {{ 'common.error'|trans }}{{ errors|length > 1 ? 's' : '' }} {{ 'common.todo'|trans|replace({'À faire': 'à corriger', 'To do': 'to fix', 'للقيام به': 'للإصلاح'}) }} :</strong>
-                </div>
-                <ul>{% for f, m in errors %}<li>{{ m }}</li>{% endfor %}</ul>
-            </div>
-            {% endif %}
+
 
             <form method="POST" enctype="multipart/form-data"
                   action="{{ employe ? path('employe_edit', {id: employe.id}) : path('employe_new') }}"

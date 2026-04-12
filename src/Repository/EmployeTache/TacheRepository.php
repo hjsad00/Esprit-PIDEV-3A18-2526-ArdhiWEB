@@ -47,8 +47,14 @@ class TacheRepository extends ServiceEntityRepository
             ->setParameter('agri', $idAgriculteur);
 
         if ($search !== '') {
-            $qb->andWhere('t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
-               ->setParameter('s', '%' . $search . '%');
+            if (is_numeric($search)) {
+                $qb->andWhere('t.id = :sid OR t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
+                   ->setParameter('sid', (int) $search)
+                   ->setParameter('s', '%' . $search . '%');
+            } else {
+                $qb->andWhere('t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
+                   ->setParameter('s', '%' . $search . '%');
+            }
         }
 
         if ($statut !== 'Tous') {

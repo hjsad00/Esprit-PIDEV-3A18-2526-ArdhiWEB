@@ -82,7 +82,7 @@
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      <a href="/" class="logo d-flex align-items-center text-decoration-none">
+      <a href="{{ is_granted('ROLE_ADMIN') ? path('admin_dashboard') : '/' }}" class="logo d-flex align-items-center text-decoration-none">
         <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi">
         <h1 class="sitename">ARDHI</h1>
       </a>
@@ -92,9 +92,27 @@
           {% if app.request.get('_route') == 'app_employe_dashboard' %}
               {{ render(controller('App\\Controller\\EmployeTache\\NotificationController::renderNavbarIcon')) }}
           {% endif %}
-          <li><a href="/">Diagnostic IA</a></li>
-          <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
-          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
+          <li>
+            {% if is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_diags_dashboard') }}">Diagnostic IA</a>
+            {% else %}
+              <a href="/">Diagnostic IA</a>
+            {% endif %}
+          </li>
+          <li>
+            {% if is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_marketplace_accueil') }}" class="{{ app.request.get('_route') == 'admin_marketplace_accueil' ? 'active' : '' }}">Marketplace</a>
+            {% else %}
+              <a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a>
+            {% endif %}
+          </li>
+          <li>
+            {% if is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_materiel_index') }}" class="{{ app.request.get('_route') == 'admin_materiel_index' ? 'active' : '' }}">Matériel & Maintenance</a>
+            {% else %}
+              <a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a>
+            {% endif %}
+          </li>
           <li>
             {% if is_granted('ROLE_AGRICULTEUR') %}
               <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
@@ -104,9 +122,17 @@
               <a href="#">Cultures</a>
             {% endif %}
           </li>
-          <li><a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a></li>
           <li>
-            {% if is_granted('ROLE_AGRICULTEUR') %}
+            {% if is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('app_evenement_admin_dashboard') }}" class="{{ app.request.get('_route') starts with 'app_evenement_admin' ? 'active' : '' }}">Évènements</a>
+            {% else %}
+              <a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a>
+            {% endif %}
+          </li>
+          <li>
+            {% if is_granted('ROLE_ADMIN') %}
+              <a href="{{ path('admin_agriculteurs_employe') }}" class="{{ app.request.get('_route') == 'admin_agriculteurs_employe' ? 'active' : '' }}">Employés</a>
+            {% elseif is_granted('ROLE_AGRICULTEUR') %}
               <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">Employés</a>
             {% else %}
               <a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">Employés</a>
@@ -172,7 +198,7 @@
           <div class="col-lg-2 col-md-3 footer-links">
             <h4>Liens utiles</h4>
             <ul>
-              <li><a href="/">Accueil</a></li>
+              <li><a href="{{ is_granted('ROLE_ADMIN') ? path('admin_dashboard') : '/' }}">Accueil</a></li>
               <li><a href="#">À propos</a></li>
               <li><a href="#">Services</a></li>
             </ul>
