@@ -294,13 +294,13 @@
 
     {# ── Header ─────────────────────────────────────────── #}
     <div class="stats-header">
-        <h1><i class="bi bi-bar-chart-line-fill"></i> Statistiques des Tâches</h1>
+        <h1><i class="bi bi-bar-chart-line-fill"></i> {{ 'tache.stats_page.title'|trans }}</h1>
         <div class="stats-header-actions">
             <a href="{{ path('tache_index') }}" class="btn-back">
-                <i class="bi bi-arrow-left"></i> Retour aux tâches
+                <i class="bi bi-arrow-left"></i> {{ 'tache.stats_page.back'|trans }}
             </a>
             <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-pdf-export">
-                <i class="bi bi-file-earmark-pdf-fill"></i> Exporter PDF
+                <i class="bi bi-file-earmark-pdf-fill"></i> {{ 'tache.stats_page.export_pdf'|trans }}
             </a>
         </div>
     </div>
@@ -308,22 +308,22 @@
     {# ── Tabs ───────────────────────────────────────────── #}
     <div class="stats-tabs">
         <button class="stats-tab active" data-tab="resume">
-            <i class="bi bi-clipboard-data"></i> Résumé
+            <i class="bi bi-clipboard-data"></i> {{ 'tache.stats_page.tab_resume'|trans }}
         </button>
         <button class="stats-tab" data-tab="statuts">
-            <i class="bi bi-pie-chart-fill"></i> Statuts
+            <i class="bi bi-pie-chart-fill"></i> {{ 'tache.stats_page.tab_statuts'|trans }}
         </button>
         <button class="stats-tab" data-tab="priorites">
-            <i class="bi bi-flag-fill"></i> Priorités
+            <i class="bi bi-flag-fill"></i> {{ 'tache.stats_page.tab_priorites'|trans }}
         </button>
         <button class="stats-tab" data-tab="employes">
-            <i class="bi bi-people-fill"></i> Employés
+            <i class="bi bi-people-fill"></i> {{ 'tache.stats_page.tab_employes'|trans }}
         </button>
         <button class="stats-tab" data-tab="evolution">
-            <i class="bi bi-graph-up"></i> Évolution
+            <i class="bi bi-graph-up"></i> {{ 'tache.stats_page.tab_evolution'|trans }}
         </button>
         <button class="stats-tab" data-tab="categories">
-            <i class="bi bi-grid-3x3-gap-fill"></i> Catégories
+            <i class="bi bi-grid-3x3-gap-fill"></i> {{ 'tache.stats_page.tab_categories'|trans }}
         </button>
     </div>
 
@@ -336,28 +336,28 @@
                 <div class="kpi-box-icon">📋</div>
                 <div>
                     <div class="kpi-box-value">{{ kpis.total }}</div>
-                    <div class="kpi-box-label">Total tâches</div>
+                    <div class="kpi-box-label">{{ 'tache.stats_page.total_tasks'|trans }}</div>
                 </div>
             </div>
             <div class="kpi-box kpi-teal">
                 <div class="kpi-box-icon">✅</div>
                 <div>
                     <div class="kpi-box-value">{{ tauxCompletion }}%</div>
-                    <div class="kpi-box-label">Taux complétion</div>
+                    <div class="kpi-box-label">{{ 'tache.stats_page.completion_rate'|trans }}</div>
                 </div>
             </div>
             <div class="kpi-box kpi-danger">
                 <div class="kpi-box-icon">⚠️</div>
                 <div>
                     <div class="kpi-box-value">{{ enRetard }}</div>
-                    <div class="kpi-box-label">En retard</div>
+                    <div class="kpi-box-label">{{ 'tache.stats_page.overdue'|trans }}</div>
                 </div>
             </div>
             <div class="kpi-box kpi-lime">
                 <div class="kpi-box-icon">👤</div>
                 <div>
                     <div class="kpi-box-value">{{ nonAssignees }}</div>
-                    <div class="kpi-box-label">Non assignées</div>
+                    <div class="kpi-box-label">{{ 'tache.stats_page.unassigned'|trans }}</div>
                 </div>
             </div>
         </div>
@@ -365,7 +365,7 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> Répartition par Statut</div>
+                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> {{ 'tache.stats_page.by_status'|trans }}</div>
                     <div class="chart-wrapper">
                         <canvas id="resumeStatutChart"></canvas>
                     </div>
@@ -373,10 +373,10 @@
             </div>
             <div class="col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-bar-chart-fill"></i> Détail des statuts</div>
+                    <div class="stat-card-title"><i class="bi bi-bar-chart-fill"></i> {{ 'tache.stats_page.status_detail'|trans }}</div>
                     <table class="stat-table">
                         <thead>
-                            <tr><th>Statut</th><th>Nombre</th><th>Proportion</th></tr>
+                            <tr><th>{{ 'tache.stats_page.status'|trans }}</th><th>{{ 'tache.stats_page.count'|trans }}</th><th>{{ 'tache.stats_page.proportion'|trans }}</th></tr>
                         </thead>
                         <tbody>
                             {% for label, count in statuts %}
@@ -404,7 +404,7 @@
         <div class="row g-4">
             <div class="col-md-7">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> Répartition par Statut</div>
+                    <div class="stat-card-title"><i class="bi bi-pie-chart-fill"></i> {{ 'tache.stats_page.by_status'|trans }}</div>
                     <div class="chart-wrapper">
                         <canvas id="statutPieChart"></canvas>
                     </div>
@@ -412,9 +412,9 @@
             </div>
             <div class="col-md-5">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-list-check"></i> Détails</div>
+                    <div class="stat-card-title"><i class="bi bi-list-check"></i> {{ 'tache.stats_page.details'|trans }}</div>
                     <table class="stat-table">
-                        <thead><tr><th>Statut</th><th>Nombre</th><th>%</th></tr></thead>
+                        <thead><tr><th>{{ 'tache.stats_page.status'|trans }}</th><th>{{ 'tache.stats_page.count'|trans }}</th><th>{{ 'tache.stats_page.percent'|trans }}</th></tr></thead>
                         <tbody>
                         {% for label, count in statuts %}
                         <tr>
@@ -437,7 +437,7 @@
         <div class="row g-4">
             <div class="col-md-7">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-flag-fill"></i> Tâches par Priorité</div>
+                    <div class="stat-card-title"><i class="bi bi-flag-fill"></i> {{ 'tache.stats_page.by_priority'|trans }}</div>
                     <div class="chart-wrapper chart-wrapper-wide">
                         <canvas id="prioriteBarChart"></canvas>
                     </div>
@@ -445,10 +445,10 @@
             </div>
             <div class="col-md-5">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-bullseye"></i> Détails</div>
-                    {% set prioLabels = {1: 'Basse', 2: 'Moyenne', 3: 'Haute', 4: 'Critique'} %}
+                    <div class="stat-card-title"><i class="bi bi-bullseye"></i> {{ 'tache.stats_page.details'|trans }}</div>
+                    {% set prioLabels = {1: 'tache.form.priority_low'|trans, 2: 'tache.form.priority_medium'|trans, 3: 'tache.form.priority_high'|trans, 4: 'tache.form.priority_critical'|trans} %}
                     <table class="stat-table">
-                        <thead><tr><th>Priorité</th><th>Nombre</th><th>Barre</th></tr></thead>
+                        <thead><tr><th>{{ 'tache.stats_page.priority'|trans }}</th><th>{{ 'tache.stats_page.count'|trans }}</th><th>{{ 'tache.stats_page.bar'|trans }}</th></tr></thead>
                         <tbody>
                         {% set maxPrio = 1 %}
                         {% for k, v in priorites %}{% if v > maxPrio %}{% set maxPrio = v %}{% endif %}{% endfor %}
@@ -477,7 +477,7 @@
         <div class="row g-4">
             <div class="col-md-7">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-people-fill"></i> Tâches par Employé</div>
+                    <div class="stat-card-title"><i class="bi bi-people-fill"></i> {{ 'tache.stats_page.by_employee'|trans }}</div>
                     <div class="chart-wrapper chart-wrapper-wide">
                         <canvas id="employeBarChart"></canvas>
                     </div>
@@ -485,10 +485,10 @@
             </div>
             <div class="col-md-5">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-person-badge"></i> Détails</div>
+                    <div class="stat-card-title"><i class="bi bi-person-badge"></i> {{ 'tache.stats_page.details'|trans }}</div>
                     {% if employeStats|length > 0 %}
                     <table class="stat-table">
-                        <thead><tr><th>Employé</th><th>Tâches</th><th>Barre</th></tr></thead>
+                        <thead><tr><th>{{ 'tache.stats_page.employee'|trans }}</th><th>{{ 'tache.stats_page.tasks'|trans }}</th><th>{{ 'tache.stats_page.bar'|trans }}</th></tr></thead>
                         <tbody>
                         {% set maxEmp = 1 %}
                         {% for es in employeStats %}{% if es.total > maxEmp %}{% set maxEmp = es.total %}{% endif %}{% endfor %}
@@ -508,7 +508,7 @@
                     {% else %}
                     <div style="text-align:center;padding:40px 20px;color:#aaa;">
                         <i class="bi bi-person-x" style="font-size:2.5rem;display:block;margin-bottom:8px;"></i>
-                        Aucune donnée par employé
+                        {{ 'tache.stats_page.no_employee_data'|trans }}
                     </div>
                     {% endif %}
                 </div>
@@ -521,7 +521,7 @@
     {# ══════════════════════════════════════════════════════ #}
     <div class="tab-content" id="tab-evolution">
         <div class="stat-card">
-            <div class="stat-card-title"><i class="bi bi-graph-up"></i> Évolution des tâches dans le temps</div>
+            <div class="stat-card-title"><i class="bi bi-graph-up"></i> {{ 'tache.stats_page.evolution_title'|trans }}</div>
             {% if evolution|length > 0 %}
             <div class="chart-wrapper chart-wrapper-wide" style="max-height:400px;">
                 <canvas id="evolutionLineChart"></canvas>
@@ -529,7 +529,7 @@
             {% else %}
             <div style="text-align:center;padding:50px 20px;color:#aaa;">
                 <i class="bi bi-calendar-x" style="font-size:3rem;display:block;margin-bottom:10px;"></i>
-                <h5>Aucune donnée d'évolution disponible</h5>
+                <h5>{{ 'tache.stats_page.no_evolution'|trans }}</h5>
             </div>
             {% endif %}
         </div>
@@ -542,7 +542,7 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-grid-3x3-gap-fill"></i> Répartition par Catégorie</div>
+                    <div class="stat-card-title"><i class="bi bi-grid-3x3-gap-fill"></i> {{ 'tache.stats_page.by_category'|trans }}</div>
                     <div class="chart-wrapper">
                         <canvas id="categorieDoughnutChart"></canvas>
                     </div>
@@ -550,10 +550,10 @@
             </div>
             <div class="col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-title"><i class="bi bi-tags-fill"></i> Détails par Catégorie</div>
+                    <div class="stat-card-title"><i class="bi bi-tags-fill"></i> {{ 'tache.stats_page.category_detail'|trans }}</div>
                     {% if categories|length > 0 %}
                     <table class="stat-table">
-                        <thead><tr><th>Catégorie</th><th>Nombre</th><th>Barre</th></tr></thead>
+                        <thead><tr><th>{{ 'tache.stats_page.category'|trans }}</th><th>{{ 'tache.stats_page.count'|trans }}</th><th>{{ 'tache.stats_page.bar'|trans }}</th></tr></thead>
                         <tbody>
                         {% set maxCat = 1 %}
                         {% for k, v in categories %}{% if v > maxCat %}{% set maxCat = v %}{% endif %}{% endfor %}
@@ -573,7 +573,7 @@
                     {% else %}
                     <div style="text-align:center;padding:40px 20px;color:#aaa;">
                         <i class="bi bi-folder-x" style="font-size:2.5rem;display:block;margin-bottom:8px;"></i>
-                        Aucune donnée de catégorie
+                        {{ 'tache.stats_page.no_category_data'|trans }}
                     </div>
                     {% endif %}
                 </div>

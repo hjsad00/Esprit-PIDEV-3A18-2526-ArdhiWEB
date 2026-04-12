@@ -87,15 +87,15 @@
               novalidate>
             <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
 
-            {# ── SECTION 1 : Informations principales ─────────────── #}
-            <div class="section-header">📋 INFORMATIONS PRINCIPALES</div>
+            {# ── SECTION 1 : Informations principales ───────────────── #}
+            <div class="section-header">{{ 'tache.form.main_info'|trans }}</div>
 
             <div class="mb-3">
-                <label class="form-label">Titre <span class="req">*</span></label>
+                <label class="form-label">{{ 'tache.form.title_label'|trans }} <span class="req">*</span></label>
                 <input type="text" name="titre"
                        class="form-control {{ errors.titre is defined ? 'is-invalid' : '' }}"
                        value="{{ old.titre ?? (tache ? tache.titre : '') }}"
-                       placeholder="Ex : Arroser les plants de tomates"
+                       placeholder="{{ 'tache.form.title_ph'|trans }}"
                        maxlength="200">
                 {% if errors.titre is defined %}
                     <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.titre }}</div>
@@ -103,21 +103,21 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Description <span class="req">*</span></label>
+                <label class="form-label">{{ 'tache.form.description_label'|trans }} <span class="req">*</span></label>
                 <textarea name="description" rows="3"
                           class="form-control {{ errors.description is defined ? 'is-invalid' : '' }}"
-                          placeholder="Décrivez la tâche en détail...">{{ old.description ?? (tache ? tache.description : '') }}</textarea>
+                          placeholder="{{ 'tache.form.description_ph'|trans }}">{{ old.description ?? (tache ? tache.description : '') }}</textarea>
                 {% if errors.description is defined %}
                     <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.description }}</div>
                 {% endif %}
             </div>
 
             {# ── SECTION 2 : Statut & Priorité ───────────────────── #}
-            <div class="section-header">🔖 STATUT & PRIORITÉ</div>
+            <div class="section-header">{{ 'tache.form.status_priority'|trans }}</div>
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Statut</label>
+                    <label class="form-label">{{ 'tache.form.status_label'|trans }}</label>
                     <select name="statut" class="form-select {{ errors.statut is defined ? 'is-invalid' : '' }}">
                         {% for s in constant('App\\Entity\\EmployeTache\\Tache::STATUTS') %}
                             <option value="{{ s }}"
@@ -132,9 +132,9 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Priorité</label>
+                    <label class="form-label">{{ 'tache.form.priority_label'|trans }}</label>
                     <select name="priorite" class="form-select {{ errors.priorite is defined ? 'is-invalid' : '' }}">
-                        {% set priorites = {1: 'Basse', 2: 'Moyenne', 3: 'Haute', 4: 'Critique'} %}
+                        {% set priorites = {1: 'tache.form.priority_low'|trans, 2: 'tache.form.priority_medium'|trans, 3: 'tache.form.priority_high'|trans, 4: 'tache.form.priority_critical'|trans} %}
                         {% for val, label in priorites %}
                             <option value="{{ val }}"
                                 style="color: {{ {1:'#3498db', 2:'#f39c12', 3:'#e74c3c', 4:'#8e44ad'}[val] }}"
@@ -149,7 +149,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Catégorie</label>
+                    <label class="form-label">{{ 'tache.form.category_label'|trans }}</label>
                     <select name="categorie" class="form-select">
                         {% for cat in constant('App\\Entity\\EmployeTache\\Tache::CATEGORIES') %}
                             <option value="{{ cat }}"
@@ -161,12 +161,12 @@
                 </div>
             </div>
 
-            {# ── SECTION 3 : Dates ────────────────────────────────── #}
-            <div class="section-header">📅 DATES</div>
+            {# ── SECTION 3 : Dates ──────────────────────────────── #}
+            <div class="section-header">{{ 'tache.form.dates'|trans }}</div>
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Date de début <span class="req">*</span></label>
+                    <label class="form-label">{{ 'tache.form.start_date'|trans }} <span class="req">*</span></label>
                     <input type="date" name="dateDebut" id="dateDebut"
                            class="form-control {{ errors.dateDebut is defined ? 'is-invalid' : '' }}"
                            value="{{ old.dateDebut ?? (tache and tache.dateDebut ? tache.dateDebut|date('Y-m-d') : '') }}"
@@ -176,14 +176,14 @@
                     {% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Date de fin</label>
+                    <label class="form-label">{{ 'tache.form.end_date'|trans }}</label>
                     <input type="date" name="dateFin" id="dateFin"
                            class="form-control {{ errors.dateFin is defined ? 'is-invalid' : '' }}"
                            value="{{ old.dateFin ?? (tache and tache.dateFin ? tache.dateFin|date('Y-m-d') : '') }}"
                            onchange="checkDates()">
                     {# Alerte visuelle date fin < date début — identique au desktop #}
                     <div class="retard-warning" id="retardWarn">
-                        <i class="bi bi-exclamation-triangle"></i> Date fin &lt; date début
+                        <i class="bi bi-exclamation-triangle"></i> {{ 'tache.form.date_warning'|trans }}
                     </div>
                     {% if errors.dateFin is defined %}
                         <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.dateFin }}</div>
@@ -192,15 +192,15 @@
             </div>
 
             {# ── SECTION 4 : Affectation ─────────────────────────── #}
-            <div class="section-header">👷 AFFECTATION</div>
+            <div class="section-header">{{ 'tache.form.assignment'|trans }}</div>
 
             <div class="mb-3">
-                <label class="form-label">Employé <span class="req">*</span></label>
+                <label class="form-label">{{ 'tache.form.employee_label'|trans }} <span class="req">*</span></label>
                 <div class="d-flex gap-2">
                     <select name="idEmploye"
                             class="form-select {{ errors.idEmploye is defined ? 'is-invalid' : '' }}"
                             id="selectEmploye">
-                        <option value="">Non assigné</option>
+                        <option value="">{{ 'tache.form.not_assigned'|trans }}</option>
                         {% for emp in employes %}
                             <option value="{{ emp.id }}"
                                 {{ (old.idEmploye ?? (tache ? tache.idEmploye : null)) == emp.id ? 'selected' : '' }}>
@@ -209,8 +209,8 @@
                         {% endfor %}
                     </select>
                     {# Bouton Recommandation IA (placeholder pour future intégration) #}
-                    <button type="button" class="btn-recomm" onclick="recommanderEmploye()" title="Recommandation IA">
-                        <i class="bi bi-cpu"></i> Recomm...
+                    <button type="button" class="btn-recomm" onclick="recommanderEmploye()" title="{{ 'tache.form.ia_recommend_title'|trans }}">
+                        <i class="bi bi-cpu"></i> {{ 'tache.form.ia_recommend'|trans }}
                     </button>
                 </div>
                 {% if errors.idEmploye is defined %}
@@ -218,14 +218,14 @@
                 {% endif %}
             </div>
 
-            {# ── Boutons ──────────────────────────────────────────── #}
+            {# ── Boutons ──────────────────────────────────────── #}
             <div class="d-flex gap-3 mt-4 pt-3 border-top">
                 <button type="submit" class="btn-save">
                     <i class="bi bi-check-lg me-1"></i>
-                    {{ tache ? 'Enregistrer les modifications' : '+ Ajouter' }}
+                    {{ tache ? 'tache.form.save'|trans : 'tache.form.add_btn'|trans }}
                 </button>
                 <a href="{{ path('tache_index') }}" class="btn-cancel">
-                    <i class="bi bi-x-lg"></i> Annuler
+                    <i class="bi bi-x-lg"></i> {{ 'tache.form.cancel'|trans }}
                 </a>
             </div>
 

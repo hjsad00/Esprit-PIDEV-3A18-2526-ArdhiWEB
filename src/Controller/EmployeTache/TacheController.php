@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/taches')]
 class TacheController extends AbstractController
@@ -25,7 +26,8 @@ class TacheController extends AbstractController
     public function __construct(
         private AgriculteurContextService  $ctx,
         private GoogleCalendarService      $gcal,
-        private EmployeAutoInactifService  $autoInactif,  // ✅ AJOUT
+        private EmployeAutoInactifService  $autoInactif,
+        private TranslatorInterface        $translator,
     ) {}
 
     private function checkAccess(): int|Response
@@ -296,11 +298,18 @@ class TacheController extends AbstractController
         $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('Ardhi');
         $pdf->SetAuthor('Ardhi');
-        $pdf->SetTitle('Liste des Tâches');
+        $pdf->SetTitle($this->translator->trans('tache.pdf.title'));
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
         $pdf->SetMargins(8, 8, 8);
         $pdf->SetAutoPageBreak(true, 12);
+
+        // RTL support for Arabic
+        $locale = $this->translator->getLocale();
+        if ($locale === 'ar') {
+            $pdf->setRTL(true);
+        }
+
         $pdf->AddPage();
 
         $pdf->SetFillColor(34, 120, 60);
@@ -308,13 +317,13 @@ class TacheController extends AbstractController
         $pdf->SetFillColor(39, 174, 96);
         $pdf->Rect(0, 24, 297, 4, 'F');
 
-        $pdf->SetFont('helvetica', 'B', 22);
+        $pdf->SetFont('dejavusans', 'B', 22);
         $pdf->SetTextColor(255, 255, 255);
         $pdf->SetY(4);
-        $pdf->Cell(0, 10, 'LISTE DES TÂCHES', 0, 1, 'C');
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->Cell(0, 10, $this->translator->trans('tache.pdf.title'), 0, 1, 'C');
+        $pdf->SetFont('dejavusans', '', 10);
         $date = (new \DateTime())->format('d/m/Y H:i');
-        $pdf->Cell(0, 6, 'Généré le : ' . $date, 0, 1, 'C');
+        $pdf->Cell(0, 6, $this->translator->trans('tache.pdf.generated') . ' ' . $date, 0, 1, 'C');
         $pdf->Ln(8);
 
         $pdf->SetTextColor(50, 50, 50);
@@ -322,11 +331,11 @@ class TacheController extends AbstractController
         $boxW = 50;
         $gap = 5;
         $kpiData = [
-            ['label' => 'Total tâches',  'value' => $kpis['total'],      'r' => 74,  'g' => 124, 'b' => 89],
-            ['label' => 'En cours',      'value' => $kpis['en_cours'],   'r' => 46,  'g' => 139, 'b' => 87],
-            ['label' => 'Terminées',     'value' => $kpis['terminees'],  'r' => 39,  'g' => 174, 'b' => 96],
-            ['label' => 'En attente',    'value' => $kpis['en_attente'], 'r' => 100, 'g' => 160, 'b' => 120],
-            ['label' => 'En retard',     'value' => $enRetard,           'r' => 180, 'g' => 60,  'b' => 60],
+            ['label' => $this->translator->trans('tache.pdf.total'),       'value' => $kpis['total'],      'r' => 74,  'g' => 124, 'b' => 89],
+            ['label' => $this->translator->trans('tache.pdf.in_progress'), 'value' => $kpis['en_cours'],   'r' => 46,  'g' => 139, 'b' => 87],
+            ['label' => $this->translator->trans('tache.pdf.completed'),   'value' => $kpis['terminees'],  'r' => 39,  'g' => 174, 'b' => 96],
+            ['label' => $this->translator->trans('tache.pdf.pending'),     'value' => $kpis['en_attente'], 'r' => 100, 'g' => 160, 'b' => 120],
+            ['label' => $this->translator->trans('tache.pdf.overdue'),     'value' => $enRetard,           'r' => 180, 'g' => 60,  'b' => 60],
         ];
 
         $y = $pdf->GetY();
@@ -334,34 +343,39 @@ class TacheController extends AbstractController
             $x = $startX + $i * ($boxW + $gap);
             $pdf->SetFillColor($kpi['r'], $kpi['g'], $kpi['b']);
             $pdf->RoundedRect($x, $y, $boxW, 16, 3, '1111', 'F');
-            $pdf->SetFont('helvetica', 'B', 16);
+            $pdf->SetFont('dejavusans', 'B', 16);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->SetXY($x, $y + 1);
             $pdf->Cell($boxW, 8, $kpi['value'], 0, 0, 'C');
-            $pdf->SetFont('helvetica', '', 8);
+            $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetXY($x, $y + 8);
             $pdf->Cell($boxW, 6, $kpi['label'], 0, 0, 'C');
         }
         $pdf->Ln(22);
 
-        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetFont('dejavusans', 'B', 9);
         $pdf->SetFillColor(34, 120, 60);
         $pdf->SetTextColor(255, 255, 255);
         $pdf->SetDrawColor(34, 120, 60);
 
         $cols = [
-            ['w' => 12, 'h' => 'ID'],        ['w' => 42, 'h' => 'Titre'],
-            ['w' => 50, 'h' => 'Description'],['w' => 25, 'h' => 'Statut'],
-            ['w' => 22, 'h' => 'Priorité'],   ['w' => 28, 'h' => 'Catégorie'],
-            ['w' => 25, 'h' => 'Début'],      ['w' => 25, 'h' => 'Fin'],
-            ['w' => 38, 'h' => 'Employé'],    ['w' => 14, 'h' => 'Retard'],
+            ['w' => 12, 'h' => $this->translator->trans('tache.pdf.col_id')],
+            ['w' => 42, 'h' => $this->translator->trans('tache.pdf.col_title')],
+            ['w' => 50, 'h' => $this->translator->trans('tache.pdf.col_description')],
+            ['w' => 25, 'h' => $this->translator->trans('tache.pdf.col_status')],
+            ['w' => 22, 'h' => $this->translator->trans('tache.pdf.col_priority')],
+            ['w' => 28, 'h' => $this->translator->trans('tache.pdf.col_category')],
+            ['w' => 25, 'h' => $this->translator->trans('tache.pdf.col_start')],
+            ['w' => 25, 'h' => $this->translator->trans('tache.pdf.col_end')],
+            ['w' => 38, 'h' => $this->translator->trans('tache.pdf.col_employee')],
+            ['w' => 14, 'h' => $this->translator->trans('tache.pdf.col_overdue')],
         ];
         foreach ($cols as $col) {
             $pdf->Cell($col['w'], 8, $col['h'], 1, 0, 'C', true);
         }
         $pdf->Ln();
 
-        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetFont('dejavusans', '', 8);
         $pdf->SetTextColor(30, 30, 30);
         $pdf->SetDrawColor(200, 220, 200);
         $rowIndex = 0;
@@ -382,10 +396,10 @@ class TacheController extends AbstractController
                 'Annulé'     => [180, 60, 60],   default     => [100, 100, 100],
             };
             $pdf->SetTextColor($stColor[0], $stColor[1], $stColor[2]);
-            $pdf->SetFont('helvetica', 'B', 8);
+            $pdf->SetFont('dejavusans', 'B', 8);
             $pdf->Cell(25, 7, $tache->getStatut(), 1, 0, 'C', true);
             $pdf->SetTextColor(30, 30, 30);
-            $pdf->SetFont('helvetica', '', 8);
+            $pdf->SetFont('dejavusans', '', 8);
 
             $pdf->Cell(22, 7, Tache::PRIORITES[$tache->getPriorite()] ?? 'Moyenne', 1, 0, 'C', true);
             $pdf->Cell(28, 7, $tache->getCategorie() ?? '-', 1, 0, 'C', true);
@@ -396,10 +410,10 @@ class TacheController extends AbstractController
             if ($tache->isEnRetard()) {
                 $pdf->SetFillColor(255, 220, 220);
                 $pdf->SetTextColor(180, 40, 40);
-                $pdf->SetFont('helvetica', 'B', 8);
-                $pdf->Cell(14, 7, 'OUI', 1, 1, 'C', true);
+                $pdf->SetFont('dejavusans', 'B', 8);
+                $pdf->Cell(14, 7, $this->translator->trans('tache.pdf.yes'), 1, 1, 'C', true);
                 $pdf->SetTextColor(30, 30, 30);
-                $pdf->SetFont('helvetica', '', 8);
+                $pdf->SetFont('dejavusans', '', 8);
             } else {
                 $pdf->Cell(14, 7, '-', 1, 1, 'C', true);
             }
@@ -410,9 +424,9 @@ class TacheController extends AbstractController
         $pdf->SetFillColor(39, 174, 96);
         $pdf->Rect(8, $pdf->GetY(), 281, 1, 'F');
         $pdf->Ln(3);
-        $pdf->SetFont('helvetica', 'I', 8);
+        $pdf->SetFont('dejavusans', 'I', 8);
         $pdf->SetTextColor(130, 130, 130);
-        $pdf->Cell(0, 5, 'Ardhi - Gestion Agricole Intelligente | ' . $date, 0, 1, 'C');
+        $pdf->Cell(0, 5, $this->translator->trans('tache.pdf.footer') . ' | ' . $date, 0, 1, 'C');
 
         return new Response(
             $pdf->Output('taches_' . date('Ymd_His') . '.pdf', 'I'),

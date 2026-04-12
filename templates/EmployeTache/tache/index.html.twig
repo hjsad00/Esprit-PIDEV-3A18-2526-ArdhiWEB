@@ -216,7 +216,7 @@
             <span class="kpi-icon">🔄</span>
             <div>
                 <div class="kpi-count" style="color:#3498db">{{ kpis.en_cours }}</div>
-                <div class="kpi-label">{{ 'tache.stats.in.progress'|trans }}</div>
+                <div class="kpi-label">{{ 'tache.stats.in_progress'|trans }}</div>
             </div>
         </div>
         <div class="kpi-sep"></div>
@@ -240,7 +240,7 @@
             <span class="kpi-icon">❌</span>
             <div>
                 <div class="kpi-count" style="color:#e74c3c">{{ kpis.annulees }}</div>
-                <div class="kpi-label">{{ 'common.cancel'|trans }}</div>
+                <div class="kpi-label">{{ 'tache.stats.cancelled'|trans }}</div>
             </div>
         </div>
 
@@ -253,10 +253,10 @@
                 <i class="bi bi-arrow-clockwise"></i> {{ 'common.refresh'|trans }}
             </a>
             <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-actualiser" style="background:#1B5E20;color:white;border-color:#1B5E20;">
-                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                <i class="bi bi-file-earmark-pdf-fill"></i> {{ 'common.export_pdf'|trans }}
             </a>
             <a href="{{ path('tache_statistiques') }}" class="btn-actualiser" style="background:#2E7D32;color:white;border-color:#2E7D32;">
-                <i class="bi bi-bar-chart-line-fill"></i> Statistiques
+                <i class="bi bi-bar-chart-line-fill"></i> {{ 'common.statistics'|trans }}
             </a>
         </div>
     </div>
@@ -268,29 +268,29 @@
         {# Recherche #}
         <i class="bi bi-search text-muted"></i>
         <input type="text" name="search" value="{{ search }}" class="tache-search"
-               placeholder="{{ 'tache.search.prompt'|trans }}">
+               placeholder="{{ 'tache.search_prompt'|trans }}">
 
         <div class="toolbar-sep"></div>
-        <span class="tri-label">{{ 'common.status'|trans }}</span>
+        <span class="tri-label">{{ 'tache.col.status'|trans }}</span>
         <select name="statut" class="filter-select" onchange="this.form.submit()">
             {% for s in statuts %}
-                <option value="{{ s }}" {{ statut == s ? 'selected' : '' }}>{{ s }}</option>
+                <option value="{{ s }}" {{ statut == s ? 'selected' : '' }}>{{ s == 'Tous' ? 'common.all'|trans : s }}</option>
             {% endfor %}
         </select>
 
         {# Filtre Priorité #}
-        <span class="tri-label">{{ 'common.priority'|trans }}</span>
+        <span class="tri-label">{{ 'tache.col.priority'|trans }}</span>
         <select name="priorite" class="filter-select" onchange="this.form.submit()">
             {% for p in priorites %}
-                <option value="{{ p }}" {{ priorite == p ? 'selected' : '' }}>{{ p|trans }}</option>
+                <option value="{{ p }}" {{ priorite == p ? 'selected' : '' }}>{{ p == 'Toutes' ? 'common.all_f'|trans : p }}</option>
             {% endfor %}
         </select>
 
         {# Filtre Catégorie #}
-        <span class="tri-label">{{ 'common.category'|trans }}</span>
+        <span class="tri-label">{{ 'tache.col.category'|trans }}</span>
         <select name="categorie" class="filter-select" onchange="this.form.submit()">
             {% for c in categories %}
-                <option value="{{ c }}" {{ categorie == c ? 'selected' : '' }}>{{ c }}</option>
+                <option value="{{ c }}" {{ categorie == c ? 'selected' : '' }}>{{ c == 'Toutes' ? 'common.all_f'|trans : c }}</option>
             {% endfor %}
         </select>
 
@@ -299,28 +299,28 @@
         {# Tri #}
         <span class="tri-label">{{ 'common.sort.by'|trans }}</span>
         <select name="tri" class="filter-select" onchange="this.form.submit()">
-            <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
-            <option value="titre"     {{ tri == 'titre'     ? 'selected' : '' }}>Titre</option>
-            <option value="statut"    {{ tri == 'statut'    ? 'selected' : '' }}>Statut</option>
-            <option value="priorite"  {{ tri == 'priorite'  ? 'selected' : '' }}>Priorité</option>
-            <option value="dateDebut" {{ tri == 'dateDebut' ? 'selected' : '' }}>Date Début</option>
-            <option value="dateFin"   {{ tri == 'dateFin'   ? 'selected' : '' }}>Date Fin</option>
-            <option value="categorie" {{ tri == 'categorie' ? 'selected' : '' }}>Catégorie</option>
+            <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>{{ 'tache.sort.id'|trans }}</option>
+            <option value="titre"     {{ tri == 'titre'     ? 'selected' : '' }}>{{ 'tache.sort.title'|trans }}</option>
+            <option value="statut"    {{ tri == 'statut'    ? 'selected' : '' }}>{{ 'tache.sort.status'|trans }}</option>
+            <option value="priorite"  {{ tri == 'priorite'  ? 'selected' : '' }}>{{ 'tache.sort.priority'|trans }}</option>
+            <option value="dateDebut" {{ tri == 'dateDebut' ? 'selected' : '' }}>{{ 'tache.sort.start_date'|trans }}</option>
+            <option value="dateFin"   {{ tri == 'dateFin'   ? 'selected' : '' }}>{{ 'tache.sort.end_date'|trans }}</option>
+            <option value="categorie" {{ tri == 'categorie' ? 'selected' : '' }}>{{ 'tache.sort.category'|trans }}</option>
         </select>
 
         <input type="hidden" name="direction" id="dirInput" value="{{ direction }}">
         <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
-                onclick="setDir('asc')" title="Croissant">↑</button>
+                onclick="setDir('asc')" title="{{ 'common.ascending'|trans }}">↑</button>
         <button type="submit" class="btn-dir {{ direction == 'desc' ? 'active' : '' }}"
-                onclick="setDir('desc')" title="Décroissant">↓</button>
+                onclick="setDir('desc')" title="{{ 'common.descending'|trans }}">↓</button>
 
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
-            <i class="bi bi-search me-1"></i>Rechercher
+            <i class="bi bi-search me-1"></i>{{ 'common.search'|trans }}
         </button>
 
         {% if search or statut != 'Tous' or priorite != 'Toutes' or categorie != 'Toutes' %}
         <a href="{{ path('tache_index') }}" class="btn btn-outline-secondary btn-sm" style="border-radius:7px">
-            <i class="bi bi-x-lg"></i> Réinitialiser
+            <i class="bi bi-x-lg"></i> {{ 'common.reset'|trans }}
         </a>
         {% endif %}
 
@@ -336,29 +336,29 @@
             <tr>
                 {# Colonnes cliquables — identiques au desktop #}
                 <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'id', direction:(tri=='id' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">ID</a>
+                    <a href="{{ path('tache_index', {tri:'id', direction:(tri=='id' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.id'|trans }}</a>
                 </th>
                 <th class="sortable {{ tri == 'titre' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'titre', direction:(tri=='titre' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Titre</a>
+                    <a href="{{ path('tache_index', {tri:'titre', direction:(tri=='titre' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.title'|trans }}</a>
                 </th>
-                <th>Description</th>
+                <th>{{ 'tache.col.description'|trans }}</th>
                 <th class="sortable {{ tri == 'statut' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'statut', direction:(tri=='statut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Statut</a>
+                    <a href="{{ path('tache_index', {tri:'statut', direction:(tri=='statut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.status'|trans }}</a>
                 </th>
                 <th class="sortable {{ tri == 'priorite' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'priorite', direction:(tri=='priorite' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Priorité</a>
+                    <a href="{{ path('tache_index', {tri:'priorite', direction:(tri=='priorite' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.priority'|trans }}</a>
                 </th>
                 <th class="sortable {{ tri == 'categorie' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'categorie', direction:(tri=='categorie' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Catégorie</a>
+                    <a href="{{ path('tache_index', {tri:'categorie', direction:(tri=='categorie' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.category'|trans }}</a>
                 </th>
                 <th class="sortable {{ tri == 'dateDebut' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'dateDebut', direction:(tri=='dateDebut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Date Début</a>
+                    <a href="{{ path('tache_index', {tri:'dateDebut', direction:(tri=='dateDebut' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.start_date'|trans }}</a>
                 </th>
                 <th class="sortable {{ tri == 'dateFin' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('tache_index', {tri:'dateFin', direction:(tri=='dateFin' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">Date Fin</a>
+                    <a href="{{ path('tache_index', {tri:'dateFin', direction:(tri=='dateFin' and direction=='asc')?'desc':'asc', search:search, statut:statut, priorite:priorite, categorie:categorie}) }}" style="color:white;text-decoration:none">{{ 'tache.col.end_date'|trans }}</a>
                 </th>
-                <th>Employé</th>
-                <th class="text-center">Actions</th>
+                <th>{{ 'tache.col.employee'|trans }}</th>
+                <th class="text-center">{{ 'common.actions'|trans }}</th>
             </tr>
             </thead>
             <tbody>
@@ -408,13 +408,13 @@
                 {# Actions inline #}
                 <td>
                     <div class="d-flex gap-1 justify-content-center">
-                        <a href="{{ path('tache_edit', {id: tache.id}) }}" class="btn-modif" title="Modifier">
+                        <a href="{{ path('tache_edit', {id: tache.id}) }}" class="btn-modif" title="{{ 'common.edit'|trans }}">
                             <i class="bi bi-pencil-square"></i>
                         </a>
                         <form method="POST" action="{{ path('tache_delete', {id: tache.id}) }}"
-                              onsubmit="return confirm('Supprimer « {{ tache.titre }} » ?')" style="margin:0">
+                              onsubmit="return confirm('{{ 'common.delete'|trans }} « {{ tache.titre }} » ?')" style="margin:0">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tache.id) }}">
-                            <button type="submit" class="btn-suppr" title="Supprimer">
+                            <button type="submit" class="btn-suppr" title="{{ 'common.delete'|trans }}">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </form>
@@ -429,10 +429,10 @@
         <div class="tache-empty">
             <i class="bi bi-clipboard-x d-block"></i>
             {% if search or statut != 'Tous' or priorite != 'Toutes' or categorie != 'Toutes' %}
-                <h5>Aucune tâche trouvée avec ces filtres</h5>
-                <a href="{{ path('tache_index') }}" class="btn btn-outline-success mt-2">Réinitialiser les filtres</a>
+                <h5>{{ 'tache.empty_filters'|trans }}</h5>
+                <a href="{{ path('tache_index') }}" class="btn btn-outline-success mt-2">{{ 'tache.reset_filters'|trans }}</a>
             {% else %}
-                <h5>Aucune tâche pour le moment</h5>
+                <h5>{{ 'tache.empty_none'|trans }}</h5>
             {% endif %}
         </div>
         {% endif %}
@@ -450,7 +450,7 @@
             <i class="bi bi-trash3"></i> {{ 'common.delete'|trans }}
         </button>
         <button class="btn-calendrier" id="btnAnalyseIA" onclick="ouvrirAnalyseIA()" disabled style="background:#6c5ce7">
-            <i class="bi bi-cpu-fill"></i> Analyse IA
+            <i class="bi bi-cpu-fill"></i> {{ 'tache.analyse_ia'|trans }}
         </button>
 
         <span class="bottom-info" id="selectionInfo">{{ 'tache.no_selection'|trans }}</span>
@@ -567,7 +567,7 @@ document.querySelectorAll('.tache-table tbody tr').forEach(row => {
         document.getElementById('btnModifier').disabled = false;
         document.getElementById('btnSupprimer').disabled = false;
         document.getElementById('btnAnalyseIA').disabled = false;
-        document.getElementById('selectionInfo').textContent = '✔ Sélectionnée : ' + selTitre;
+        document.getElementById('selectionInfo').textContent = '{{ 'tache.selected'|trans }} ' + selTitre;
     });
 });
 
