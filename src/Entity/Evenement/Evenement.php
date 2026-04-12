@@ -52,7 +52,6 @@ class Evenement
     private ?int $nombrePlacesMax = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
-    #[Assert\NotBlank(message: 'L’organisateur est obligatoire.')]
     #[Assert\Length(max: 255, maxMessage: 'Le nom de l’organisateur ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $organisateur = null;
 

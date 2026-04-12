@@ -73,9 +73,40 @@ class EvenementController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $this->eventStatusSync->syncAll();
+
+        $gs = $statisticsService->getGlobalStatistics();
+
+        // Build event counts per status
+        $byStatus = [];
+        foreach ($gs['eventsByStatus'] as $row) {
+            $byStatus[$row['statut']] = $row['count'];
+        }
+
+        $stats = [
+            ['label' => 'Événements',   'count' => $gs['totalEvents'],         'icon' => 'bi-calendar-event-fill', 'color' => '#667A3F', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Participations','count' => $gs['totalParticipations'], 'icon' => 'bi-people-fill',         'color' => '#3498DB', 'route' => 'app_evenement_participations'],
+            ['label' => 'À venir',      'count' => $byStatus['A_VENIR']  ?? 0, 'icon' => 'bi-hourglass-split',    'color' => '#8BC34A', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'En cours',     'count' => $byStatus['EN_COURS'] ?? 0, 'icon' => 'bi-play-circle-fill',   'color' => '#3498DB', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Terminés',     'count' => $byStatus['TERMINE']  ?? 0, 'icon' => 'bi-check-circle-fill',  'color' => '#95a5a6', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Annulés',      'count' => $byStatus['ANNULE']   ?? 0, 'icon' => 'bi-x-circle-fill',      'color' => '#E74C3C', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Note moyenne', 'count' => $gs['avgRating'],            'icon' => 'bi-star-fill',           'color' => '#F39C12', 'route' => 'app_evenement_statistics'],
+            ['label' => 'Taux présence','count' => $gs['tauxPresence'].'%',    'icon' => 'bi-person-check-fill',  'color' => '#1abc9c', 'route' => 'app_evenement_participations'],
+        ];
+
         return $this->render('evenement/admin_dashboard.html.twig', [
-            'globalStats' => $statisticsService->getGlobalStatistics(),
-            'evenements'  => $evenementRepo->findWithFilters(null, null, null),
+            'stats'    => $stats,
+            'evenements' => $evenementRepo->findWithFilters(null, null, null),
+        ]);
+    }
+
+    // ─── ADMIN LISTE ──────────────────────────────────────────────────────────
+    #[Route('/admin-liste', name: 'app_evenement_admin_liste', methods: ['GET'])]
+    public function adminListe(EvenementRepository $evenementRepo): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->eventStatusSync->syncAll();
+        return $this->render('evenement/admin_liste.html.twig', [
+            'evenements' => $evenementRepo->findWithFilters(null, null, null),
         ]);
     }
 
@@ -100,7 +131,8 @@ class EvenementController extends AbstractController
             $data['userStats'] = $statisticsService->getUserStatistics($user);
         }
 
-        return $this->render('evenement/statistics.html.twig', $data);
+        $template = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_statistiques.html.twig' : 'evenement/statistics.html.twig';
+        return $this->render($template, $data);
     }
 
     #[Route('/calendrier', name: 'app_evenement_calendrier', methods: ['GET'])]
@@ -122,9 +154,8 @@ class EvenementController extends AbstractController
             ];
         }, $events);
 
-        return $this->render('Evenement/calendrier.html.twig', [
-            'calendarEvents' => $calendarEvents,
-        ]);
+        $template = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_calendrier.html.twig' : 'Evenement/calendrier.html.twig';
+        return $this->render($template, ['calendarEvents' => $calendarEvents]);
     }
 
     // ─── MES FAVORIS ─────────────────────────────────────────────────────────
@@ -162,7 +193,8 @@ class EvenementController extends AbstractController
             $participations = $participationRepo->findForCreator($this->getUser());
         }
 
-        return $this->render('evenement/participations.html.twig', [
+        $template = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_participations.html.twig' : 'evenement/participations.html.twig';
+        return $this->render($template, [
             'participations' => $participations,
             'isAdmin'        => $this->isGranted('ROLE_ADMIN'),
         ]);
@@ -180,13 +212,13 @@ class EvenementController extends AbstractController
         $statut = $request->request->get('statut');
         if (!in_array($statut, ['CONFIRME', 'EN_ATTENTE', 'REFUSE', 'ANNULE', 'PRESENT'], true)) {
             $this->addFlash('danger', 'Statut invalide.');
-            return $this->redirectToRoute('app_evenement_participations');
+            return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
         }
 
         $ev = $participation->getEvenement();
         if ($ev->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
             $this->addFlash('danger', 'Non autorisé.');
-            return $this->redirectToRoute('app_evenement_participations');
+            return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
         }
 
         $participation->setStatut($statut);
@@ -206,25 +238,86 @@ class EvenementController extends AbstractController
 
         $em->flush();
         $this->addFlash('success', 'Statut mis à jour.');
-        return $this->redirectToRoute('app_evenement_participations');
+        return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
     }
 
-    // ─── CREATE ──────────────────────────────────────────────────────────────
-    #[Route('/nouveau', name: 'app_evenement_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    // ─── CREATE ──────────────────────────────────────────────────────────────────
+#[Route('/nouveau', name: 'app_evenement_new', methods: ['GET', 'POST'])]
+public function new(Request $request, EntityManagerInterface $em): Response
+{
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+ 
+    /** @var \App\Entity\UserAndDiag\User $user */
+    $user = $this->getUser();
+    $organisateur = trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''));
+    if ($organisateur === '') {
+        $organisateur = $user->getEmail();
+    }
 
-        $evenement = new Evenement();
-        $form = $this->createForm(EvenementType::class, $evenement);
-        $form->handleRequest($request);
+    $evenement = new Evenement();
+    $evenement->setOrganisateur($organisateur);
+    $evenement->setCreateur($user);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ($evenement->getDateFin() < $evenement->getDateDebut()) {
-                $this->addFlash('danger', 'La date de fin doit être ≥ à la date de début.');
-                return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
+    $form = $this->createForm(EvenementType::class, $evenement);
+    $form->handleRequest($request);
+ 
+    if ($form->isSubmitted() && $form->isValid()) {
+        // ── Handle image upload ───────────────────────────────────────────
+        $imageFile = $form->get('imageFile')->getData();
+        if ($imageFile) {
+                $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
+                if (!is_dir($uploadsDir)) {
+                    mkdir($uploadsDir, 0755, true);
+                }
+                $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
+                try {
+                    $imageFile->move($uploadsDir, $newFilename);
+                    $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
+                } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+                    $this->addFlash('danger', "Impossible d'enregistrer l'image.");
+                    $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_new.html.twig' : 'evenement/new.html.twig';
+                    return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
+                }
             }
 
+            $em->persist($evenement);
+            $em->flush();
+
+            $this->addFlash('success', 'Événement créé avec succès !');
+            return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+        }
+ 
+    $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_new.html.twig' : 'evenement/new.html.twig';
+    return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
+}
+
+// ─── EDIT ────────────────────────────────────────────────────────────────────
+#[Route('/{id}/modifier', name: 'app_evenement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+public function edit(Request $request, Evenement $evenement, EntityManagerInterface $em): Response
+{
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+ 
+    if ($evenement->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
+        $this->addFlash('danger', 'Non autorisé.');
+        return $this->redirectToRoute('app_evenement_index');
+    }
+ 
+    $form = $this->createForm(EvenementType::class, $evenement);
+    $form->handleRequest($request);
+ 
+    if ($form->isSubmitted()) {
+        /** @var \App\Entity\UserAndDiag\User $creator */
+        $creator = $evenement->getCreateur();
+        if ($creator) {
+            $organisateur = trim(($creator->getNom() ?? '') . ' ' . ($creator->getPrenom() ?? ''));
+            if ($organisateur === '') {
+                $organisateur = $creator->getEmail();
+            }
+            $evenement->setOrganisateur($organisateur);
+        }
+
+        if ($form->isValid()) {
+            // ── Handle image upload ───────────────────────────────────────────
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
                 $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
@@ -234,23 +327,24 @@ class EvenementController extends AbstractController
                 $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
                 try {
                     $imageFile->move($uploadsDir, $newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Impossible d\'enregistrer l\'image.');
-                    return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
+                    $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
+                } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+                    $this->addFlash('danger', "Impossible d'enregistrer l'image.");
+                    $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_edit.html.twig' : 'evenement/edit.html.twig';
+                    return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
                 }
-                $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
             }
 
-            $evenement->setCreateur($this->getUser());
-            $em->persist($evenement);
             $em->flush();
-            $this->addFlash('success', 'Événement créé avec succès !');
+            $this->addFlash('success', 'Événement modifié avec succès !');
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
         }
-
-        return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
     }
-
+ 
+    $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_edit.html.twig' : 'evenement/edit.html.twig';
+    return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
+}
+ 
     // ─── SHOW ────────────────────────────────────────────────────────────────
     #[Route('/{id}', name: 'app_evenement_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(
@@ -291,7 +385,8 @@ class EvenementController extends AbstractController
             fn($p) => $p->getNote() > 0
         );
 
-        return $this->render('evenement/show.html.twig', [
+        $template = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_show.html.twig' : 'evenement/show.html.twig';
+        return $this->render($template, [
             'evenement'         => $evenement,
             'isFavori'          => $isFavori,
             'userParticipation' => $userParticipation,
@@ -336,49 +431,7 @@ class EvenementController extends AbstractController
         return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
     }
 
-    // ─── EDIT ────────────────────────────────────────────────────────────────
-    #[Route('/{id}/modifier', name: 'app_evenement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
-    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $em): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        if ($evenement->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('danger', 'Non autorisé.');
-            return $this->redirectToRoute('app_evenement_index');
-        }
-
-        $form = $this->createForm(EvenementType::class, $evenement);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ($evenement->getDateFin() < $evenement->getDateDebut()) {
-                $this->addFlash('danger', 'La date de fin doit être ≥ à la date de début.');
-                return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
-            }
-
-            $imageFile = $form->get('imageFile')->getData();
-            if ($imageFile) {
-                $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
-                if (!is_dir($uploadsDir)) {
-                    mkdir($uploadsDir, 0755, true);
-                }
-                $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
-                try {
-                    $imageFile->move($uploadsDir, $newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Impossible d\'enregistrer l\'image.');
-                    return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
-                }
-                $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
-            }
-
-            $em->flush();
-            $this->addFlash('success', 'Événement modifié avec succès !');
-            return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
-        }
-
-        return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
-    }
 
     // ─── DELETE ──────────────────────────────────────────────────────────────
     #[Route('/{id}/supprimer', name: 'app_evenement_delete', methods: ['POST'], requirements: ['id' => '\d+'])]

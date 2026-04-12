@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Événements - Ardhi Admin{% endblock %}</title>
+  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+  {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <a href="{{ path('admin_dashboard') }}" class="sidebar-brand">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" class="sidebar-logo">
+        <span>Ardhi Admin</span>
+      </a>
+      <button class="sidebar-close d-lg-none" id="sidebarClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    {% set current_route = app.request.attributes.get('_route') %}
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Navigation</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ path('admin_dashboard') }}">
+            <i class="bi bi-grid-fill"></i><span>Portail Global</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-section-title">Module: Événements</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_admin_dashboard' ? 'active' : '' }}" href="{{ path('app_evenement_admin_dashboard') }}">
+            <i class="bi bi-speedometer2 text-warning"></i><span>Tableau de bord</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_admin_liste' ? 'active' : '' }}" href="{{ path('app_evenement_admin_liste') }}">
+            <i class="bi bi-table text-warning"></i><span>Liste des événements</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_participations' ? 'active' : '' }}" href="{{ path('app_evenement_participations') }}">
+            <i class="bi bi-people-fill text-warning"></i><span>Participations</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_statistics' ? 'active' : '' }}" href="{{ path('app_evenement_statistics') }}">
+            <i class="bi bi-graph-up text-warning"></i><span>Statistiques</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_calendrier' ? 'active' : '' }}" href="{{ path('app_evenement_calendrier') }}">
+            <i class="bi bi-calendar3 text-warning"></i><span>Calendrier</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_evenement_new' ? 'active' : '' }}" href="{{ path('app_evenement_new') }}">
+            <i class="bi bi-plus-circle-fill text-warning"></i><span>Nouvel Événement</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-section-title">Compte</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ path('app_logout') }}">
+            <i class="bi bi-box-arrow-left"></i><span>Déconnexion</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <!-- Top Navbar -->
+    <header class="admin-topbar">
+      <button class="sidebar-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">{% block page_title %}Événements{% endblock %}</h1>
+      <div class="topbar-right">
+        <a href="{{ path('app_profile') }}" class="topbar-user text-decoration-none" style="color:inherit;">
+          <i class="bi bi-person-circle"></i>
+          {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
+        </a>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="alert alert-{{ label }} alert-dismissible fade show mx-4 mt-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <!-- Page Content -->
+    <main class="admin-content">
+      {% block body %}{% endblock %}
+    </main>
+  </div>
+
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+    const toggle = document.getElementById('sidebarToggle');
+    const close  = document.getElementById('sidebarClose');
+    const sidebar  = document.getElementById('adminSidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    function openSidebar()  { sidebar.classList.add('open');    overlay.classList.add('active'); }
+    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+    if (toggle)  toggle.addEventListener('click', openSidebar);
+    if (close)   close.addEventListener('click',  closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+  </script>
+  {% block javascripts %}{% endblock %}
+</body>
+</html>

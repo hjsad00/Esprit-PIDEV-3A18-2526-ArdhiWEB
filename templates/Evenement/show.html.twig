@@ -248,15 +248,29 @@
             <div class="table-responsive">
               <table class="table table-sm align-middle">
                 <thead class="table-light">
-                  <tr><th>Nom</th><th>Statut</th><th>Inscrit le</th></tr>
+                  <tr><th>Nom</th><th>Statut</th><th>Inscrit le</th><th class="text-end">Action</th></tr>
                 </thead>
                 <tbody>
                   {% for p in evenement.participations %}
                   {% if p.statut != 'ANNULE' %}
                   <tr>
                     <td>{{ p.utilisateur.prenom }} {{ p.utilisateur.nom }}</td>
-                    <td><span class="badge bg-{{ p.statut=='CONFIRME' ? 'success' : p.statut=='PRESENT' ? 'info' : 'warning text-dark' }}">{{ p.statut }}</span></td>
-                    <td>{{ p.dateInscription|date('d/m/Y') }}</td>
+                    <td>
+                      <span class="badge bg-{{ p.statut=='CONFIRME' ? 'success' : p.statut=='PRESENT' ? 'info' : 'warning text-dark' }}">
+                        {{ p.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}
+                      </span>
+                    </td>
+                    <td style="font-size:.85rem;color:#6b7280;">{{ p.dateInscription|date('d/m/Y') }}</td>
+                    <td class="text-end">
+                      <form method="post" action="{{ path('app_evenement_participation_update', {id: p.id}) }}" class="d-flex gap-2 justify-content-end">
+                        <select name="statut" class="form-select form-select-sm" style="width:130px;font-size:0.75rem;">
+                          {% for code, label in {'CONFIRME':'Confirmer','EN_ATTENTE':'En attente','PRESENT':'Present','REFUSE':'Refuser','ANNULE':'Annuler'} %}
+                            <option value="{{ code }}" {% if p.statut == code %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-success px-2 py-0" style="font-size:0.75rem;font-weight:700;">OK</button>
+                      </form>
+                    </td>
                   </tr>
                   {% endif %}
                   {% endfor %}

@@ -1,30 +1,12 @@
 {% extends 'evenement/admin_layout.html.twig' %}
-{% block title %}Gestion des Événements - Ardhi Admin{% endblock %}
-{% block page_title %}Gestion des Événements{% endblock %}
+{% block title %}Liste des Événements - Ardhi Admin{% endblock %}
+{% block page_title %}Liste des Événements{% endblock %}
 
 {% block body %}
-{# ── Stat cards — same markup/CSS as the diags dashboard ── #}
-<div class="row g-4 mb-4">
-  {% for stat in stats %}
-  <div class="col-xl-3 col-lg-4 col-md-6">
-    <a href="{{ path(stat.route) }}" class="stat-card" style="--card-accent: {{ stat.color }};">
-      <div class="stat-icon" style="background: {{ stat.color }}1a; color: {{ stat.color }};">
-        <i class="bi {{ stat.icon }}"></i>
-      </div>
-      <div class="stat-info">
-        <span class="stat-count">{{ stat.count }}</span>
-        <span class="stat-label">{{ stat.label }}</span>
-      </div>
-    </a>
-  </div>
-  {% endfor %}
-</div>
-
-{# ── Events table ── #}
 <div class="card shadow-sm">
   <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
     <h5 class="fw-bold mb-0" style="font-size:.95rem;color:#1a2e05;">
-      <i class="bi bi-table me-2 text-success"></i>Tous les événements
+      <i class="bi bi-table me-2 text-warning"></i>Tous les événements ({{ evenements|length }})
     </h5>
     <a href="{{ path('app_evenement_new') }}" class="btn btn-sm btn-success">
       <i class="bi bi-plus-lg me-1"></i>Créer
@@ -36,9 +18,11 @@
         <thead class="table-light">
           <tr>
             <th>Titre</th>
+            <th>Organisateur</th>
             <th>Type</th>
             <th>Statut</th>
             <th>Date début</th>
+            <th>Date fin</th>
             <th>Places</th>
             <th class="text-end">Actions</th>
           </tr>
@@ -46,7 +30,8 @@
         <tbody>
           {% for e in evenements %}
           <tr>
-            <td class="fw-semibold" style="font-size:.9rem;">{{ e.titre|slice(0,42) }}</td>
+            <td class="fw-semibold" style="font-size:.9rem;">{{ e.titre|slice(0,38) }}</td>
+            <td style="font-size:.85rem;color:#6b7280;">{{ e.organisateur ?? '-' }}</td>
             <td>
               <span class="badge {{ e.type=='FOIRE' ? 'bg-primary' : e.type=='FORMATION' ? 'bg-dark' : e.type=='CONFERENCE' ? 'bg-warning text-dark' : 'bg-success' }}">
                 {{ e.type }}
@@ -58,19 +43,26 @@
               </span>
             </td>
             <td style="white-space:nowrap;font-size:.84rem;">{{ e.dateDebut|date('d/m/Y') }}</td>
+            <td style="white-space:nowrap;font-size:.84rem;">{{ e.dateFin|date('d/m/Y') }}</td>
             <td style="font-size:.84rem;">{{ e.nombreParticipants }}/{{ e.nombrePlacesMax }}</td>
             <td class="text-end">
-              <a href="{{ path('app_evenement_show', {id: e.id}) }}" class="btn btn-sm btn-outline-success me-1">Voir</a>
-              <a href="{{ path('app_evenement_edit', {id: e.id}) }}" class="btn btn-sm btn-success me-1">Modifier</a>
+              <a href="{{ path('app_evenement_show', {id: e.id}) }}" class="btn btn-sm btn-outline-success me-1" title="Voir">
+                <i class="bi bi-eye-fill"></i>
+              </a>
+              <a href="{{ path('app_evenement_edit', {id: e.id}) }}" class="btn btn-sm btn-success me-1" title="Modifier">
+                <i class="bi bi-pencil-fill"></i>
+              </a>
               <form method="post" action="{{ path('app_evenement_delete', {id: e.id}) }}" class="d-inline"
-                    onsubmit="return confirm('Supprimer cet événement ?')">
+                    onsubmit="return confirm('Supprimer « {{ e.titre|slice(0,30) }} » ?')">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete'~e.id) }}">
-                <button type="submit" class="btn btn-sm btn-danger">Supp.</button>
+                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center text-muted py-4">Aucun événement trouvé.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">Aucun événement trouvé.</td></tr>
           {% endfor %}
         </tbody>
       </table>
