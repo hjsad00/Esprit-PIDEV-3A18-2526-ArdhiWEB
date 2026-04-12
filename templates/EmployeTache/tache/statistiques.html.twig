@@ -667,13 +667,13 @@ new Chart(document.getElementById('statutPieChart'), {
 
 // ── Priorités : Bar chart ──────────────────────────────────
 const prioData = {{ priorites|json_encode|raw }};
-const prioLabels = {1:'Basse', 2:'Moyenne', 3:'Haute', 4:'Critique'};
+const prioLabels = {1:'{{ 'tache.form.priority_low'|trans|e('js') }}', 2:'{{ 'tache.form.priority_medium'|trans|e('js') }}', 3:'{{ 'tache.form.priority_high'|trans|e('js') }}', 4:'{{ 'tache.form.priority_critical'|trans|e('js') }}'};
 new Chart(document.getElementById('prioriteBarChart'), {
     type: 'bar',
     data: {
         labels: Object.keys(prioData).map(k => prioLabels[k] || k),
         datasets: [{
-            label: 'Tâches',
+            label: '{{ 'tache.stats_page.tasks'|trans|e('js') }}',
             data: Object.values(prioData),
             backgroundColor: ['#81C784', '#4CAF50', '#2E7D32', '#1B5E20'],
             borderColor: ['#66BB6A', '#43A047', '#1B5E20', '#0a3d0a'],
@@ -689,11 +689,11 @@ new Chart(document.getElementById('prioriteBarChart'), {
                 beginAtZero: true,
                 ticks: { stepSize: 1, font: { family: 'Inter' } },
                 grid: { color: 'rgba(0,0,0,.05)' },
-                title: { display: true, text: 'Nombre', font: { family: 'Inter', weight: 600 } }
+                title: { display: true, text: '{{ 'tache.stats_page.count'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
             },
             x: {
                 grid: { display: false },
-                title: { display: true, text: 'Priorité', font: { family: 'Inter', weight: 600 } }
+                title: { display: true, text: '{{ 'tache.stats_page.priority'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
             }
         },
         plugins: { legend: { display: false } }
@@ -708,7 +708,7 @@ if (empStats.length > 0) {
         data: {
             labels: empStats.map(e => e.nom),
             datasets: [{
-                label: 'Tâches assignées',
+                label: '{{ 'tache.stats_page.tasks'|trans|e('js') }}',
                 data: empStats.map(e => e.total),
                 backgroundColor: empStats.map((_, i) => greens[i % greens.length]),
                 borderColor: empStats.map((_, i) => greensBorder[i % greensBorder.length]),
@@ -724,11 +724,11 @@ if (empStats.length > 0) {
                     beginAtZero: true,
                     ticks: { stepSize: 1, font: { family: 'Inter' } },
                     grid: { color: 'rgba(0,0,0,.05)' },
-                    title: { display: true, text: 'Nombre', font: { family: 'Inter', weight: 600 } }
+                    title: { display: true, text: '{{ 'tache.stats_page.count'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
                 },
                 y: {
                     grid: { display: false },
-                    title: { display: true, text: 'Employé', font: { family: 'Inter', weight: 600 } }
+                    title: { display: true, text: '{{ 'tache.stats_page.employee'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
                 }
             },
             plugins: { legend: { display: false } }
@@ -744,7 +744,7 @@ if (evolData.length > 0) {
         data: {
             labels: evolData.map(e => e.date),
             datasets: [{
-                label: 'Nouvelles tâches',
+                label: '{{ 'tache.stats_page.tab_evolution'|trans|e('js') }}',
                 data: evolData.map(e => e.total),
                 borderColor: '#2E7D32',
                 backgroundColor: 'rgba(46,125,50,.12)',
@@ -765,11 +765,11 @@ if (evolData.length > 0) {
                     beginAtZero: true,
                     ticks: { stepSize: 1, font: { family: 'Inter' } },
                     grid: { color: 'rgba(0,0,0,.06)' },
-                    title: { display: true, text: 'Nombre de tâches', font: { family: 'Inter', weight: 600 } }
+                    title: { display: true, text: '{{ 'tache.stats_page.count'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
                 },
                 x: {
                     grid: { color: 'rgba(0,0,0,.04)' },
-                    title: { display: true, text: 'Date', font: { family: 'Inter', weight: 600 } }
+                    title: { display: true, text: '{{ 'tache.sort.start_date'|trans|e('js') }}', font: { family: 'Inter', weight: 600 } }
                 }
             },
             plugins: { legend: { position: 'bottom' } }

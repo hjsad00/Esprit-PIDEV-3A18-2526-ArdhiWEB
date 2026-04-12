@@ -95,16 +95,16 @@ class ChatbotService
         if (preg_match('/compar|compare|top\s*3|top\s*trois|meilleur.*3|3.*meilleur|classement.*employe|podium|مقارنة/iu', $message)) {
             return "COMPARER_TOP3";
         }
-        if (preg_match('/recommand|suggest|recommend|propose|meilleur.*(?:employ|pour)|assign|qui peut|trouve.*employ|donne.*employ|best.*employ|who can|find.*employ|يوصي|اوصي|ينصح|من يستطيع|الأفضل/iu', $message)) {
+        if (preg_match('/recommand|suggest|recommend|propose|meilleur.*(?:employ|pour)|assign|qui peut|trouve.*employ|donne.*employ|best.*employ|who can|find.*employ|يوصي|اوصي|ينصح|توصية|من يستطيع|الأفضل/iu', $message)) {
             return "RECOMMANDER_EMPLOYE";
         }
         if (preg_match('/qui sait|comp[eé]tence|connai[ts]|ma[iî]trise|expert|capable|proficient|who knows|skilled|يعرف|خبير|مهارة/iu', $message)) {
             return "RECHERCHER_COMPETENCE";
         }
-        if (preg_match('/performance|évaluation|evaluation|classement|statistique|meilleur|top|ranking|أداء|تقييم|ترتيب/iu', $message)) {
+        if (preg_match('/performance|évaluation|evaluation|classement|statistique|meilleur|top|ranking|أداء|الأداء|تقييم|ترتيب/iu', $message)) {
             return "ANALYSER_PERFORMANCE";
         }
-        if (preg_match('/disponib|libre|occup|charge|peut.*prendre|available|free|workload|متاح|حر|متفرغ/iu', $message)) {
+        if (preg_match('/disponib|libre|occup|charge|peut.*prendre|available|free|workload|متاح|حر|متفرغ|التوفر/iu', $message)) {
             return "DISPONIBILITE";
         }
         if (preg_match('/^aide$|^help$|comment.*utilis|que.*peux.*faire|what can you|مساعدة/iu', $message)) {
@@ -143,7 +143,7 @@ class ChatbotService
 
         $tache = $this->tacheRepository->find($idTache);
         if (!$tache) {
-            $response->reponse = "❌ Tâche introuvable.";
+            $response->reponse = $this->translator->trans('chatbot.reco.task_not_found', [], null, $lang);
             return $response;
         }
 
@@ -160,9 +160,9 @@ class ChatbotService
             $r->scoreDisponibilite = 50.0;
             $r->scoreExperience = $perf['tauxReussite'];
             $r->indiceConfiance = 90.0;
-            $r->raisonRecommandation = "Déjà assigné à cette tâche.";
+            $r->raisonRecommandation = $this->translator->trans('chatbot.reco.already_assigned_reason', [], null, $lang);
             
-            $response->reponse = "✅ Employé(s) déjà assigné(s) à \"" . $tache->getTitre() . "\"";
+            $response->reponse = $this->translator->trans('chatbot.reco.already_assigned', ['%task%' => $tache->getTitre()], null, $lang);
             $response->recommandations[] = $r;
             return $response;
         }
@@ -192,11 +192,11 @@ class ChatbotService
         $results = $this->matchingService->recommanderEmployes($idTache, 3);
 
         if (count($results) < 2) {
-            $response->reponse = "😕 Moins de 2 employés disponibles pour cette tâche.";
+            $response->reponse = $this->translator->trans('chatbot.compare.not_enough_employees', [], null, $lang);
             return $response;
         }
 
-        $response->reponse = "🏆 **Comparaison Top 3 pour \"" . $tache->getTitre() . "\"**";
+        $response->reponse = $this->translator->trans('chatbot.compare.title', ['%task%' => $tache->getTitre()], null, $lang);
         $response->recommandations = $results;
         return $response;
     }
@@ -209,7 +209,7 @@ class ChatbotService
         if ($competence) {
             $employes = $this->rechercherEmployesActifsParCompetence($competence, $idAgriculteur);
             if (!empty($employes)) {
-                $sb = "🔍 **" . count($employes) . " employé(s) avec \"" . $competence . "\" :**\n";
+                $sb = $this->translator->trans('chatbot.skills.found_title', ['%count%' => count($employes), '%comp%' => $competence], null, $lang) . "\n";
                 foreach (array_slice($employes, 0, 5) as $emp) {
                     $sb .= "\n👤 **" . $emp->getPrenom() . " " . $emp->getNom() . "**";
                     if ($emp->getPoste()) $sb .= " — " . $emp->getPoste();
@@ -233,11 +233,16 @@ class ChatbotService
         $avecTaches = array_slice($avecTaches, 0, 5);
 
         if (!empty($avecTaches)) {
-            $sb = "📊 **Classement des Top Performeurs :**\n\n";
+            $sb = $this->translator->trans('chatbot.performance.title', [], null, $lang) . "\n\n";
             $medals = ["🥇", "🥈", "🥉", "🏅", "⭐"];
             foreach ($avecTaches as $i => $p) {
                 $medal = $medals[$i] ?? "⭐️";
-                $sb .= sprintf("%s **#%d - %s**\n   💼 Score: %.1f/100 — %s\n", $medal, $i+1, $p['nomEmploye'], $p['score'], $this->performanceService->getAppreciation($p['score']));
+                $scoreLine = $this->translator->trans('chatbot.performance.score_line', [
+                    '%score%' => sprintf('%.1f', $p['score']),
+                    '%appreciation%' => $this->performanceService->getAppreciation($p['score'])
+                ], null, $lang);
+                
+                $sb .= sprintf("%s **#%d - %s**\n   %s\n", $medal, $i+1, $p['nomEmploye'], $scoreLine);
             }
             $response->reponse = $sb;
         } else {
@@ -249,13 +254,13 @@ class ChatbotService
     private function traiterDisponibilite(int $idAgriculteur, string $lang): ChatbotResponse
     {
         $response = new ChatbotResponse();
-        $dispos = $this->getDisponibilitesActifs($idAgriculteur);
+        $dispos = $this->getDisponibilitesActifs($idAgriculteur, $lang);
 
         if (!empty($dispos)) {
-            $response->reponse = "📅 **Disponibilité des " . count($dispos) . " employés actifs :**\n🟢 Disponible • 🟡 Modéré • 🔴 Surchargé";
+            $response->reponse = $this->translator->trans('chatbot.availability.title_with_modes', ['%count%' => count($dispos)], null, $lang);
             $response->disponibilites = $dispos;
         } else {
-            $response->reponse = "📅 Aucune information de disponibilité.";
+            $response->reponse = $this->translator->trans('chatbot.availability.no_info', [], null, $lang);
         }
         return $response;
     }
@@ -356,20 +361,20 @@ class ChatbotService
     /**
      * @return array
      */
-    private function getDisponibilitesActifs(int $idAgriculteur): array
+    private function getDisponibilitesActifs(int $idAgriculteur, string $lang = 'fr'): array
     {
         $employes = $this->employeRepository->findActifsByAgriculteur($idAgriculteur);
         $dispos = [];
         foreach ($employes as $emp) {
             $tachesEnCours = $this->tacheRepository->countTachesActivesParEmploye($emp->getId(), $idAgriculteur);
             
-            $statut = "Disponible";
+            $statut = $this->translator->trans('status.available', [], null, $lang);
             $color = "#27ae60";
             if ($tachesEnCours > 0 && $tachesEnCours <= 2) {
-                $statut = "Modéré";
+                $statut = $this->translator->trans('status.moderate', [], null, $lang);
                 $color = "#f39c12";
             } elseif ($tachesEnCours > 2) {
-                $statut = "Surchargé";
+                $statut = $this->translator->trans('status.overloaded', [], null, $lang);
                 $color = "#e74c3c";
             }
 

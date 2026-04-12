@@ -87,7 +87,7 @@ class EmployeController extends AbstractController
         foreach ($employes as $emp) {
             $perf = $this->performanceService->calculatePerformance($emp->getId());
             $performanceMap[$emp->getId()] = $perf;
-            if ($emp->isActif() && $perf['totalTaches'] > 0) {
+            if ($emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
                 $perfSort[] = ['emp' => $emp, 'perf' => $perf];
             }
         }

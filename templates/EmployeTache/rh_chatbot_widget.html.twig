@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
             removeTypingIndicator();
 
             if (data.error) {
-                appendMessage('bot', "Désolé, j'ai rencontré une erreur : " + data.error);
+                appendMessage('bot', "{{ 'chatbot.error.server_returned_error'|trans|e('js') }}" + data.error);
             } else {
                 appendMessage('bot', data.reponse);
                 
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Chatbot Error:', error);
             removeTypingIndicator();
-            appendMessage('bot', "Oups ! Je n'arrive pas à joindre le serveur.");
+            appendMessage('bot', "{{ 'chatbot.error.network'|trans|e('js') }}");
         }
         
         scrollToBottom();

@@ -61,6 +61,13 @@
         [dir="rtl"] .hero-headline br {
             display: none;
         }
+        
+        .hero-description {
+            font-size: 1.05rem; /* Rendre un petit peu plus petit en haut */
+            line-height: 1.5;
+            max-width: 600px;
+            opacity: 0.9;
+        }
         [dir="rtl"] .category-item {
             flex-direction: row-reverse;
             text-align: right;
@@ -94,15 +101,20 @@
           <div class="hero-left">
             <div class="hero-label">{{ 'dashboard.rh_label'|trans }}</div>
             <h1 class="hero-headline">
-              {{ 'dashboard.title'|trans|raw|replace({'Employés': 'employés<br>', 'Tâches': 'tâches'}) }}
+              {{ 'dashboard.title'|trans|raw|replace({'Employés': 'employés ', 'Tâches': 'tâches'}) }}
             </h1>
             <p class="hero-description">
               {{ 'dashboard.subtitle'|trans }}
             </p>
 
-            <a href="{{ path('employe_index') }}" class="hero-btn-primary">
+            <a href="{{ path('employe_index') }}" class="hero-btn-primary" style="margin-bottom: 2rem;">
               <i class="bi bi-people"></i> {{ 'employe.go_tasks'|trans }}
             </a>
+            
+            <!-- Widget Météo Agricole moved to left -->
+            <div style="margin-top: 1rem; max-width: 90%;">
+               {{ render(controller('App\\Controller\\EmployeTache\\MeteoController::widgetMeteo')) }}
+            </div>
           </div>
 
           <div class="hero-right">
@@ -137,10 +149,6 @@
               {# GESTION EMPLOYES — FIN DE LISTE #}
             </div>
 
-            <!-- Widget Météo Agricole -->
-            <div style="margin-top: 2rem;">
-               {{ render(controller('App\\Controller\\EmployeTache\\MeteoController::widgetMeteo')) }}
-            </div>
           </div>
 
         </div>

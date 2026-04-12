@@ -252,11 +252,11 @@
             <a href="{{ path('tache_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
                 <i class="bi bi-arrow-clockwise"></i> {{ 'common.refresh'|trans }}
             </a>
-            <a href="{{ path('tache_pdf') }}" target="_blank" class="btn-actualiser" style="background:#1B5E20;color:white;border-color:#1B5E20;">
-                <i class="bi bi-file-earmark-pdf-fill"></i> {{ 'common.export_pdf'|trans }}
+            <a href="{{ path('tache_pdf') }}" target="_blank" class="btn btn-danger" style="border-radius:8px">
+                <i class="bi bi-file-earmark-pdf-fill"></i> {{ 'common.export_pdf'|trans|replace({'📄 ': ''}) }}
             </a>
-            <a href="{{ path('tache_statistiques') }}" class="btn-actualiser" style="background:#2E7D32;color:white;border-color:#2E7D32;">
-                <i class="bi bi-bar-chart-line-fill"></i> {{ 'common.statistics'|trans }}
+            <a href="{{ path('tache_statistiques') }}" class="btn btn-info text-white" style="border-radius:8px">
+                <i class="bi bi-bar-chart-line-fill"></i> {{ 'common.statistics'|trans|replace({'📊 ': ''}) }}
             </a>
         </div>
     </div>
@@ -379,23 +379,49 @@
                         'Validé':     'st-valide',
                         'Annulé':     'st-annule'
                     } %}
+                    {% set statutKeyMap = {
+                        'En attente': 'tache.status.en_attente',
+                        'En cours':   'tache.status.en_cours',
+                        'Terminé':    'tache.status.termine',
+                        'Validé':     'tache.status.valide',
+                        'Annulé':     'tache.status.annule'
+                    } %}
                     <span class="st-badge {{ stClass[tache.statut] ?? 'st-attente' }}">
-                        {{ tache.statutIcone }} {{ tache.statut }}
+                        {{ tache.statutIcone }} {{ (statutKeyMap[tache.statut] ?? tache.statut)|trans }}
                     </span>
                     {% if tache.isEnRetard %}
-                        <span class="badge-retard">En at...</span>
+                        <span class="badge-retard">{{ 'tache.stats.overdue'|trans }}</span>
                     {% endif %}
                 </td>
 
                 {# Priorité colorée — identique au desktop #}
                 <td>
                     {% set prioClass = {1:'prio-basse', 2:'prio-moyenne', 3:'prio-haute', 4:'prio-critique'} %}
+                    {% set prioKeys = {1:'tache.form.priority_low', 2:'tache.form.priority_medium', 3:'tache.form.priority_high', 4:'tache.form.priority_critical'} %}
                     <span class="{{ prioClass[tache.priorite] ?? 'prio-moyenne' }}">
-                        {{ tache.prioriteLabel }}
+                        {{ (prioKeys[tache.priorite] ?? 'tache.form.priority_medium')|trans }}
                     </span>
                 </td>
 
-                <td>{{ tache.categorie ?? '—' }}</td>
+                <td>
+                    {% set catKeyMap = {
+                        'Plantation': 'tache.category.plantation',
+                        'Récolte': 'tache.category.recolte',
+                        'Irrigation': 'tache.category.irrigation',
+                        'Fertilisation': 'tache.category.fertilisation',
+                        'Maintenance': 'tache.category.maintenance',
+                        'Administratif': 'tache.category.administratif',
+                        'Autre': 'tache.category.autre',
+                        'Nettoyage': 'tache.category.nettoyage',
+                        'Logistique': 'tache.category.logistique',
+                        'Formation': 'tache.category.formation',
+                        'Analyse': 'tache.category.analyse',
+                        'Gestion': 'tache.category.gestion',
+                        'Énergie': 'tache.category.energie',
+                        'Planification': 'tache.category.planification'
+                    } %}
+                    {{ tache.categorie ? (catKeyMap[tache.categorie] is defined ? (catKeyMap[tache.categorie])|trans : tache.categorie) : '—' }}
+                </td>
                 <td>{{ tache.dateDebut ? tache.dateDebut|date('d/m/Y') : '—' }}</td>
                 <td>
                     {{ tache.dateFin ? tache.dateFin|date('d/m/Y') : '—' }}

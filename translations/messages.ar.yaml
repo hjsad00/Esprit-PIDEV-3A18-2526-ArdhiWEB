@@ -1,415 +1,442 @@
 common:
-    back: "← رجوع"
-    add: "➕ إضافة"
-    edit: "✏️ تعديل"
-    delete: "🗑️ حذف"
-    refresh: "🔄 تحديث"
-    search: "🔍 بحث"
-    export_pdf: "📄 PDF"
-    statistics: "📊 إحصائيات"
+    back: '← رجوع'
+    add: '➕ إضافة'
+    edit: '✏️ تعديل'
+    delete: '🗑️ حذف'
+    refresh: '🔄 تحديث'
+    search: '🔍 بحث'
+    export_pdf: '📄 PDF'
+    statistics: '📊 إحصائيات'
     sort:
-        asc: "⬆"
-        desc: "⬇"
-        by: "ترتيب حسب :"
-    language: "اللغة"
-    actions: "الإجراءات"
-    save_changes: "حفظ التغييرات"
-    total: "المجموع"
-    success: "تمت العملية بنجاح"
-    error: "خطأ"
-    todo: "للقيام به"
-    active: "مفعل"
-    inactive: "معطل"
-    view: "عرض"
-    loading_time: "تم التحميل في %ms%ms"
-    high: "مرتفع"
-    medium: "متوسط"
-    low: "منخفض"
-    none: "منعدم"
-    moderate: "معتدل"
-    high_load: "مرتفع"
-    id: "المعرف"
-    generated_by: "تم إنشاء المستند بواسطة %name% في %date%"
-    cancel: "إلغاء"
-    status: "الحالة"
-    priority: "الأولوية"
-    category: "الفئة"
-    reset: "إعادة تعيين"
-    all: "الكل"
-    all_f: "الكل"
-    ascending: "تصاعدي"
-    descending: "تنازلي"
-    close: "إغلاق"
-
+        asc: ⬆
+        desc: ⬇
+        by: 'ترتيب حسب :'
+    language: اللغة
+    actions: الإجراءات
+    save_changes: 'حفظ التغييرات'
+    total: المجموع
+    success: 'تمت العملية بنجاح'
+    error: خطأ
+    todo: 'للقيام به'
+    active: مفعل
+    inactive: معطل
+    view: عرض
+    loading_time: 'تم التحميل في %ms%ms'
+    high: مرتفع
+    medium: متوسط
+    low: منخفض
+    none: منعدم
+    moderate: معتدل
+    high_load: مرتفع
+    id: المعرف
+    generated_by: 'تم إنشاء المستند بواسطة %name% في %date%'
+    cancel: إلغاء
+    status: الحالة
+    priority: الأولوية
+    category: الفئة
+    reset: 'إعادة تعيين'
+    all: الكل
+    all_f: الكل
+    ascending: تصاعدي
+    descending: تنازلي
+    close: إغلاق
 dashboard:
-    title: "إدارة الموظفين والمهام"
-    subtitle: "قم بإدارة موظفيك وتتبع مهامهم في الوقت الفعلي. حسّن تنظيم مزرعتك."
-    manage_employees: "إدارة موظفيّ"
-    home: "← الرئيسية"
-    services: "الخدمات المتاحة"
-    role: "إدارة الموظفين"
-    logout: "تسجيل الخروج"
+    title: 'إدارة الموظفين والمهام'
+    subtitle: 'قم بإدارة موظفيك وتتبع مهامهم في الوقت الفعلي. حسّن تنظيم مزرعتك.'
+    manage_employees: 'إدارة موظفيّ'
+    home: '← الرئيسية'
+    services: 'الخدمات المتاحة'
+    role: 'إدارة الموظفين'
+    logout: 'تسجيل الخروج'
     card:
-        employees: "الموظفون"
-        employees_desc: "إدارة فريقك"
-        tasks: "المهام"
-        tasks_desc: "تتبع الأنشطة"
-        diagnostic: "تشخيص بالذكاء الاصطناعي"
-        diagnostic_desc: "تحليل الأمراض"
-        marketplace: "السوق"
-        marketplace_desc: "بيع وشراء"
-        events: "الأحداث"
-        events_desc: "التقويم الزراعي"
-        cultures: "المحاصيل"
-        cultures_desc: "متابعة القطع"
-        maintenance: "الصيانة"
-        maintenance_desc: "إدارة المعدات"
-        notifications: "الإشعارات"
-        notifications_desc: "التنبيهات والرسائل"
+        employees: الموظفون
+        employees_desc: 'إدارة فريقك'
+        tasks: المهام
+        tasks_desc: 'تتبع الأنشطة'
+        diagnostic: 'تشخيص بالذكاء الاصطناعي'
+        diagnostic_desc: 'تحليل الأمراض'
+        marketplace: السوق
+        marketplace_desc: 'بيع وشراء'
+        events: الأحداث
+        events_desc: 'التقويم الزراعي'
+        cultures: المحاصيل
+        cultures_desc: 'متابعة القطع'
+        maintenance: الصيانة
+        maintenance_desc: 'إدارة المعدات'
+        notifications: الإشعارات
+        notifications_desc: 'التنبيهات والرسائل'
     nav:
-        diagnostic: "تشخيص IA"
-        marketplace: "السوق"
-        maintenance: "الصيانة"
-        cultures: "المحاصيل"
-        events: "الأحداث"
-        employees: "الموظفون"
-        tasks: "المهام"
-    bienvenue: "أهلاً بك، %name%"
-    rh_label: "ARDHI لإدارة الموارد البشرية"
-
+        diagnostic: 'تشخيص IA'
+        marketplace: السوق
+        maintenance: الصيانة
+        cultures: المحاصيل
+        events: الأحداث
+        employees: الموظفون
+        tasks: المهام
+    bienvenue: 'أهلاً بك، %name%'
+    rh_label: 'ARDHI لإدارة الموارد البشرية'
 navbar:
-    diagnostic: "التشخيص"
-    marketplace: "السوق"
-    maintenance: "المعدات والصيانة"
-    cultures: "المحاصيل"
-    events: "الأحداث"
-    employees: "الموظفون"
-    profile: "ملفي الشخصي"
-    logout: "تسجيل الخروج"
-    login: "تسجيل الدخول"
-
+    diagnostic: التشخيص
+    marketplace: السوق
+    maintenance: 'المعدات والصيانة'
+    cultures: المحاصيل
+    events: الأحداث
+    employees: الموظفون
+    profile: 'ملفي الشخصي'
+    logout: 'تسجيل الخروج'
+    login: 'تسجيل الدخول'
 employe:
-    title: "إدارة الموظفين"
-    search_prompt: "🔍 بحث بالاسم، البريد الإلكتروني، المنصب..."
-    add: "➕ إضافة موظف"
+    title: 'إدارة الموظفين'
+    search_prompt: '🔍 بحث بالاسم، البريد الإلكتروني، المنصب...'
+    add: '➕ إضافة موظف'
     search:
-        prompt: "🔍 بحث بالاسم، البريد الإلكتروني، المنصب..."
-    top_performance: "أفضل أداء"
+        prompt: '🔍 بحث بالاسم، البريد الإلكتروني، المنصب...'
+    top_performance: 'أفضل أداء'
     col:
-        id: "المعرف"
-        nom: "اللقب"
-        prenom: "الاسم"
-        email: "البريد الإلكتروني"
-        poste: "المنصب"
-        telephone: "الهاتف"
-        actif: "نشط"
-        photo: "صورة"
-        qr: "باركود"
-    empty: "📨 لا يوجد موظفون"
+        id: المعرف
+        nom: اللقب
+        prenom: الاسم
+        email: 'البريد الإلكتروني'
+        poste: المنصب
+        telephone: الهاتف
+        actif: نشط
+        photo: صورة
+        qr: باركود
+    empty: '📨 لا يوجد موظفون'
     empty_hint: "انقر على 'إضافة' لإنشاء موظف جديد"
-    go_tasks: "📋 إدارة المهام"
-    go_tasks_tooltip: "إدارة مهام الموظفين"
-    attestation: "شهادة عمل"
-    attestation_success: "تم إرسال الشهادة بنجاح"
-    stats: "📊 إحصائيات"
-    ia_matching: "🧠 مطابقة الذكاء الاصطناعي"
-    performance: "📈 الأداء"
-    fiche_title: "بطاقة موظف"
-    scan_mobile: "امسح للعرض على الهاتف"
-
+    go_tasks: '📋 إدارة المهام'
+    go_tasks_tooltip: 'إدارة مهام الموظفين'
+    attestation: 'شهادة عمل'
+    attestation_success: 'تم إرسال الشهادة بنجاح'
+    stats: '📊 إحصائيات'
+    ia_matching: '🧠 مطابقة الذكاء الاصطناعي'
+    performance: '📈 الأداء'
+    fiche_title: 'بطاقة موظف'
+    scan_mobile: 'امسح للعرض على الهاتف'
     stats_page:
-        title: "إحصائيات الموظفين"
-        back: "العودة إلى الموظفين"
-        export_pdf: "تصدير PDF"
-        total_employees: "إجمالي الموظفين"
-        active: "نشطون"
-        inactive: "غير نشطين"
-        active_vs_inactive: "الموظفون النشطون مقابل غير النشطين"
-        status: "الحالة"
-        count: "العدد"
-        percentage: "%"
-        job_distribution: "التوزيع حسب المنصب"
-        job: "المنصب"
-        bar: "شريط"
-        no_job_data: "لا توجد بيانات متاحة للمناصب"
-        employees: "الموظفون"
-        employee_count_label: "عدد الموظفين"
-
+        title: 'إحصائيات الموظفين'
+        back: 'العودة إلى الموظفين'
+        export_pdf: 'تصدير PDF'
+        total_employees: 'إجمالي الموظفين'
+        active: نشطون
+        inactive: 'غير نشطين'
+        active_vs_inactive: 'الموظفون النشطون مقابل غير النشطين'
+        status: الحالة
+        count: العدد
+        percentage: '%'
+        job_distribution: 'التوزيع حسب المنصب'
+        job: المنصب
+        bar: شريط
+        no_job_data: 'لا توجد بيانات متاحة للمناصب'
+        employees: الموظفون
+        employee_count_label: 'عدد الموظفين'
     perf_page:
-        title: "أداء الموظفين"
-        subtitle: "الترتيب مبني على المهام المنجزة والتأخيرات ومعدل النجاح"
-        back: "العودة إلى الموظفين"
-        avg_score: "متوسط النقاط"
-        evaluated: "الموظفون المقيَّمون"
-        total_tasks: "إجمالي المهام"
-        best_employee: "أفضل موظف"
-        top_performers: "أفضل الأداءات"
-        pts: "نقطة"
-        full_ranking: "الترتيب الكامل"
-        employees_count_label: "موظف"
-        no_active: "لم يتم العثور على موظف نشط."
-        empty_hint: "أضف موظفين وعيّن لهم مهاماً لمشاهدة أدائهم."
-        employee: "الموظف"
-        total: "الإجمالي"
-        completed: "منتهية"
-        delayed: "متأخرة"
-        score: "النقاط"
-        appreciation: "التقييم"
-        tasks: "المهام"
-        action: "إجراء"
-        details: "التفاصيل"
-        success_rate: "معدل النجاح:"
-        task_stats: "إحصائيات المهام"
-        tasks_count: "مهمة"
-        in_progress: "قيد التنفيذ"
-        canceled: "ملغاة"
-        pending: "في الانتظار"
-        perf_score: "نقاط الأداء"
-        completion_time: "وقت الإنجاز"
-        avg_duration: "متوسط المدة لكل مهمة"
-        days: "أيام"
-        no_completed: "لا توجد مهام منجزة"
-        close: "إغلاق"
-        error_loading: "خطأ في التحميل"
-
+        title: 'أداء الموظفين'
+        subtitle: 'الترتيب مبني على المهام المنجزة والتأخيرات ومعدل النجاح'
+        back: 'العودة إلى الموظفين'
+        avg_score: 'متوسط النقاط'
+        evaluated: 'الموظفون المقيَّمون'
+        total_tasks: 'إجمالي المهام'
+        best_employee: 'أفضل موظف'
+        top_performers: 'أفضل الأداءات'
+        pts: نقطة
+        full_ranking: 'الترتيب الكامل'
+        employees_count_label: موظف
+        no_active: 'لم يتم العثور على موظف نشط.'
+        empty_hint: 'أضف موظفين وعيّن لهم مهاماً لمشاهدة أدائهم.'
+        employee: الموظف
+        total: الإجمالي
+        completed: منتهية
+        delayed: متأخرة
+        score: النقاط
+        appreciation: التقييم
+        tasks: المهام
+        action: إجراء
+        details: التفاصيل
+        success_rate: 'معدل النجاح:'
+        task_stats: 'إحصائيات المهام'
+        tasks_count: مهمة
+        in_progress: 'قيد التنفيذ'
+        canceled: ملغاة
+        pending: 'في الانتظار'
+        perf_score: 'نقاط الأداء'
+        completion_time: 'وقت الإنجاز'
+        avg_duration: 'متوسط المدة لكل مهمة'
+        days: أيام
+        no_completed: 'لا توجد مهام منجزة'
+        close: إغلاق
+        error_loading: 'خطأ في التحميل'
     form:
-        add_title: "➕ إضافة موظف"
-        edit_title: "✏️ تعديل بيانات الموظف"
-        photo: "صورة"
-        photo_keep: "اتركه فارغاً للاحتفاظ بالصورة الحالية"
-        identity: "الهوية"
-        last_name: "اللقب"
-        last_name_ph: "أدخل اللقب"
-        first_name: "الاسم"
-        first_name_ph: "أدخل الاسم"
-        job: "المنصب"
-        job_ph: "مثال: عامل، فني..."
-        status: "الحساب نشط"
-        contact: "بيانات الاتصال"
-        email: "البريد الإلكتروني"
-        email_ph: "example@ardhi.tn"
-        phone: "هاتف"
-        phone_ph: "8 أرقام"
-
+        add_title: '➕ إضافة موظف'
+        edit_title: '✏️ تعديل بيانات الموظف'
+        photo: صورة
+        photo_keep: 'اتركه فارغاً للاحتفاظ بالصورة الحالية'
+        identity: الهوية
+        last_name: اللقب
+        last_name_ph: 'أدخل اللقب'
+        first_name: الاسم
+        first_name_ph: 'أدخل الاسم'
+        job: المنصب
+        job_ph: 'مثال: عامل، فني...'
+        status: 'الحساب نشط'
+        contact: 'بيانات الاتصال'
+        email: 'البريد الإلكتروني'
+        email_ph: example@ardhi.tn
+        phone: هاتف
+        phone_ph: '8 أرقام'
 tache:
-    title: "📋 إدارة المهام"
-    search_prompt: "🔍 بحث عن مهمة (العنوان، الوصف، الموظف...)"
-    add: "➕ إضافة مهمة"
+    title: '📋 إدارة المهام'
+    search_prompt: '🔍 بحث عن مهمة (العنوان، الوصف، الموظف...)'
+    add: '➕ إضافة مهمة'
     stats:
-        total: "إجمالي المهام"
-        in_progress: "قيد التنفيذ"
-        completed: "مكتملة"
-        pending: "قيد الانتظار"
-        cancelled: "ملغاة"
-        detailed: "📊 إحصائيات مفصلة"
-        completion_rate: "معدل الإنجاز"
-        overdue: "متأخرة"
-        unassigned: "غير معينة"
+        total: 'إجمالي المهام'
+        in_progress: 'قيد التنفيذ'
+        completed: مكتملة
+        pending: 'قيد الانتظار'
+        cancelled: ملغاة
+        detailed: '📊 إحصائيات مفصلة'
+        completion_rate: 'معدل الإنجاز'
+        overdue: متأخرة
+        unassigned: 'غير معينة'
     col:
-        id: "المعرف"
-        title: "العنوان"
-        description: "الوصف"
-        status: "الحالة"
-        priority: "الأولوية"
-        category: "الفئة"
-        start_date: "تاريخ البداية"
-        end_date: "تاريخ الانتهاء"
-        employee: "الموظف"
-        retard: "تأخير"
-    empty: "لا توجد مهام"
+        id: المعرف
+        title: العنوان
+        description: الوصف
+        status: الحالة
+        priority: الأولوية
+        category: الفئة
+        start_date: 'تاريخ البداية'
+        end_date: 'تاريخ الانتهاء'
+        employee: الموظف
+        retard: تأخير
+    empty: 'لا توجد مهام'
     empty_hint: "انقر على 'إضافة مهمة' للبدء"
-    empty_filters: "لا توجد مهام بهذه الفلاتر"
-    empty_none: "لا توجد مهام حالياً"
-    reset_filters: "إعادة تعيين الفلاتر"
-    no_selection: "لم يتم اختيار مهمة"
-    selected: "✔ مختارة:"
-    advanced_filters: "⚡ فلاتر متقدمة"
-    analyse_ia: "تحليل الذكاء الاصطناعي"
+    empty_filters: 'لا توجد مهام بهذه الفلاتر'
+    empty_none: 'لا توجد مهام حالياً'
+    reset_filters: 'إعادة تعيين الفلاتر'
+    no_selection: 'لم يتم اختيار مهمة'
+    selected: '✔ مختارة:'
+    advanced_filters: '⚡ فلاتر متقدمة'
+    analyse_ia: 'تحليل الذكاء الاصطناعي'
     filter:
-        priority: "الأولوية :"
-        category: "الفئة :"
-        employee: "الموظف :"
-        start_date: "تاريخ البداية :"
-        end_date: "تاريخ الانتهاء :"
+        priority: 'الأولوية :'
+        category: 'الفئة :'
+        employee: 'الموظف :'
+        start_date: 'تاريخ البداية :'
+        end_date: 'تاريخ الانتهاء :'
     sort:
-        id: "المعرف"
-        title: "العنوان"
-        status: "الحالة"
-        priority: "الأولوية"
-        start_date: "تاريخ البداية"
-        end_date: "تاريخ الانتهاء"
-        category: "الفئة"
+        id: المعرف
+        title: العنوان
+        status: الحالة
+        priority: الأولوية
+        start_date: 'تاريخ البداية'
+        end_date: 'تاريخ الانتهاء'
+        category: الفئة
     form:
-        add_title: "➕ إضافة مهمة"
-        edit_title: "✏️ تعديل المهمة"
-        main_info: "📋 المعلومات الرئيسية"
-        title_label: "العنوان"
-        title_ph: "مثال: سقي شتلات الطماطم"
-        description_label: "الوصف"
-        description_ph: "صف المهمة بالتفصيل..."
-        status_priority: "🔖 الحالة والأولوية"
-        status_label: "الحالة"
-        priority_label: "الأولوية"
-        category_label: "الفئة"
-        dates: "📅 التواريخ"
-        start_date: "تاريخ البداية"
-        end_date: "تاريخ الانتهاء"
-        date_warning: "تاريخ الانتهاء < تاريخ البداية"
-        assignment: "👷 التعيين"
-        employee_label: "الموظف"
-        not_assigned: "غير معين"
-        ia_recommend: "توصية..."
-        ia_recommend_title: "توصية الذكاء الاصطناعي"
-        save: "حفظ التغييرات"
-        add_btn: "+ إضافة"
-        cancel: "إلغاء"
-        errors_title: "%count% خطأ(أخطاء) للتصحيح:"
-        priority_low: "منخفضة"
-        priority_medium: "متوسطة"
-        priority_high: "عالية"
-        priority_critical: "حرجة"
+        add_title: '➕ إضافة مهمة'
+        edit_title: '✏️ تعديل المهمة'
+        main_info: '📋 المعلومات الرئيسية'
+        title_label: العنوان
+        title_ph: 'مثال: سقي شتلات الطماطم'
+        description_label: الوصف
+        description_ph: 'صف المهمة بالتفصيل...'
+        status_priority: '🔖 الحالة والأولوية'
+        status_label: الحالة
+        priority_label: الأولوية
+        category_label: الفئة
+        dates: '📅 التواريخ'
+        start_date: 'تاريخ البداية'
+        end_date: 'تاريخ الانتهاء'
+        date_warning: 'تاريخ الانتهاء < تاريخ البداية'
+        assignment: '👷 التعيين'
+        employee_label: الموظف
+        not_assigned: 'غير معين'
+        ia_recommend: توصية...
+        ia_recommend_title: 'توصية الذكاء الاصطناعي'
+        save: 'حفظ التغييرات'
+        add_btn: '+ إضافة'
+        cancel: إلغاء
+        errors_title: '%count% خطأ(أخطاء) للتصحيح:'
+        priority_low: منخفضة
+        priority_medium: متوسطة
+        priority_high: عالية
+        priority_critical: حرجة
     stats_page:
-        title: "إحصائيات المهام"
-        back: "العودة إلى المهام"
-        export_pdf: "تصدير PDF"
-        tab_resume: "ملخص"
-        tab_statuts: "الحالات"
-        tab_priorites: "الأولويات"
-        tab_employes: "الموظفون"
-        tab_evolution: "التطور"
-        tab_categories: "الفئات"
-        total_tasks: "إجمالي المهام"
-        completion_rate: "معدل الإنجاز"
-        overdue: "متأخرة"
-        unassigned: "غير معينة"
-        by_status: "التوزيع حسب الحالة"
-        status_detail: "تفاصيل الحالات"
-        status: "الحالة"
-        count: "العدد"
-        proportion: "النسبة"
-        details: "تفاصيل"
-        percent: "%"
-        by_priority: "المهام حسب الأولوية"
-        priority: "الأولوية"
-        bar: "شريط"
-        by_employee: "المهام حسب الموظف"
-        employee: "الموظف"
-        tasks: "المهام"
-        no_employee_data: "لا توجد بيانات حسب الموظف"
-        evolution_title: "تطور المهام عبر الزمن"
-        no_evolution: "لا توجد بيانات تطور متاحة"
-        by_category: "التوزيع حسب الفئة"
-        category_detail: "تفاصيل الفئات"
-        category: "الفئة"
-        no_category_data: "لا توجد بيانات فئات"
-        chart_tasks: "المهام"
-        chart_assigned: "المهام المعينة"
-        chart_new_tasks: "مهام جديدة"
-        chart_count: "العدد"
-        chart_date: "التاريخ"
-        chart_task_count: "عدد المهام"
+        title: 'إحصائيات المهام'
+        back: 'العودة إلى المهام'
+        export_pdf: 'تصدير PDF'
+        tab_resume: ملخص
+        tab_statuts: الحالات
+        tab_priorites: الأولويات
+        tab_employes: الموظفون
+        tab_evolution: التطور
+        tab_categories: الفئات
+        total_tasks: 'إجمالي المهام'
+        completion_rate: 'معدل الإنجاز'
+        overdue: متأخرة
+        unassigned: 'غير معينة'
+        by_status: 'التوزيع حسب الحالة'
+        status_detail: 'تفاصيل الحالات'
+        status: الحالة
+        count: العدد
+        proportion: النسبة
+        details: تفاصيل
+        percent: '%'
+        by_priority: 'المهام حسب الأولوية'
+        priority: الأولوية
+        bar: شريط
+        by_employee: 'المهام حسب الموظف'
+        employee: الموظف
+        tasks: المهام
+        no_employee_data: 'لا توجد بيانات حسب الموظف'
+        evolution_title: 'تطور المهام عبر الزمن'
+        no_evolution: 'لا توجد بيانات تطور متاحة'
+        by_category: 'التوزيع حسب الفئة'
+        category_detail: 'تفاصيل الفئات'
+        category: الفئة
+        no_category_data: 'لا توجد بيانات فئات'
+        chart_tasks: المهام
+        chart_assigned: 'المهام المعينة'
+        chart_new_tasks: 'مهام جديدة'
+        chart_count: العدد
+        chart_date: التاريخ
+        chart_task_count: 'عدد المهام'
     pdf:
-        title: "قائمة المهام"
-        generated: "تم الإنشاء في:"
-        total: "إجمالي المهام"
-        in_progress: "قيد التنفيذ"
-        completed: "مكتملة"
-        pending: "قيد الانتظار"
-        overdue: "متأخرة"
-        col_id: "المعرف"
-        col_title: "العنوان"
-        col_description: "الوصف"
-        col_status: "الحالة"
-        col_priority: "الأولوية"
-        col_category: "الفئة"
-        col_start: "البداية"
-        col_end: "الانتهاء"
-        col_employee: "الموظف"
-        col_overdue: "تأخير"
-        yes: "نعم"
-        footer: "Ardhi - إدارة زراعية ذكية"
-
+        title: 'قائمة المهام'
+        generated: 'تم الإنشاء في:'
+        total: 'إجمالي المهام'
+        in_progress: 'قيد التنفيذ'
+        completed: مكتملة
+        pending: 'قيد الانتظار'
+        overdue: متأخرة
+        col_id: المعرف
+        col_title: العنوان
+        col_description: الوصف
+        col_status: الحالة
+        col_priority: الأولوية
+        col_category: الفئة
+        col_start: البداية
+        col_end: الانتهاء
+        col_employee: الموظف
+        col_overdue: تأخير
+        'yes': نعم
+        footer: 'Ardhi - إدارة زراعية ذكية'
 notification:
-    title: "🔔 الإشعارات"
-    subtitle: "ابقَ على اطلاع بأنشطتك الزراعية"
-    total: "المجموع"
-    unread: "غير مقروءة"
-    mark_all_read: "✓ تعليم الكل كمقروء"
-    refresh: "🔄 تحديث"
-    empty: "لا توجد إشعارات حالياً."
+    title: '🔔 الإشعارات'
+    subtitle: 'ابقَ على اطلاع بأنشطتك الزراعية'
+    total: المجموع
+    unread: 'غير مقروءة'
+    mark_all_read: '✓ تعليم الكل كمقروء'
+    refresh: '🔄 تحديث'
+    empty: 'لا توجد إشعارات حالياً.'
     types:
-        task_overdue: "⏰ مهمة متأخرة: %title%"
-        task_blocked: "🔒 مهمة متوقفة: %title%"
-        meteo_alert: "⚠️ تنبيه جوي: %title%"
+        task_overdue: '⏰ مهمة متأخرة: %title%'
+        task_blocked: '🔒 مهمة متوقفة: %title%'
+        meteo_alert: '⚠️ تنبيه جوي: %title%'
     messages:
-        overdue_detail: "تاريخ الاستحقاق: %date% | التأخير: %days% يوم (أيام)"
-        blocked_detail: "المهمة قيد التنفيذ بدون تغيير لأكثر من يومين. يوصى بالمتابعة."
+        overdue_detail: 'تاريخ الاستحقاق: %date% | التأخير: %days% يوم (أيام)'
+        blocked_detail: 'المهمة قيد التنفيذ بدون تغيير لأكثر من يومين. يوصى بالمتابعة.'
+    mark_read: 'تحديد كمقروء'
 status:
-    online: "متصل"
-
+    online: متصل
 meteo:
-    widget_title: "الطقس الزراعي"
-    temp: "الحرارة"
-    humidity: "الرطوبة"
-    wind: "الرياح"
-    pressure: "الضغط"
-    recommendation: "توصية"
+    widget_title: 'الطقس الزراعي'
+    temp: الحرارة
+    humidity: الرطوبة
+    wind: الرياح
+    pressure: الضغط
+    recommendation: توصية
     alerts:
-        good: "✅ ظروف مثالية لـ: %task%"
-        caution: "⚠️ تنبيه: %reason% لـ %task%"
-        danger: "🚫 لا ينصح بـ: %reason% لـ %task%"
+        good: '✅ ظروف مثالية لـ: %task%'
+        caution: '⚠️ تنبيه: %reason% لـ %task%'
+        danger: '🚫 لا ينصح بـ: %reason% لـ %task%'
     conditions:
-        too_windy: "رياح قوية جداً"
-        too_wet: "رطوبة عالية"
-        too_dry: "جفاف شديد"
-        too_hot: "حرارة مفرطة"
-        too_cold: "خطر الصقيع"
-
+        too_windy: 'رياح قوية جداً'
+        too_wet: 'رطوبة عالية'
+        too_dry: 'جفاف شديد'
+        too_hot: 'حرارة مفرطة'
+        too_cold: 'خطر الصقيع'
 chatbot:
-    greet_help: "كيف يمكنني مساعدتك اليوم؟"
-    welcome: "مرحباً! أنا مساعدك الذكي للموارد البشرية. <br>كيف يمكنني مساعدتك اليوم؟"
-    input_placeholder: "اكتب رسالتك..."
+    greet_help: 'كيف يمكنني مساعدتك اليوم؟'
+    welcome: 'مرحباً! أنا مساعدك الذكي للموارد البشرية. <br>كيف يمكنني مساعدتك اليوم؟'
+    input_placeholder: 'اكتب رسالتك...'
     suggestion:
-        reco: "توصية"
-        perf: "الأداء"
-        dispo: "التوفر"
-        help: "مساعدة"
+        reco: توصية
+        perf: الأداء
+        dispo: التوفر
+        help: مساعدة
     chips:
-        employees: "👥 قائمة الموظفين"
-        tasks: "📋 المهام الجارية"
-        stats: "📊 عرض الإحصائيات"
-        reco: "🧠 توصية الذكاء الاصطناعي"
+        employees: '👥 قائمة الموظفين'
+        tasks: '📋 المهام الجارية'
+        stats: '📊 عرض الإحصائيات'
+        reco: '🧠 توصية الذكاء الاصطناعي'
     understanding:
-        no_key: "🤔 لست متأكداً من أنني فهمت. اكتب **مساعدة** لمعرفة ما يمكنني القيام به."
-        error: "حدث خطأ أثناء معالجة طلبك."
+        no_key: '🤔 لست متأكداً من أنني فهمت. اكتب **مساعدة** لمعرفة ما يمكنني القيام به.'
+        error: 'حدث خطأ أثناء معالجة طلبك.'
     reco:
-        need_task: "🤔 لأي مهمة تريد التوصية؟\n\n📌 **المهام المتاحة :**\n%list%\n💡 قل مثلاً : \"اوصي لمهمة الحصاد\""
-        analysis_done: "🤖 **اكتمل تحليل الذكاء الاصطناعي لـ \"%title%\"**"
-        no_match: "😕 لا يوجد موظفون نشطون يطابقون هذه المهمة حالياً."
-    compare:
-        need_task: "🤔 للمقارنة بين أفضل 3 موظفين، يرجى تحديد المهمة.\n💡 مثال: \"قارن بين أفضل 3 لمهمة الري\""
-    skills:
-        not_found: "😕 لم يتم العثور على موظف لديه مهارة \"%comp%\"."
-        prompt: "🤔 ما هي المهارة التي تبحث عنها؟\n💡 مثال: \"من يتقن الري؟\""
-    performance:
-        no_data: "📊 لا توجد بيانات أداء متاحة."
-    help:
-        text: "👋 **أنا مساعدك في الموارد البشرية!**\n\n🎯 \"اوصي لمهمة الحصاد\"\n🔍 \"من يتقن الري؟\"\n📊 \"أظهر الأداء\"\n📅 \"من هو المتاح؟\"\n🏆 \"قارن بين أفضل 3\""
+        need_task: |-
+            🤔 لأي مهمة تريد التوصية؟
 
+            📌 **المهام المتاحة :**
+            %list%
+            💡 قل مثلاً : "اوصي لمهمة الحصاد"
+        analysis_done: '🤖 **اكتمل تحليل الذكاء الاصطناعي لـ "%title%"**'
+        no_match: '😕 لا يوجد موظفون نشطون يطابقون هذه المهمة حالياً.'
+        task_not_found: '❌ مهمة غير موجودة.'
+        already_assigned_reason: 'تم تعيينه بالفعل لهذه المهمة.'
+        already_assigned: '✅ موظف (موظفين) تم تعيينهم بالفعل لـ \"%task%\"'
+    compare:
+        need_task: |-
+            🤔 للمقارنة بين أفضل 3 موظفين، يرجى تحديد المهمة.
+            💡 مثال: "قارن بين أفضل 3 لمهمة الري"
+        not_enough_employees: '😕 أقل من موظفين اثنين متاحين لهذه المهمة.'
+        title: '🏆 **مقارنة أفضل 3 لـ \"%task%\"**'
+    skills:
+        not_found: '😕 لم يتم العثور على موظف لديه مهارة "%comp%".'
+        prompt: |-
+            🤔 ما هي المهارة التي تبحث عنها؟
+            💡 مثال: "من يتقن الري؟"
+        found_title: '🔍 **%count% موظف (موظفين) بمهارة \"%comp%\" :**'
+    performance:
+        no_data: '📊 لا توجد بيانات أداء متاحة.'
+        score_line: 'النتيجة: %score%/100 — %appreciation%'
+        title: '📊 **تصنيف أفضل الأداء:**'
+    help:
+        text: |-
+            👋 **أنا مساعدك في الموارد البشرية!**
+
+            🎯 "اوصي لمهمة الحصاد"
+            🔍 "من يتقن الري؟"
+            📊 "أظهر الأداء"
+            📅 "من هو المتاح؟"
+            🏆 "قارن بين أفضل 3"
+    availability:
+        title_with_modes: |-
+            📅 **توفر %count% موظف (موظفين) نشطين :**
+            🟢 متاح • 🟡 معتدل • 🔴 مثقل
+        no_info: '📅 لا توجد معلومات عن التوفر.'
+    error:
+        server_returned_error: 'عذراً، حدث خطأ: '
+        network: 'عذراً! لا يمكنني الاتصال بالخادم.'
 ai:
     matching:
-        perfect: "مطابقة مثالية"
-        good: "ملف جيد"
-        fair: "ملف متوسط"
-        poor: "غير موصى به"
-        reason_detail: "اختار الذكاء الاصطناعي %name% لأن لديه نسبة %relevance%%% في ملاءمة المهارات، وتقييمات ممتازة (%perf%/100)، وهو متاح (عبء عمل %charge%)."
+        perfect: 'مطابقة مثالية'
+        good: 'ملف جيد'
+        fair: 'ملف متوسط'
+        poor: 'غير موصى به'
+        reason_detail: 'اختار الذكاء الاصطناعي %name% لأن لديه نسبة %relevance%%% في ملاءمة المهارات، وتقييمات ممتازة (%perf%/100)، وهو متاح (عبء عمل %charge%).'
         reason:
-            skills: "مهارات مناسبة"
-            availability: "متاح فوراً"
-            proximity: "قرب جغرافي"
+            skills: 'مهارات مناسبة'
+            availability: 'متاح فوراً'
+            proximity: 'قرب جغرافي'
     performance:
-        excellent: "ممتاز"
-        tres_bien: "جيد جداً"
-        bien: "جيد"
-        moyen: "متوسط"
-        faible: "ضعيف"
+        excellent: ممتاز
+        tres_bien: 'جيد جداً'
+        bien: جيد
+        moyen: متوسط
+        faible: ضعيف
+time:
+    days: 'يوم (أيام)'
+    hours: 'ساعة (ساعات)'
+    mins: 'دقيقة (دقائق)'
+    just_now: الآن
