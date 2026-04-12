@@ -38,4 +38,20 @@ class EvenementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Returns all events that have the given statut value.
+     * Used by ParticipationPredictionService to analyse historical data.
+     *
+     * @return Evenement[]
+     */
+    public function findByStatut(string $statut): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.statut = :statut')
+            ->setParameter('statut', $statut)
+            ->orderBy('e.dateDebut', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

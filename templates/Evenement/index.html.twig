@@ -134,6 +134,11 @@
           <div class="service-sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
           <div class="service-sidebar-text"><h4>Participations</h4><span>Gérer les inscriptions</span></div>
         </a>
+        <a href="{{ path('app_qr_checkin') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_qr_checkin' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-qr-code-scan"></i></div>
+          <div class="service-sidebar-text"><h4>Scanner QR</h4><span>Check-in participants</span></div>
+        </a>
         {% endif %}
         {% endif %}
 

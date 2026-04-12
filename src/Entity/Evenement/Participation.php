@@ -54,7 +54,7 @@ class Participation
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $rappelJ1Envoye = false;
 
-    #[ORM\Column(type: Types::STRING, length: 64, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 64, nullable: true, unique: true)]
     private ?string $qrCodeToken = null;
 
     public function __construct()
@@ -106,4 +106,15 @@ class Participation
 
     public function getQrCodeToken(): ?string { return $this->qrCodeToken; }
     public function setQrCodeToken(?string $qrCodeToken): static { $this->qrCodeToken = $qrCodeToken; return $this; }
+
+    /**
+     * Helper for QR Code and Mailer services.
+     */
+    public function getNomComplet(): string
+    {
+        $user = $this->getUtilisateur();
+        if (!$user) return 'Participant #' . $this->id;
+        return trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''))
+            ?: $user->getEmail();
+    }
 }

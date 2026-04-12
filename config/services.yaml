@@ -13,6 +13,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             string $mailFrom: '%app.mail_from%'
+            string $projectDir: '%kernel.project_dir%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -29,3 +30,25 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
             $calendarId: '%env(GOOGLE_CALENDAR_ID)%'
+
+    App\Service\Evenement\UnsplashImageService:
+        arguments:
+            $httpClient:  '@http_client'
+            $logger:      '@logger'
+            $projectDir:  '%kernel.project_dir%'
+
+    App\Service\Evenement\GeminiAIEventService:
+        arguments:
+            $httpClient:      '@http_client'
+            $unsplashService: '@App\Service\Evenement\UnsplashImageService'
+            $logger:          '@logger'
+
+    App\Service\Evenement\ParticipationPredictionService: ~
+
+    App\Service\Evenement\QRCodeService:
+        arguments:
+            $em:                 '@doctrine.orm.entity_manager'
+            $participationRepo:  '@App\Repository\Evenement\ParticipationRepository'
+            $evenementRepo:      '@App\Repository\Evenement\EvenementRepository'
+            $logger:             '@logger'
+            $projectDir:         '%kernel.project_dir%'
