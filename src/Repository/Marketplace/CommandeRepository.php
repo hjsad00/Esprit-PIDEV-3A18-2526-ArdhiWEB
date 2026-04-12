@@ -3,6 +3,7 @@
 namespace App\Repository\Marketplace;
 
 use App\Entity\Marketplace\Commande;
+use App\Entity\Marketplace\Produits;
 use App\Entity\UserAndDiag\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -159,5 +160,25 @@ class CommandeRepository extends ServiceEntityRepository
         return $qb->orderBy('c.dateCommande', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Vérifie si l'utilisateur a bien reçu ce produit (commande livrée).
+     */
+    public function hasUserBoughtProduct(User $user, Produits $produit): bool
+    {
+        $count = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->innerJoin('c.details', 'd')
+            ->andWhere('c.user = :user')
+            ->andWhere('d.produit = :produit')
+            ->andWhere('c.etat = :etat')
+            ->setParameter('user', $user)
+            ->setParameter('produit', $produit)
+            ->setParameter('etat', 'livree')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $count > 0;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Marketplace;
 
+use App\Repository\Marketplace\AvisRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\WishlistRepository;
@@ -21,6 +22,7 @@ class CatalogueController extends AbstractController
     public function catalogue(
         Request $request,
         ProduitsRepository $produitsRepository,
+        AvisRepository $avisRepository,
         PanierRepository $panierRepository,
         WishlistRepository $wishlistRepository,
         CityCoordinatesService $cityCoordinatesService
@@ -82,6 +84,15 @@ class CatalogueController extends AbstractController
         }
 
         $produits    = $produitsRepository->findAllWithFilters($filters, $userId);
+
+        $reviewsStats = $avisRepository->getStatsForProduits($produits);
+        foreach ($produits as $produit) {
+            $stats = $reviewsStats[$produit->getId()] ?? ['avg' => 0.0, 'count' => 0];
+            $produit
+                ->setAverageRating((float) $stats['avg'])
+                ->setReviewsCount((int) $stats['count']);
+        }
+
         $categories  = $produitsRepository->findDistinctCategories();
         $priceRange  = $produitsRepository->findPriceRange($userId);
 

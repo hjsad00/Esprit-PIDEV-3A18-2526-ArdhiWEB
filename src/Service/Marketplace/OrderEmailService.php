@@ -48,4 +48,33 @@ class OrderEmailService
 
         $this->mailer->send($email);
     }
+
+    /**
+     * Envoie une notification par email à l'acheteur pour un changement de statut (En cours / Annulée).
+     */
+    public function sendOrderStatusUpdateBuyerNotification(Commande $commande): void
+    {
+        $acheteur = $commande->getUser();
+        if (!$acheteur || !$acheteur->getEmail()) {
+            return;
+        }
+
+        $sujet = ($commande->getEtat() === 'en_cours') 
+            ? '🚚 Votre commande Ardhi est en cours de préparation !'
+            : '❌ Notification concernant votre commande Ardhi';
+
+        $vendeur = $commande->getDetails()->first()->getProduit()->getUser();
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->mailFrom, 'Ardhi Marketplace'))
+            ->to($acheteur->getEmail())
+            ->subject($sujet)
+            ->htmlTemplate('Marketplace/Emails/acheteur_commande_statut.html.twig')
+            ->context([
+                'commande' => $commande,
+                'vendeur' => $vendeur,
+            ]);
+
+        $this->mailer->send($email);
+    }
 }

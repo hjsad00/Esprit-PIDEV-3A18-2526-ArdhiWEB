@@ -127,7 +127,13 @@ class CommandeController extends AbstractController
      * Mettre à jour l'état d'une commande (vendeur uniquement).
      */
     #[Route('/marketplace/commande/{id}/status/{status}', name: 'app_marketplace_commande_update_status', methods: ['POST'])]
-    public function updateStatus(int $id, string $status, CommandeRepository $commandeRepo, EntityManagerInterface $em): JsonResponse
+    public function updateStatus(
+        int $id, 
+        string $status, 
+        CommandeRepository $commandeRepo, 
+        EntityManagerInterface $em,
+        OrderEmailService $orderEmailService
+    ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -183,6 +189,11 @@ class CommandeController extends AbstractController
         }
 
         $em->flush();
+
+        // Notification de l'acheteur si le statut passe à "En cours" ou "Annulée"
+        if ($status === 'en_cours' || $status === 'annulee') {
+            $orderEmailService->sendOrderStatusUpdateBuyerNotification($commande);
+        }
 
         return $this->json([
             'success' => true,

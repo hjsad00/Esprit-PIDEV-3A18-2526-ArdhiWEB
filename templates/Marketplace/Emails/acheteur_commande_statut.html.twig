@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f6f9f6; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .header { background: linear-gradient(135deg, #4A8C3F 0%, #3d7534 100%); padding: 30px 20px; text-align: center; color: white; }
+        .content { padding: 30px 25px; }
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 14px; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-en_cours { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-annulee { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .order-box { background-color: #f8faf8; border: 1px solid #edf2ed; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .order-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .order-table th { text-align: left; font-size: 12px; color: #888; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .order-table td { padding: 12px 0; border-bottom: 1px solid #f1f1f1; font-size: 14px; }
+        .total-row td { border-top: 2px solid #4A8C3F; border-bottom: none; font-weight: bold; font-size: 16px; color: #4A8C3F; padding-top: 15px; }
+        .footer { background-color: #fafafa; padding: 20px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eeeeee; }
+        .btn { display: inline-block; background-color: #4A8C3F; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://i.ibb.co/8nyxk57x/logo-ardhi.png" alt="Ardhi Logo" style="max-height: 60px; margin-bottom: 10px;">
+            <h2 style="margin:0; font-weight: 400; opacity: 0.9;">Mise à jour de votre commande</h2>
+        </div>
+
+        <div class="content">
+            <p>Bonjour <strong>{{ commande.user.prenom }}</strong>,</p>
+
+            {% if commande.etat == 'en_cours' %}
+                <div class="status-badge status-en_cours">🚚 En cours de préparation</div>
+                <p>Bonne nouvelle ! L'agriculteur <strong>{{ vendeur.nom }} {{ vendeur.prenom }}</strong> a commencé la préparation de votre commande <strong>#{{ commande.id }}</strong>. Vos produits frais seront bientôt prêts !</p>
+            {% elseif commande.etat == 'annulee' %}
+                <div class="status-badge status-annulee">❌ Commande annulée</div>
+                <p>Nous vous informons que votre commande <strong>#{{ commande.id }}</strong> a été annulée par l'agriculteur <strong>{{ vendeur.nom }} {{ vendeur.prenom }}</strong>.</p>
+                {% if commande.payeeParPoints %}
+                    <p style="color: #666; font-style: italic;">Vos points de fidélité utilisés pour cet achat ont été recrédités sur votre compte.</p>
+                {% endif %}
+            {% endif %}
+
+            <div class="order-box">
+                <h3 style="margin: 0 0 10px 0; color: #333; font-size: 15px;">Détails de la commande</h3>
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th style="text-align: center;">Qté</th>
+                            <th style="text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in commande.details %}
+                            <tr>
+                                <td>{{ detail.produit ? detail.produit.nom : 'Produit inconnu' }}</td>
+                                <td style="text-align: center;">x{{ detail.quantite }}</td>
+                                <td style="text-align: right;">{{ detail.sousTotal|number_format(2, ',', ' ') }} DT</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        {% if commande.modeLivraison == 'LIVRAISON' %}
+                            <tr>
+                                <td colspan="2" style="padding-top: 15px; text-align: right; color: #888; font-size: 13px;">Frais de livraison :</td>
+                                <td style="padding-top: 15px; text-align: right; color: #888; font-size: 13px;">+{{ commande.fraisLivraison|number_format(2, ',', ' ') }} DT</td>
+                            </tr>
+                        {% endif %}
+                        <tr class="total-row">
+                            <td colspan="2" style="text-align: right;">Total :</td>
+                            <td style="text-align: right;">{{ commande.total|number_format(2, ',', ' ') }} DT</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <p style="font-size: 13px; color: #666;">Vous pouvez suivre l'historique de vos achats directement depuis votre espace client.</p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; {{ "now"|date("Y") }} Ardhi Marketplace. Tous droits réservés.<br>
+            Le marché équitable entre agriculteurs et consommateurs.</p>
+        </div>
+    </div>
+</body>
+</html>

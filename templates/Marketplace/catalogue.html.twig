@@ -352,6 +352,21 @@
                       {% endif %}
                     {% endif %}
                     <h3 class="product-card-title">{{ produit.nom }}</h3>
+                    <div class="product-rating-inline" role="button" tabindex="0" onclick="openReviewsModal({{ produit.id }}, '{{ produit.nom|e('js') }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReviewsModal({{ produit.id }}, '{{ produit.nom|e('js') }}');}">
+                      <div class="stars" aria-label="Note moyenne {{ produit.averageRating|number_format(1, '.', ' ') }} sur 5">
+                        {% for i in 1..5 %}
+                          {% if produit.averageRating >= i %}
+                            <i class="bi bi-star-fill"></i>
+                          {% elseif produit.averageRating >= (i - 0.5) %}
+                            <i class="bi bi-star-half"></i>
+                          {% else %}
+                            <i class="bi bi-star"></i>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                      <span class="rating-value">{{ produit.averageRating|number_format(1, '.', ' ') }}</span>
+                      <span class="reviews-count">({{ produit.reviewsCount }} avis)</span>
+                    </div>
                     <div class="product-card-seller">
                       <i class="bi bi-person-circle"></i> Vendu par <strong>{{ produit.user.prenom ?? '' }} {{ produit.user.nom ?? '' }}</strong>
                     </div>
@@ -412,6 +427,55 @@
 
       </div>
     </section>
+
+    <div id="reviewsModal" class="reviews-modal-overlay" aria-hidden="true">
+      <div class="reviews-modal" role="dialog" aria-modal="true" aria-labelledby="reviewsModalTitle">
+        <div class="reviews-modal-header">
+          <div>
+            <div class="reviews-modal-kicker">TEMOIGNAGES CLIENTS</div>
+            <h3 id="reviewsModalTitle">Avis produit</h3>
+          </div>
+          <button class="reviews-modal-close" type="button" onclick="closeReviewsModal()" aria-label="Fermer les avis">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="reviews-modal-body">
+          <div class="reviews-summary-bar">
+            <div class="reviews-summary-stars" id="reviewsSummaryStars"></div>
+            <div class="reviews-summary-text"><span id="reviewsAverage">0.0</span> / 5 · <span id="reviewsTotal">0</span> avis</div>
+          </div>
+
+          <div id="reviewsList" class="reviews-list">
+            <div class="reviews-empty">Aucun avis pour le moment. Soyez le premier a partager votre experience.</div>
+          </div>
+
+          {% if app.user %}
+            <form id="reviewForm" class="review-form">
+              <h4>Laisser un avis</h4>
+              <div class="review-rating-input" id="reviewRatingInput" role="radiogroup" aria-label="Selectionner une note">
+                {% for i in 1..5 %}
+                  <button type="button" class="rate-star" data-value="{{ i }}" aria-label="{{ i }} etoile(s)">
+                    <i class="bi bi-star-fill"></i>
+                  </button>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="note" id="reviewNote" value="0">
+
+              <textarea id="reviewComment" name="commentaire" rows="4" maxlength="1000" placeholder="Partagez votre avis sur ce produit..."></textarea>
+
+              <button type="submit" class="review-submit-btn">
+                <i class="bi bi-send-fill"></i> Publier mon avis
+              </button>
+            </form>
+          {% else %}
+            <div class="review-login-hint">
+              Connectez-vous pour publier un avis sur ce produit.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
     {# ============================
        MODAL LOCALISATION (MAP)
@@ -698,6 +762,216 @@ async function toggleWishlist(productId, btn) {
     }
 }
 
+
+// ── Product Reviews Modal ───────────────────────────────────────────
+const reviewsModal = document.getElementById('reviewsModal');
+const reviewsList = document.getElementById('reviewsList');
+const reviewsAverage = document.getElementById('reviewsAverage');
+const reviewsTotal = document.getElementById('reviewsTotal');
+const reviewsSummaryStars = document.getElementById('reviewsSummaryStars');
+const reviewForm = document.getElementById('reviewForm');
+const reviewNoteInput = document.getElementById('reviewNote');
+const reviewCommentInput = document.getElementById('reviewComment');
+const reviewRatingInput = document.getElementById('reviewRatingInput');
+const canSubmitReview = {{ app.user ? 'true' : 'false' }};
+
+let activeReviewProductId = null;
+
+const escapeHtml = (value) => {
+  return (value ?? '').toString()
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+};
+
+const renderStarsMarkup = (rating, sizeClass = '') => {
+  let markup = '';
+  for (let i = 1; i <= 5; i += 1) {
+    if (rating >= i) {
+      markup += `<i class="bi bi-star-fill ${sizeClass}"></i>`;
+    } else if (rating >= i - 0.5) {
+      markup += `<i class="bi bi-star-half ${sizeClass}"></i>`;
+    } else {
+      markup += `<i class="bi bi-star ${sizeClass}"></i>`;
+    }
+  }
+  return markup;
+};
+
+const renderReviewsSummary = (average, count) => {
+  if (reviewsAverage) reviewsAverage.textContent = Number(average || 0).toFixed(1);
+  if (reviewsTotal) reviewsTotal.textContent = `${count || 0}`;
+  if (reviewsSummaryStars) {
+    reviewsSummaryStars.innerHTML = renderStarsMarkup(Number(average || 0), 'summary-star');
+  }
+};
+
+const renderReviewsList = (reviews) => {
+  if (!reviewsList) return;
+
+  if (!reviews || reviews.length === 0) {
+    reviewsList.innerHTML = '<div class="reviews-empty">Aucun avis pour le moment. Soyez le premier a partager votre experience.</div>';
+    return;
+  }
+
+  reviewsList.innerHTML = reviews.map((review) => {
+    const verifiedIcon = review.isVerifiedBuyer
+      ? '<i class="bi bi-patch-check-fill verified-buyer-icon" data-tooltip="Acheteur" aria-label="Acheteur verifie"></i>'
+      : '';
+    const comment = review.commentaire
+      ? `<p class="review-item-comment">${escapeHtml(review.commentaire)}</p>`
+      : '';
+
+    return `
+      <article class="review-item">
+        <div class="review-item-head">
+          <div class="review-item-user">
+            <span class="review-user-name">${escapeHtml(review.user?.name || 'Utilisateur')}</span>
+            ${verifiedIcon}
+          </div>
+          <div class="review-item-date">${escapeHtml(review.dateAvis || '')}</div>
+        </div>
+        <div class="review-item-rating">${renderStarsMarkup(Number(review.note || 0), 'review-star')}</div>
+        ${comment}
+      </article>
+    `;
+  }).join('');
+};
+
+const loadReviews = async (productId) => {
+  try {
+    if (reviewsList) {
+      reviewsList.innerHTML = '<div class="reviews-empty">Chargement des avis...</div>';
+    }
+    const response = await fetch(`/marketplace/avis/${productId}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'Impossible de charger les avis.');
+    }
+
+    renderReviewsSummary(data.averageRating, data.reviewsCount);
+    renderReviewsList(data.reviews || []);
+  } catch (error) {
+    if (reviewsList) {
+      reviewsList.innerHTML = '<div class="reviews-empty">Impossible de charger les avis pour ce produit.</div>';
+    }
+  }
+};
+
+window.openReviewsModal = (productId, productName) => {
+  activeReviewProductId = productId;
+  const title = document.getElementById('reviewsModalTitle');
+  if (title) {
+    title.textContent = `Avis: ${productName}`;
+  }
+
+  if (reviewForm) reviewForm.reset();
+  if (reviewNoteInput) reviewNoteInput.value = '0';
+  updateStarPicker(0);
+  renderReviewsSummary(0, 0);
+  renderReviewsList([]);
+
+  if (reviewsModal) {
+    reviewsModal.classList.add('active');
+    reviewsModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('reviews-modal-open');
+  }
+
+  loadReviews(productId);
+};
+
+window.closeReviewsModal = () => {
+  if (!reviewsModal) return;
+  reviewsModal.classList.remove('active');
+  reviewsModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('reviews-modal-open');
+};
+
+const updateStarPicker = (value) => {
+  if (!reviewRatingInput) return;
+  reviewRatingInput.querySelectorAll('.rate-star').forEach((btn) => {
+    const starValue = Number(btn.dataset.value || 0);
+    btn.classList.toggle('active', starValue <= value);
+  });
+};
+
+if (reviewRatingInput && reviewNoteInput) {
+  reviewRatingInput.querySelectorAll('.rate-star').forEach((btn) => {
+    btn.addEventListener('mouseenter', () => updateStarPicker(Number(btn.dataset.value || 0)));
+    btn.addEventListener('click', () => {
+      const value = Number(btn.dataset.value || 0);
+      reviewNoteInput.value = `${value}`;
+      updateStarPicker(value);
+    });
+  });
+
+  reviewRatingInput.addEventListener('mouseleave', () => {
+    updateStarPicker(Number(reviewNoteInput.value || 0));
+  });
+}
+
+if (reviewForm) {
+  reviewForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!canSubmitReview || !activeReviewProductId) {
+      showToast('Vous devez etre connecte pour publier un avis.', true);
+      return;
+    }
+
+    const note = Number(reviewNoteInput?.value || 0);
+    if (note < 1 || note > 5) {
+      showToast('Veuillez selectionner une note entre 1 et 5 etoiles.', true);
+      return;
+    }
+
+    const payload = {
+      note,
+      commentaire: (reviewCommentInput?.value || '').trim(),
+    };
+
+    const submitBtn = reviewForm.querySelector('.review-submit-btn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const response = await fetch(`/marketplace/avis/${activeReviewProductId}/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Impossible d\'enregistrer votre avis.');
+      }
+
+      showToast('Avis publie avec succes.');
+      reviewForm.reset();
+      reviewNoteInput.value = '0';
+      updateStarPicker(0);
+      await loadReviews(activeReviewProductId);
+      applyFiltersAjax();
+    } catch (error) {
+      showToast(error.message || 'Une erreur est survenue.', true);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
+
+if (reviewsModal) {
+  reviewsModal.addEventListener('click', (event) => {
+    if (event.target === reviewsModal) {
+      closeReviewsModal();
+    }
+  });
+}
 // ── Currency Conversion ─────────────────────────────────────────────
 const currencySelect = document.getElementById('filter-currency');
 
@@ -1039,6 +1313,252 @@ input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: 
 .search-result-item { padding: 10px 15px; color: #fff; font-size: 13px; cursor: pointer; border-bottom: 1px solid #353b48; transition: 0.2s; }
 .search-result-item:hover { background: #4a8c3f; }
 .search-result-item:last-child { border-bottom: none; }
+
+.product-rating-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+  cursor: pointer;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #fff8e5 0%, #fff2cc 100%);
+  transition: none;
+}
+
+.product-rating-inline .stars {
+  color: #f59f00;
+  font-size: 12px;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.product-rating-inline .stars i {
+  background: linear-gradient(180deg, #ffd95a 0%, #ffb100 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(120, 79, 0, 0.22));
+  transition: none;
+}
+
+.product-rating-inline .rating-value {
+  font-weight: 800;
+  color: #8b3d00;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.product-rating-inline .reviews-count {
+  color: #9a6a00;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.product-rating-inline:focus-visible {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.reviews-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 18, 0.88);
+  backdrop-filter: blur(7px);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+.reviews-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.reviews-modal {
+  width: min(840px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(circle at top left, #1f2d3a, #121922 70%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  transform: translateY(18px);
+  transition: transform 0.25s ease;
+}
+.reviews-modal-overlay.active .reviews-modal { transform: translateY(0); }
+  box-shadow: none;
+body.reviews-modal-open { overflow: hidden; }
+
+.reviews-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.reviews-modal-kicker {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #9db7ff;
+  margin-bottom: 3px;
+}
+.reviews-modal-header h3 { margin: 0; color: #eef3ff; font-size: 1.25rem; }
+.reviews-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e8edf7;
+  cursor: pointer;
+}
+
+.reviews-modal-body {
+  overflow-y: auto;
+  max-height: calc(min(90vh, 840px) - 82px);
+  padding: 18px 22px 22px;
+}
+
+.reviews-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.reviews-summary-stars { color: #f1c40f; display: inline-flex; gap: 2px; }
+.reviews-summary-text { color: #d9e4f9; font-size: 14px; font-weight: 600; }
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.review-item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 12px;
+}
+.review-item-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.review-item-user { display: flex; align-items: center; gap: 7px; }
+.review-user-name { color: #f1f5ff; font-weight: 700; }
+.verified-buyer-icon {
+  color: #5ec5ff;
+  font-size: 14px;
+  position: relative;
+  cursor: help;
+}
+
+.verified-buyer-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: #0f1720;
+  color: #f8fbff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.verified-buyer-icon:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+.review-item-date { color: #a7b3c9; font-size: 12px; }
+.review-item-rating { color: #f1c40f; font-size: 13px; margin-top: 4px; }
+.review-item-comment { color: #dce5f7; margin: 8px 0 0; line-height: 1.5; font-size: 14px; }
+.reviews-empty {
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 14px;
+  color: #becbe2;
+  text-align: center;
+  font-size: 14px;
+}
+
+.review-form {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+}
+.review-form h4 { margin: 0 0 10px; color: #f1f5ff; font-size: 15px; }
+.review-rating-input { display: inline-flex; gap: 4px; margin-bottom: 10px; }
+.rate-star {
+  border: none;
+  background: transparent;
+  color: #6c768b;
+  font-size: 23px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, color 0.12s ease;
+}
+.rate-star.active { color: #f1c40f; }
+.rate-star:hover { transform: translateY(-2px); }
+
+.review-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 105px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  color: #eff5ff;
+  padding: 10px 12px;
+  outline: none;
+}
+.review-form textarea:focus {
+  border-color: #78c8ff;
+  box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.15);
+}
+
+.review-submit-btn {
+  margin-top: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #1f9d55, #157347);
+  color: #fff;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.review-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.review-login-hint {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+  color: #d0d8ea;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .reviews-modal { border-radius: 14px; }
+  .review-item-head { align-items: flex-start; flex-direction: column; }
+  .product-card-actions { gap: 8px; }
+}
 </style>
 {% endblock %}
 {% endblock %}

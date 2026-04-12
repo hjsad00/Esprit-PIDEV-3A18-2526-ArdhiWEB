@@ -72,6 +72,10 @@ class Produits
     #[ORM\Column(name: 'visible_admin', type: Types::BOOLEAN, options: ["default" => true])]
     private bool $visibleAdmin = true;
 
+    // Virtual fields hydrated at runtime (not persisted)
+    private float $averageRating = 0.0;
+    private int $reviewsCount = 0;
+
     // ==================== GETTERS & SETTERS ====================
 
     public function getId(): ?int
@@ -208,6 +212,28 @@ class Produits
     public function setVisibleAdmin(bool $visibleAdmin): static
     {
         $this->visibleAdmin = $visibleAdmin;
+        return $this;
+    }
+
+    public function getAverageRating(): float
+    {
+        return $this->averageRating;
+    }
+
+    public function setAverageRating(float $averageRating): static
+    {
+        $this->averageRating = max(0.0, min(5.0, $averageRating));
+        return $this;
+    }
+
+    public function getReviewsCount(): int
+    {
+        return $this->reviewsCount;
+    }
+
+    public function setReviewsCount(int $reviewsCount): static
+    {
+        $this->reviewsCount = max(0, $reviewsCount);
         return $this;
     }
 
