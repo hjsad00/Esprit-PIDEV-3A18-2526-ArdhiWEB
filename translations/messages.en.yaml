@@ -320,6 +320,27 @@ tache:
         col_overdue: Overdue
         'yes': 'YES'
         footer: 'Ardhi - Intelligent Agricultural Management'
+    status:
+        en_attente: Pending
+        en_cours: 'In progress'
+        termine: Completed
+        valide: Validated
+        annule: Cancelled
+    category:
+        plantation: Planting
+        recolte: Harvest
+        irrigation: Irrigation
+        fertilisation: Fertilization
+        maintenance: Maintenance
+        administratif: Administrative
+        autre: Other
+        nettoyage: Cleaning
+        logistique: Logistics
+        formation: Training
+        analyse: Analysis
+        gestion: Management
+        energie: Energy
+        planification: Planning
 notification:
     title: '🔔 Notifications'
     subtitle: 'Stay informed about your agricultural activities'

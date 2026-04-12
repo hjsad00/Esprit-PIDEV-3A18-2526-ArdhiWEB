@@ -321,6 +321,27 @@ tache:
         col_overdue: تأخير
         'yes': نعم
         footer: 'Ardhi - إدارة زراعية ذكية'
+    status:
+        en_attente: 'قيد الانتظار'
+        en_cours: 'قيد الإنجاز'
+        termine: مكتمل
+        valide: صالح
+        annule: ملغى
+    category:
+        plantation: زراعة
+        recolte: حصاد
+        irrigation: ري
+        fertilisation: تسميد
+        maintenance: صيانة
+        administratif: إداري
+        autre: أخرى
+        nettoyage: تنظيف
+        logistique: لوجستية
+        formation: تدريب
+        analyse: تحليل
+        gestion: إدارة
+        energie: طاقة
+        planification: تخطيط
 notification:
     title: '🔔 الإشعارات'
     subtitle: 'ابقَ على اطلاع بأنشطتك الزراعية'

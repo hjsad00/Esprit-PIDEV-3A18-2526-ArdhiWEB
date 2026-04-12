@@ -273,24 +273,27 @@
         <div class="toolbar-sep"></div>
         <span class="tri-label">{{ 'tache.col.status'|trans }}</span>
         <select name="statut" class="filter-select" onchange="this.form.submit()">
+            {% set statKeyMap = {'En attente':'tache.status.en_attente', 'En cours':'tache.status.en_cours', 'Terminé':'tache.status.termine', 'Validé':'tache.status.valide', 'Annulé':'tache.status.annule'} %}
             {% for s in statuts %}
-                <option value="{{ s }}" {{ statut == s ? 'selected' : '' }}>{{ s == 'Tous' ? 'common.all'|trans : s }}</option>
+                <option value="{{ s }}" {{ statut == s ? 'selected' : '' }}>{{ s == 'Tous' ? 'common.all'|trans : (statKeyMap[s] ?? s)|trans }}</option>
             {% endfor %}
         </select>
 
         {# Filtre Priorité #}
         <span class="tri-label">{{ 'tache.col.priority'|trans }}</span>
         <select name="priorite" class="filter-select" onchange="this.form.submit()">
+            {% set prioStringMap = {'Basse':'tache.form.priority_low', 'Moyenne':'tache.form.priority_medium', 'Haute':'tache.form.priority_high', 'Critique':'tache.form.priority_critical'} %}
             {% for p in priorites %}
-                <option value="{{ p }}" {{ priorite == p ? 'selected' : '' }}>{{ p == 'Toutes' ? 'common.all_f'|trans : p }}</option>
+                <option value="{{ p }}" {{ priorite == p ? 'selected' : '' }}>{{ p == 'Toutes' ? 'common.all_f'|trans : (prioStringMap[p] ?? p)|trans }}</option>
             {% endfor %}
         </select>
 
         {# Filtre Catégorie #}
         <span class="tri-label">{{ 'tache.col.category'|trans }}</span>
         <select name="categorie" class="filter-select" onchange="this.form.submit()">
+            {% set catKeyMap = {'Plantation':'tache.category.plantation', 'Récolte':'tache.category.recolte', 'Irrigation':'tache.category.irrigation', 'Fertilisation':'tache.category.fertilisation', 'Maintenance':'tache.category.maintenance', 'Administratif':'tache.category.administratif', 'Autre':'tache.category.autre', 'Nettoyage':'tache.category.nettoyage', 'Logistique':'tache.category.logistique', 'Formation':'tache.category.formation', 'Analyse':'tache.category.analyse', 'Gestion':'tache.category.gestion', 'Énergie':'tache.category.energie', 'Planification':'tache.category.planification'} %}
             {% for c in categories %}
-                <option value="{{ c }}" {{ categorie == c ? 'selected' : '' }}>{{ c == 'Toutes' ? 'common.all_f'|trans : c }}</option>
+                <option value="{{ c }}" {{ categorie == c ? 'selected' : '' }}>{{ c == 'Toutes' ? 'common.all_f'|trans : (catKeyMap[c] ?? c)|trans }}</option>
             {% endfor %}
         </select>
 
