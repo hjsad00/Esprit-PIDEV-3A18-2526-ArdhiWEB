@@ -43,7 +43,7 @@ class AdminMaintenanceController extends AbstractController
     }
 
     #[Route('/{id}/status', name: 'status_update', methods: ['POST'])]
-    public function updateStatus(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em): Response
+    public function updateStatus(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, UserRepository $userRepo): Response
     {
         $maintenance = $repo->find($id);
 
@@ -66,6 +66,20 @@ class AdminMaintenanceController extends AbstractController
                     if ($dateCible) {
                         $materiel->setDerniereMaintenance($dateCible);
                         $materiel->calculerProchaineMaintenance();
+                    }
+                }
+
+                // Notification pour le propriétaire du matériel
+                $materiel = $maintenance->getMateriel();
+                if ($materiel) {
+                    $userId = $materiel->getUserId();
+                    $user = $userRepo->find($userId);
+                    if ($user) {
+                        $notif = new \App\Entity\MaterielEtMaintenance\NotificationMaintenance();
+                        $notif->setUser($user);
+                        $notif->setMateriel($materiel);
+                        $notif->setNouveauStatut($nouveauStatut);
+                        $em->persist($notif);
                     }
                 }
 

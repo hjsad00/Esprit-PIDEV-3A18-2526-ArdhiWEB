@@ -150,4 +150,21 @@ class GoogleCalendarService
             return $this->createMaintenanceEvent($user, $title, $description, $date);
         }
     }
+
+    public function deleteMaintenanceEvent(User $user, string $eventId): bool
+    {
+        $client = $this->authenticateUserClient($user);
+        if (!$client) {
+            return false;
+        }
+
+        $calendarService = new Calendar($client);
+
+        try {
+            $calendarService->events->delete('primary', $eventId);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }
