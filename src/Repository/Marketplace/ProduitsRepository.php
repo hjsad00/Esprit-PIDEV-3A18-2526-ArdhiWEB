@@ -146,6 +146,17 @@ class ProduitsRepository extends ServiceEntityRepository
                ->setParameter('cat', $filters['categorie']);
         }
 
+        // --- FILTRAGE SPATIAL ---
+        if (isset($filters['valid_cities'])) {
+            // Nous joignons le vendeur 'v' si ce n'est pas déjà fait plus tard.
+            // On s'assure de l'ajouter ici pour la clause WHERE.
+            if (!in_array('v', $qb->getAllAliases())) {
+                $qb->join('p.user', 'v');
+            }
+            $qb->andWhere('LOWER(v.location) IN (:villes)')
+               ->setParameter('villes', $filters['valid_cities']);
+        }
+
         if (isset($filters['prix_min']) && $filters['prix_min'] !== '') {
             $qb->andWhere('p.prix >= :pmin')
                ->setParameter('pmin', (float) $filters['prix_min']);
@@ -181,8 +192,10 @@ class ProduitsRepository extends ServiceEntityRepository
         }
 
         if ($isAdmin && !empty($filters['vendeur'])) {
-            $qb->join('p.user', 'v')
-               ->andWhere('(v.nom LIKE :vdr OR v.prenom LIKE :vdr OR v.email LIKE :vdr)')
+            if (!in_array('v', $qb->getAllAliases())) {
+                $qb->join('p.user', 'v');
+            }
+            $qb->andWhere('(v.nom LIKE :vdr OR v.prenom LIKE :vdr OR v.email LIKE :vdr)')
                ->setParameter('vdr', '%' . $filters['vendeur'] . '%');
         }
 

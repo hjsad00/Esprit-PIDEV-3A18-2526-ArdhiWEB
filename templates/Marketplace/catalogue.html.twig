@@ -6,6 +6,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link href="{{ asset('assets/css/marketplace/marketplace.css') }}?v={{ date().timestamp }}" rel="stylesheet">
 {% endblock %}
 
@@ -126,6 +127,30 @@
                   </select>
                   <i class="bi bi-chevron-down sidebar-select-arrow"></i>
                 </div>
+              </div>
+
+              {# ── Localisation (Map) ── #}
+              <div class="sidebar-group">
+                <label class="sidebar-label">
+                  <i class="bi bi-geo-alt"></i> Localisation
+                </label>
+                <div style="border: 1px solid #e0e6e0; border-radius: 10px; padding: 12px; background: #f8faf9; cursor: pointer; display: flex; flex-direction: column; gap: 5px; transition: all 0.2s;" onclick="openLocationModal()" onmouseover="this.style.borderColor='#4a8c3f'" onmouseout="this.style.borderColor='#e0e6e0'">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-geo" style="color: #4a8c3f;"></i>
+                    <span id="currentLocationText" style="font-size: 14px; font-weight: 600; color: #2d3436;">
+                      {{ filters.location_name ?: 'Changer le lieu' }}
+                    </span>
+                  </div>
+                  <div id="currentRadiusWrap" style="display: {{ filters.radius and filters.location_name ? 'block' : 'none' }};">
+                     <span style="font-size: 12px; color: #636e72;">Rayon : <strong id="currentRadiusText">{{ filters.radius ?: '25' }}</strong> km</span>
+                  </div>
+                </div>
+                
+                {# Hidden inputs for form submission #}
+                <input type="hidden" name="location_name" id="filter-location-name" value="{{ filters.location_name }}">
+                <input type="hidden" name="lat" id="filter-lat" value="{{ filters.lat }}">
+                <input type="hidden" name="lng" id="filter-lng" value="{{ filters.lng }}">
+                <input type="hidden" name="radius" id="filter-radius" value="{{ filters.radius ?: '25' }}">
               </div>
 
               {# ── Plage de Prix ── #}
@@ -388,7 +413,54 @@
       </div>
     </section>
 
+    {# ============================
+       MODAL LOCALISATION (MAP)
+       ============================ #}
+    <div id="locationModal" class="location-modal-overlay">
+      <div class="location-modal">
+        <div class="location-modal-header">
+          <h3 style="margin:0; font-size: 18px; color: #fff;">Changer le lieu</h3>
+          <button class="location-modal-close" onclick="closeLocationModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="location-modal-body">
+          <p style="color: #b2bec3; font-size: 13px; margin-bottom: 15px;">Trouvez les agriculteurs et les produits frais situés autour de vous.</p>
+          
+          <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: stretch;">
+            <div style="position: relative; flex-grow: 1;">
+              <i class="bi bi-geo-alt" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #b2bec3;"></i>
+              <input type="text" id="mapSearchInput" placeholder="Rechercher une ville..." style="width: 100%; height: 100%; padding: 12px 12px 12px 40px; background: #2d3436; border: 1px solid #636e72; border-radius: 8px; color: #fff; font-family: 'Inter', sans-serif; box-sizing: border-box; outline: none;">
+              <div id="mapSearchResults" style="position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: #2d3436; border: 1px solid #636e72; border-radius: 8px; z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
+            </div>
+            <button onclick="geolocateUser()" title="Ma position actuelle" type="button" style="background: #2d3436; border: 1px solid #636e72; border-radius: 8px; color: #fff; padding: 0 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;"><i class="bi bi-crosshair"></i></button>
+          </div>
+          <div id="mapErrorText" style="color: #e17055; font-size: 13px; margin-bottom: 15px; display: none;"><i class="bi bi-exclamation-circle"></i> Veuillez d'abord choisir votre emplacement</div>
+
+          <div style="margin-bottom: 15px;">
+            <div style="background: #2d3436; border: 1px solid #636e72; border-radius: 8px; padding: 10px 15px;">
+              <label style="display: block; font-size: 11px; color: #b2bec3; margin-bottom: 2px;">Rayon</label>
+              <select id="mapRadiusSelect" style="width: 100%; background: transparent; border: none; color: #fff; outline: none; appearance: none; font-size: 14px; cursor: pointer;">
+                <option value="5" style="background-color: #2d3436; color: #fff;">5 kilomètres</option>
+                <option value="10" style="background-color: #2d3436; color: #fff;">10 kilomètres</option>
+                <option value="25" selected style="background-color: #2d3436; color: #fff;">25 kilomètres</option>
+                <option value="50" style="background-color: #2d3436; color: #fff;">50 kilomètres</option>
+                <option value="100" style="background-color: #2d3436; color: #fff;">100 kilomètres</option>
+                <option value="250" style="background-color: #2d3436; color: #fff;">250 kilomètres</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="mapContainer" style="height: 300px; border-radius: 8px; overflow: hidden; margin-bottom: 5px; z-index: 1;"></div>
+
+        </div>
+        <div class="location-modal-footer">
+          <button class="btn-filter-reset" onclick="resetLocationFilter()" style="margin-right: auto; padding: 10px 20px; font-size: 14px;"><i class="bi bi-trash"></i> Vider</button>
+          <button class="btn-filter-apply" onclick="applyLocationFilter()" style="width: auto; padding: 10px 20px;">Appliquer</button>
+        </div>
+      </div>
+    </div>
+
 {% block javascripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 // ── Sidebar Mobile Toggle ───────────────────────────────────────────
 const filterToggle  = document.getElementById('filterToggle');
@@ -724,6 +796,218 @@ if (currencySelect) {
         }
     });
 }
+// ── Map / Localisation Logic ──────────────────────────────────────────
+let map, marker, radiusCircle;
+const locationModal = document.getElementById('locationModal');
+const searchInput = document.getElementById('mapSearchInput');
+const searchResults = document.getElementById('mapSearchResults');
+const radiusSelect = document.getElementById('mapRadiusSelect');
+
+let currentLat = document.getElementById('filter-lat').value;
+let currentLng = document.getElementById('filter-lng').value;
+let currentRadius = document.getElementById('filter-radius').value || 25;
+let currentLocName = document.getElementById('filter-location-name').value;
+
+if(radiusSelect && currentRadius) {
+    let opt = Array.from(radiusSelect.options).find(o => o.value == currentRadius);
+    if(opt) opt.selected = true;
+}
+
+function initMap() {
+    if (map) return;
+    
+    // Default: Tunis center
+    const startLat = currentLat ? parseFloat(currentLat) : 34.0;
+    const startLng = currentLng ? parseFloat(currentLng) : 9.0;
+    const startZoom = currentLat ? 10 : 6;
+
+    map = L.map('mapContainer').setView([startLat, startLng], startZoom);
+
+    // Dark theme map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    if (currentLat && currentLng) {
+        updateMapMarker(startLat, startLng, currentRadius);
+    }
+
+    // Fonction de vérification des frontières (Boîte englobante approximative de la Tunisie)
+    function isLocationInTunisia(lat, lng) {
+        return (lat >= 30.2 && lat <= 37.4 && lng >= 7.5 && lng <= 11.6);
+    }
+
+    map.on('click', function(e) {
+        const errorText = document.getElementById('mapErrorText');
+        
+        if (!isLocationInTunisia(e.latlng.lat, e.latlng.lng)) {
+            errorText.innerHTML = '<i class="bi bi-exclamation-circle"></i> Veuillez choisir un emplacement en Tunisie.';
+            errorText.style.display = 'block';
+            return;
+        }
+
+        errorText.style.display = 'none';
+        updateMapMarker(e.latlng.lat, e.latlng.lng, radiusSelect.value);
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.address) {
+                    currentLocName = data.address.city || data.address.town || data.address.village || data.address.state || "Lieu sélectionné";
+                    searchInput.value = currentLocName;
+                }
+            });
+    });
+}
+
+function updateMapMarker(lat, lng, radiusKm) {
+    currentLat = lat;
+    currentLng = lng;
+    currentRadius = radiusKm;
+
+    if (marker) map.removeLayer(marker);
+    if (radiusCircle) map.removeLayer(radiusCircle);
+
+    marker = L.marker([lat, lng]).addTo(map);
+    
+    radiusCircle = L.circle([lat, lng], {
+        color: '#4a8c3f',
+        fillColor: '#4a8c3f',
+        fillOpacity: 0.2,
+        radius: radiusKm * 1000 // meters
+    }).addTo(map);
+
+    map.setView([lat, lng]);
+}
+
+function openLocationModal() {
+    locationModal.classList.add('active');
+    if (!map) {
+        initMap();
+    }
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+}
+
+function closeLocationModal() {
+    locationModal.classList.remove('active');
+}
+
+if(radiusSelect) {
+    radiusSelect.addEventListener('change', function(e) {
+        if(currentLat && currentLng) {
+            updateMapMarker(currentLat, currentLng, e.target.value);
+        }
+    });
+}
+
+let searchTimeout;
+if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+        document.getElementById('mapErrorText').style.display = 'none';
+        clearTimeout(searchTimeout);
+        const query = e.target.value;
+        if(query.length < 3) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=tn&limit=5`)
+                .then(res => res.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    if(data.length > 0) {
+                        data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item';
+                            div.innerHTML = `<i class="bi bi-geo-alt"></i> ${item.display_name.split(',')[0]} <small style="opacity:0.6">${item.display_name}</small>`;
+                            div.onclick = function() {
+                                currentLocName = item.display_name.split(',')[0];
+                                searchInput.value = currentLocName;
+                                searchResults.style.display = 'none';
+                                updateMapMarker(parseFloat(item.lat), parseFloat(item.lon), radiusSelect.value);
+                            };
+                            searchResults.appendChild(div);
+                        });
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.style.display = 'none';
+                    }
+                });
+        }, 500);
+    });
+}
+
+function geolocateUser() {
+    const errorText = document.getElementById('mapErrorText');
+    errorText.style.display = 'none';
+    
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            if (!(position.coords.latitude >= 30.2 && position.coords.latitude <= 37.4 && position.coords.longitude >= 7.5 && position.coords.longitude <= 11.6)) {
+                errorText.innerHTML = '<i class="bi bi-exclamation-circle"></i> Votre position actuelle semble être hors de la Tunisie.';
+                errorText.style.display = 'block';
+                return;
+            }
+            
+            updateMapMarker(position.coords.latitude, position.coords.longitude, radiusSelect.value);
+            currentLocName = "Ma position";
+            searchInput.value = "Ma position";
+        }, function(error) {
+            alert("Impossible de vous géolocaliser.");
+        });
+    } else {
+        alert("La géolocalisation n'est pas supportée.");
+    }
+}
+
+function applyLocationFilter() {
+    const errorText = document.getElementById('mapErrorText');
+    if (!currentLat || !currentLng) {
+        errorText.innerHTML = '<i class="bi bi-exclamation-circle"></i> Veuillez d\'abord choisir votre emplacement';
+        errorText.style.display = 'block';
+        return;
+    }
+    errorText.style.display = 'none';
+
+    document.getElementById('filter-lat').value = currentLat;
+    document.getElementById('filter-lng').value = currentLng;
+    document.getElementById('filter-radius').value = currentRadius;
+    document.getElementById('filter-location-name').value = currentLocName;
+
+    document.getElementById('currentLocationText').innerText = currentLocName || "Changer le lieu";
+    document.getElementById('currentRadiusText').innerText = currentRadius;
+    document.getElementById('currentRadiusWrap').style.display = currentLat ? 'block' : 'none';
+
+    closeLocationModal();
+    applyFiltersAjax();
+}
+
+function resetLocationFilter() {
+    currentLat = '';
+    currentLng = '';
+    currentRadius = '25';
+    currentLocName = '';
+    
+    document.getElementById('filter-lat').value = '';
+    document.getElementById('filter-lng').value = '';
+    document.getElementById('filter-location-name').value = '';
+    document.getElementById('filter-radius').value = '25';
+
+    document.getElementById('currentLocationText').innerText = "Changer le lieu";
+    document.getElementById('currentRadiusWrap').style.display = 'none';
+    
+    if (marker) { map.removeLayer(marker); marker = null; }
+    if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+    if (searchInput) searchInput.value = '';
+    if (radiusSelect) radiusSelect.value = '25';
+    if (map) map.setView([34.0, 9.0], 6);
+
+    applyFiltersAjax();
+}
 </script>
 
 <style>
@@ -741,6 +1025,20 @@ input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: 
 .custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 .custom-sidebar-scroll::-webkit-scrollbar-thumb { background: #e0e6e0; border-radius: 10px; }
 .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #c3cfc3; }
+
+/* Location Modal */
+.location-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s; }
+.location-modal-overlay.active { opacity: 1; visibility: visible; }
+.location-modal { background: #1e272e; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(-20px); transition: all 0.3s; }
+.location-modal-overlay.active .location-modal { transform: translateY(0); }
+.location-modal-header { padding: 15px 20px; border-bottom: 1px solid #2d3436; display: flex; justify-content: space-between; align-items: center; }
+.location-modal-close { background: #2d3436; border: none; width: 30px; height: 30px; border-radius: 50%; color: #b2bec3; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+.location-modal-close:hover { background: #636e72; color: #fff; }
+.location-modal-body { padding: 20px; }
+.location-modal-footer { padding: 15px 20px; border-top: 1px solid #2d3436; display: flex; justify-content: flex-end; }
+.search-result-item { padding: 10px 15px; color: #fff; font-size: 13px; cursor: pointer; border-bottom: 1px solid #353b48; transition: 0.2s; }
+.search-result-item:hover { background: #4a8c3f; }
+.search-result-item:last-child { border-bottom: none; }
 </style>
 {% endblock %}
 {% endblock %}

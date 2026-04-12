@@ -5,6 +5,7 @@ namespace App\Controller\Marketplace;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\WishlistRepository;
+use App\Service\Marketplace\CityCoordinatesService;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +22,8 @@ class CatalogueController extends AbstractController
         Request $request,
         ProduitsRepository $produitsRepository,
         PanierRepository $panierRepository,
-        WishlistRepository $wishlistRepository
+        WishlistRepository $wishlistRepository,
+        CityCoordinatesService $cityCoordinatesService
     ): Response
     {
         /** @var \App\Entity\UserAndDiag\User $user */
@@ -38,7 +40,24 @@ class CatalogueController extends AbstractController
             'stock_max' => $request->query->get('stock_max', ''),
             'en_solde'  => $request->query->get('en_solde', ''),
             'tri'       => $request->query->get('tri', 'recent'),
+            'lat'       => $request->query->get('lat', ''),
+            'lng'       => $request->query->get('lng', ''),
+            'radius'    => $request->query->get('radius', '25'),
+            'location_name' => $request->query->get('location_name', ''),
         ];
+
+        // --- FILTRAGE SPATIAL (VILLES PROCHES) ---
+        if ($filters['lat'] !== '' && $filters['lng'] !== '') {
+            $validCities = $cityCoordinatesService->getCitiesWithinRadius(
+                (float)$filters['lat'],
+                (float)$filters['lng'],
+                (float)$filters['radius']
+            );
+            // Ajout du tableau des villes valides aux filtres
+            // Si la liste est vide (aucune ville dans le rayon), on passe une valeur factice pour forcer 0 résultat ?
+            // Ou on passe la liste vide à Doctrine.
+            $filters['valid_cities'] = empty($validCities) ? ['__AUCUNE_VILLE__'] : $validCities;
+        }
 
         // --- VALIDATION SERVEUR (PHP) ---
         // 1. Validation Prix
