@@ -1,0 +1,105 @@
+{# templates/Evenement/_location_map.html.twig #}
+
+<div class="detail-card" id="map-section">
+  <h4><i class="bi bi-geo-alt-fill"></i>Localisation</h4>
+
+  <div class="info-row mb-3">
+    <div class="info-icon"><i class="bi bi-pin-map-fill"></i></div>
+    <div>
+      <div class="info-label">Adresse</div>
+      <div class="info-value">{{ evenement.lieu }}</div>
+    </div>
+  </div>
+
+  {# ── Embed API iframe — no billing needed ── #}
+  <iframe
+    width="100%"
+    height="340"
+    style="border-radius:14px; border:1.5px solid #e5e7eb;"
+    loading="lazy"
+    allowfullscreen
+    referrerpolicy="no-referrer-when-downgrade"
+    src="https://www.google.com/maps/embed/v1/place?key={{ google_maps_key }}&q={{ evenement.lieu|url_encode }}&language=fr">
+  </iframe>
+
+  <div class="d-flex gap-2 mt-3 flex-wrap">
+    <a href="https://www.google.com/maps/search/{{ evenement.lieu|url_encode }}"
+       target="_blank" rel="noopener"
+       class="btn btn-sm fw-semibold"
+       style="border-radius:10px;background:#3498DB;color:#fff;padding:9px 18px;">
+      <i class="bi bi-map-fill me-1"></i>Voir sur la carte
+    </a>
+    <button class="btn btn-sm fw-semibold"
+            style="border-radius:10px;background:#27AE60;color:#fff;padding:9px 18px;"
+            onclick="openDirections()">
+      <i class="bi bi-signpost-split-fill me-1"></i>Obtenir l'itinéraire
+    </button>
+  </div>
+</div>
+
+{# ── Directions modal ── #}
+<div class="modal fade" id="directionsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" style="color:#2C3E50;">
+          <i class="bi bi-signpost-split-fill me-2" style="color:#27AE60;"></i>Obtenir l'itinéraire
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p style="font-size:.9rem;color:#6b7280;">
+          Destination : <strong>{{ evenement.lieu }}</strong>
+        </p>
+        <label class="form-label fw-semibold" style="font-size:.88rem;">D'où partez-vous ?</label>
+        <div class="input-group">
+          <span class="input-group-text" style="background:#f0f4e8;border-color:#d1d5db;">
+            <i class="bi bi-geo-alt" style="color:#667A3F;"></i>
+          </span>
+          <input type="text" id="origin-input" class="form-control"
+                 placeholder="Ex: Tunis, Ariana, votre adresse..."
+                 style="border-color:#d1d5db;font-size:.9rem;">
+        </div>
+        <div class="mt-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="useMyLocation()" style="border-radius:8px;">
+            <i class="bi bi-crosshair me-1"></i>Ma position actuelle
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn fw-bold text-white"
+                data-bs-dismiss="modal"
+                style="background:#27AE60;border-radius:10px;padding:9px 24px;"
+                onclick="goDirections()">
+          <i class="bi bi-arrow-right-circle-fill me-1"></i>Lancer l'itinéraire
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const EVENT_LOCATION = {{ evenement.lieu|json_encode|raw }};
+  let userOrigin = 'Tunis, Tunisia';
+
+  function openDirections() {
+    new bootstrap.Modal(document.getElementById('directionsModal')).show();
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      userOrigin = pos.coords.latitude + ',' + pos.coords.longitude;
+      document.getElementById('origin-input').value = 'Ma position actuelle';
+    });
+  }
+
+  function goDirections() {
+    const input = document.getElementById('origin-input').value.trim();
+    const origin = input || userOrigin;
+    window.open(
+      `https://www.google.com/maps/dir/${encodeURIComponent(origin)}/${encodeURIComponent(EVENT_LOCATION)}`,
+      '_blank'
+    );
+  }
+</script>

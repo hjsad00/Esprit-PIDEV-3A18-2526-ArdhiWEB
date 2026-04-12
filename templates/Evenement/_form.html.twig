@@ -28,11 +28,118 @@
             {{ form_errors(form.description) }}
         </div>
 
+        {# Replace the entire lieu field block #}
         <div class="mb-4">
             {{ form_label(form.lieu, form.lieu.vars.label ~ ' *', {'label_attr': {'class': 'form-label'}}) }}
-            {{ form_widget(form.lieu) }}
+            
+            <div class="input-group mb-2">
+                {{ form_widget(form.lieu, {'attr': {'class': 'form-control', 'id': 'evenement_lieu', 'placeholder': 'Cliquez sur la carte ou tapez une adresse...', 'autocomplete': 'off'}}) }}
+                <button type="button" id="btn-search-map"
+                        class="btn fw-semibold"
+                        style="background:#667A3F;color:#fff;border-radius:0 12px 12px 0;padding:0 16px;border:1.5px solid #667A3F;">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
             {{ form_errors(form.lieu) }}
+
+            {# Leaflet Map #}
+            <div id="leaflet-map" style="height:320px;border-radius:14px;border:1.5px solid #e2e8f0;z-index:0;"></div>
+            <div class="form-text text-muted mt-2" style="font-size:0.8rem;">
+                <i class="bi bi-cursor-fill me-1 text-success"></i>
+                Cliquez n'importe où sur la carte pour définir le lieu, ou tapez une adresse et appuyez sur Entrée.
+            </div>
         </div>
+
+        {# Leaflet CSS + JS — free, no API key #}
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ── Leaflet map init (centered on Tunis) ──────────────────────────────
+            const map = L.map('leaflet-map').setView([36.8065, 10.1815], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+            }).addTo(map);
+
+            let marker = null;
+
+            function placeMarker(lat, lng, label) {
+                if (marker) marker.remove();
+                marker = L.marker([lat, lng]).addTo(map);
+                if (label) marker.bindPopup(label).openPopup();
+                map.setView([lat, lng], 15);
+                document.getElementById('evenement_lieu').value = label || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+
+            // ── Click on map → reverse geocode → fill lieu field ──────────────────
+            map.on('click', async (e) => {
+                const { lat, lng } = e.latlng;
+
+                // Show a temporary marker immediately
+                placeMarker(lat, lng, '...');
+
+                try {
+                    const res  = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`,
+                        { headers: { 'Accept-Language': 'fr' } }
+                    );
+                    const data = await res.json();
+                    const address = data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                    placeMarker(lat, lng, address);
+                } catch {
+                    placeMarker(lat, lng, `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+                }
+            });
+
+            // ── Search by typing address → geocode → move map ─────────────────────
+            async function searchAddress() {
+                const query = document.getElementById('evenement_lieu').value.trim();
+                if (!query) return;
+
+                try {
+                    const res  = await fetch(
+                        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=fr`
+                    );
+                    const data = await res.json();
+
+                    if (data.length > 0) {
+                        const { lat, lon, display_name } = data[0];
+                        placeMarker(parseFloat(lat), parseFloat(lon), display_name);
+                    } else {
+                        alert('Adresse introuvable. Essayez avec plus de détails.');
+                    }
+                } catch {
+                    alert('Erreur de recherche. Vérifiez votre connexion.');
+                }
+            }
+
+            const btnSearch = document.getElementById('btn-search-map');
+            if (btnSearch) btnSearch.addEventListener('click', searchAddress);
+            
+            const lInput = document.getElementById('evenement_lieu');
+            if (lInput) {
+                lInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); searchAddress(); }
+                });
+            }
+
+            // ── If lieu field already has a value (edit mode), show it on map ──────
+            const existingLieu = document.getElementById('evenement_lieu').value.trim();
+            if (existingLieu) {
+                fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(existingLieu)}&format=json&limit=1`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            placeMarker(parseFloat(data[0].lat), parseFloat(data[0].lon), existingLieu);
+                        }
+                    }).catch(() => {});
+            }
+        });
+        </script>
 
         <div class="row g-3">
             <div class="col-md-6 mb-4">

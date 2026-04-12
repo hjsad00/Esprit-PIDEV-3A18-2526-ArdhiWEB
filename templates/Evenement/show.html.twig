@@ -170,6 +170,9 @@
         </div>
         {% endif %}
 
+        {# Visualisation de la localisation #}
+        {% include 'Evenement/_location_map.html.twig' with { evenement: evenement } %}
+
         <!-- ── AVIS SECTION ── -->
         <div class="detail-card">
           <h4><i class="bi bi-star-fill"></i>Avis et évaluations
