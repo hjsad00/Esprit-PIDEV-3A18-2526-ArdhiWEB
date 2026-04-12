@@ -186,7 +186,6 @@
       <div class="col-12">
         {{ form_label(form.dateAchat) }}
         {{ form_widget(form.dateAchat, {'attr': {'class': 'form-control ' ~ (form.dateAchat.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
-        {{ form_errors(form.dateAchat) }}
         {% if form.dateAchat.vars.errors|length > 0 %}
             <div class="invalid-feedback d-block fw-bold" style="font-size: 0.9rem;">
                 {% for error in form.dateAchat.vars.errors %}{{ error.message }}{% endfor %}

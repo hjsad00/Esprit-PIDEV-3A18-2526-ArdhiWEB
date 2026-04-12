@@ -27,12 +27,16 @@ class Maintenance
     )]
     private ?string $description = null;
 
-    #[ORM\Column(name: 'date_maintenance', type: 'date')]
-    #[Assert\NotBlank(message: 'La date de maintenance est obligatoire.')]
+    #[ORM\Column(name: 'date_maintenance', type: 'datetime')]
+    #[Assert\NotBlank(message: 'La date et l\'heure de maintenance sont obligatoires.')]
     #[Assert\GreaterThanOrEqual('today', message: "Tu ne peux pas mettre une date de maintenance au passé.")]
     #[Assert\Expression(
         "value == null or value.format('w') != 0",
         message: "La date de maintenance ne peut pas être prévue un dimanche."
+    )]
+    #[Assert\Expression(
+        "value == null or (value.format('G') < 16) or (value.format('G') == 16 and value.format('i') == 0)",
+        message: "L'heure de planification ne peut pas dépasser 16:00."
     )]
     private ?\DateTimeInterface $date_maintenance = null;
 

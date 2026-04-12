@@ -8,6 +8,15 @@
     <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
 {% endblock %}
 
+{% form_theme form _self %}
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <div class="text-danger mt-1 mb-2 small fw-bold" style="color: #dc3545 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ errors[0].message }}
+        </div>
+    {% endif %}
+{% endblock form_errors %}
+
 {% block body %}
 <div class="materiel-page-wrapper" style="background: url('{{ asset("assets/img/maintenance.webp") }}') center/cover no-repeat fixed; min-height: 100vh; padding-bottom: 3rem;">
     <div class="container py-4">

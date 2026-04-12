@@ -41,6 +41,16 @@
             <i class="bi bi-tools text-warning"></i><span>Gestion du Matériel</span>
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_maintenance_timeline' ? 'active' : '' }}" href="{{ path('admin_maintenance_timeline') }}">
+            <i class="bi bi-calendar-range text-info"></i><span>Gestion Timeline</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ app.request.attributes.get('_route') == 'admin_maintenance_historique' ? 'active' : '' }}" href="{{ path('admin_maintenance_historique') }}">
+            <i class="bi bi-clock-history text-secondary"></i><span>Historique Maintenance</span>
+          </a>
+        </li>
       </ul>
 
       <div class="nav-section-title">Compte & Système</div>

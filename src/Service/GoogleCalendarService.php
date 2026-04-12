@@ -86,11 +86,11 @@ class GoogleCalendarService
             'description' => $description,
             'colorId' => '9', // Blueberry color
             'start' => [
-                'dateTime' => $date->format('Y-m-d\T09:00:00'),
+                'dateTime' => $date->format('Y-m-d\TH:i:s'),
                 'timeZone' => 'Africa/Tunis',
             ],
             'end' => [
-                'dateTime' => $date->format('Y-m-d\T12:00:00'),
+                'dateTime' => (clone $date)->modify('+3 hours')->format('Y-m-d\TH:i:s'),
                 'timeZone' => 'Africa/Tunis',
             ],
             'reminders' => [
@@ -110,6 +110,44 @@ class GoogleCalendarService
             ];
         } catch (\Exception $e) {
             return null;
+        }
+    }
+
+    public function updateMaintenanceEvent(User $user, string $eventId, string $title, string $description, \DateTimeInterface $date): ?array
+    {
+        $client = $this->authenticateUserClient($user);
+        if (!$client) {
+            return null;
+        }
+
+        $calendarService = new Calendar($client);
+
+        try {
+            // Récupérer l'événement existant
+            $event = $calendarService->events->get('primary', $eventId);
+            
+            // Mettre à jour les informations
+            $event->setSummary('🚜 Maintenance: ' . $title);
+            $event->setDescription($description);
+
+            $start = new \Google\Service\Calendar\EventDateTime();
+            $start->setDateTime($date->format('Y-m-d\TH:i:s'));
+            $start->setTimeZone('Africa/Tunis');
+            $event->setStart($start);
+
+            $end = new \Google\Service\Calendar\EventDateTime();
+            $end->setDateTime((clone $date)->modify('+3 hours')->format('Y-m-d\TH:i:s'));
+            $end->setTimeZone('Africa/Tunis');
+            $event->setEnd($end);
+
+            $updatedEvent = $calendarService->events->update('primary', $eventId, $event);
+            return [
+                'id' => $updatedEvent->getId(),
+                'link' => $updatedEvent->getHtmlLink()
+            ];
+        } catch (\Exception $e) {
+            // Si l'événement n'existe pas ou erreur, on le recrée
+            return $this->createMaintenanceEvent($user, $title, $description, $date);
         }
     }
 }
