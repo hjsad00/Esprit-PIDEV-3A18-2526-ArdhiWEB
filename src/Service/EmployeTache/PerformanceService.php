@@ -4,6 +4,7 @@ namespace App\Service\EmployeTache;
 
 use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * 📊 Service d'évaluation des performances des employés
@@ -21,6 +22,7 @@ class PerformanceService
     public function __construct(
         private TacheRepository  $tacheRepo,
         private EmployeRepository $employeRepo,
+        private TranslatorInterface $translator,
     ) {}
 
     // ══════════════════════════════════════════════════════════════════
@@ -195,11 +197,13 @@ class PerformanceService
      */
     public function getAppreciation(float $score): string
     {
-        if ($score >= 90) return 'Excellent';
-        if ($score >= 75) return 'Très bien';
-        if ($score >= 60) return 'Bien';
-        if ($score >= 50) return 'Moyen';
-        return 'Faible';
+        if ($score >= 90) $key = 'excellent';
+        elseif ($score >= 75) $key = 'tres_bien';
+        elseif ($score >= 60) $key = 'bien';
+        elseif ($score >= 50) $key = 'moyen';
+        else $key = 'faible';
+
+        return $this->translator->trans('ai.performance.' . $key);
     }
 
     /**

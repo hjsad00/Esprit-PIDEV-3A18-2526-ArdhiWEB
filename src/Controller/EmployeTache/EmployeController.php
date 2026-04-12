@@ -18,6 +18,7 @@ use App\Service\EmployeTache\FicheEmployePdfService;
 use App\Service\EmployeTache\EmployeAutoInactifService;
 use App\Service\EmployeTache\PerformanceService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/employes')]
 class EmployeController extends AbstractController
@@ -28,6 +29,7 @@ class EmployeController extends AbstractController
         private AgriculteurContextService $ctx,
         private EmployeAutoInactifService $autoInactif,
         private PerformanceService        $performanceService,
+        private TranslatorInterface       $translator,
     ) {}
 
     // ── Garde d'accès commune ─────────────────────────────────────────
@@ -141,13 +143,13 @@ class EmployeController extends AbstractController
                 }
                 $em->flush();
 
-                $this->addFlash('success', '✅ Employé ' . $employe->getNomComplet() . ' créé.');
+                $this->addFlash('success', '✅ ' . $this->translator->trans('common.success') . ': ' . $employe->getNomComplet());
                 return $this->redirectToRoute('employe_index');
             }
         }
 
         return $this->render('EmployeTache/employe/form.html.twig', [
-            'page_title'       => 'Ajouter un Employé',
+            'page_title'       => $this->translator->trans('common.add'),
             'employe'          => null,
             'errors'           => $errors,
             'old'              => $old,
@@ -196,13 +198,13 @@ class EmployeController extends AbstractController
                 }
                 $em->flush();
 
-                $this->addFlash('success', '✅ ' . $employe->getNomComplet() . ' modifié.');
+                $this->addFlash('success', '✅ ' . $this->translator->trans('common.success') . ': ' . $employe->getNomComplet());
                 return $this->redirectToRoute('employe_index');
             }
         }
 
         return $this->render('EmployeTache/employe/form.html.twig', [
-            'page_title'       => 'Modifier — ' . $employe->getNomComplet(),
+            'page_title'       => $this->translator->trans('common.edit') . ' — ' . $employe->getNomComplet(),
             'employe'          => $employe,
             'errors'           => $errors,
             'old'              => $old,
@@ -228,7 +230,7 @@ class EmployeController extends AbstractController
             $nom = $employe->getNomComplet();
             $em->remove($employe);
             $em->flush();
-            $this->addFlash('success', '🗑️ ' . $nom . ' supprimé.');
+            $this->addFlash('success', '🗑️ ' . $this->translator->trans('common.delete') . ': ' . $nom);
         }
         return $this->redirectToRoute('employe_index');
     }
@@ -275,7 +277,7 @@ class EmployeController extends AbstractController
 
         try {
             $mailService->envoyerAttestation($employe);
-            $this->addFlash('success', '📧 Attestation envoyée avec succès à ' . $employe->getEmail());
+            $this->addFlash('success', '📧 ' . $this->translator->trans('employe.attestation_success'));
         } catch (\Exception $e) {
             $this->addFlash('danger', '❌ Erreur : ' . $e->getMessage());
         }
@@ -297,12 +299,20 @@ class EmployeController extends AbstractController
         $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('Ardhi');
         $pdf->SetAuthor('Ardhi');
-        $pdf->SetTitle('Liste des Employés');
+        $pdf->SetTitle($this->translator->trans('employe.title'));
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 10);
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
         $pdf->AddPage();
+
+        $currentLocale = $this->translator->getLocale();
+        $isAr = ($currentLocale === 'ar');
+        $font = $isAr ? 'freeserif' : 'helvetica';
+
+        if ($isAr) {
+            $pdf->setRTL(true);
+        }
 
         // Header green bar
         $pdf->SetFillColor(34, 120, 60);
@@ -310,30 +320,40 @@ class EmployeController extends AbstractController
         $pdf->SetFillColor(39, 174, 96);
         $pdf->Rect(0, 24, 297, 4, 'F');
 
-        $pdf->SetFont('helvetica', 'B', 18);
+        $pdf->SetFont($font, 'B', 18);
         $pdf->SetTextColor(255, 255, 255);
         $pdf->SetY(5);
-        $pdf->Cell(0, 10, 'LISTE DES EMPLOYÉS', 0, 1, 'C');
-        $pdf->SetFont('helvetica', '', 10);
+        $title = $this->translator->trans('employe.title');
+        $pdf->Cell(0, 10, $isAr ? $title : strtoupper($title), 0, 1, 'C');
+        
+        $pdf->SetFont($font, '', 10);
         $date = (new \DateTime())->format('d/m/Y H:i');
         $total = count($employes);
-        $pdf->Cell(0, 6, "Généré le : $date | Total : $total employé(s)", 0, 1, 'C');
+        
+        $genLabel = strtr($this->translator->trans('common.loading_time'), [
+            'Chargé en %ms%ms' => 'Généré le',
+            'Loaded in %ms%ms' => 'Generated on',
+            'تم التحميل في %ms%ms' => 'تم الإنشاء في'
+        ]);
+        $totalLabel = $this->translator->trans('common.total');
+        
+        $pdf->Cell(0, 6, "$genLabel : $date | $totalLabel : $total", 0, 1, 'C');
         $pdf->Ln(8);
 
         // Table header
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetFont($font, 'B', 10);
         $pdf->SetFillColor(34, 120, 60);
         $pdf->SetTextColor(255, 255, 255);
 
         $pdf->Cell(15, 8, 'ID', 1, 0, 'C', true);
-        $pdf->Cell(40, 8, 'Nom', 1, 0, 'C', true);
-        $pdf->Cell(40, 8, 'Prénom', 1, 0, 'C', true);
-        $pdf->Cell(60, 8, 'Email', 1, 0, 'C', true);
-        $pdf->Cell(40, 8, 'Poste', 1, 0, 'C', true);
-        $pdf->Cell(35, 8, 'Téléphone', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'Actif', 1, 1, 'C', true);
+        $pdf->Cell(40, 8, $this->translator->trans('employe.col.nom'), 1, 0, 'C', true);
+        $pdf->Cell(40, 8, $this->translator->trans('employe.col.prenom'), 1, 0, 'C', true);
+        $pdf->Cell(60, 8, $this->translator->trans('employe.col.email'), 1, 0, 'C', true);
+        $pdf->Cell(40, 8, $this->translator->trans('employe.col.poste'), 1, 0, 'C', true);
+        $pdf->Cell(35, 8, $this->translator->trans('employe.col.telephone'), 1, 0, 'C', true);
+        $pdf->Cell(20, 8, $this->translator->trans('employe.col.actif'), 1, 1, 'C', true);
 
-        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFont($font, '', 9);
         $pdf->SetTextColor(0, 0, 0);
 
         foreach ($employes as $i => $emp) {
@@ -348,10 +368,10 @@ class EmployeController extends AbstractController
 
             if ($emp->isActif()) {
                 $pdf->SetFillColor(200, 240, 200);
-                $pdf->Cell(20, 7, 'Oui', 1, 1, 'C', true);
+                $pdf->Cell(20, 7, $this->translator->trans('common.active'), 1, 1, 'C', true);
             } else {
                 $pdf->SetFillColor(255, 200, 200);
-                $pdf->Cell(20, 7, 'Non', 1, 1, 'C', true);
+                $pdf->Cell(20, 7, $this->translator->trans('common.inactive'), 1, 1, 'C', true);
             }
         }
 
@@ -407,8 +427,8 @@ class EmployeController extends AbstractController
         if ($employe && $employe->getIdAgriculteur() === $idAgriculteur) {
             $employe->setActif(!$employe->isActif());
             $em->flush();
-            $statut = $employe->isActif() ? 'activé ✅' : 'désactivé ⛔';
-            $this->addFlash('success', $employe->getNomComplet() . ' ' . $statut . '.');
+            $statut = $employe->isActif() ? $this->translator->trans('common.active') : $this->translator->trans('common.inactive');
+            $this->addFlash('success', $employe->getNomComplet() . ' : ' . $statut);
         }
         return $this->redirectToRoute('employe_index');
     }

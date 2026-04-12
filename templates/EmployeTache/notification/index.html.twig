@@ -173,21 +173,21 @@
     {# ── En-tête ───────────────────────────────────────────────────────── #}
     <div class="notif-header-card">
         <div>
-            <div class="notif-header-title">🔔 Notifications</div>
+            <div class="notif-header-title">{{ 'notification.title'|trans }}</div>
             <div class="notif-header-sub">
-                Restez informé de vos activités agricoles
+                {{ 'notification.subtitle'|trans }}
                 {% if supervision_mode %}<span class="badge bg-warning text-dark ms-2">📋 {{ nom_supervise }}</span>{% endif %}
             </div>
         </div>
         <div style="display:flex; gap:1rem;">
             <div class="notif-stat-badge">
                 <div class="stat-num">{{ total }}</div>
-                <div class="stat-lbl">Total</div>
+                <div class="stat-lbl">{{ 'notification.total'|trans }}</div>
             </div>
             {% if nb_non_lues > 0 %}
             <div class="notif-stat-badge">
                 <div class="stat-num" style="color:#e74c3c;">{{ nb_non_lues }}</div>
-                <div class="stat-lbl">Non lues</div>
+                <div class="stat-lbl">{{ 'notification.unread'|trans }}</div>
             </div>
             {% endif %}
         </div>
@@ -197,13 +197,13 @@
     <div class="notif-actions">
         <button class="btn-notif-action btn-mark-all" id="btn-mark-all"
             onclick="markAllRead()" {% if nb_non_lues == 0 %}disabled{% endif %}>
-            ✓ Tout marquer comme lu
+            {{ 'notification.mark_all_read'|trans }}
         </button>
         <button class="btn-notif-action btn-refresh" onclick="refreshNotifs()">
-            🔄 Actualiser
+            {{ 'notification.refresh'|trans }}
         </button>
         <a href="{{ path('tache_index') }}" class="btn-notif-action btn-refresh">
-            📋 Voir les tâches
+            📋 {{ 'tache.title'|trans }}
         </a>
     </div>
 
@@ -212,8 +212,8 @@
         {% if notifications is empty %}
             <div class="notif-empty">
                 <div class="notif-empty-icon">🔔</div>
-                <div class="notif-empty-title">Aucune notification</div>
-                <div class="notif-empty-sub">Tout est à jour. Les alertes de retard et météo apparaîtront ici.</div>
+                <div class="notif-empty-title">{{ 'common.no_selection'|trans }}</div>
+                <div class="notif-empty-sub">{{ 'notification.empty'|trans }}</div>
             </div>
         {% else %}
             {% for notif in notifications %}
@@ -235,9 +235,9 @@
                             {% if notif.priorite == 'CRITICAL' %}badge-critical
                             {% elseif notif.priorite == 'WARNING' %}badge-warning
                             {% else %}badge-info{% endif %}">
-                            {% if notif.priorite == 'CRITICAL' %}CRITIQUE
-                            {% elseif notif.priorite == 'WARNING' %}ATTENTION
-                            {% else %}INFO{% endif %}
+                            {% if notif.priorite == 'CRITICAL' %}{{ 'common.error'|trans|upper }}
+                            {% elseif notif.priorite == 'WARNING' %}{{ 'common.warning'|trans|upper }}
+                            {% else %}{{ 'common.info'|trans|upper }}{% endif %}
                         </span>
                     </div>
 
@@ -246,11 +246,11 @@
                     <div class="notif-card-footer">
                         {% if not notif.lue %}
                         <button class="btn-small btn-read" onclick="markRead({{ notif.id }})">
-                            ✓ Marquer comme lu
+                            ✓ {{ 'notification.mark_all_read'|trans|replace({'Tout marquer comme lu': 'Marquer comme lu', 'Mark all as read': 'Mark as read', 'تعليم الكل كمقروء': 'تعليم كمقروء'}) }}
                         </button>
                         {% endif %}
                         <button class="btn-small btn-delete" onclick="deleteNotif({{ notif.id }})">
-                            🗑 Supprimer
+                            🗑 {{ 'common.delete'|trans }}
                         </button>
                     </div>
                 </div>

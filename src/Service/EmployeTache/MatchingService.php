@@ -6,6 +6,7 @@ use App\Entity\EmployeTache\Employe;
 use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Repository\EmployeTache\TacheRepository;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RecommandationResult
 {
@@ -18,19 +19,19 @@ class RecommandationResult
     public float $indiceConfiance = 0.0;
     public string $raisonRecommandation = '';
 
-    public function getAppreciation(): string
+    public function getAppreciationKey(): string
     {
-        if ($this->scoreTotal >= 80) return "Correspondance idéale";
-        if ($this->scoreTotal >= 60) return "Bonne correspondance";
-        if ($this->scoreTotal >= 40) return "Correspondance moyenne";
-        return "Non recommandé";
+        if ($this->scoreTotal >= 80) return "ai.matching.perfect";
+        if ($this->scoreTotal >= 60) return "ai.matching.good";
+        if ($this->scoreTotal >= 40) return "ai.matching.fair";
+        return "ai.matching.poor"; 
     }
 
-    public function getConfianceLabel(): string
+    public function getConfianceKey(): string
     {
-        if ($this->indiceConfiance >= 80) return "Haute";
-        if ($this->indiceConfiance >= 50) return "Moyenne";
-        return "Faible";
+        if ($this->indiceConfiance >= 80) return "common.high";
+        if ($this->indiceConfiance >= 50) return "common.medium";
+        return "common.low";
     }
 
     public function getEmoji(): string
@@ -53,12 +54,19 @@ class MatchingService
     private EmployeRepository $employeRepository;
     private TacheRepository $tacheRepository;
     private PerformanceService $performanceService;
+    private TranslatorInterface $translator;
 
-    public function __construct(EmployeRepository $employeRepository, TacheRepository $tacheRepository, PerformanceService $performanceService)
+    public function __construct(
+        EmployeRepository $employeRepository,
+        TacheRepository $tacheRepository,
+        PerformanceService $performanceService,
+        TranslatorInterface $translator
+    )
     {
         $this->employeRepository = $employeRepository;
         $this->tacheRepository = $tacheRepository;
         $this->performanceService = $performanceService;
+        $this->translator = $translator;
     }
 
     /**
@@ -104,14 +112,14 @@ class MatchingService
             $rec->scoreTotal = ($rec->scoreCompetences * 0.4) + ($rec->scorePerformance * 0.4) + ($rec->scoreDisponibilite * 0.2);
             $rec->indiceConfiance = min(100, $rec->scoreTotal + 10);
             
-            $rec->raisonRecommandation = sprintf(
-                "L'IA a sélectionné %s car %s a %.0f%% de pertinence de compétences, d'excellentes évaluations (%.0f/100) et est disponible (charge %s).",
-                $emp->getPrenom(),
-                $emp->getPrenom(),
-                $rec->scoreCompetences,
-                $rec->scorePerformance,
-                $nbEnCours === 0 ? "nulle" : ($nbEnCours <= 2 ? "modérée" : "élevée")
-            );
+            $chargeKey = $nbEnCours === 0 ? 'common.none' : ($nbEnCours <= 2 ? 'common.moderate' : 'common.high_load');
+            
+            $rec->raisonRecommandation = $this->translator->trans('ai.matching.reason_detail', [
+                '%name%' => $emp->getPrenom(),
+                '%relevance%' => $rec->scoreCompetences,
+                '%perf%' => $rec->scorePerformance,
+                '%charge%' => $this->translator->trans($chargeKey)
+            ]);
 
             $results[] = $rec;
         }

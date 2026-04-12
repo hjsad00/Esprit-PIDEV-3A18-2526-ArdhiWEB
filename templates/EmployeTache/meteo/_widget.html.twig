@@ -119,7 +119,7 @@
             <div class="meteo-icon">⚠️</div>
             <div class="meteo-info">
                 <h2>N/A</h2>
-                <p>Météo indisponible</p>
+                <p>{{ 'meteo.widget_title'|trans }}</p>
                 <small>{{ weather.description }}</small>
             </div>
         </div>
@@ -137,19 +137,19 @@
         <div class="meteo-stats">
             <div class="meteo-stat-item">
                 <i class="bi bi-droplet-fill"></i>
-                {{ weather.humidity }}% Humidité
+                {{ weather.humidity }}% {{ 'meteo.humidity'|trans }}
             </div>
             <div class="meteo-stat-item">
                 <i class="bi bi-wind" style="color: #cbd5e1;"></i>
-                {{ weather.windSpeed|round }} km/h
+                {{ weather.windSpeed|round }} km/h {{ 'meteo.wind'|trans }}
             </div>
             <div class="meteo-stat-item">
                 <i class="bi bi-thermometer-half" style="color: #f59e0b;"></i>
-                Ressenti {{ weather.feelsLike|round }}°C
+                {{ 'meteo.temp'|trans }} {{ weather.feelsLike|round }}°C
             </div>
         </div>
         
-        <div class="meteo-alerts-title">Alertes Météo Agricoles</div>
+        <div class="meteo-alerts-title">{{ 'meteo.recommendation'|trans }}</div>
         <div class="meteo-alert-list">
             {% if recommandations|length > 0 %}
                 {% for reco in recommandations %}
@@ -168,7 +168,7 @@
                 {% endfor %}
             {% else %}
                 <div class="meteo-alert alert-info" style="border-left-color: #94a3b8; background: rgba(148, 163, 184, 0.1);">
-                    <p>Aucune recommandation critique pour les tâches d'aujourd'hui.</p>
+                    <p>{{ 'notification.empty'|trans }}</p>
                 </div>
             {% endif %}
         </div>

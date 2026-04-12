@@ -6,6 +6,8 @@ use App\Entity\EmployeTache\Employe;
 use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Repository\EmployeTache\TacheRepository;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class ChatbotResponse
 {
@@ -24,17 +26,23 @@ class ChatbotService
     private EmployeRepository $employeRepository;
     private TacheRepository $tacheRepository;
     private PerformanceService $performanceService;
+    private TranslatorInterface $translator;
+    private RequestStack $requestStack;
 
     public function __construct(
         MatchingService $matchingService,
         EmployeRepository $employeRepository,
         TacheRepository $tacheRepository,
-        PerformanceService $performanceService
+        PerformanceService $performanceService,
+        TranslatorInterface $translator,
+        RequestStack $requestStack
     ) {
         $this->matchingService = $matchingService;
         $this->employeRepository = $employeRepository;
         $this->tacheRepository = $tacheRepository;
         $this->performanceService = $performanceService;
+        $this->translator = $translator;
+        $this->requestStack = $requestStack;
     }
 
     public function traiterMessage(string $messageUtilisateur, int $idAgriculteur): ChatbotResponse
@@ -74,9 +82,12 @@ class ChatbotService
 
     private function detecterLangue(string $message): string
     {
+        // 1. Priorité à la détection explicite dans le message
         if (preg_match('/[\x{0600}-\x{06FF}]/u', $message)) return 'ar';
         if (preg_match('/\b(recommend|show|who|can|best|task|employee|performance|available|help|find|give|compare|top)\b/i', $message)) return 'en';
-        return 'fr';
+        
+        // 2. Repli sur la locale de la session si le message est neutre ou ambigu
+        return $this->requestStack->getCurrentRequest()?->getLocale() ?? 'fr';
     }
 
     private function detecterIntention(string $message): string
@@ -124,11 +135,9 @@ class ChatbotService
         $idTache = $this->extraireIdTache($message, $idAgriculteur);
 
         if (!$idTache) {
-            $response->reponse = $this->buildMsg($lang,
-                "🤔 Pour quelle tâche voulez-vous une recommandation ?\n\n📌 **Tâches disponibles :**\n" . $this->listerTaches($idAgriculteur) . "\n💡 Dites par exemple : \"Recommande pour la tâche REMISE\"",
-                "🤔 For which task do you need a recommendation?\n\n📌 **Available tasks:**\n" . $this->listerTaches($idAgriculteur) . "\n💡 Say: \"Recommend for task REMISE\"",
-                "🤔 لأي مهمة تريد التوصية؟\n\n📌 **المهام المتاحة :**\n" . $this->listerTaches($idAgriculteur)
-            );
+            $response->reponse = $this->translator->trans('chatbot.reco.need_task', [
+                '%list%' => "\n" . $this->listerTaches($idAgriculteur)
+            ], null, $lang);
             return $response;
         }
 
@@ -160,10 +169,10 @@ class ChatbotService
 
         $recommandations = $this->matchingService->recommanderEmployes($idTache, 3);
         if (!empty($recommandations)) {
-            $response->reponse = "🤖 **Analyse IA terminée pour \"" . $tache->getTitre() . "\"**";
+            $response->reponse = $this->translator->trans('chatbot.reco.analysis_done', ['%title%' => $tache->getTitre()], null, $lang);
             $response->recommandations = $recommandations;
         } else {
-            $response->reponse = "😕 Aucun employé actif ne correspond à cette tâche pour le moment.";
+            $response->reponse = $this->translator->trans('chatbot.reco.no_match', [], null, $lang);
         }
 
         return $response;
@@ -175,11 +184,7 @@ class ChatbotService
         $idTache = $this->extraireIdTache($message, $idAgriculteur);
 
         if (!$idTache) {
-            $response->reponse = $this->buildMsg($lang,
-                "🤔 Pour comparer les 3 meilleurs, précisez la tâche.\n💡 Ex: \"Compare les 3 meilleurs pour la tâche Récolte\"",
-                "🤔 To compare the top 3, specify the task.",
-                "🤔 حدد المهمة للمقارنة."
-            );
+            $response->reponse = $this->translator->trans('chatbot.compare.need_task', [], null, $lang);
             return $response;
         }
 
@@ -211,10 +216,10 @@ class ChatbotService
                 }
                 $response->reponse = $sb;
             } else {
-                $response->reponse = "😕 Aucun employé trouvé avec la compétence \"$competence\".";
+                $response->reponse = $this->translator->trans('chatbot.skills.not_found', ['%comp%' => $competence], null, $lang);
             }
         } else {
-            $response->reponse = "🤔 Quelle compétence recherchez-vous ?\n💡 Ex: \"Qui maîtrise l'irrigation ?\"";
+            $response->reponse = $this->translator->trans('chatbot.skills.prompt', [], null, $lang);
         }
         return $response;
     }
@@ -236,7 +241,7 @@ class ChatbotService
             }
             $response->reponse = $sb;
         } else {
-            $response->reponse = "📊 Aucune donnée de performance disponible.";
+            $response->reponse = $this->translator->trans('chatbot.performance.no_data', [], null, $lang);
         }
         return $response;
     }
@@ -258,21 +263,13 @@ class ChatbotService
     private function genererAide(string $lang): ChatbotResponse
     {
         $response = new ChatbotResponse();
-        $response->reponse = $this->buildMsg($lang,
-            "👋 **Je suis votre Assistant RH !**\n\n🎯 \"Recommande pour la tâche RÉCOLTE\"\n🔍 \"Qui maîtrise l'irrigation ?\"\n📊 \"Montre les performances\"\n📅 \"Qui est disponible ?\"\n🏆 \"Compare les 3 meilleurs\"",
-            "👋 **I'm your HR Assistant!**\n\n🎯 \"Recommend for task HARVEST\"\n🔍 \"Who knows irrigation?\"",
-            "👋 **مرحباً ! أنا مساعد Ardhi**\n\n🎯 اوصي لمهمة ...\n🔍 من يعرف الري ?"
-        );
+        $response->reponse = $this->translator->trans('chatbot.help.text', [], null, $lang);
         return $response;
     }
 
     private function genererReponseDefaut(string $lang): string
     {
-        return $this->buildMsg($lang,
-            "🤔 Je n'ai pas compris. Tapez **aide** pour voir mes capacités.",
-            "🤔 I didn't understand. Type **help** to see what I can do.",
-            "🤔 لم أفهم. اكتب **مساعدة**."
-        );
+        return $this->translator->trans('chatbot.understanding.no_key', [], null, $lang);
     }
 
     // ===================================

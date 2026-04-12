@@ -64,7 +64,37 @@
             }
         }
 
-        // 2. Gestion RTL
+        // 2. Traduction dynamique des éléments de la navbar existante
+        const navbarTranslations = {
+            'Diagnostic IA': '{{ "navbar.diagnostic"|trans }}',
+            'Marketplace': '{{ "navbar.marketplace"|trans }}',
+            'Matériel & Maintenance': '{{ "navbar.maintenance"|trans }}',
+            'Cultures': '{{ "navbar.cultures"|trans }}',
+            'Évènements': '{{ "navbar.events"|trans }}',
+            'Employés': '{{ "navbar.employees"|trans }}',
+            'Mon Profil': '{{ "navbar.profile"|trans }}',
+            'Déconnexion': '{{ "navbar.logout"|trans }}',
+            'Se connecter': '{{ "navbar.login"|trans }}'
+        };
+
+        const navLinks = document.querySelectorAll('.navmenu a');
+        navLinks.forEach(link => {
+            const originalText = link.textContent.trim().split('(')[0].trim(); // Gère "Mon Profil (Nom)"
+            for (const [key, value] of Object.entries(navbarTranslations)) {
+                if (originalText.includes(key)) {
+                    // Si c'est "Mon Profil (Nom)", on garde le nom
+                    if (originalText === 'Mon Profil' && link.textContent.includes('(')) {
+                        const namePart = link.textContent.split('(')[1];
+                        link.innerHTML = value + ' (' + namePart;
+                    } else {
+                        link.textContent = value;
+                    }
+                    break;
+                }
+            }
+        });
+
+        // 3. Gestion RTL
         if ('{{ app.request.locale }}' === 'ar') {
             document.documentElement.setAttribute('dir', 'rtl');
             document.body.classList.add('rtl-mode');

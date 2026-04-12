@@ -134,12 +134,12 @@
         <span class="tri-label">{{ 'common.sort.by'|trans }}</span>
         <select name="tri" class="tri-select" onchange="this.form.submit()">
             <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
-            <option value="nom"       {{ tri == 'nom'       ? 'selected' : '' }}>Nom</option>
-            <option value="prenom"    {{ tri == 'prenom'    ? 'selected' : '' }}>Prénom</option>
-            <option value="email"     {{ tri == 'email'     ? 'selected' : '' }}>Email</option>
-            <option value="poste"     {{ tri == 'poste'     ? 'selected' : '' }}>Poste</option>
-            <option value="telephone" {{ tri == 'telephone' ? 'selected' : '' }}>Téléphone</option>
-            <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>Actif</option>
+            <option value="nom"       {{ tri == 'nom'       ? 'selected' : '' }}>{{ 'employe.col.nom'|trans }}</option>
+            <option value="prenom"    {{ tri == 'prenom'    ? 'selected' : '' }}>{{ 'employe.col.prenom'|trans }}</option>
+            <option value="email"     {{ tri == 'email'     ? 'selected' : '' }}>{{ 'employe.col.email'|trans }}</option>
+            <option value="poste"     {{ tri == 'poste'     ? 'selected' : '' }}>{{ 'employe.col.poste'|trans }}</option>
+            <option value="telephone" {{ tri == 'telephone' ? 'selected' : '' }}>{{ 'employe.col.telephone'|trans }}</option>
+            <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>{{ 'employe.col.actif'|trans }}</option>
         </select>
         <input type="hidden" name="direction" id="directionInput" value="{{ direction }}">
         <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
@@ -151,14 +151,14 @@
             <i class="bi bi-arrow-clockwise"></i> {{ 'common.refresh'|trans }}
         </a>
         <a href="{{ path('employe_pdf') }}" class="btn btn-danger" style="border-radius:8px">
-            <i class="bi bi-file-earmark-pdf"></i> PDF
+            <i class="bi bi-file-earmark-pdf"></i> {{ 'common.export_pdf'|trans|replace({'📄 ': ''}) }}
         </a>
         <a href="{{ path('employe_performance') }}" class="btn btn-warning"
            style="border-radius:8px; background:#f39c12; border-color:#f39c12; color:white; font-weight:700;">
-            <i class="bi bi-trophy-fill"></i> Top Performance
+            <i class="bi bi-trophy-fill"></i> {{ 'employe.top_performance'|trans }}
         </a>
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
-            <i class="bi bi-search me-1"></i>Rechercher
+            <i class="bi bi-search me-1"></i>{{ 'common.search'|trans }}
         </button>
     </div>
     </form>
@@ -174,20 +174,20 @@
                 <th class="sortable {{ tri=='id'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
                     <a href="{{ path('employe_index',{tri:'id',direction:(tri=='id' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">ID</a></th>
                 <th class="sortable {{ tri=='nom'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'nom',direction:(tri=='nom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Nom</a></th>
+                    <a href="{{ path('employe_index',{tri:'nom',direction:(tri=='nom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.nom'|trans }}</a></th>
                 <th class="sortable {{ tri=='prenom'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'prenom',direction:(tri=='prenom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Prénom</a></th>
+                    <a href="{{ path('employe_index',{tri:'prenom',direction:(tri=='prenom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.prenom'|trans }}</a></th>
                 <th class="sortable {{ tri=='email'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'email',direction:(tri=='email' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Email</a></th>
+                    <a href="{{ path('employe_index',{tri:'email',direction:(tri=='email' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.email'|trans }}</a></th>
                 <th class="sortable {{ tri=='poste'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'poste',direction:(tri=='poste' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Poste</a></th>
+                    <a href="{{ path('employe_index',{tri:'poste',direction:(tri=='poste' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.poste'|trans }}</a></th>
                 <th class="sortable {{ tri=='telephone'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'telephone',direction:(tri=='telephone' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Téléphone</a></th>
+                    <a href="{{ path('employe_index',{tri:'telephone',direction:(tri=='telephone' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.telephone'|trans }}</a></th>
                 <th class="sortable {{ tri=='actif'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
-                    <a href="{{ path('employe_index',{tri:'actif',direction:(tri=='actif' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">Actif</a></th>
+                    <a href="{{ path('employe_index',{tri:'actif',direction:(tri=='actif' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.actif'|trans }}</a></th>
                 {# ✅ COLONNE PERFORMANCE — identique à colPerformance Java #}
-                <th style="text-align:center">Performance</th>
-                <th class="text-center">Actions</th>
+                <th style="text-align:center">{{ 'employe.performance'|trans }}</th>
+                <th class="text-center">{{ 'common.actions'|trans }}</th>
             </tr></thead>
             <tbody>
             {% for emp in employes %}
@@ -202,8 +202,8 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{{ path('employe_fiche_pdf',{id:emp.id}) }}" target="_blank" title="Fiche PDF">
-                        <img src="{{ path('employe_qr_image',{id:emp.id}) }}" alt="QR"
+                    <a href="{{ path('employe_fiche_pdf',{id:emp.id}) }}" target="_blank" title="{{ 'common.export_pdf'|trans }}">
+                        <img src="{{ path('employe_qr_image',{id:emp.id}) }}" alt="{{ 'employe.col.qr'|trans }}"
                              style="width:50px;height:50px;border-radius:4px;border:1px solid #ddd;transition:opacity .2s"
                              onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
                     </a>
@@ -216,7 +216,7 @@
                 <td>{{ emp.telephone ?? '—' }}</td>
                 <td>
                     {% if emp.actif %}<span class="st-actif">✓ {{ 'common.active'|trans }}</span>
-                    {% else %}<span class="st-inactif">✗ {{ 'employe.empty'|trans|split(' ')|last }}</span>{% endif %}
+                    {% else %}<span class="st-inactif">✗ {{ 'common.inactive'|trans }}</span>{% endif %}
                 </td>
 
                 {# ✅ CERCLE PERFORMANCE — clic ouvre la modal identique au desktop Java #}
@@ -224,25 +224,24 @@
                     <button class="perf-circle"
                             style="background:{{ perf ? perf.couleur : '#aaa' }};box-shadow:0 3px 10px {{ perf ? perf.couleur ~ '55' : '#aaa5' }}"
                             onclick="event.stopPropagation();ouvrirPerf({{ emp.id }},'{{ emp.nomComplet|e('js') }}')"
-                            title="Performance de {{ emp.nomComplet }}">
+                            title="{{ 'employe.performance'|trans }} : {{ emp.nomComplet }}">
                         {{ perf ? perf.score|round : '—' }}
                     </button>
                 </td>
-
                 <td>
                     <div class="d-flex gap-1 justify-content-center">
-                        <a href="{{ path('employe_show',{id:emp.id}) }}" class="btn-voir" title="Voir"><i class="bi bi-eye"></i></a>
-                        <a href="{{ path('employe_edit',{id:emp.id}) }}" class="btn-modif" title="Modifier"><i class="bi bi-pencil-square"></i></a>
+                        <a href="{{ path('employe_show',{id:emp.id}) }}" class="btn-voir" title="{{ 'common.view'|trans }}"><i class="bi bi-eye"></i></a>
+                        <a href="{{ path('employe_edit',{id:emp.id}) }}" class="btn-modif" title="{{ 'common.edit'|trans }}"><i class="bi bi-pencil-square"></i></a>
                         <form method="POST" action="{{ path('employe_toggle',{id:emp.id}) }}" style="margin:0">
                             <button type="submit" class="{{ emp.actif ? 'btn-tog-on' : 'btn-tog-off' }}"
-                                    title="{{ emp.actif ? 'Désactiver' : 'Activer' }}">
+                                    title="{{ emp.actif ? 'common.inactive'|trans : 'common.active'|trans }}">
                                 <i class="bi bi-toggle-{{ emp.actif ? 'on' : 'off' }}"></i>
                             </button>
                         </form>
                         <form method="POST" action="{{ path('employe_delete',{id:emp.id}) }}"
-                              onsubmit="return confirmDelete('{{ emp.nomComplet }}')" style="margin:0">
+                               onsubmit="return confirmDelete('{{ emp.nomComplet }}')" style="margin:0">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete'~emp.id) }}">
-                            <button type="submit" class="btn-suppr" title="Supprimer"><i class="bi bi-trash3"></i></button>
+                            <button type="submit" class="btn-suppr" title="{{ 'common.delete'|trans }}"><i class="bi bi-trash3"></i></button>
                         </form>
                     </div>
                 </td>
@@ -255,20 +254,21 @@
         <div class="emp-empty">
             <i class="bi bi-people"></i>
             {% if search %}
-                <h5>Aucun résultat pour "{{ search }}"</h5>
-                <a href="{{ path('employe_index') }}" class="btn btn-outline-success mt-2">Voir tous</a>
+                <h5>{{ 'common.no_selection'|trans }} "{{ search }}"</h5>
+                <a href="{{ path('employe_index') }}" class="btn btn-outline-success mt-2">{{ 'common.back'|trans }}</a>
             {% else %}
-                <h5>Aucun employé pour le moment</h5>
+                <h5>{{ 'employe.empty'|trans }}</h5>
+                <p>{{ 'employe.empty_hint'|trans }}</p>
             {% endif %}
         </div>
         {% endif %}
     </div>
 
     <div class="emp-bottombar">
-        <a href="{{ path('employe_new') }}" class="btn-add"><i class="bi bi-plus-lg"></i> {{ 'employe.add'|trans }}</a>
-        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled><i class="bi bi-pencil-square"></i> Modifier</button>
-        <button class="btn-red"    id="btnSupprimer" onclick="supprimerSelectionne()" disabled><i class="bi bi-trash3"></i> Supprimer</button>
-        <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()"><i class="bi bi-file-earmark-text"></i> {{ 'employe.go_tasks'|trans }}</a>
+        <a href="{{ path('employe_new') }}" class="btn-add"><i class="bi bi-plus-lg"></i> {{ 'common.add'|trans }}</a>
+        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled><i class="bi bi-pencil-square"></i> {{ 'common.edit'|trans }}</button>
+        <button class="btn-red"    id="btnSupprimer" onclick="supprimerSelectionne()" disabled><i class="bi bi-trash3"></i> {{ 'common.delete'|trans }}</button>
+        <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()"><i class="bi bi-file-earmark-text"></i> {{ 'employe.attestation'|trans }}</a>
         <span class="bottom-info" id="selectionInfo">{{ 'common.no_selection'|trans }}</span>
     </div>
 
@@ -320,6 +320,18 @@ function ouvrirPerf(id, nom) {
 
 function buildModal(p) {
     const c = p.score >= 75 ? '#27ae60' : p.score >= 50 ? '#fdf100' : '#e74c3c';
+    const trans = {
+        stats: "{{ 'employe.stats'|trans|e('js') }}",
+        total: "{{ 'common.total'|trans|e('js') }}",
+        completed: "{{ 'tache.stats.completed'|trans|e('js') }}",
+        in_progress: "{{ 'tache.stats.in_progress'|trans|e('js') }}",
+        delayed: "{{ 'common.warning'|trans|e('js') }}",
+        canceled: "{{ 'tache.stats.pending'|trans|e('js') }}", // Simple mapping
+        duration: "⏱ {{ 'meteo.wind'|trans|replace({'Vent': 'Durée', 'Wind': 'Duration', 'رياح': 'المدة'})|e('js') }}",
+        avg: "📅 {{ 'meteo.temp'|trans|replace({'Température': 'Moyenne', 'Temperature': 'Average', 'حرارة': 'المعدل'})|e('js') }}",
+        close: "{{ 'common.close'|trans|e('js') }}"
+    };
+
     return `
     <div class="perf-modal-header">
         <div class="perf-score-circle" style="background:${c}">${Math.round(p.score)}</div>
@@ -330,24 +342,24 @@ function buildModal(p) {
         </div>
     </div>
     <div class="perf-modal-body">
-        <div class="perf-section-title">📋 Statistiques des Tâches</div>
-        <div class="perf-stat-row"><span class="perf-stat-label">📊 Total</span><span class="perf-stat-value">${p.totalTaches} tâche(s)</span></div>
-        <div class="perf-stat-row"><span class="perf-stat-label">✅ Terminées</span><span class="perf-stat-value" style="color:#27ae60">${p.tachesTerminees} tâche(s)</span></div>
-        <div class="perf-stat-row"><span class="perf-stat-label">🔄 En cours</span><span class="perf-stat-value" style="color:#3498db">${p.tachesEnCours} tâche(s)</span></div>
-        <div class="perf-stat-row"><span class="perf-stat-label">⏰ En retard</span><span class="perf-stat-value" style="color:#e74c3c">${p.tachesEnRetard} tâche(s)</span></div>
-        <div class="perf-stat-row"><span class="perf-stat-label">❌ Annulées</span><span class="perf-stat-value" style="color:#95a5a6">${p.tachesAnnulees} tâche(s)</span></div>
-        <div class="perf-section-title">📈 Score de Performance</div>
+        <div class="perf-section-title">📋 ${trans.stats}</div>
+        <div class="perf-stat-row"><span class="perf-stat-label">📊 ${trans.total}</span><span class="perf-stat-value">${p.totalTaches}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">✅ ${trans.completed}</span><span class="perf-stat-value" style="color:#27ae60">${p.tachesTerminees}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">🔄 ${trans.in_progress}</span><span class="perf-stat-value" style="color:#3498db">${p.tachesEnCours}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">⏰ ${trans.delayed}</span><span class="perf-stat-value" style="color:#e74c3c">${p.tachesEnRetard}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">❌ ${trans.canceled}</span><span class="perf-stat-value" style="color:#95a5a6">${p.tachesAnnulees}</span></div>
+        <div class="perf-section-title">📈 Score</div>
         <div class="perf-bar-wrap">
             <div class="perf-bar"><div class="perf-bar-fill" style="width:${p.score}%;background:${c}"></div></div>
             <div class="perf-bar-labels"><span>0</span><span style="color:${c};font-weight:800">${p.score}/100</span><span>100</span></div>
         </div>
-        <div class="perf-section-title">⏱ Temps de Réalisation</div>
+        <div class="perf-section-title">${trans.duration}</div>
         <div class="perf-stat-row">
-            <span class="perf-stat-label">📅 Durée moyenne par tâche</span>
-            <span class="perf-stat-value">${p.tempsRealisationMoyen > 0 ? p.tempsRealisationMoyen + ' jours' : '—'}</span>
+            <span class="perf-stat-label">${trans.avg}</span>
+            <span class="perf-stat-value">${p.tempsRealisationMoyen > 0 ? p.tempsRealisationMoyen : '—'}</span>
         </div>
     </div>
-    <div class="perf-modal-footer"><button class="btn-fermer" onclick="fermerPerf()">Fermer</button></div>`;
+    <div class="perf-modal-footer"><button class="btn-fermer" onclick="fermerPerf()">${trans.close}</button></div>`;
 }
 
 function fermerPerf(e) {

@@ -58,12 +58,11 @@
 
         <div class="form-body">
 
-            {# ── Erreurs globales ──────────────────────────────────── #}
             {% if errors is defined and errors|length > 0 %}
             <div class="alert-errors">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-                    <strong class="text-danger">{{ errors|length }} erreur(s) à corriger :</strong>
+                    <strong class="text-danger">{{ errors|length }} {{ 'common.error'|trans }}{{ errors|length > 1 ? 's' : '' }} {{ 'common.todo'|trans|replace({'À faire': 'à corriger', 'To do': 'to fix', 'للقيام به': 'للإصلاح'}) }} :</strong>
                 </div>
                 <ul>{% for f, m in errors %}<li>{{ m }}</li>{% endfor %}</ul>
             </div>
@@ -75,7 +74,7 @@
                 <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
 
                 {# ── Photo ─────────────────────────────────────────── #}
-                <div class="section-title">📷 Photo de profil</div>
+                <div class="section-title">📷 {{ 'employe.form.photo'|trans }}</div>
                 <div class="photo-wrap mb-3">
                     {% if employe and employe.hasPhoto %}
                         <img src="{{ employe.photoPath }}" class="emp-photo-prev" id="photoPreview">
@@ -91,20 +90,20 @@
                             <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.photo }}</div>
                         {% else %}
                             <small class="text-muted d-block mt-1">JPG / PNG / WebP — max 5 Mo
-                            {% if employe and employe.hasPhoto %} · Laisser vide pour garder la photo actuelle{% endif %}</small>
+                            {% if employe and employe.hasPhoto %} · {{ 'employe.form.photo_keep'|trans }}{% endif %}</small>
                         {% endif %}
                     </div>
                 </div>
 
                 {# ── Identité ──────────────────────────────────────── #}
-                <div class="section-title">👤 Identité</div>
+                <div class="section-title">👤 {{ 'employe.form.identity'|trans }}</div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Nom <span class="req">*</span></label>
+                        <label class="form-label">{{ 'employe.form.last_name'|trans }} <span class="req">*</span></label>
                         <input type="text" name="nom"
                                class="form-control {{ errors.nom is defined ? 'is-invalid' : '' }}"
                                value="{{ old.nom ?? (employe ? employe.nom : '') }}"
-                               placeholder="Ex : Benattia" maxlength="100"
+                               placeholder="{{ 'employe.form.last_name_ph'|trans }}" maxlength="100"
                                oninput="cnt(this,'cNom',100)">
                         <div class="char-count" id="cNom"></div>
                         {% if errors.nom is defined %}
@@ -112,11 +111,11 @@
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Prénom <span class="req">*</span></label>
+                        <label class="form-label">{{ 'employe.form.first_name'|trans }} <span class="req">*</span></label>
                         <input type="text" name="prenom"
                                class="form-control {{ errors.prenom is defined ? 'is-invalid' : '' }}"
                                value="{{ old.prenom ?? (employe ? employe.prenom : '') }}"
-                               placeholder="Ex : Asma" maxlength="100"
+                               placeholder="{{ 'employe.form.first_name_ph'|trans }}" maxlength="100"
                                oninput="cnt(this,'cPrenom',100)">
                         <div class="char-count" id="cPrenom"></div>
                         {% if errors.prenom is defined %}
@@ -124,11 +123,11 @@
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Poste</label>
+                        <label class="form-label">{{ 'employe.form.job'|trans }}</label>
                         <input type="text" name="poste"
                                class="form-control {{ errors.poste is defined ? 'is-invalid' : '' }}"
                                value="{{ old.poste ?? (employe ? employe.poste : '') }}"
-                               placeholder="Ex : Technicien, Directeur..." maxlength="100"
+                               placeholder="{{ 'employe.form.job_ph'|trans }}" maxlength="100"
                                oninput="cnt(this,'cPoste',100)">
                         <div class="char-count" id="cPoste"></div>
                         {% if errors.poste is defined %}
@@ -139,30 +138,30 @@
                         <div class="form-check form-switch ms-2">
                             <input class="form-check-input" type="checkbox" name="actif" value="1" id="actif"
                                    {{ (old.actif is defined ? old.actif == '1' : (employe is null or employe.actif)) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold" for="actif">Employé actif</label>
+                            <label class="form-check-label fw-bold" for="actif">{{ 'employe.form.status'|trans }}</label>
                         </div>
                     </div>
                 </div>
 
                 {# ── Contact ───────────────────────────────────────── #}
-                <div class="section-title">📞 Contact</div>
+                <div class="section-title">📞 {{ 'employe.form.contact'|trans }}</div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Email <span class="req">*</span></label>
+                        <label class="form-label">{{ 'employe.form.email'|trans }} <span class="req">*</span></label>
                         <input type="email" name="email"
                                class="form-control {{ errors.email is defined ? 'is-invalid' : '' }}"
                                value="{{ old.email ?? (employe ? employe.email : '') }}"
-                               placeholder="Ex : asma@ardhi.com" maxlength="150">
+                               placeholder="{{ 'employe.form.email_ph'|trans }}" maxlength="150">
                         {% if errors.email is defined %}
                             <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.email }}</div>
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Téléphone</label>
+                        <label class="form-label">{{ 'employe.form.phone'|trans }}</label>
                         <input type="text" name="telephone"
                                class="form-control {{ errors.telephone is defined ? 'is-invalid' : '' }}"
                                value="{{ old.telephone ?? (employe ? employe.telephone : '') }}"
-                               placeholder="Ex : 23987675" maxlength="20">
+                               placeholder="{{ 'employe.form.phone_ph'|trans }}" maxlength="20">
                         {% if errors.telephone is defined %}
                             <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.telephone }}</div>
                         {% endif %}
@@ -173,10 +172,10 @@
                 <div class="d-flex gap-3 mt-4 pt-3 border-top">
                     <button type="submit" class="btn-save">
                         <i class="bi bi-check-lg me-1"></i>
-                        {{ employe ? 'Enregistrer les modifications' : "Créer l'employé" }}
+                        {{ (employe ? 'common.save_changes' : 'common.add')|trans }}
                     </button>
                     <a href="{{ path('employe_index') }}" class="btn-cancel">
-                        <i class="bi bi-x-lg"></i> Annuler
+                        <i class="bi bi-x-lg"></i> {{ 'common.cancel'|trans }}
                     </a>
                 </div>
             </form>

@@ -355,7 +355,7 @@
                 </div>
                 <div class="bot-name-status">
                     <span class="bot-name">SmartFarm Manager</span>
-                    <span class="bot-status">● En ligne</span>
+                    <span class="bot-status">● {{ 'status.online'|trans|default('En ligne') }}</span>
                 </div>
             </div>
             <button id="rh-chatbot-close"><i class="bi bi-dash"></i></button>
@@ -365,23 +365,23 @@
         <div id="rh-chatbot-messages">
             <div class="msg-wrapper bot">
                 <div class="chat-bubble">
-                    Bonjour ! Je suis votre assistant RH intelligent. <br>Que puis-je faire pour vous aujourd'hui?
+                    {{ 'chatbot.welcome'|trans }}
                 </div>
-                <div class="msg-time">À l'instant</div>
+                <div class="msg-time">{{ 'common.loading_time'|trans|replace({'%ms%ms': '0'})|replace({'Chargé en 0': "À l'instant", 'Loaded in 0': 'Just now', 'تم التحميل في 0': 'الآن'}) }}</div>
             </div>
         </div>
 
         <!-- Suggestion Chips -->
         <div id="rh-chatbot-suggestions">
-            <div class="suggestion-chip" data-msg="Recommande un employé">🎯 Recommander</div>
-            <div class="suggestion-chip" data-msg="Montre les performances">📊 Performances</div>
-            <div class="suggestion-chip" data-msg="Qui est disponible?">📅 Disponibilités</div>
-            <div class="suggestion-chip" data-msg="Aide">❓ Aide</div>
+            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.reco'|trans }}">🎯 {{ 'chatbot.suggestion.reco'|trans }}</div>
+            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.perf'|trans }}">📊 {{ 'chatbot.suggestion.perf'|trans }}</div>
+            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.dispo'|trans }}">📅 {{ 'chatbot.suggestion.dispo'|trans }}</div>
+            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.help'|trans }}">❓ {{ 'chatbot.suggestion.help'|trans }}</div>
         </div>
 
         <!-- Input Area -->
         <div id="rh-chatbot-input-area">
-            <input type="text" id="rh-chatbot-input" placeholder="Écrivez votre message..." autocomplete="off">
+            <input type="text" id="rh-chatbot-input" placeholder="{{ 'chatbot.input_placeholder'|trans }}" autocomplete="off">
             <button id="rh-chatbot-send"><i class="bi bi-send-fill"></i></button>
         </div>
     </div>
@@ -518,9 +518,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <div class="emp-scores">
-                    ${renderScoreBar('Compétences', rec.scoreCompetences, '#3498db')}
-                    ${renderScoreBar('Performance', rec.scorePerformance, '#27ae60')}
-                    ${renderScoreBar('Disponibilité', rec.scoreDisponibilite, '#f1c40f')}
+                    ${renderScoreBar("{{ 'ai.matching.reason.skills'|trans|e('js') }}", rec.scoreCompetences, '#3498db')}
+                    ${renderScoreBar("{{ 'employe.performance'|trans|e('js') }}", rec.scorePerformance, '#27ae60')}
+                    ${renderScoreBar("{{ 'ai.matching.reason.availability'|trans|e('js') }}", rec.scoreDisponibilite, '#f1c40f')}
                 </div>
 
                 <div style="font-size: 11px; color: #777; font-style: italic; margin-bottom: 15px;">
@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <a href="/employes/${rec.employe.id}" class="btn btn-sm btn-outline-success w-100" style="border-radius: 20px; font-size: 12px; font-weight:600;">
-                    Voir le profil
+                    {{ 'common.view'|trans|default('Voir') }}
                 </a>
             `;
             messagesContainer.appendChild(card);

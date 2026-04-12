@@ -11,25 +11,25 @@ common:
         asc: "⬆"
         desc: "⬇"
         by: "ترتيب حسب :"
-    total: "المجموع"
-    active: "نشط"
-    status: "الحالة"
-    priority: "الأولوية"
-    category: "الفئة"
-    employee: "الموظف"
-    loading_time: "تم التحميل في %ms% مللي ثانية"
-    no_selection: "لا يوجد اختيار"
-    confirm: "تأكيد"
-    cancel: "إلغاء"
-    save: "حفظ"
-    close: "إغلاق"
-    yes: "نعم"
-    no: "لا"
-    error: "خطأ"
-    success: "نجاح"
-    warning: "تحذير"
-    info: "معلومات"
     language: "اللغة"
+    actions: "الإجراءات"
+    save_changes: "حفظ التغييرات"
+    total: "المجموع"
+    success: "تمت العملية بنجاح"
+    error: "خطأ"
+    todo: "للقيام به"
+    active: "مفعل"
+    inactive: "معطل"
+    view: "عرض"
+    loading_time: "تم التحميل في %ms%ms"
+    high: "مرتفع"
+    medium: "متوسط"
+    low: "منخفض"
+    none: "منعدم"
+    moderate: "معتدل"
+    high_load: "مرتفع"
+    id: "المعرف"
+    generated_by: "تم إنشاء المستند بواسطة %name% في %date%"
 
 dashboard:
     title: "إدارة الموظفين والمهام"
@@ -65,11 +65,26 @@ dashboard:
         employees: "الموظفون"
         tasks: "المهام"
     bienvenue: "أهلاً بك، %name%"
+    rh_label: "ARDHI لإدارة الموارد البشرية"
+
+navbar:
+    diagnostic: "التشخيص"
+    marketplace: "السوق"
+    maintenance: "المعدات والصيانة"
+    cultures: "المحاصيل"
+    events: "الأحداث"
+    employees: "الموظفون"
+    profile: "ملفي الشخصي"
+    logout: "تسجيل الخروج"
+    login: "تسجيل الدخول"
 
 employe:
-    title: "👥 إدارة الموظفين"
+    title: "إدارة الموظفين"
     search_prompt: "🔍 بحث بالاسم، البريد الإلكتروني، المنصب..."
     add: "➕ إضافة موظف"
+    search:
+        prompt: "🔍 بحث بالاسم، البريد الإلكتروني، المنصب..."
+    top_performance: "أفضل أداء"
     col:
         id: "المعرف"
         nom: "اللقب"
@@ -78,11 +93,38 @@ employe:
         poste: "المنصب"
         telephone: "الهاتف"
         actif: "نشط"
+        photo: "صورة"
+        qr: "باركود"
     empty: "📨 لا يوجد موظفون"
     empty_hint: "انقر على 'إضافة' لإنشاء موظف جديد"
     go_tasks: "📋 إدارة المهام"
     go_tasks_tooltip: "إدارة مهام الموظفين"
+    attestation: "شهادة عمل"
+    attestation_success: "تم إرسال الشهادة بنجاح"
     stats: "📊 إحصائيات"
+    ia_matching: "🧠 مطابقة الذكاء الاصطناعي"
+    performance: "📈 الأداء"
+    fiche_title: "بطاقة موظف"
+    scan_mobile: "امسح للعرض على الهاتف"
+
+    form:
+        add_title: "➕ إضافة موظف"
+        edit_title: "✏️ تعديل بيانات الموظف"
+        photo: "صورة"
+        photo_keep: "اتركه فارغاً للاحتفاظ بالصورة الحالية"
+        identity: "الهوية"
+        last_name: "اللقب"
+        last_name_ph: "أدخل اللقب"
+        first_name: "الاسم"
+        first_name_ph: "أدخل الاسم"
+        job: "المنصب"
+        job_ph: "مثال: عامل، فني..."
+        status: "الحساب نشط"
+        contact: "بيانات الاتصال"
+        email: "البريد الإلكتروني"
+        email_ph: "example@ardhi.tn"
+        phone: "هاتف"
+        phone_ph: "8 أرقام"
 
 tache:
     title: "📋 إدارة المهام"
@@ -122,6 +164,80 @@ notification:
     unread: "غير مقروءة"
     mark_all_read: "✓ تعليم الكل كمقروء"
     refresh: "🔄 تحديث"
+    empty: "لا توجد إشعارات حالياً."
+    types:
+        task_overdue: "⏰ مهمة متأخرة: %title%"
+        task_blocked: "🔒 مهمة متوقفة: %title%"
+        meteo_alert: "⚠️ تنبيه جوي: %title%"
+    messages:
+        overdue_detail: "تاريخ الاستحقاق: %date% | التأخير: %days% يوم (أيام)"
+        blocked_detail: "المهمة قيد التنفيذ بدون تغيير لأكثر من يومين. يوصى بالمتابعة."
+status:
+    online: "متصل"
+
+meteo:
+    widget_title: "الطقس الزراعي"
+    temp: "الحرارة"
+    humidity: "الرطوبة"
+    wind: "الرياح"
+    pressure: "الضغط"
+    recommendation: "توصية"
+    alerts:
+        good: "✅ ظروف مثالية لـ: %task%"
+        caution: "⚠️ تنبيه: %reason% لـ %task%"
+        danger: "🚫 لا ينصح بـ: %reason% لـ %task%"
+    conditions:
+        too_windy: "رياح قوية جداً"
+        too_wet: "رطوبة عالية"
+        too_dry: "جفاف شديد"
+        too_hot: "حرارة مفرطة"
+        too_cold: "خطر الصقيع"
 
 chatbot:
-    greet: "👋 مرحبا! أنا مساعدك في إدارة الموارد البشرية."
+    greet_help: "كيف يمكنني مساعدتك اليوم؟"
+    welcome: "مرحباً! أنا مساعدك الذكي للموارد البشرية. <br>كيف يمكنني مساعدتك اليوم؟"
+    input_placeholder: "اكتب رسالتك..."
+    suggestion:
+        reco: "توصية"
+        perf: "الأداء"
+        dispo: "التوفر"
+        help: "مساعدة"
+    chips:
+        employees: "👥 قائمة الموظفين"
+        tasks: "📋 المهام الجارية"
+        stats: "📊 عرض الإحصائيات"
+        reco: "🧠 توصية الذكاء الاصطناعي"
+    understanding:
+        no_key: "🤔 لست متأكداً من أنني فهمت. اكتب **مساعدة** لمعرفة ما يمكنني القيام به."
+        error: "حدث خطأ أثناء معالجة طلبك."
+    reco:
+        need_task: "🤔 لأي مهمة تريد التوصية؟\n\n📌 **المهام المتاحة :**\n%list%\n💡 قل مثلاً : \"اوصي لمهمة الحصاد\""
+        analysis_done: "🤖 **اكتمل تحليل الذكاء الاصطناعي لـ \"%title%\"**"
+        no_match: "😕 لا يوجد موظفون نشطون يطابقون هذه المهمة حالياً."
+    compare:
+        need_task: "🤔 للمقارنة بين أفضل 3 موظفين، يرجى تحديد المهمة.\n💡 مثال: \"قارن بين أفضل 3 لمهمة الري\""
+    skills:
+        not_found: "😕 لم يتم العثور على موظف لديه مهارة \"%comp%\"."
+        prompt: "🤔 ما هي المهارة التي تبحث عنها؟\n💡 مثال: \"من يتقن الري؟\""
+    performance:
+        no_data: "📊 لا توجد بيانات أداء متاحة."
+    help:
+        text: "👋 **أنا مساعدك في الموارد البشرية!**\n\n🎯 \"اوصي لمهمة الحصاد\"\n🔍 \"من يتقن الري؟\"\n📊 \"أظهر الأداء\"\n📅 \"من هو المتاح؟\"\n🏆 \"قارن بين أفضل 3\""
+
+ai:
+    matching:
+        perfect: "مطابقة مثالية"
+        good: "ملف جيد"
+        fair: "ملف متوسط"
+        poor: "غير موصى به"
+        reason_detail: "اختار الذكاء الاصطناعي %name% لأن لديه نسبة %relevance%%% في ملاءمة المهارات، وتقييمات ممتازة (%perf%/100)، وهو متاح (عبء عمل %charge%)."
+        reason:
+            skills: "مهارات مناسبة"
+            availability: "متاح فوراً"
+            proximity: "قرب جغرافي"
+    performance:
+        excellent: "ممتاز"
+        tres_bien: "جيد جداً"
+        bien: "جيد"
+        moyen: "متوسط"
+        faible: "ضعيف"

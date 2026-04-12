@@ -11,25 +11,25 @@ common:
         asc: "⬆"
         desc: "⬇"
         by: "Trier par :"
-    total: "Total"
-    active: "Actifs"
-    status: "Statut"
-    priority: "Priorité"
-    category: "Catégorie"
-    employee: "Employé"
-    loading_time: "Chargé en %ms%ms"
-    no_selection: "Aucune sélection"
-    confirm: "Confirmer"
-    cancel: "Annuler"
-    save: "Enregistrer"
-    close: "Fermer"
-    yes: "Oui"
-    no: "Non"
-    error: "Erreur"
-    success: "Succès"
-    warning: "Attention"
-    info: "Information"
     language: "Langue"
+    actions: "Actions"
+    save_changes: "Enregistrer les modifications"
+    total: "Total"
+    success: "Opération réussie"
+    error: "Erreur"
+    todo: "à faire"
+    active: "Activé"
+    inactive: "Désactivé"
+    view: "Voir"
+    loading_time: "Chargé en %ms%ms"
+    high: "Haute"
+    medium: "Moyenne"
+    low: "Faible"
+    none: "Nulle"
+    moderate: "Modérée"
+    high_load: "Élevée"
+    id: "ID"
+    generated_by: "Document généré par %name% le %date%"
 
 dashboard:
     title: "Gérez vos Employés et Tâches"
@@ -64,11 +64,26 @@ dashboard:
         events: "Évènements"
         employees: "Employés"
     bienvenue: "Bienvenue, %name%"
+    rh_label: "ARDHI GESTION RH"
+
+navbar:
+    diagnostic: "Diagnostic IA"
+    marketplace: "Marketplace"
+    maintenance: "Matériel & Maintenance"
+    cultures: "Cultures"
+    events: "Évènements"
+    employees: "Employés"
+    profile: "Mon Profil"
+    logout: "Déconnexion"
+    login: "Se connecter"
 
 employe:
-    title: "👥 Gestion des Employés"
+    title: "Gestion des Employés"
     search_prompt: "🔍 Rechercher par nom, prénom, email, poste..."
     add: "➕ Ajouter un Employé"
+    search:
+        prompt: "🔍 Rechercher par nom, prénom, email, poste..."
+    top_performance: "Top Performance"
     col:
         id: "ID"
         nom: "Nom"
@@ -77,11 +92,38 @@ employe:
         poste: "Poste"
         telephone: "Téléphone"
         actif: "Actif"
+        photo: "Photo"
+        qr: "QR"
     empty: "📨 Aucun employé trouvé"
     empty_hint: "Cliquez sur 'Ajouter' pour créer un nouvel employé"
     go_tasks: "📋 Gestion Tâches"
     go_tasks_tooltip: "Gérer les tâches des employés"
+    attestation: "Attestation de travail"
+    attestation_success: "Attestation envoyée avec succès"
     stats: "📊 Statistiques"
+    ia_matching: "🧠 Correspondance IA"
+    performance: "📈 Performance"
+    fiche_title: "FICHE EMPLOYÉ"
+    scan_mobile: "Scannez pour la fiche mobile"
+
+    form:
+        add_title: "➕ Ajouter un Employé"
+        edit_title: "✏️ Modifier l'Employé"
+        photo: "Photo"
+        photo_keep: "Laisser vide pour garder la photo actuelle"
+        identity: "Identité"
+        last_name: "Nom"
+        last_name_ph: "Entrez le nom"
+        first_name: "Prénom"
+        first_name_ph: "Entrez le prénom"
+        job: "Poste"
+        job_ph: "Ex: Ouvrier, Technicien..."
+        status: "Compte actif"
+        contact: "Coordonnées"
+        email: "Email"
+        email_ph: "exemple@ardhi.tn"
+        phone: "Téléphone"
+        phone_ph: "8 chiffres"
 
 tache:
     title: "📋 Gestion des Tâches"
@@ -121,6 +163,80 @@ notification:
     unread: "Non lues"
     mark_all_read: "✓ Tout marquer comme lu"
     refresh: "🔄 Actualiser"
+    empty: "Aucune notification pour le moment."
+    types:
+        task_overdue: "⏰ Tâche en retard : %title%"
+        task_blocked: "🔒 Tâche bloquée : %title%"
+        meteo_alert: "⚠️ Alerte Météo : %title%"
+    messages:
+        overdue_detail: "Date limite : %date% | Retard : %days% jour(s)"
+        blocked_detail: "Tâche en cours sans modification depuis plus de 2 jours. Un suivi est recommandé."
+status:
+    online: "En ligne"
+
+meteo:
+    widget_title: "Météo Agricole"
+    temp: "Température"
+    humidity: "Humidité"
+    wind: "Vent"
+    pressure: "Pression"
+    recommendation: "Recommandation"
+    alerts:
+        good: "✅ Conditions idéales pour : %task%"
+        caution: "⚠️ Attention : %reason% pour %task%"
+        danger: "🚫 Déconseillé : %reason% pour %task%"
+    conditions:
+        too_windy: "Vent trop fort"
+        too_wet: "Humidité élevée"
+        too_dry: "Sécheresse extrême"
+        too_hot: "Chaleur excessive"
+        too_cold: "Gel risqué"
 
 chatbot:
-    greet: "👋 Bonjour ! Je suis votre assistant RH Ardhi."
+    greet_help: "Comment puis-je vous aider aujourd'hui ?"
+    welcome: "Bonjour ! Je suis votre assistant RH intelligent. <br>Que puis-je faire pour vous aujourd'hui?"
+    input_placeholder: "Écrivez votre message..."
+    suggestion:
+        reco: "Recommander"
+        perf: "Performances"
+        dispo: "Disponibilités"
+        help: "Aide"
+    chips:
+        employees: "👥 Liste employés"
+        tasks: "📋 Tâches en cours"
+        stats: "📊 Voir statistiques"
+        reco: "🧠 Recommandation IA"
+    understanding:
+        no_key: "🤔 Je ne suis pas sûr de comprendre. Tapez **aide** pour voir mes capacités."
+        error: "Une erreur est survenue lors du traitement de votre demande."
+    reco:
+        need_task: "🤔 Pour quelle tâche voulez-vous une recommandation ?\n\n📌 **Tâches disponibles :**\n%list%\n💡 Dites par exemple : \"Recommande pour la tâche REMISE\""
+        analysis_done: "🤖 **Analyse IA terminée pour \"%title%\"**"
+        no_match: "😕 Aucun employé actif ne correspond à cette tâche pour le moment."
+    compare:
+        need_task: "🤔 Pour comparer les 3 meilleurs, précisez la tâche.\n💡 Ex: \"Compare les 3 meilleurs pour la tâche Récolte\""
+    skills:
+        not_found: "😕 Aucun employé trouvé avec la compétence \"%comp%\"."
+        prompt: "🤔 Quelle compétence recherchez-vous ?\n💡 Ex: \"Qui maîtrise l'irrigation ?\""
+    performance:
+        no_data: "📊 Aucune donnée de performance disponible."
+    help:
+        text: "👋 **Je suis votre Assistant RH !**\n\n🎯 \"Recommande pour la tâche RÉCOLTE\"\n🔍 \"Qui maîtrise l'irrigation ?\"\n📊 \"Montre les performances\"\n📅 \"Qui est disponible ?\"\n🏆 \"Compare les 3 meilleurs\""
+
+ai:
+    matching:
+        perfect: "Correspondance idéale"
+        good: "Bon profile"
+        fair: "Bonne correspondance"
+        poor: "Non recommandé"
+        reason_detail: "L'IA a sélectionné %name% car il a %relevance%%% de pertinence de compétences, d'excellentes évaluations (%perf%/100) et est disponible (charge %charge%)."
+        reason:
+            skills: "Compétences adaptées"
+            availability: "Disponible immédiatement"
+            proximity: "Proximité géographique"
+    performance:
+        excellent: "Excellent"
+        tres_bien: "Très bien"
+        bien: "Bien"
+        moyen: "Moyen"
+        faible: "Faible"
