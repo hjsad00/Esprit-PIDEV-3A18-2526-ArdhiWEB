@@ -25,14 +25,30 @@
                         {% endif %}
                         <div class="d-flex w-100">
                             <div class="me-3 mt-1">
-                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 35px; height: 35px;">
-                                    <i class="bi bi-gear-wide-connected fs-6"></i>
-                                </div>
+                                {% if notif.nouveauStatut starts with 'reclamation' %}
+                                    <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 35px; height: 35px;">
+                                        <i class="bi bi-megaphone fs-6"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 35px; height: 35px;">
+                                        <i class="bi bi-gear-wide-connected fs-6"></i>
+                                    </div>
+                                {% endif %}
                             </div>
                             <div>
                                 <small class="text-muted d-block mb-1"><i class="bi bi-clock me-1"></i> {{ notif.createdAt|date('d/m/Y H:i') }}</small>
                                 <strong class="fs-6 text-dark d-block mb-1">{{ notif.materiel ? notif.materiel.nom : 'Matériel' }}</strong>
-                                <span class="text-dark small d-block">L'administrateur a changé le statut de votre intervention à : <span class="badge bg-secondary-subtle text-secondary">{{ notif.nouveauStatut }}</span></span>
+                                {% if notif.nouveauStatut == 'reclamation_soumise' %}
+                                    <span class="text-dark small d-block">Votre réclamation a bien été soumise à l'admin.</span>
+                                {% elseif notif.nouveauStatut == 'reclamation_en_attente' %}
+                                    <span class="text-dark small d-block">Votre réclamation est <strong>en attente</strong> de traitement.</span>
+                                {% elseif notif.nouveauStatut == 'reclamation_en_cours' %}
+                                    <span class="text-dark small d-block">Votre réclamation est <strong>en cours</strong> de traitement.</span>
+                                {% elseif notif.nouveauStatut == 'reclamation_resolue' %}
+                                    <span class="text-success small d-block"><i class="bi bi-check-circle-fill me-1"></i>Votre réclamation a été <strong>résolue</strong> !</span>
+                                {% else %}
+                                    <span class="text-dark small d-block">Statut intervention mis à jour : <span class="badge bg-secondary-subtle text-secondary">{{ notif.nouveauStatut }}</span></span>
+                                {% endif %}
                             </div>
                         </div>
                     </a>

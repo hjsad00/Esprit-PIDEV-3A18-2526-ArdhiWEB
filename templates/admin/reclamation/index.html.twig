@@ -1,0 +1,142 @@
+{% extends 'admin/materiel/admin_materiel_base.html.twig' %}
+
+{% block title %}Gestion des Réclamations - Ardhi Admin{% endblock %}
+{% block page_title %}Gestion des Réclamations{% endblock %}
+
+{% block body %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold" style="color: #c0392b;">
+            <i class="bi bi-megaphone-fill me-2"></i> Réclamations Agriculteurs
+        </h5>
+        <span class="badge bg-danger rounded-pill fs-6">{{ reclamations|length }} réclamation(s)</span>
+    </div>
+    <div class="card-body p-0">
+        {% if reclamations|length > 0 %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-uppercase small text-muted">
+                    <tr>
+                        <th class="ps-4">Urgence</th>
+                        <th>Agriculteur</th>
+                        <th>Matériel</th>
+                        <th>Sujet</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th class="text-end pe-4">Traiter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reclamations %}
+                    <tr class="{{ r.urgence == 'urgente' and r.statut == 'en_attente' ? 'table-danger' : '' }}">
+                        <td class="ps-4">
+                            {% if r.urgence == 'urgente' %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Urgente</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border">Normale</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.user %}
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small" style="color:#116530;">{{ r.user.prenom }} {{ r.user.nom }}</div>
+                                        <small class="text-muted">{{ r.user.email }}</small>
+                                    </div>
+                                </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ r.materiel ? r.materiel.nom : '—' }}</div>
+                            {% if r.materiel %}<span class="badge bg-light border text-muted small">{{ r.materiel.type }}</span>{% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ r.sujet }}</div>
+                            <small class="text-muted">{{ r.description|slice(0,80) }}{% if r.description|length > 80 %}...{% endif %}</small>
+                        </td>
+                        <td>
+                            {% if r.statut == 'en_attente' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning"><i class="bi bi-hourglass-split me-1"></i> En attente</span>
+                            {% elseif r.statut == 'en_cours' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary"><i class="bi bi-gear-wide-connected me-1"></i> En cours</span>
+                            {% elseif r.statut == 'resolue' %}
+                                <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle-fill me-1"></i> Résolue</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ r.createdAt|date('d/m/Y H:i') }}</td>
+                        <td class="text-end pe-4">
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill"
+                                data-bs-toggle="modal" data-bs-target="#modal-{{ r.id }}">
+                                <i class="bi bi-pencil-square me-1"></i> Traiter
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-light d-block mb-3"></i>
+            <p class="text-muted">Aucune réclamation en attente.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Modals de traitement #}
+{% for r in reclamations %}
+<div class="modal fade" id="modal-{{ r.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="bi bi-megaphone-fill me-2"></i> Traiter la réclamation
+                    {% if r.urgence == 'urgente' %}<span class="badge bg-danger ms-2">Urgente</span>{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="bg-light rounded-3 p-3 mb-3">
+                    <div class="fw-bold text-dark mb-1">{{ r.sujet }}</div>
+                    <p class="text-muted small mb-2">{{ r.description }}</p>
+                    <div class="d-flex gap-3">
+                        <small class="text-muted"><i class="bi bi-person me-1"></i> {{ r.user ? r.user.prenom ~ ' ' ~ r.user.nom : '—' }}</small>
+                        <small class="text-muted"><i class="bi bi-tractor me-1"></i> {{ r.materiel ? r.materiel.nom : '—' }}</small>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ r.createdAt|date('d/m/Y H:i') }}</small>
+                    </div>
+                </div>
+
+                <form method="post" action="{{ path('admin_reclamation_traiter', {id: r.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('traiter_reclamation_' ~ r.id) }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Changer le statut</label>
+                        <select name="statut" class="form-select">
+                            <option value="en_attente" {{ r.statut == 'en_attente' ? 'selected' : '' }}>⏳ En attente</option>
+                            <option value="en_cours" {{ r.statut == 'en_cours' ? 'selected' : '' }}>⚙️ En cours</option>
+                            <option value="resolue" {{ r.statut == 'resolue' ? 'selected' : '' }}>✅ Résolue</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Commentaire de réponse <span class="text-muted fw-normal">(visible par l'agriculteur)</span></label>
+                        <textarea name="commentaire_admin" class="form-control" rows="4" placeholder="Expliquez la prise en charge ou la résolution...">{{ r.commentaireAdmin }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <i class="bi bi-check-circle me-1"></i> Enregistrer & Notifier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

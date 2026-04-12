@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nouvelle Réclamation - {{ materiel.nom }}{% endblock %}
+{% block body_class %}materiel-theme{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="materiel-page-wrapper">
+<div class="container py-5" style="margin-top: 70px;">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            <div class="mb-4">
+                <a href="{{ path('app_materiel_show', {id: materiel.id}) }}" class="btn btn-outline-secondary btn-sm rounded-pill mb-3">
+                    <i class="bi bi-arrow-left me-1"></i> Retour à la fiche
+                </a>
+                <h2 class="fw-bold text-dark">
+                    <i class="bi bi-megaphone-fill me-2 text-danger"></i> Signaler un retard de maintenance
+                </h2>
+                <p class="text-muted">
+                    Matériel concerné : <strong class="text-dark">{{ materiel.nom }}</strong>
+                    <span class="badge bg-light border text-muted ms-2">{{ materiel.type }}</span>
+                </p>
+                <div class="alert border-start border-warning border-3 bg-warning-subtle small text-dark py-2 px-3 rounded-3 mb-0">
+                    <i class="bi bi-clock-history me-2 text-warning"></i>
+                    Utilisez ce formulaire si la maintenance de ce matériel a dépassé le délai normal prévu dans la timeline.
+                </div>
+            </div>
+
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-body p-4">
+                    {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+
+                    <div class="mb-4">
+                        {{ form_label(form.description, null, {label_attr: {class: 'fw-semibold mb-1'}}) }}
+                        {{ form_widget(form.description) }}
+                        {% if form.description.vars.errors|length > 0 %}
+                            <div class="text-danger small mt-1">{{ form.description.vars.errors[0].message }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form_label(form.urgence, null, {label_attr: {class: 'fw-semibold mb-1'}}) }}
+                        {{ form_widget(form.urgence) }}
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ path('app_maintenance_index') }}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-send-fill me-2"></i> Soumettre la réclamation
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
