@@ -251,53 +251,107 @@ class TreatmentPlanController extends AbstractController
             return $this->json(['error' => 'Aucune image fournie.'], 400);
 
         try {
-            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'Maladie inconnue';
+            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'Maladie';
             $baselineUrl = $plan->getDiagnostic()->getImageScannee();
 
-            // STEP 1: Check Consistency
+            // 1. Consistency Check (Different Plant)
             $consistency = $groqService->checkConsistency($file, $diseaseName);
             if (str_starts_with($consistency, 'MISMATCH')) {
-                $reason = explode('|', $consistency)[1] ?? 'L\'image ne correspond pas à la plante traitée.';
+                $reason = explode('|', $consistency)[1] ?? 'Plante différente détectée.';
                 return $this->json(['status' => 'MISMATCH', 'message' => $reason]);
             }
 
-            // STEP 2: Analyze Recovery
+            // 2. Recovery Analysis (Healed, Worsening, Recovering, Unchanged)
             $recoveryStatus = $groqService->analyzeRecovery($baselineUrl, $file, $diseaseName);
-
             $parts = explode('|', $recoveryStatus);
             $status = trim($parts[0]);
             $details = trim($parts[1] ?? '');
 
-            // Upload the new image to ImgBB for record keeping
+            // Upload for history
             $imgUrl = $imgBBService->uploadImage($file);
 
             if ($status === 'HEALED') {
                 $plan->setStatus('COMPLETED');
                 $em->flush();
-                return $this->json(['status' => 'HEALED', 'message' => $details]);
             }
 
-            if ($status === 'UNCHANGED' || $status === 'RECOVERING') {
-                return $this->json(['status' => $status, 'message' => $details]);
-            }
-
-            // STEP 3: If WORSENING, generate a new plan
-            if ($status === 'WORSENING') {
-                $aiResponse = $groqService->generateUpdatedPlan($baselineUrl, $file, $diseaseName);
-
-                return $this->json([
-                    'status' => 'PROPOSAL',
-                    'message' => $details,
-                    'raw_ai_response' => $aiResponse,
-                    'img_url' => $imgUrl
-                ]);
-            }
-
-            // Fallback
-            return $this->json(['error' => 'Réponse IA incompréhensible: ' . $recoveryStatus], 500);
+            // Return JUST the status and remark. No plan generation here!
+            return $this->json([
+                'status' => $status,
+                'message' => $details,
+                'img_url' => $imgUrl
+            ]);
 
         } catch (\Exception $e) {
             return $this->json(['error' => 'Erreur technique: ' . $e->getMessage()], 500);
         }
+    }
+
+    #[Route('/{id}/generate-proposal', name: 'app_user_and_diag_treatment_plan_generate_proposal', methods: ['POST'])]
+    public function generateProposal(
+        TreatmentPlan $plan,
+        \App\Service\UserAndDiag\GroqService $groqService
+    ): JsonResponse {
+
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'la maladie';
+
+        // Ask Groq for a new plan based on the disease
+        $aiResponse = $groqService->generateTreatmentPlan($diseaseName);
+
+        if (str_starts_with($aiResponse, 'ERREUR')) {
+            return $this->json(['error' => "L'IA n'a pas pu générer le plan."], 500);
+        }
+
+        return $this->json(['success' => true, 'raw_ai_response' => $aiResponse]);
+    }
+
+    #[Route('/{id}/accept-proposal', name: 'app_user_and_diag_treatment_plan_accept_proposal', methods: ['POST'])]
+    public function acceptProposal(
+        TreatmentPlan $plan,
+        Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+
+        $data = json_decode($request->getContent(), true);
+        $rawTasks = $data['tasks'] ?? '';
+
+        if (empty($rawTasks))
+            return $this->json(['error' => 'Aucune tâche fournie.'], 400);
+
+        // 1. Find the last completed day so we can schedule new tasks accurately into the future
+        $lastCompletedDay = 0;
+        $existingTasks = $em->getRepository(TreatmentTask::class)->findBy(['treatmentPlan' => $plan]);
+
+        foreach ($existingTasks as $t) {
+            if ($t->getStatus() === 'COMPLETED' && $t->getDayOffset() > $lastCompletedDay) {
+                $lastCompletedDay = $t->getDayOffset();
+            }
+        }
+
+        // 2. Delete all current PENDING tasks
+        foreach ($existingTasks as $t) {
+            if ($t->getStatus() === 'PENDING') {
+                $em->remove($t);
+            }
+        }
+        $em->flush(); // Commit deletions
+
+        // 3. Parse and save new tasks
+        $lines = explode("\n", str_replace('```', '', $rawTasks));
+        foreach ($lines as $line) {
+            $parts = explode('|', trim($line));
+            if (count($parts) >= 2 && is_numeric(trim($parts[0]))) {
+                $task = new TreatmentTask();
+                $task->setTreatmentPlan($plan);
+                $task->setDayOffset($lastCompletedDay + (int) trim($parts[0])); // Append to history
+                $task->setTaskDescription(substr(trim($parts[1]), 0, 255));
+                $task->setStatus('PENDING');
+
+                $em->persist($task);
+            }
+        }
+        $em->flush();
+
+        return $this->json(['success' => true]);
     }
 }

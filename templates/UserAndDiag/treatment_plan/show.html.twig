@@ -107,10 +107,47 @@
                 {% endfor %}
             </div>
         </div>
-        
+        </div>
+</div>
+
+<div class="modal fade" id="statusRemarkModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-light">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title"><i class="bi bi-activity"></i> Résultat de l'Analyse</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <h3 id="statusRemarkBadge" class="mb-3"></h3>
+                <p id="statusRemarkText" class="fs-5 text-white-75"></p>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center" id="statusRemarkFooter">
+                </div>
+        </div>
     </div>
 </div>
+
+<div class="modal fade" id="aiProposalModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-robot"></i> Nouveau Protocole Suggéré</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white-75">Voici le nouveau plan de traitement généré pour faire face à la situation :</p>
+                <pre id="aiProposalContent" class="bg-secondary p-3 rounded text-light" style="white-space: pre-wrap; font-size: 14px;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">❌ Refuser</button>
+                <button type="button" class="btn btn-success" onclick="acceptAiPlan()">✅ Accepter le nouveau plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
+
 
 {% block javascripts %}
 <script>
@@ -217,13 +254,15 @@
             alert("Erreur réseau de communication avec le serveur.");
         });
     }
+    let currentProposedTasks = ""; // Stores the AI's raw text if a new plan is generated
+
+    // STEP 1: Upload and get the Remark
     function handleAiReevaluation(inputElement) {
         if (!inputElement.files[0]) return;
         
         const formData = new FormData();
         formData.append('image', inputElement.files[0]);
 
-        // Show a visual loading indicator (since this uses Vision models, it takes a few seconds)
         const btn = document.querySelector('.btn-ai');
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyse en cours...';
@@ -238,32 +277,102 @@
         .then(data => {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
-            inputElement.value = ""; // Reset file input
+            inputElement.value = ""; 
 
             if (data.error) {
                 alert("Erreur: " + data.error);
                 return;
             }
 
+            // Setup the Status Modal based on the AI's remark
+            const badge = document.getElementById('statusRemarkBadge');
+            const text = document.getElementById('statusRemarkText');
+            const footer = document.getElementById('statusRemarkFooter');
+            
+            text.innerText = data.message;
+
             if (data.status === 'MISMATCH') {
-                alert("⚠️ INCOHÉRENCE DÉTECTÉE\n\nL'IA indique que cette image ne correspond pas au suivi de ce protocole.\nDétail : " + data.message);
-            } else if (data.status === 'HEALED') {
-                alert("🎉 FÉLICITATIONS !\n\nL'IA a détecté que votre plante est totalement guérie !\nDétail : " + data.message);
-                window.location.reload();
-            } else if (data.status === 'UNCHANGED' || data.status === 'RECOVERING') {
-                const prefix = data.status === 'RECOVERING' ? "📈 AMÉLIORATION" : "➡️ STATIONNAIRE";
-                alert(prefix + "\n\nL'IA confirme que le plan actuel est approprié. Continuez vos tâches !\nDétail : " + data.message);
-            } else if (data.status === 'PROPOSAL') {
-                // The plant is worsening, show the modal with the new proposed tasks!
-                alert("⚠️ AGGRAVATION DÉTECTÉE\n\nL'IA a constaté une détérioration (" + data.message + "). Un nouveau protocole a été généré.");
-                document.getElementById('aiProposalContent').innerText = data.raw_ai_response;
-                new bootstrap.Modal(document.getElementById('aiProposalModal')).show();
+                badge.innerHTML = '<span class="badge bg-secondary">Différente Plante</span>';
+                footer.innerHTML = '<button class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>';
+            } 
+            else if (data.status === 'HEALED') {
+                badge.innerHTML = '<span class="badge bg-success">Totalement Guérie !</span>';
+                footer.innerHTML = '<button class="btn btn-success" onclick="window.location.reload()">Terminer le protocole</button>';
+            } 
+            else {
+                // WORSENING, RECOVERING, or UNCHANGED
+                if (data.status === 'WORSENING') badge.innerHTML = '<span class="badge bg-danger">Aggravation</span>';
+                if (data.status === 'RECOVERING') badge.innerHTML = '<span class="badge bg-info text-dark">En Amélioration</span>';
+                if (data.status === 'UNCHANGED') badge.innerHTML = '<span class="badge bg-warning text-dark">Stationnaire</span>';
+
+                // Give them the option to keep or generate!
+                footer.innerHTML = `
+                    <button class="btn btn-outline-light" data-bs-dismiss="modal">Garder le plan actuel</button>
+                    <button class="btn btn-primary" onclick="generateNewPlan()">Générer un nouveau plan</button>
+                `;
             }
+
+            new bootstrap.Modal(document.getElementById('statusRemarkModal')).show();
         })
         .catch(err => {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
-            alert("Erreur réseau lors de la communication avec l'IA.");
+            alert("Erreur réseau de communication.");
+        });
+    }
+
+    // STEP 2: User chose to generate a new plan
+    function generateNewPlan() {
+        // Switch modals to show loading
+        const statusModal = bootstrap.Modal.getInstance(document.getElementById('statusRemarkModal'));
+        statusModal.hide();
+        
+        const btn = document.querySelector('.btn-ai');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Génération...';
+        
+        fetch(`{{ path('app_user_and_diag_treatment_plan_generate_proposal', {id: plan.id}) }}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = '<i class="bi bi-robot"></i> Réévaluer via IA';
+            
+            if (data.error) {
+                alert("Erreur: " + data.error);
+                return;
+            }
+
+            // Save the raw tasks in memory and show the Proposal Modal
+            currentProposedTasks = data.raw_ai_response;
+            document.getElementById('aiProposalContent').innerText = currentProposedTasks;
+            new bootstrap.Modal(document.getElementById('aiProposalModal')).show();
+        });
+    }
+
+    // STEP 3: User accepts the proposed plan
+    function acceptAiPlan() {
+        const btn = document.querySelector('#aiProposalModal .btn-success');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Application...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_accept_proposal', {id: plan.id}) }}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest' 
+            },
+            body: JSON.stringify({ tasks: currentProposedTasks })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload(); // Refresh to see new tasks!
+            } else {
+                alert("Erreur: " + data.error);
+                btn.innerHTML = '✅ Appliquer le nouveau plan';
+                btn.disabled = false;
+            }
         });
     }
 </script>
