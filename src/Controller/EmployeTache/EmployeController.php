@@ -82,11 +82,17 @@ class EmployeController extends AbstractController
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
         // ✅ Calcul du score de performance pour chaque employé
-        // Identique à refreshPerformanceCache() dans EmployeController.java desktop
         $performanceMap = [];
+        $perfSort = [];
         foreach ($employes as $emp) {
-            $performanceMap[$emp->getId()] = $this->performanceService->calculatePerformance($emp->getId());
+            $perf = $this->performanceService->calculatePerformance($emp->getId());
+            $performanceMap[$emp->getId()] = $perf;
+            if ($emp->isActif() && $perf['totalTaches'] > 0) {
+                $perfSort[] = ['emp' => $emp, 'perf' => $perf];
+            }
         }
+        usort($perfSort, fn($a, $b) => $b['perf']['score'] <=> $a['perf']['score']);
+        $top3 = array_slice($perfSort, 0, 3);
 
         return $this->render('EmployeTache/employe/index.html.twig', [
             'employes'          => $employes,
@@ -95,8 +101,8 @@ class EmployeController extends AbstractController
             'direction'         => $direction,
             'total'             => count($employes),
             'total_actifs'      => count(array_filter($employes, fn($e) => $e->isActif())),
-            'performanceMap'    => $performanceMap,  // ✅ score par employé
-            // Contexte admin pour bannière
+            'performanceMap'    => $performanceMap,
+            'top3'              => $top3,
             'supervision_mode'  => $this->ctx->isSupervisionMode(),
             'nom_supervise'     => $this->ctx->getNomAgriculteurSupervise(),
         ]);

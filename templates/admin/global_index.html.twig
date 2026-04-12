@@ -1,121 +1,652 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Ardhi - Administration Globale</title>
-  <link href="{{ asset('assets/img/ardhi_logo.png') }}" rel="icon">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ardhi Admin — Portail</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
-  <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══════════════════════════════════════════
+       SLIDER ARRIÈRE-PLAN PLEIN ÉCRAN
+       ═══════════════════════════════════════════ */
+    .bg-slider {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+    .bg-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.6s ease-in-out;
+    }
+    .bg-slide.active { opacity: 1; }
+
+    .bg-slide:nth-child(1) { background-image: url("{{ asset('assets/img/employees.jpg') }}"); }
+    .bg-slide:nth-child(2) { background-image: url("{{ asset('assets/img/machine.jpg') }}"); }
+    .bg-slide:nth-child(3) { background-image: url("{{ asset('assets/img/event.jpg') }}"); }
+    .bg-slide:nth-child(4) { background-image: url("{{ asset('assets/img/ai.jpg') }}"); }
+    .bg-slide:nth-child(5) { background-image: url("{{ asset('assets/img/parcelle.jpg') }}"); }
+    .bg-slide:nth-child(6) { background-image: url("{{ asset('assets/img/market.jpg') }}"); }
+
+    /* Overlay sombre sur le slider */
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(5, 30, 12, 0.75) 0%,
+        rgba(10, 60, 25, 0.65) 50%,
+        rgba(0, 0, 0, 0.70) 100%
+      );
+      z-index: 1;
+    }
+
+    /* Particules animées */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-120px) scale(1); opacity: 0; }
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE LAYOUT
+       ═══════════════════════════════════════════ */
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: #0a1f0d;
+    }
+
+    .page-wrapper {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ═══════════════════════════════════════════
+       HEADER GLASSMORPHISM
+       ═══════════════════════════════════════════ */
+    .admin-header {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding: 14px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .header-brand img { height: 38px; filter: drop-shadow(0 0 8px rgba(52,211,76,0.4)); }
+    .header-brand span {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 20px rgba(52,211,76,0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 30px;
+      padding: 7px 16px;
+      color: white;
+      font-size: .88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    .user-pill:hover { background: rgba(255,255,255,0.2); color: white; }
+    .user-pill i { font-size: 1.1rem; color: #4ade80; }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 10px;
+      padding: 8px 16px;
+      color: #fca5a5;
+      font-size: .85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .25s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.4); color: white; transform: translateY(-1px); }
+
+    /* ═══════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════ */
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(74,222,128,0.15);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 30px;
+      padding: 6px 18px;
+      color: #4ade80;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+      animation: fadeInDown .7s ease both;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      color: white;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      animation: fadeInDown .8s ease both;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(90deg, #4ade80, #22d3ee, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: 1.1rem;
+      font-weight: 400;
+      animation: fadeInDown .9s ease both;
+      margin-bottom: 0;
+    }
+
+    /* Slider indicators */
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 18px;
+      animation: fadeInDown 1s ease both;
+    }
+    .slider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: all .3s;
+    }
+    .slider-dot.active {
+      background: #4ade80;
+      width: 22px;
+      border-radius: 3px;
+      box-shadow: 0 0 8px #4ade80;
+    }
+
+    /* ═══════════════════════════════════════════
+       MODULE CARDS GRID
+       ═══════════════════════════════════════════ */
+    .modules-grid {
+      padding: 20px 40px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 22px;
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Card principale */
+    .mod-card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 240px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      animation: fadeInUp .6s ease both;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+    }
+
+    .mod-card:nth-child(1) { animation-delay: .05s; }
+    .mod-card:nth-child(2) { animation-delay: .10s; }
+    .mod-card:nth-child(3) { animation-delay: .15s; }
+    .mod-card:nth-child(4) { animation-delay: .20s; }
+    .mod-card:nth-child(5) { animation-delay: .25s; }
+    .mod-card:nth-child(6) { animation-delay: .30s; }
+    .mod-card:nth-child(7) { animation-delay: .35s; }
+
+    .mod-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 28px 60px rgba(0,0,0,.5);
+    }
+
+    /* Image */
+    .mod-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .5s ease;
+    }
+    .mod-card:hover .mod-img { transform: scale(1.12); }
+
+    /* Calque verre */
+    .mod-glass {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        160deg,
+        rgba(0,0,0,0) 20%,
+        rgba(0,0,0,0.75) 100%
+      );
+      transition: background .3s;
+    }
+    .mod-card:hover .mod-glass {
+      background: linear-gradient(
+        160deg,
+        rgba(0,0,0,0.1) 0%,
+        rgba(0,0,0,0.85) 100%
+      );
+    }
+
+    /* Accent couleur en haut */
+    .mod-accent {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .mod-card:hover .mod-accent { opacity: 1; }
+
+    /* Contenu carte */
+    .mod-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 20px 22px;
+    }
+
+    .mod-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transform: translateY(8px);
+      opacity: 0;
+      transition: all .35s ease;
+    }
+    .mod-card:hover .mod-icon-wrap {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .mod-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.3px;
+      text-shadow: 0 2px 10px rgba(0,0,0,.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mod-desc {
+      font-size: .78rem;
+      color: rgba(255,255,255,0.65);
+      margin-top: 4px;
+      transform: translateY(6px);
+      opacity: 0;
+      transition: all .3s ease .05s;
+    }
+    .mod-card:hover .mod-desc {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .mod-arrow {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      backdrop-filter: blur(8px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: .85rem;
+      transform: translate(4px, -4px);
+      opacity: 0;
+      transition: all .3s;
+    }
+    .mod-card:hover .mod-arrow {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+
+    /* Statistique rapide dans la carte */
+    .mod-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 3px 11px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: .5px;
+    }
+
+    /* ═══════════════════════════════════════════
+       FOOTER BAR
+       ═══════════════════════════════════════════ */
+    .admin-footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 18px;
+      color: rgba(255,255,255,0.3);
+      font-size: .76rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════ */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-25px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(35px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .admin-header { padding: 12px 18px; }
+      .hero { padding: 40px 18px 28px; }
+      .modules-grid { padding: 10px 18px 40px; gap: 14px; }
+      .mod-card { height: 190px; }
+    }
+  </style>
 </head>
-<body style="background-color: #f4f6f9;">
+<body>
 
-<header style="background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi" style="height: 35px;">
-        <span style="font-weight: 700; font-size: 1.25rem; color: #116530;">Ardhi Admin</span>
-    </div>
-    
-    <div style="display: flex; align-items: center; gap: 15px;">
+  {# ── Slider arrière-plan ─────────────────────────────── #}
+  <div class="bg-slider" id="bgSlider">
+    <div class="bg-slide active"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+  </div>
+  <div class="bg-overlay"></div>
+
+  {# ── Particules flottantes ────────────────────────────── #}
+  <div class="particles" id="particles"></div>
+
+  {# ── Contenu principal ────────────────────────────────── #}
+  <div class="page-wrapper">
+
+    {# HEADER #}
+    <header class="admin-header">
+      <a href="{{ path('admin_dashboard') }}" class="header-brand">
+        <img src="{{ asset('assets/img/ardhi_logo.png') }}" alt="Ardhi">
+        <span>Ardhi Admin</span>
+      </a>
+      <div class="header-right">
         {% if app.user %}
-            <a href="{{ path('app_profile') }}" style="text-decoration: none; color: #444; display: flex; align-items: center; gap: 8px; margin-right: 15px; font-weight: 500;">
-                <i class="bi bi-person-circle" style="font-size: 1.2rem;"></i>
-                {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
-            </a>
+          <a href="{{ path('app_profile') }}" class="user-pill">
+            <i class="bi bi-person-circle"></i>
+            {{ app.user.prenom ?? '' }} {{ app.user.nom ?? '' }}
+          </a>
         {% endif %}
+        <a href="{{ path('app_logout') }}" class="btn-logout">
+          <i class="bi bi-box-arrow-right"></i> Déconnexion
+        </a>
+      </div>
+    </header>
 
-        {% if app.user %}
-            <a href="{{ path('app_logout') }}" class="btn btn-danger btn-sm">
-                <i class="bi bi-box-arrow-right"></i> Déconnexion
-            </a>
-        {% endif %}
+    {# HERO #}
+    <section class="hero">
+      <div class="hero-badge">
+        <i class="bi bi-shield-fill-check"></i> PORTAIL ADMINISTRATION
+      </div>
+      <h1>Tableau de bord<br><span>Administrateur</span></h1>
+      <p class="hero-sub">Gérez l'ensemble des modules de la plateforme Ardhi</p>
+      <div class="slider-dots" id="sliderDots"></div>
+    </section>
+
+    {# GRILLE DES MODULES #}
+    <div class="modules-grid">
+
+      {# Utilisateurs #}
+      <a href="{{ path('admin_users_dashboard') }}" class="mod-card">
+        <img src="{{ asset('assets/img/users.png') }}" class="mod-img" alt="Utilisateurs">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#4ade80,#22d3ee)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(74,222,128,0.25)">👥</div>
+          <div class="mod-title">Utilisateurs</div>
+          <div class="mod-desc">Comptes, abonnements, badges & communauté</div>
+        </div>
+      </a>
+
+      {# Employés #}
+      <a href="{{ path('admin_agriculteurs_employe') }}" class="mod-card">
+        <img src="{{ asset('assets/img/employees.jpg') }}" class="mod-img" alt="Employés">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(245,158,11,0.25)">🧑‍🌾</div>
+          <div class="mod-title">Employés</div>
+          <div class="mod-desc">Gestion RH, tâches, performances & attestations</div>
+        </div>
+      </a>
+
+      {# Matériel #}
+      <a href="{{ path('admin_materiel_index') }}" class="mod-card">
+        <img src="{{ asset('assets/img/machine.jpg') }}" class="mod-img" alt="Matériel">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(99,102,241,0.25)">🚜</div>
+          <div class="mod-title">Matériel</div>
+          <div class="mod-desc">Parc de matériel agricole et maintenance</div>
+        </div>
+      </a>
+
+      {# Marketplace #}
+      <a href="{{ path('admin_marketplace_accueil') }}" class="mod-card">
+        <img src="{{ asset('assets/img/market.jpg') }}" class="mod-img" alt="Marketplace">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#ec4899,#f43f5e)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(236,72,153,0.25)">🛒</div>
+          <div class="mod-title">Marketplace</div>
+          <div class="mod-desc">Produits, offres et transactions agricoles</div>
+        </div>
+      </a>
+
+      {# Évènements #}
+      <a href="{{ path('app_evenement_admin_dashboard') }}" class="mod-card">
+        <img src="{{ asset('assets/img/event.jpg') }}" class="mod-img" alt="Évènements">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#f97316,#eab308)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(249,115,22,0.25)">📅</div>
+          <div class="mod-title">Évènements</div>
+          <div class="mod-desc">Agenda agricole et événements communautaires</div>
+        </div>
+      </a>
+
+      {# Diagnostic AI #}
+      <a href="{{ path('admin_diags_dashboard') }}" class="mod-card">
+        <img src="{{ asset('assets/img/ai.jpg') }}" class="mod-img" alt="Diagnostic AI">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#06b6d4,#3b82f6)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(6,182,212,0.25)">🤖</div>
+          <div class="mod-title">Diagnostic AI</div>
+          <div class="mod-desc">Analyse IA des cultures, prévention & traitements</div>
+        </div>
+      </a>
+
+      {# Parcelles #}
+      <a href="{{ path('admin_parcelle_index') }}" class="mod-card">
+        <img src="{{ asset('assets/img/parcelle.jpg') }}" class="mod-img" alt="Parcelles">
+        <div class="mod-glass"></div>
+        <div class="mod-accent" style="background:linear-gradient(90deg,#10b981,#84cc16)"></div>
+        <div class="mod-badge">MODULE</div>
+        <div class="mod-arrow"><i class="bi bi-arrow-up-right"></i></div>
+        <div class="mod-content">
+          <div class="mod-icon-wrap" style="background:rgba(16,185,129,0.25)">🌱</div>
+          <div class="mod-title">Parcelles</div>
+          <div class="mod-desc">Suivi parcellaire et cartographie agricole</div>
+        </div>
+      </a>
+
     </div>
-</header>
 
-<div class="container py-5" style="margin-top: 60px;">
-    <div class="row mb-5">
-        <div class="col-12 text-center">
-            <h1 class="fw-bold" style="color: #116530;">Portail d'Administration</h1>
-            <p class="text-muted">Sélectionnez un module pour continuer</p>
-        </div>
-    </div>
+    <footer class="admin-footer">
+      © {{ "now"|date("Y") }} Ardhi Platform — Administration &nbsp;|&nbsp; Tous droits réservés
+    </footer>
 
-    <div class="row g-4 justify-content-center">
-        <!-- Utilisateurs -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_users_dashboard') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#212529'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-people display-4 text-dark mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark">Gestion des utilisateurs</h5>
-                </div>
-            </a>
-        </div>
+  </div>{# /page-wrapper #}
 
-        <!-- Diagnostics -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_diags_dashboard') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#212529'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-heart-pulse display-4 text-dark mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark">Gestion des diagnostics</h5>
-                </div>
-            </a>
-        </div>
+  <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+  // ── SLIDER ARRIÈRE-PLAN ───────────────────────────────────────────
+  const slides = document.querySelectorAll('.bg-slide');
+  const dotsContainer = document.getElementById('sliderDots');
+  let current = 0;
 
-        <!-- Marketplace -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_marketplace_accueil') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#198754'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-shop display-4 text-success mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark mb-0">Marketplace</h5>
-                </div>
-            </a>
-        </div>
+  // Créer les dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
 
-        <!-- Matériel & Maintenance (Admin) -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_materiel_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#fd7e14'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-tools display-4 text-warning mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark mb-1">Matériel & Maintenance</h5>
-                    <p class="text-muted small mb-0">Gestion de la flotte et des entretiens</p>
-                </div>
-            </a>
-        </div>
+  function goTo(idx) {
+    slides[current].classList.remove('active');
+    document.querySelectorAll('.slider-dot')[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    document.querySelectorAll('.slider-dot')[current].classList.add('active');
+  }
 
-        <!-- Cultures -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_parcelle_index') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#20c997'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-tree display-4 text-info mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark mb-0">Cultures</h5>
-                </div>
-            </a>
-        </div>
+  function nextSlide() {
+    goTo((current + 1) % slides.length);
+  }
 
-        <!-- Évènements -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('app_evenement_admin_dashboard') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#6f42c1'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-calendar-event display-4 mb-3" style="color: #6f42c1;"></i>
-                    <h5 class="card-title fw-bold text-dark mb-0">Évènements</h5>
-                </div>
-            </a>
-        </div>
+  setInterval(nextSlide, 5000);
 
-        <!-- Employés — connecté ✅ -->
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ path('admin_agriculteurs_employe') }}" class="card h-100 text-center text-decoration-none shadow-sm" style="border: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderColor='#dc3545'; this.style.transform='translateY(-5px)';" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';">
-                <div class="card-body py-5">
-                    <i class="bi bi-people display-4 text-danger mb-3"></i>
-                    <h5 class="card-title fw-bold text-dark mb-0">Employés</h5>
-                    <p class="text-muted small mt-1">Gérer les équipes</p>
-                </div>
-            </a>
-        </div>
-    </div>
-</div>
+  // ── PARTICULES FLOTTANTES ─────────────────────────────────────────
+  const container = document.getElementById('particles');
+  const count = 28;
 
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 18 + 6;
+    p.style.cssText = `
+      width:${size}px;
+      height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*18+10}s;
+      animation-delay:${Math.random()*-20}s;
+      opacity:${Math.random()*0.12+0.03};
+    `;
+    container.appendChild(p);
+  }
+  </script>
 </body>
 </html>

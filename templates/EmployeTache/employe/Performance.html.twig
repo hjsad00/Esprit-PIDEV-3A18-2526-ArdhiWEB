@@ -421,14 +421,14 @@
     <div class="perf-header">
         <div>
             <div class="perf-header-title">
-                📊 Performance des Employés
+                📊 {{ 'employe.perf_page.title'|trans }}
             </div>
             <div class="perf-header-sub">
-                Classement basé sur les tâches terminées, les retards et le taux de réussite
+                {{ 'employe.perf_page.subtitle'|trans }}
             </div>
         </div>
         <a href="{{ path('employe_index') }}" class="btn-retour">
-            <i class="bi bi-arrow-left"></i> Retour aux employés
+            <i class="bi bi-arrow-left"></i> {{ 'employe.perf_page.back'|trans }}
         </a>
     </div>
 
@@ -436,32 +436,32 @@
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-value" style="color:#2E7D32">{{ stats.moyenneScore }}</div>
-            <div class="kpi-label">Score moyen</div>
+            <div class="kpi-label">{{ 'employe.perf_page.avg_score'|trans }}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-value" style="color:#f39c12">{{ classement|length }}</div>
-            <div class="kpi-label">Employés évalués</div>
+            <div class="kpi-label">{{ 'employe.perf_page.evaluated'|trans }}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-value" style="color:#3498db">{{ stats.totalTaches }}</div>
-            <div class="kpi-label">Total tâches</div>
+            <div class="kpi-label">{{ 'employe.perf_page.total_tasks'|trans }}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-value" style="color:#8e44ad">{{ stats.meilleurEmploye }}</div>
-            <div class="kpi-label">🏆 Meilleur employé</div>
+            <div class="kpi-label">🏆 {{ 'employe.perf_page.best_employee'|trans }}</div>
         </div>
     </div>
 
     {# ── Top 3 (identique à updateTopPerformers() + handleShowTopPerformeurs() Java) #}
     {% if top3|length > 0 %}
     <div class="top3-section">
-        <div class="top3-title">🏆 Top Performeurs</div>
+        <div class="top3-title">🏆 {{ 'employe.perf_page.top_performers'|trans }}</div>
         <div class="top3-grid">
             {% for i, perf in top3 %}
             <div class="top3-card {{ i == 0 ? 'gold' : (i == 1 ? 'silver' : 'bronze') }}">
                 <div class="top3-medal">{{ i == 0 ? '🥇' : (i == 1 ? '🥈' : '🥉') }}</div>
                 <div class="top3-name">{{ perf.nomEmploye }}</div>
-                <div class="top3-score">{{ perf.score }} pts — {{ perf.appreciation }}</div>
+                <div class="top3-score">{{ perf.score }} {{ 'employe.perf_page.pts'|trans }} — {{ perf.appreciation }}</div>
             </div>
             {% endfor %}
         </div>
@@ -471,30 +471,30 @@
     {# ── Tableau de classement (identique à tablePerformance Java) #}
     <div class="perf-table-card">
         <div class="perf-table-header">
-            📋 Classement complet
+            📋 {{ 'employe.perf_page.full_ranking'|trans }}
             <span style="font-size:.85rem;font-weight:400;opacity:.8;margin-left:8px">
-                {{ classement|length }} employé(s)
+                {{ classement|length }} {{ 'employe.perf_page.employees_count_label'|trans }}
             </span>
         </div>
 
         {% if classement|length == 0 %}
         <div class="perf-empty">
-            Aucun employé actif trouvé.<br>
-            <small>Ajoutez des employés et assignez-leur des tâches pour voir leurs performances.</small>
+            {{ 'employe.perf_page.no_active'|trans }}<br>
+            <small>{{ 'employe.perf_page.empty_hint'|trans }}</small>
         </div>
         {% else %}
         <table class="perf-table">
             <thead>
                 <tr>
                     <th class="center">#</th>
-                    <th>Employé</th>
-                    <th class="center">Total</th>
-                    <th class="center">✅ Terminées</th>
-                    <th class="center">⚠️ Retard</th>
-                    <th>Score</th>
-                    <th class="center">Appréciation</th>
-                    <th class="center">Tâches</th>
-                    <th class="center">Action</th>
+                    <th>{{ 'employe.perf_page.employee'|trans }}</th>
+                    <th class="center">{{ 'employe.perf_page.total'|trans }}</th>
+                    <th class="center">✅ {{ 'employe.perf_page.completed'|trans }}</th>
+                    <th class="center">⚠️ {{ 'employe.perf_page.delayed'|trans }}</th>
+                    <th>{{ 'employe.perf_page.score'|trans }}</th>
+                    <th class="center">{{ 'employe.perf_page.appreciation'|trans }}</th>
+                    <th class="center">{{ 'employe.perf_page.tasks'|trans }}</th>
+                    <th class="center">{{ 'employe.perf_page.action'|trans }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -559,7 +559,7 @@
                 {# Bouton détails (handleVoirDetails Java) #}
                 <td class="center">
                     <button class="btn-details" onclick="event.stopPropagation();voirDetails({{ perf.idEmploye }})">
-                        👁 Détails
+                        👁 {{ 'employe.perf_page.details'|trans }}
                     </button>
                 </td>
             </tr>
@@ -633,60 +633,60 @@ function buildModalHTML(p) {
             <div>
                 <div class="modal-emp-name">${p.nomEmploye}</div>
                 <div class="modal-apprec">${p.emoji} ${p.appreciation}</div>
-                <div class="modal-taux">Taux de réussite : ${p.tauxReussite}%</div>
+                <div class="modal-taux">{{ 'employe.perf_page.success_rate'|trans|e('js') }} ${p.tauxReussite}%</div>
             </div>
         </div>
     </div>
 
     <div class="modal-body">
 
-        <div class="modal-section-title">📋 Statistiques des Tâches</div>
+        <div class="modal-section-title">📋 {{ 'employe.perf_page.task_stats'|trans|e('js') }}</div>
         <div class="modal-stats-grid">
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">📊</span>
                 <div>
-                    <div class="modal-stat-label">Total</div>
-                    <div class="modal-stat-value">${p.totalTaches} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.total'|trans|e('js') }}</div>
+                    <div class="modal-stat-value">${p.totalTaches} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">✅</span>
                 <div>
-                    <div class="modal-stat-label">Terminées</div>
-                    <div class="modal-stat-value" style="color:#27ae60">${p.tachesTerminees} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.completed'|trans|e('js') }}</div>
+                    <div class="modal-stat-value" style="color:#27ae60">${p.tachesTerminees} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">🔄</span>
                 <div>
-                    <div class="modal-stat-label">En cours</div>
-                    <div class="modal-stat-value" style="color:#3498db">${p.tachesEnCours} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.in_progress'|trans|e('js') }}</div>
+                    <div class="modal-stat-value" style="color:#3498db">${p.tachesEnCours} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">⏰</span>
                 <div>
-                    <div class="modal-stat-label">En retard</div>
-                    <div class="modal-stat-value" style="color:#e74c3c">${p.tachesEnRetard} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.delayed'|trans|e('js') }}</div>
+                    <div class="modal-stat-value" style="color:#e74c3c">${p.tachesEnRetard} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">❌</span>
                 <div>
-                    <div class="modal-stat-label">Annulées</div>
-                    <div class="modal-stat-value" style="color:#95a5a6">${p.tachesAnnulees} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.canceled'|trans|e('js') }}</div>
+                    <div class="modal-stat-value" style="color:#95a5a6">${p.tachesAnnulees} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">⏳</span>
                 <div>
-                    <div class="modal-stat-label">En attente</div>
-                    <div class="modal-stat-value" style="color:#f39c12">${p.tachesEnAttente} tâche(s)</div>
+                    <div class="modal-stat-label">{{ 'employe.perf_page.pending'|trans|e('js') }}</div>
+                    <div class="modal-stat-value" style="color:#f39c12">${p.tachesEnAttente} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
         </div>
 
-        <div class="modal-section-title">✅ Score de Performance</div>
+        <div class="modal-section-title">✅ {{ 'employe.perf_page.perf_score'|trans|e('js') }}</div>
         <div class="modal-score-bar-wrap">
             <div class="modal-score-bar">
                 <div class="modal-score-bar-fill"
@@ -700,15 +700,15 @@ function buildModalHTML(p) {
             </div>
         </div>
 
-        <div class="modal-section-title">⏱ Temps de Réalisation</div>
+        <div class="modal-section-title">⏱ {{ 'employe.perf_page.completion_time'|trans|e('js') }}</div>
         <div class="modal-stat-item" style="max-width:260px">
             <span class="modal-stat-icon">📅</span>
             <div>
-                <div class="modal-stat-label">Durée moyenne par tâche</div>
+                <div class="modal-stat-label">{{ 'employe.perf_page.avg_duration'|trans|e('js') }}</div>
                 <div class="modal-stat-value">
                     ${p.tempsRealisationMoyen > 0
-                        ? p.tempsRealisationMoyen + ' jours'
-                        : 'Aucune tâche terminée'}
+                        ? p.tempsRealisationMoyen + ' {{ 'employe.perf_page.days'|trans|e('js') }}'
+                        : '{{ 'employe.perf_page.no_completed'|trans|e('js') }}'}
                 </div>
             </div>
         </div>
@@ -716,7 +716,7 @@ function buildModalHTML(p) {
     </div>
 
     <div class="modal-footer">
-        <button class="btn-fermer" onclick="fermerModal()">Fermer</button>
+        <button class="btn-fermer" onclick="fermerModal()">{{ 'employe.perf_page.close'|trans|e('js') }}</button>
     </div>`;
 }
 

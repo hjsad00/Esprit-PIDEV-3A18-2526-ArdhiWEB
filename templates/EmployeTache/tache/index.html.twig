@@ -246,6 +246,9 @@
 
         {# Boutons haut droite #}
         <div class="ms-auto d-flex gap-2">
+            <a href="{{ path('employe_index') }}" class="btn-actualiser" style="background:#1B5E20;color:white;border-color:#1B5E20;">
+                <i class="bi bi-people-fill"></i> {{ 'employe.title'|trans|replace({'📋 ': ''}) }}
+            </a>
             <a href="{{ path('tache_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
                 <i class="bi bi-arrow-clockwise"></i> {{ 'common.refresh'|trans }}
             </a>
