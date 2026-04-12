@@ -67,6 +67,11 @@
             <i class="bi bi-qr-code-scan text-warning"></i><span>Scanner QR — Check-in</span>
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {{ current_route == 'app_inactifs_dashboard' ? 'active' : '' }}" href="{{ path('app_inactifs_dashboard') }}">
+            <i class="bi bi-person-x-fill text-warning"></i><span>Participants inactifs</span>
+          </a>
+        </li>
       </ul>
 
       <div class="nav-section-title">Compte</div>

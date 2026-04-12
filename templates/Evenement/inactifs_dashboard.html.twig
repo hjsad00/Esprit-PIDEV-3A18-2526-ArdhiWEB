@@ -1,0 +1,279 @@
+{% extends 'evenement/admin_layout.html.twig' %}
+
+{% block title %}Participants inactifs — Tableau de bord{% endblock %}
+
+{% block page_title %}Détection des participants inactifs{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .risk-bar { height: 8px; border-radius: 4px; background: #eee; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+    .badge-risk { border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: bold; color: white; }
+    .stat-tile { border-radius: 14px; padding: 1.4rem 1rem; color: white; text-align: center; }
+    
+    /* High Contrast Enhancements */
+    #profiles-table thead th { 
+        background-color: #f8fafc !important; 
+        color: #1e293b !important; 
+        border-bottom: 2px solid #e2e8f0 !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+    }
+    #profiles-table tbody td { 
+        vertical-align: middle; 
+        color: #1a202c; 
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .text-600 { color: #4b5563 !important; }
+    .activity-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; color: #475569; display: inline-block; margin-bottom: 2px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+
+    {# ── Header ──────────────────────────────────────────────────────────── #}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-0">🔍 Détection des participants inactifs</h3>
+            <p class="text-muted mb-0">Scoring automatique · Relances personnalisées</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btn-refresh-stats" class="btn btn-outline-secondary btn-sm">🔄 Actualiser</button>
+            <button id="btn-relances-auto" class="btn btn-warning">
+                📨 Envoyer relances automatiques
+            </button>
+            <a href="{{ path('app_evenement_index') }}" class="btn btn-outline-secondary btn-sm">← Retour</a>
+        </div>
+    </div>
+
+    {# ── Global stats tiles ──────────────────────────────────────────────── #}
+    <div class="row g-3 mb-4" id="global-stats">
+        <div class="col-6 col-md-3">
+            <div class="stat-tile" style="background:#3498DB;">
+                <div class="fs-2 fw-bold">{{ globalStats.total }}</div>
+                <small>Analysés</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-tile" style="background:#E74C3C;">
+                <div class="fs-2 fw-bold">{{ globalStats.urgent }}</div>
+                <small>🔴 Urgents (≥80)</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-tile" style="background:#F39C12;">
+                <div class="fs-2 fw-bold">{{ globalStats.important }}</div>
+                <small>🟠 Importants (60–79)</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-tile" style="background:#8E44AD;">
+                <div class="fs-2 fw-bold">{{ globalStats.scoreMoyen|number_format(1) }}</div>
+                <small>Score moyen</small>
+            </div>
+        </div>
+    </div>
+
+    {# ── Profiles table ──────────────────────────────────────────────────── #}
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">👥 Profils à risque ({{ profiles|length }})</span>
+            <input type="search" id="search-profiles" class="form-control form-control-sm"
+                   placeholder="🔎 Rechercher un participant…" style="max-width:240px;">
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="profiles-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Participant</th>
+                            <th class="text-center">Score de risque</th>
+                            <th>Niveau</th>
+                            <th>Indicateurs</th>
+                            <th>Recommandation</th>
+                            <th class="text-center">Activité</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for profile in profiles %}
+                        <tr data-score="{{ profile.riskScore }}" data-userid="{{ profile.userId }}">
+
+                            {# Name + email #}
+                            <td>
+                                <div class="fw-semibold">{{ profile.nomComplet }}</div>
+                                <small class="text-muted">{{ profile.email }}</small>
+                            </td>
+
+                            {# Score bar #}
+                            <td style="min-width:140px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="risk-bar flex-grow-1">
+                                        <div class="risk-bar-fill"
+                                             style="width:{{ profile.riskScore }}%; background:{{ profile.riskColor }};"></div>
+                                    </div>
+                                    <span class="fw-bold" style="color:{{ profile.riskColor }}; min-width:36px;">
+                                        {{ profile.riskScore|number_format(0) }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            {# Risk badge #}
+                            <td>
+                                <span class="badge-risk" style="background:{{ profile.riskColor }};">
+                                    {{ profile.riskLevel }}
+                                </span>
+                            </td>
+
+                            {# Indicators #}
+                            <td>
+                                {% if profile.indicateurs is not empty %}
+                                    <ul class="mb-0 ps-3 small text-600">
+                                        {% for ind in profile.indicateurs %}
+                                            <li>{{ ind }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <span class="text-muted small" style="font-style:italic;">Aucun risque détecté</span>
+                                {% endif %}
+                            </td>
+
+                            {# Recommendation #}
+                            <td><small>{{ profile.recommandation }}</small></td>
+
+                            {# Activity summary #}
+                            <td class="text-center">
+                                <div class="activity-badge">{{ profile.totalParticipations }} participations</div><br>
+                                <div class="activity-badge">{{ profile.presences }} présences</div><br>
+                                <div class="activity-badge">{{ profile.annulations }} annulations</div><br>
+                                <div class="activity-badge text-primary fw-bold">{{ profile.joursSansActivite }} jours d'inactivité</div>
+                            </td>
+
+                            {# Send email button #}
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning btn-relance"
+                                        data-userid="{{ profile.userId }}"
+                                        data-email="{{ profile.email }}"
+                                        title="Envoyer une relance personnalisée">
+                                    📨
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                ✅ Aucun participant à risque détecté.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# ── Toast notification ──────────────────────────────────────────────── #}
+    <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+        <div id="toast-msg" class="toast align-items-center border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold" id="toast-text"></div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+
+    // ── Toast helper ──────────────────────────────────────────────────────
+    function toast(message, success = true) {
+        const el   = document.getElementById('toast-msg');
+        const text = document.getElementById('toast-text');
+        el.classList.remove('bg-success', 'bg-danger', 'text-white');
+        el.classList.add(success ? 'bg-success' : 'bg-danger', 'text-white');
+        text.textContent = message;
+        bootstrap.Toast.getOrCreateInstance(el, { delay: 4000 }).show();
+    }
+
+    // ── Single relance ────────────────────────────────────────────────────
+    document.querySelectorAll('.btn-relance').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const userId = btn.dataset.userid;
+            const email  = btn.dataset.email;
+
+            if (!confirm(`Envoyer un email de relance à ${email} ?`)) return;
+
+            btn.disabled    = true;
+            btn.textContent = '⏳';
+
+            // Fixed: Use numeric placeholder to satisfy route requirements (\d+)
+            const url = `{{ path('app_inactifs_relance_single', {userId: 999999}) }}`
+                            .replace('999999', userId);
+
+            try {
+                const res  = await fetch(url, { method: 'POST' });
+                const data = await res.json();
+                toast(data.message, data.success);
+            } catch (e) {
+                toast('Erreur réseau: ' + e.message, false);
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = '📨';
+            }
+        });
+    });
+
+    // ── Batch relances ────────────────────────────────────────────────────
+    document.getElementById('btn-relances-auto').addEventListener('click', async () => {
+        if (!confirm('Envoyer des relances automatiques à tous les participants à risque (score ≥ 30) ?')) return;
+
+        const btn = document.getElementById('btn-relances-auto');
+        btn.disabled    = true;
+        btn.textContent = '⏳ Envoi en cours…';
+
+        try {
+            const res  = await fetch('{{ path("app_inactifs_relances_auto") }}', { method: 'POST' });
+            const data = await res.json();
+            toast(`✅ ${data.total} relance(s) envoyée(s) — 🔴 ${data.urgentes} urgentes · 🟠 ${data.importantes} importantes · 🟡 ${data.standard} standard · ❌ ${data.echecs} échecs`);
+        } catch (e) {
+            toast('Erreur: ' + e.message, false);
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = '📨 Envoyer relances automatiques';
+        }
+    });
+
+    // ── Client-side search ────────────────────────────────────────────────
+    document.getElementById('search-profiles').addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#profiles-table tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+
+    // ── Refresh stats ─────────────────────────────────────────────────────
+    document.getElementById('btn-refresh-stats').addEventListener('click', async () => {
+        try {
+            const res  = await fetch('{{ path("app_inactifs_stats") }}');
+            const data = await res.json();
+            // Simple page reload is fine here — stats are server-rendered
+            location.reload();
+        } catch (e) {
+            toast('Erreur actualisation: ' + e.message, false);
+        }
+    });
+
+})();
+</script>
+{% endblock %}

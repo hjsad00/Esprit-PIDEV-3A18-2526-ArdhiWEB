@@ -9,11 +9,12 @@
     <div class="hero-left" style="max-width:720px;">
       <div class="hero-label">TABLEAU DE BORD</div>
       <h1 class="hero-headline">Gestion des participations</h1>
-      <div class="hero-actions-row">
-        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Retour aux evenements</a>
+      <div class="hero-actions-row flex-nowrap overflow-auto pb-2" style="gap: 12px;">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary px-3" style="min-width: auto;">Retour aux evenements</a>
         {% if not isAdmin %}
-        <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary">Mes inscriptions</a>
+        <a href="{{ path('app_evenement_inscriptions') }}" class="hero-btn-primary px-3" style="min-width: auto;">Mes inscriptions</a>
         {% endif %}
+        <a href="{{ path('app_inactifs_dashboard') }}" class="hero-btn-primary px-3" style="background:#E74C3C;border-color:#E74C3C;min-width: auto;">Predictions inactif</a>
       </div>
       <p class="hero-description">
         {% if isAdmin %}Toutes les participations de la plateforme.{% else %}Gerez les inscriptions a vos evenements.{% endif %}

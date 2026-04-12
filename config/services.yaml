@@ -52,3 +52,19 @@ services:
             $evenementRepo:      '@App\Repository\Evenement\EvenementRepository'
             $logger:             '@logger'
             $projectDir:         '%kernel.project_dir%'
+
+    App\Service\Evenement\CalendarExportService:
+        arguments:
+            $logger:       '@logger'
+            $projectDir:   '%kernel.project_dir%'
+            $requestStack: '@request_stack'
+
+    App\Service\Evenement\SmartEmailRecommendationService:
+        arguments:
+            $participationRepo: '@App\Repository\Evenement\ParticipationRepository'
+            $evenementRepo:     '@App\Repository\Evenement\EvenementRepository'
+            $mailer:            '@mailer'
+            $logger:            '@logger'
+            $mailFrom:          '%env(MAILER_FROM)%'
+
+    App\Service\Evenement\InactiveParticipantDetectionService: ~

@@ -345,7 +345,7 @@
 
           <!-- Favori -->
           {% if app.user and app.user.role != 'ADMIN' %}
-          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}" class="mb-4">
+          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: evenement.id}) }}" class="mb-3">
             <input type="hidden" name="_token" value="{{ csrf_token('favori'~evenement.id) }}">
             <button type="submit" class="btn-fav-lg {{ isFavori ? 'on' : '' }}">
               <i class="bi bi-heart{{ isFavori ? '-fill' : '' }}"></i>
@@ -353,6 +353,19 @@
             </button>
           </form>
           {% endif %}
+
+          {# ── CALENDAR EXPORT (new) ── #}
+          <div class="d-flex gap-2 mb-4 flex-wrap">
+            <form method="POST" action="{{ path('app_calendar_add', {id: evenement.id}) }}" class="flex-grow-1">
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100 py-2 fw-semibold" style="border-radius:10px;">
+                    📅 Google Calendar
+                </button>
+            </form>
+            <a href="{{ path('app_calendar_ics', {id: evenement.id}) }}" 
+               class="btn btn-outline-secondary btn-sm py-2 fw-semibold" style="border-radius:10px; width:45px;" title="Télécharger .ics">
+                ⬇️
+            </a>
+          </div>
 
           <!-- Quick stats -->
           <div class="pt-3 border-top" style="font-size:.82rem;color:#9ca3af;text-align:center;">
