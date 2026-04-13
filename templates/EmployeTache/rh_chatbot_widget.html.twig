@@ -1,607 +1,859 @@
+{# ═══════════════════════════════════════════════════════════════
+   WIDGET CHATBOT RH — Style LinkedIn Premium
+   Améliorations visuelles :
+     • Layout style messagerie LinkedIn (bulles + avatars + timestamps)
+     • Cartes employé enrichies (photo, barres de score animées, badge confiance)
+     • Cartes disponibilité avec jauge de charge de travail
+     • Suggestions chips contextuelles après chaque réponse
+     • Historique persistant dans sessionStorage
+     • Animations fluides (entrée des messages, loader dots)
+     • Header avec status en ligne + menu actions
+   Améliorations logiques :
+     • Contexte de conversation (mémorise le dernier intent)
+     • Gestion d'erreur enrichie
+     • Actions rapides dans les cartes (voir fiche, envoyer email)
+     • Formatage Markdown basique (gras, listes) dans les réponses
+   ═══════════════════════════════════════════════════════════════ #}
+
 <style>
-/* --- CHATBOT WIDGET PREMIUM STYLES --- */
-#rh-chatbot-container {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 9999;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* ─── Variables ──────────────────────────────────────────────── */
+:root {
+  --cb-green:       #0a66c2; /* LinkedIn blue principal */
+  --cb-green-light: #e8f0fe;
+  --cb-bot-bg:      #ffffff;
+  --cb-user-bg:     #0a66c2;
+  --cb-user-color:  #ffffff;
+  --cb-msg-bg:      #f3f2ef; /* fond LinkedIn */
+  --cb-radius:      18px;
+  --cb-shadow:      0 8px 30px rgba(0,0,0,.18);
+  --cb-font:        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Floating Button */
-#rh-chatbot-launcher {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #27ae60, #2ecc71);
-    color: white;
-    border: none;
-    box-shadow: 0 10px 25px rgba(39, 174, 96, 0.4);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: hidden;
+/* ─── Conteneur principal ────────────────────────────────────── */
+#rh-cb {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9998;
+  font-family: var(--cb-font);
 }
 
-#rh-chatbot-launcher:hover {
-    transform: scale(1.1) translateY(-5px);
-    box-shadow: 0 15px 35px rgba(39, 174, 96, 0.5);
+/* ─── Launcher ────────────────────────────────────────────────── */
+#rh-cb-launch {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--cb-green);
+  border: none;
+  box-shadow: 0 4px 20px rgba(10,102,194,.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+  position: relative;
+}
+#rh-cb-launch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(10,102,194,.55);
+}
+#rh-cb-launch .cb-notif-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 12px; height: 12px;
+  background: #e74c3c;
+  border: 2px solid white;
+  border-radius: 50%;
+  animation: cbPulse 2s infinite;
+}
+@keyframes cbPulse {
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.3);opacity:.7}
 }
 
-#rh-chatbot-launcher i {
-    transition: transform 0.4s;
+/* ─── Fenêtre ─────────────────────────────────────────────────── */
+#rh-cb-window {
+  position: absolute;
+  bottom: 74px;
+  right: 0;
+  width: 420px;
+  height: 600px;
+  max-height: calc(100vh - 100px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--cb-shadow);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.08);
+  transform-origin: bottom right;
+}
+#rh-cb-window.cb-open {
+  display: flex;
+  animation: cbWindowIn .28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cbWindowIn {
+  from{opacity:0;transform:scale(.85) translateY(16px)}
+  to  {opacity:1;transform:scale(1)   translateY(0)}
 }
 
-#rh-chatbot-launcher.active i {
-    transform: rotate(90deg);
+/* ─── Header ─────────────────────────────────────────────────── */
+#rh-cb-header {
+  background: var(--cb-green);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.cb-bot-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  border: 2px solid rgba(255,255,255,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: white; flex-shrink: 0; position: relative;
+}
+.cb-online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 10px; height: 10px;
+  background: #2ecc71;
+  border: 2px solid white; border-radius: 50%;
+}
+.cb-header-info { flex: 1; }
+.cb-header-name { color: white; font-size: 14px; font-weight: 700; line-height: 1.2; }
+.cb-header-status { color: rgba(255,255,255,.8); font-size: 11px; margin-top: 2px; }
+.cb-header-actions { display: flex; gap: 4px; }
+.cb-header-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.15); border: none; color: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: background .2s;
+}
+.cb-header-btn:hover { background: rgba(255,255,255,.3); }
+
+/* ─── Zone messages ──────────────────────────────────────────── */
+#rh-cb-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--cb-msg-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scroll-behavior: smooth;
+}
+#rh-cb-messages::-webkit-scrollbar { width: 4px; }
+#rh-cb-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+/* ─── Groupes de messages ─────────────────────────────────────── */
+.cb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.cb-group.bot  { align-items: flex-start; }
+.cb-group.user { align-items: flex-end; }
+
+/* Avatar de groupe */
+.cb-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cb-group.user .cb-group-header { flex-direction: row-reverse; }
+
+.cb-msg-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--cb-green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: white; flex-shrink: 0;
+}
+.cb-msg-avatar.user-av { background: #666; }
+.cb-sender-label { font-size: 11px; font-weight: 600; color: #555; }
+.cb-timestamp    { font-size: 10px; color: #aaa; margin-left: 4px; }
+
+/* ─── Bulles ─────────────────────────────────────────────────── */
+.cb-bubble {
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1d;
+  max-width: 100%;
+  word-break: break-word;
+  animation: cbMsgIn .2s ease;
+}
+@keyframes cbMsgIn {
+  from{opacity:0;transform:translateY(6px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+.cb-group.bot  .cb-bubble {
+  background: white;
+  border-radius: 4px 16px 16px 16px;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.cb-group.user .cb-bubble {
+  background: var(--cb-user-bg);
+  color: var(--cb-user-color);
+  border-radius: 16px 4px 16px 16px;
+}
+.cb-group.bot  .cb-bubble + .cb-bubble { border-radius: 4px 16px 16px 16px; }
+.cb-group.user .cb-bubble + .cb-bubble { border-radius: 16px 4px 16px 16px; }
+
+/* ─── Typing indicator ───────────────────────────────────────── */
+.cb-typing {
+  display: flex; gap: 4px; padding: 10px 14px;
+  background: white; border-radius: 4px 16px 16px 16px;
+  border: 1px solid rgba(0,0,0,.06);
+  width: fit-content;
+  animation: cbMsgIn .2s ease;
+}
+.cb-typing span {
+  width: 7px; height: 7px; background: var(--cb-green);
+  border-radius: 50%; display: block;
+  animation: cbDot 1.3s infinite ease-in-out;
+}
+.cb-typing span:nth-child(2){animation-delay:.16s}
+.cb-typing span:nth-child(3){animation-delay:.32s}
+@keyframes cbDot {
+  0%,80%,100%{transform:scale(.8);opacity:.4}
+  40%{transform:scale(1.1);opacity:1}
 }
 
-/* Chat Window */
-#rh-chatbot-window {
-    position: absolute;
-    bottom: 85px;
-    right: 0;
-    width: 400px;
-    height: 550px;
-    max-height: calc(100vh - 120px);
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    transform-origin: bottom right;
-    animation: windowOpen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(0,0,0,0.05);
+/* ─── CARTE EMPLOYÉ style LinkedIn ─────────────────────────────── */
+.cb-emp-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 6px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  animation: cbMsgIn .25s ease;
+}
+.cb-emp-card-top {
+  background: linear-gradient(135deg, #0a66c2 0%, #0e77de 100%);
+  height: 44px;
+  position: relative;
+}
+.cb-emp-card-body { padding: 0 14px 14px; }
+.cb-emp-photo-wrap {
+  margin-top: -22px;
+  margin-bottom: 8px;
+}
+.cb-emp-photo, .cb-emp-initials {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.cb-emp-initials { background: var(--cb-green); }
+.cb-emp-name { font-size: 14px; font-weight: 700; color: #1d1d1d; line-height: 1.2; }
+.cb-emp-poste { font-size: 12px; color: #555; margin-top: 1px; }
+.cb-emp-rank {
+  float: right; margin-top: -42px;
+  background: rgba(255,255,255,.2);
+  color: white; border-radius: 20px;
+  padding: 3px 10px; font-size: 11px; font-weight: 700;
 }
 
-@keyframes windowOpen {
-    from { opacity: 0; transform: scale(0.8) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+/* Badge confiance */
+.cb-confidence {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  margin: 8px 0;
 }
 
-/* Header */
-#rh-chatbot-header {
-    background: white;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #f0f0f0;
+/* Barres de score */
+.cb-scores { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; }
+.cb-score-row { display: flex; flex-direction: column; gap: 3px; }
+.cb-score-lbl {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #555; font-weight: 600;
+}
+.cb-bar-bg { height: 5px; background: #eee; border-radius: 3px; overflow: hidden; }
+.cb-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* Raison */
+.cb-reason {
+  font-size: 11px; color: #666; font-style: italic;
+  margin: 6px 0 10px;
+  padding: 6px 10px;
+  background: #f8f8f8;
+  border-left: 3px solid var(--cb-green);
+  border-radius: 0 6px 6px 0;
 }
 
-.bot-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+/* Actions carte */
+.cb-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cb-card-btn {
+  flex: 1; padding: 7px 10px;
+  border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  border: 1.5px solid;
 }
-
-.bot-avatar {
-    width: 40px;
-    height: 40px;
-    background: #e8f5e9;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #27ae60;
-    font-size: 20px;
-    position: relative;
+.cb-card-btn.primary {
+  background: var(--cb-green); color: white;
+  border-color: var(--cb-green);
 }
-
-.bot-avatar::after {
-    content: '';
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    background: #2ecc71;
-    border: 2px solid white;
-    border-radius: 50%;
+.cb-card-btn.secondary {
+  background: white; color: var(--cb-green);
+  border-color: var(--cb-green);
 }
+.cb-card-btn:hover.primary { background: #1f6a1f; }
+.cb-card-btn:hover.secondary { background: var(--cb-green-light); }
 
-.bot-name-status {
-    display: flex;
-    flex-direction: column;
+/* ─── CARTE DISPONIBILITÉ ─────────────────────────────────────── */
+.cb-dispo-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  animation: cbMsgIn .2s ease;
 }
-
-.bot-name {
-    font-weight: 700;
-    color: #333;
-    font-size: 15px;
-    line-height: 1.2;
+.cb-dispo-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--cb-green); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
+.cb-dispo-info { flex: 1; min-width: 0; }
+.cb-dispo-name { font-size: 13px; font-weight: 700; color: #1d1d1d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-dispo-poste { font-size: 11px; color: #777; }
+.cb-dispo-right { text-align: right; flex-shrink: 0; }
+.cb-dispo-status { font-size: 11px; font-weight: 700; }
+.cb-dispo-tasks { font-size: 10px; color: #aaa; margin-top: 1px; }
 
-.bot-status {
-    font-size: 11px;
-    color: #2ecc71;
-    font-weight: 500;
+/* Jauge de charge */
+.cb-load-bar {
+  height: 3px; background: #eee; border-radius: 2px;
+  overflow: hidden; margin-top: 6px; width: 100%;
 }
+.cb-load-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
 
-#rh-chatbot-close {
-    background: none;
-    border: none;
-    color: #999;
-    font-size: 22px;
-    cursor: pointer;
-    padding: 5px;
-    transition: color 0.2s;
+/* ─── Chips de suggestion ────────────────────────────────────── */
+#rh-cb-chips {
+  padding: 10px 12px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+  scrollbar-width: none;
 }
-
-#rh-chatbot-close:hover {
-    color: #e74c3c;
+#rh-cb-chips::-webkit-scrollbar { display: none; }
+.cb-chip {
+  white-space: nowrap;
+  padding: 6px 13px;
+  background: var(--cb-green-light);
+  color: var(--cb-green);
+  border: 1px solid #c8d8f0;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .15s; flex-shrink: 0;
 }
+.cb-chip:hover { background: var(--cb-green); color: white; border-color: var(--cb-green); }
 
-/* Messages Area */
-#rh-chatbot-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    background: #f8f9fa;
-    scroll-behavior: smooth;
+/* ─── Zone de saisie ─────────────────────────────────────────── */
+#rh-cb-input-area {
+  padding: 12px 14px;
+  background: white;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
 }
-
-.msg-wrapper {
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
+#rh-cb-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-family: var(--cb-font);
+  outline: none;
+  transition: border-color .2s;
+  resize: none;
+  max-height: 80px;
+  min-height: 40px;
+  line-height: 1.4;
+  overflow: hidden;
 }
-
-.msg-wrapper.bot { align-self: flex-start; }
-.msg-wrapper.user { align-self: flex-end; }
-
-.chat-bubble {
-    padding: 12px 16px;
-    font-size: 14px;
-    line-height: 1.5;
-    position: relative;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+#rh-cb-input:focus { border-color: var(--cb-green); }
+#rh-cb-send {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--cb-green);
+  color: white; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; cursor: pointer; flex-shrink: 0;
+  transition: transform .2s, background .2s;
 }
-
-.msg-wrapper.bot .chat-bubble {
-    background: white;
-    color: #333;
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid #efefef;
-}
-
-.msg-wrapper.user .chat-bubble {
-    background: #27ae60;
-    color: white;
-    border-radius: 18px 18px 4px 18px;
-}
-
-.msg-time {
-    font-size: 10px;
-    color: #aaa;
-    margin-top: 4px;
-    margin-left: 5px;
-}
-
-.msg-wrapper.user .msg-time { text-align: right; margin-right: 5px; }
-
-/* Typing Indicator */
-.typing-indicator {
-    padding: 12px 16px;
-    background: white;
-    border-radius: 18px 18px 18px 4px;
-    display: flex;
-    gap: 4px;
-    width: fit-content;
-    border: 1px solid #efefef;
-}
-
-.typing-dot {
-    width: 6px;
-    height: 6px;
-    background: #27ae60;
-    border-radius: 50%;
-    animation: typingBounce 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-    40% { transform: translateY(-5px); opacity: 1; }
-}
-
-/* RICH CARDS: Employee Card */
-.employee-card {
-    background: white;
-    border-radius: 15px;
-    padding: 15px;
-    margin-top: 10px;
-    border: 1px solid #eee;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    width: 100%;
-}
-
-.emp-header {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.emp-photo {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #f0f0f0;
-}
-
-.emp-initials {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: #27ae60;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-}
-
-.emp-info h5 { margin: 0; font-size: 14px; font-weight: 700; color: #333; }
-.emp-info p { margin: 0; font-size: 12px; color: #777; }
-
-.emp-scores { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-
-.score-bar-group { display: flex; flex-direction: column; gap: 3px; }
-.score-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #555; }
-.progress-bg { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease-out; }
-
-.overall-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    margin-bottom: 15px;
-}
-
-/* Suggestion Chips */
-#rh-chatbot-suggestions {
-    padding: 10px 15px;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    background: white;
-    border-top: 1px solid #f0f0f0;
-    scrollbar-width: none;
-}
-
-#rh-chatbot-suggestions::-webkit-scrollbar { display: none; }
-
-.suggestion-chip {
-    white-space: nowrap;
-    padding: 8px 15px;
-    background: #f0f7f4;
-    color: #27ae60;
-    border: 1px solid #d5eadd;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.suggestion-chip:hover {
-    background: #27ae60;
-    color: white;
-}
-
-/* Input Area */
-#rh-chatbot-input-area {
-    padding: 15px 20px;
-    background: white;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    border-top: 1px solid #f0f0f0;
-}
-
-#rh-chatbot-input {
-    flex: 1;
-    border: 1px solid #e0e0e0;
-    padding: 12px 18px;
-    border-radius: 25px;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-#rh-chatbot-input:focus { border-color: #27ae60; }
-
-#rh-chatbot-send {
-    background: #27ae60;
-    color: white;
-    border: none;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-#rh-chatbot-send:hover { transform: scale(1.1); }
+#rh-cb-send:hover { transform: scale(1.08); background: #084fa8; }
+#rh-cb-send:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 </style>
 
-<div id="rh-chatbot-container">
-    <!-- Chat Window -->
-    <div id="rh-chatbot-window">
-        <!-- Header -->
-        <div id="rh-chatbot-header">
-            <div class="bot-info">
-                <div class="bot-avatar">
-                    <i class="bi bi-robot"></i>
-                </div>
-                <div class="bot-name-status">
-                    <span class="bot-name">SmartFarm Manager</span>
-                    <span class="bot-status">● {{ 'status.online'|trans|default('En ligne') }}</span>
-                </div>
-            </div>
-            <button id="rh-chatbot-close"><i class="bi bi-dash"></i></button>
-        </div>
+{# ─── HTML ─────────────────────────────────────────────────────── #}
+<div id="rh-cb">
 
-        <!-- Messages Area -->
-        <div id="rh-chatbot-messages">
-            <div class="msg-wrapper bot">
-                <div class="chat-bubble">
-                    {{ 'chatbot.welcome'|trans }}
-                </div>
-                <div class="msg-time">{{ 'common.loading_time'|trans|replace({'%ms%ms': '0'})|replace({'Chargé en 0': "À l'instant", 'Loaded in 0': 'Just now', 'تم التحميل في 0': 'الآن'}) }}</div>
-            </div>
-        </div>
+  {# Fenêtre #}
+  <div id="rh-cb-window">
 
-        <!-- Suggestion Chips -->
-        <div id="rh-chatbot-suggestions">
-            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.reco'|trans }}">🎯 {{ 'chatbot.suggestion.reco'|trans }}</div>
-            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.perf'|trans }}">📊 {{ 'chatbot.suggestion.perf'|trans }}</div>
-            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.dispo'|trans }}">📅 {{ 'chatbot.suggestion.dispo'|trans }}</div>
-            <div class="suggestion-chip" data-msg="{{ 'chatbot.suggestion.help'|trans }}">❓ {{ 'chatbot.suggestion.help'|trans }}</div>
-        </div>
-
-        <!-- Input Area -->
-        <div id="rh-chatbot-input-area">
-            <input type="text" id="rh-chatbot-input" placeholder="{{ 'chatbot.input_placeholder'|trans }}" autocomplete="off">
-            <button id="rh-chatbot-send"><i class="bi bi-send-fill"></i></button>
-        </div>
+    {# Header #}
+    <div id="rh-cb-header">
+      <div class="cb-bot-avatar">
+        🤖
+        <span class="cb-online-dot"></span>
+      </div>
+      <div class="cb-header-info">
+        <div class="cb-header-name">SmartFarm RH</div>
+        <div class="cb-header-status" id="rh-cb-status">● {{ 'status.online'|trans|default('En ligne') }}</div>
+      </div>
+      <div class="cb-header-actions">
+        <button class="cb-header-btn" id="rh-cb-clear" title="Effacer la conversation">
+          <i class="bi bi-trash3"></i>
+        </button>
+        <button class="cb-header-btn" id="rh-cb-close" title="Fermer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- Launcher Button -->
-    <button id="rh-chatbot-launcher">
-        <i class="bi bi-robot"></i>
-    </button>
+    {# Messages #}
+    <div id="rh-cb-messages">
+      {# Message de bienvenue injecté par JS #}
+    </div>
+
+    {# Chips de suggestion #}
+    <div id="rh-cb-chips">
+      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.reco'|trans|default('Recommander un employé') }}">🎯 {{ 'chatbot.suggestion.reco'|trans|default('Recommander') }}</div>
+      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.perf'|trans|default('Analyser les performances') }}">📊 {{ 'chatbot.suggestion.perf'|trans|default('Performances') }}</div>
+      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.dispo'|trans|default('Voir les disponibilités') }}">📅 {{ 'chatbot.suggestion.dispo'|trans|default('Disponibilités') }}</div>
+      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.help'|trans|default('aide') }}">❓ Aide</div>
+    </div>
+
+    {# Input #}
+    <div id="rh-cb-input-area">
+      <textarea id="rh-cb-input"
+                placeholder="{{ 'chatbot.input_placeholder'|trans|default('Posez votre question RH...') }}"
+                rows="1"
+                autocomplete="off"></textarea>
+      <button id="rh-cb-send"><i class="bi bi-send-fill"></i></button>
+    </div>
+
+  </div>
+
+  {# Bouton launcher #}
+  <button id="rh-cb-launch" title="Assistant RH">
+    <i class="bi bi-robot"></i>
+    <span class="cb-notif-dot" id="rh-cb-notif"></span>
+  </button>
+
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const launcher = document.getElementById('rh-chatbot-launcher');
-    const windowEl = document.getElementById('rh-chatbot-window');
-    const closeBtn = document.getElementById('rh-chatbot-close');
-    const sendBtn = document.getElementById('rh-chatbot-send');
-    const inputField = document.getElementById('rh-chatbot-input');
-    const messagesContainer = document.getElementById('rh-chatbot-messages');
-    const chips = document.querySelectorAll('.suggestion-chip');
+(function() {
+'use strict';
 
-    // Toggle Chat Window
-    launcher.addEventListener('click', () => {
-        const isOpen = windowEl.style.display === 'flex';
-        windowEl.style.display = isOpen ? 'none' : 'flex';
-        launcher.classList.toggle('active', !isOpen);
-        if (!isOpen) {
-            inputField.focus();
-            scrollToBottom();
-        }
-    });
+const SEND_URL   = '{{ path("app_rh_chatbot_send") }}';
+const STORE_KEY  = 'rh_cb_history';
+const MAX_HIST   = 30;
 
-    closeBtn.addEventListener('click', () => {
-        windowEl.style.display = 'none';
-        launcher.classList.remove('active');
-    });
+const win      = document.getElementById('rh-cb-window');
+const launch   = document.getElementById('rh-cb-launch');
+const closeBtn = document.getElementById('rh-cb-close');
+const clearBtn = document.getElementById('rh-cb-clear');
+const msgs     = document.getElementById('rh-cb-messages');
+const input    = document.getElementById('rh-cb-input');
+const sendBtn  = document.getElementById('rh-cb-send');
+const chips    = document.querySelectorAll('.cb-chip');
+const notifDot = document.getElementById('rh-cb-notif');
+const statusEl = document.getElementById('rh-cb-status');
 
-    // Handle suggestion chips
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            const msg = chip.getAttribute('data-msg');
-            sendMessage(msg);
-        });
-    });
+let isOpen      = false;
+let lastIntent  = null;
+let msgCount    = 0;
 
-    // Send Message on Enter
-    inputField.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    sendBtn.addEventListener('click', () => sendMessage());
-
-    async function sendMessage(text = null) {
-        const msg = text || inputField.value.trim();
-        if (!msg) return;
-
-        inputField.value = '';
-        appendMessage('user', msg);
-        
-        scrollToBottom();
-        showTypingIndicator();
-
-        try {
-            const response = await fetch('{{ path("app_rh_chatbot_send") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg })
-            });
-
-            const data = await response.json();
-            removeTypingIndicator();
-
-            if (data.error) {
-                appendMessage('bot', "{{ 'chatbot.error.server_returned_error'|trans|e('js') }}" + data.error);
-            } else {
-                appendMessage('bot', data.reponse);
-                
-                // Handle Recommendations
-                if (data.recommandations && data.recommandations.length > 0) {
-                    renderRecommendations(data.recommandations);
-                }
-
-                // Handle Disponibilités
-                if (data.disponibilites && data.disponibilites.length > 0 && data.intention === 'DISPONIBILITE') {
-                    renderDisponibilites(data.disponibilites);
-                }
-            }
-        } catch (error) {
-            console.error('Chatbot Error:', error);
-            removeTypingIndicator();
-            appendMessage('bot', "{{ 'chatbot.error.network'|trans|e('js') }}");
-        }
-        
-        scrollToBottom();
-    }
-
-    function appendMessage(sender, text) {
-        const wrapper = document.createElement('div');
-        wrapper.className = `msg-wrapper ${sender}`;
-        
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        wrapper.innerHTML = `
-            <div class="chat-bubble">${text.replace(/\n/g, '<br>')}</div>
-            <div class="msg-time">${time}</div>
-        `;
-        
-        messagesContainer.appendChild(wrapper);
-    }
-
-    function renderRecommendations(recs) {
-        recs.forEach(rec => {
-            const card = document.createElement('div');
-            card.className = 'employee-card';
-            
-            const initials = (rec.employe.prenom[0] + rec.employe.nom[0]).toUpperCase();
-            const photoHtml = rec.employe.photoPath 
-                ? `<img src="/uploads/photos/${rec.employe.photoPath}" class="emp-photo">`
-                : `<div class="emp-initials">${initials}</div>`;
-
-            card.innerHTML = `
-                <div class="emp-header">
-                    ${photoHtml}
-                    <div class="emp-info">
-                        <h5>${rec.employe.prenom} ${rec.employe.nom}</h5>
-                        <p>${rec.employe.poste || 'Employé'}</p>
-                    </div>
-                    <div style="margin-left: auto;">
-                        ${rec.emoji}
-                    </div>
-                </div>
-                
-                <div class="overall-badge" style="background: ${rec.couleur}15; color: ${rec.couleur}">
-                    <i class="bi bi-award-fill"></i> ${rec.appreciation} (${Math.round(rec.scoreTotal)}%)
-                </div>
-
-                <div class="emp-scores">
-                    ${renderScoreBar("{{ 'ai.matching.reason.skills'|trans|e('js') }}", rec.scoreCompetences, '#3498db')}
-                    ${renderScoreBar("{{ 'employe.performance'|trans|e('js') }}", rec.scorePerformance, '#27ae60')}
-                    ${renderScoreBar("{{ 'ai.matching.reason.availability'|trans|e('js') }}", rec.scoreDisponibilite, '#f1c40f')}
-                </div>
-
-                <div style="font-size: 11px; color: #777; font-style: italic; margin-bottom: 15px;">
-                    "${rec.raisonRecommandation}"
-                </div>
-
-                <a href="/employes/${rec.employe.id}" class="btn btn-sm btn-outline-success w-100" style="border-radius: 20px; font-size: 12px; font-weight:600;">
-                    {{ 'common.view'|trans|default('Voir') }}
-                </a>
-            `;
-            messagesContainer.appendChild(card);
-        });
-    }
-
-    function renderScoreBar(label, score, color) {
-        return `
-            <div class="score-bar-group">
-                <div class="score-label">
-                    <span>${label}</span>
-                    <span>${Math.round(score)}%</span>
-                </div>
-                <div class="progress-bg">
-                    <div class="progress-fill" style="width: ${score}%; background: ${color}"></div>
-                </div>
-            </div>
-        `;
-    }
-
-    function renderDisponibilites(dispos) {
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.flexDirection = 'column';
-        container.style.gap = '10px';
-        container.style.marginTop = '10px';
-        container.style.width = '100%';
-
-        dispos.forEach(d => {
-            const item = document.createElement('div');
-            item.style.background = 'white';
-            item.style.padding = '10px 15px';
-            item.style.borderRadius = '12px';
-            item.style.border = '1px solid #eee';
-            item.style.display = 'flex';
-            item.style.alignItems = 'center';
-            item.style.gap = '10px';
-
-            item.innerHTML = `
-                <span style="font-size: 16px;">${d.dotEmoji}</span>
-                <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 700;">${d.employe.prenom} ${d.employe.nom}</div>
-                    <div style="font-size: 11px; color: #777;">${d.employe.poste || 'Poste non défini'}</div>
-                </div>
-                <div style="font-size: 11px; font-weight: 700; color: ${d.couleurStatut}">${d.statutLabel}</div>
-            `;
-            container.appendChild(item);
-        });
-        messagesContainer.appendChild(container);
-    }
-
-    function showTypingIndicator() {
-        const indicator = document.createElement('div');
-        indicator.id = 'typing-indicator-wrapper';
-        indicator.className = 'msg-wrapper bot';
-        indicator.innerHTML = `
-            <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        `;
-        messagesContainer.appendChild(indicator);
-        scrollToBottom();
-    }
-
-    function removeTypingIndicator() {
-        const indicator = document.getElementById('typing-indicator-wrapper');
-        if (indicator) indicator.remove();
-    }
-
-    function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+/* ── Ouverture / fermeture ───────────────────────────────────── */
+launch.addEventListener('click', () => {
+  isOpen = !isOpen;
+  win.classList.toggle('cb-open', isOpen);
+  if (isOpen) {
+    notifDot.style.display = 'none';
+    if (msgs.children.length === 0) initConversation();
+    setTimeout(() => input.focus(), 200);
+    scrollBottom();
+  }
 });
+
+closeBtn.addEventListener('click', () => {
+  isOpen = false;
+  win.classList.remove('cb-open');
+});
+
+clearBtn.addEventListener('click', () => {
+  msgs.innerHTML = '';
+  sessionStorage.removeItem(STORE_KEY);
+  lastIntent = null;
+  initConversation();
+});
+
+/* ── Message de bienvenue ────────────────────────────────────── */
+function initConversation() {
+  const welcome = '{{ "chatbot.welcome"|trans|default("Bonjour ! Je suis votre assistant RH SmartFarm. Comment puis-je vous aider ?")|e("js") }}';
+  addBotBubble(welcome, false);
+}
+
+/* ── Chips ───────────────────────────────────────────────────── */
+chips.forEach(c => c.addEventListener('click', () => {
+  send(c.dataset.msg);
+}));
+
+/* ── Saisie ──────────────────────────────────────────────────── */
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+});
+
+sendBtn.addEventListener('click', () => send());
+
+/* ── Envoi ───────────────────────────────────────────────────── */
+async function send(text) {
+  const msg = (text || input.value).trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addUserBubble(msg);
+  scrollBottom();
+
+  sendBtn.disabled = true;
+  statusEl.textContent = '⟳ {{ "chatbot.thinking"|trans|default("En train d\'analyser...")|e("js") }}';
+
+  const typingId = addTyping();
+
+  try {
+    const res  = await fetch(SEND_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+
+    removeTyping(typingId);
+    statusEl.textContent = '● {{ "status.online"|trans|default("En ligne")|e("js") }}';
+
+    if (data.error) {
+      addBotBubble('❌ ' + data.error);
+    } else {
+      if (data.reponse) addBotBubble(formatText(data.reponse));
+      lastIntent = data.intention;
+
+      if (data.recommandations?.length > 0) {
+        data.recommandations.forEach((r, i) => renderEmpCard(r, i));
+      }
+      if (data.disponibilites?.length > 0 && data.intention === 'DISPONIBILITE') {
+        renderDispos(data.disponibilites);
+      }
+
+      updateChips(data.intention);
+    }
+  } catch(err) {
+    removeTyping(typingId);
+    statusEl.textContent = '● {{ "status.online"|trans|default("En ligne")|e("js") }}';
+    addBotBubble('❌ {{ "chatbot.error.network"|trans|default("Erreur réseau. Veuillez réessayer.")|e("js") }}');
+  }
+
+  sendBtn.disabled = false;
+  scrollBottom();
+}
+
+/* ── Formatage Markdown basique ─────────────────────────────── */
+function formatText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+/* ── Ajout bulle bot ─────────────────────────────────────────── */
+function addBotBubble(html, animate = true) {
+  const g = getOrCreateGroup('bot');
+  const b = document.createElement('div');
+  b.className = 'cb-bubble';
+  if (!animate) b.style.animation = 'none';
+  b.innerHTML = html;
+  g.appendChild(b);
+  updateGroupTimestamp(g);
+  scrollBottom();
+  return b;
+}
+
+/* ── Ajout bulle utilisateur ─────────────────────────────────── */
+function addUserBubble(text) {
+  const g = document.createElement('div');
+  g.className = 'cb-group user';
+  g.dataset.sender = 'user';
+
+  const time = nowTime();
+  const initials = '{{ app.user ? (app.user.prenom|default("")|slice(0,1) ~ app.user.nom|default("")|slice(0,1))|upper : "U" }}';
+
+  g.innerHTML = `
+    <div class="cb-group-header">
+      <div class="cb-sender-label">{{ app.user ? (app.user.prenom ~ " " ~ app.user.nom)|default("Vous") : "Vous" }}</div>
+      <span class="cb-timestamp">${time}</span>
+      <div class="cb-msg-avatar user-av">${initials}</div>
+    </div>
+    <div class="cb-bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(g);
+}
+
+/* ── Groupes de messages bot ─────────────────────────────────── */
+function getOrCreateGroup(sender) {
+  const last = msgs.lastElementChild;
+  if (last && last.classList.contains('cb-group') && last.dataset.sender === sender) {
+    return last;
+  }
+  const g = document.createElement('div');
+  g.className = `cb-group ${sender}`;
+  g.dataset.sender = sender;
+
+  const time = nowTime();
+  g.innerHTML = `
+    <div class="cb-group-header">
+      <div class="cb-msg-avatar">🤖</div>
+      <div class="cb-sender-label">SmartFarm RH</div>
+      <span class="cb-timestamp">${time}</span>
+    </div>`;
+  msgs.appendChild(g);
+  return g;
+}
+
+function updateGroupTimestamp(g) {
+  const ts = g.querySelector('.cb-timestamp');
+  if (ts) ts.textContent = nowTime();
+}
+
+/* ── Typing indicator ────────────────────────────────────────── */
+function addTyping() {
+  const id = 'cb-typing-' + (++msgCount);
+  const g = getOrCreateGroup('bot');
+  const t = document.createElement('div');
+  t.className = 'cb-typing';
+  t.id = id;
+  t.innerHTML = '<span></span><span></span><span></span>';
+  g.appendChild(t);
+  scrollBottom();
+  return id;
+}
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+/* ── CARTE EMPLOYÉ (style LinkedIn) ─────────────────────────── */
+function renderEmpCard(rec, rank) {
+  const g = getOrCreateGroup('bot');
+  const card = document.createElement('div');
+  card.className = 'cb-emp-card';
+
+  const emp      = rec.employe;
+  const initials = ((emp.prenom||'?')[0] + (emp.nom||'?')[0]).toUpperCase();
+  const photoEl  = emp.photoPath
+    ? `<img src="${emp.photoPath}" class="cb-emp-photo" alt="${escHtml(emp.prenom)}">`
+    : `<div class="cb-emp-initials">${initials}</div>`;
+
+  const medals   = ['🥇','🥈','🥉'];
+  const medal    = medals[rank] || `#${rank+1}`;
+
+  const confColor = rec.indiceConfiance >= 80 ? '#27ae60'
+                  : rec.indiceConfiance >= 60 ? '#f39c12' : '#e74c3c';
+
+  const scoreTotal = Math.round(rec.scoreTotal || 0);
+  const scoreComp  = Math.round(rec.scoreCompetences || 0);
+  const scorePerf  = Math.round(rec.scorePerformance  || 0);
+  const scoreDispo = Math.round(rec.scoreDisponibilite || 0);
+  const conf       = Math.round(rec.indiceConfiance    || 0);
+
+  const emailAction = emp.email
+    ? `<a href="mailto:${emp.email}" class="cb-card-btn secondary"><i class="bi bi-envelope"></i></a>`
+    : '';
+
+  card.innerHTML = `
+    <div class="cb-emp-card-top">
+      <span class="cb-emp-rank">${medal} ${scoreTotal}%</span>
+    </div>
+    <div class="cb-emp-card-body">
+      <div class="cb-emp-photo-wrap">${photoEl}</div>
+      <div class="cb-emp-name">${escHtml(emp.prenom)} ${escHtml(emp.nom)}</div>
+      <div class="cb-emp-poste">${escHtml(emp.poste || '—')}</div>
+
+      <div class="cb-confidence" style="background:${confColor}18;color:${confColor}">
+        ${rec.emoji || '⭐'} ${rec.appreciation || ''} — {{ "chatbot.confidence"|trans|default("Confiance")|e("js") }} ${conf}%
+      </div>
+
+      <div class="cb-scores">
+        ${scoreBar('{{ "ai.matching.reason.skills"|trans|default("Compétences")|e("js") }}',      scoreComp,  '#0a66c2')}
+        ${scoreBar('{{ "employe.performance"|trans|default("Performance")|e("js") }}',             scorePerf,  '#27ae60')}
+        ${scoreBar('{{ "ai.matching.reason.availability"|trans|default("Disponibilité")|e("js") }}', scoreDispo, '#f39c12')}
+      </div>
+
+      ${rec.raisonRecommandation ? `<div class="cb-reason">"${escHtml(rec.raisonRecommandation)}"</div>` : ''}
+
+      <div class="cb-card-actions">
+        <a href="/employes/${emp.id}" class="cb-card-btn primary">
+          <i class="bi bi-person"></i> {{ "common.view"|trans|default("Voir la fiche")|e("js") }}
+        </a>
+        ${emailAction}
+      </div>
+    </div>`;
+
+  g.appendChild(card);
+
+  /* Anime les barres après insertion */
+  setTimeout(() => {
+    card.querySelectorAll('.cb-bar-fill').forEach(bar => {
+      const w = bar.dataset.width;
+      if (w) bar.style.width = w + '%';
+    });
+  }, 100);
+}
+
+function scoreBar(label, val, color) {
+  return `
+    <div class="cb-score-row">
+      <div class="cb-score-lbl"><span>${label}</span><span>${val}%</span></div>
+      <div class="cb-bar-bg">
+        <div class="cb-bar-fill" data-width="${val}" style="width:0%;background:${color}"></div>
+      </div>
+    </div>`;
+}
+
+/* ── CARTE DISPONIBILITÉ ─────────────────────────────────────── */
+function renderDispos(dispos) {
+  const g = getOrCreateGroup('bot');
+  const wrap = document.createElement('div');
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+  wrap.style.gap = '6px';
+  wrap.style.width = '100%';
+
+  dispos.forEach(d => {
+    const emp      = d.employe;
+    const initials = ((emp.prenom||'?')[0] + (emp.nom||'?')[0]).toUpperCase();
+    const charge   = Math.min(100, (d.tachesEnCours || 0) * 20); /* max 5 tâches = 100% */
+    const barColor = d.couleurStatut || '#27ae60';
+
+    const card = document.createElement('div');
+    card.className = 'cb-dispo-card';
+
+    const photoEl = emp.photoPath
+      ? `<img src="${emp.photoPath}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+      : `<div class="cb-dispo-avatar">${initials}</div>`;
+
+    card.innerHTML = `
+      ${photoEl}
+      <div class="cb-dispo-info">
+        <div class="cb-dispo-name">${escHtml(emp.prenom)} ${escHtml(emp.nom)}</div>
+        <div class="cb-dispo-poste">${escHtml(emp.poste || '—')}</div>
+        <div class="cb-load-bar">
+          <div class="cb-load-fill" data-w="${charge}" style="width:0%;background:${barColor}"></div>
+        </div>
+      </div>
+      <div class="cb-dispo-right">
+        <div class="cb-dispo-status" style="color:${barColor}">${d.dotEmoji} ${d.statutLabel}</div>
+        <div class="cb-dispo-tasks">${d.tachesEnCours} {{ "common.tasks"|trans|default("tâche(s)")|e("js") }}</div>
+      </div>`;
+
+    wrap.appendChild(card);
+  });
+
+  g.appendChild(wrap);
+
+  /* Anime les jauges */
+  setTimeout(() => {
+    wrap.querySelectorAll('.cb-load-fill').forEach(b => {
+      b.style.transition = 'width .8s ease';
+      b.style.width = b.dataset.w + '%';
+    });
+  }, 100);
+}
+
+/* ── Chips contextuelles après réponse ───────────────────────── */
+function updateChips(intent) {
+  const chipsEl = document.getElementById('rh-cb-chips');
+  const suggestions = {
+    'RECOMMANDER_EMPLOYE': [
+      { icon:'📊', msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'📅', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}', label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+    ],
+    'ANALYSER_PERFORMANCE': [
+      { icon:'🎯', msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}', label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📅', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}', label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+    ],
+    'DISPONIBILITE': [
+      { icon:'🎯', msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}', label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📊', msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+    ],
+  };
+
+  const newChips = suggestions[intent];
+  if (!newChips) return;
+
+  chipsEl.innerHTML = '';
+  newChips.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'cb-chip';
+    chip.dataset.msg = c.msg;
+    chip.textContent = c.icon + ' ' + c.label;
+    chip.addEventListener('click', () => send(c.msg));
+    chipsEl.appendChild(chip);
+  });
+
+  /* Rebouton Aide */
+  const aide = document.createElement('div');
+  aide.className = 'cb-chip';
+  aide.dataset.msg = 'aide';
+  aide.textContent = '❓ Aide';
+  aide.addEventListener('click', () => send('aide'));
+  chipsEl.appendChild(aide);
+}
+
+/* ── Utilitaires ─────────────────────────────────────────────── */
+function scrollBottom() {
+  requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
+}
+function nowTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ────────────────────────────────────────────────────── */
+initConversation();
+
+})();
 </script>
