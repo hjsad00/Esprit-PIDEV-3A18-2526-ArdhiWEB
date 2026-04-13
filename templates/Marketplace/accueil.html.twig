@@ -37,7 +37,56 @@
           {# --- Right: Categories Panel --- #}
           <div class="hero-right">
             <div class="categories-glass-panel">
-              <div class="categories-panel-title">Services Marketplace</div>
+              <div class="categories-panel-header" id="market-notifications">
+                <div class="categories-panel-title">Services Marketplace</div>
+
+                <div class="market-notif-wrap">
+                  <button type="button" class="market-notif-toggle" id="marketNotifToggle" aria-label="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="market-notif-badge" id="marketNotifBadge" style="display: {{ unreadCount|default(0) > 0 ? 'inline-flex' : 'none' }};">{{ unreadCount|default(0) }}</span>
+                  </button>
+
+                  <div class="market-notif-panel" id="marketNotifPanel" aria-hidden="true">
+                    <div class="market-notif-head">
+                      <h4>Notifications</h4>
+                      <button
+                        type="button"
+                        class="market-notif-readall"
+                        id="marketNotifReadAllBtn"
+                        data-url="{{ path('app_marketplace_notifications_read_all') }}"
+                        style="display: {{ unreadCount|default(0) > 0 ? 'inline-block' : 'none' }};"
+                      >
+                        Vu pour tout
+                      </button>
+                    </div>
+
+                    <div class="market-notif-list" id="marketNotifList" data-read-url-template="{{ path('app_marketplace_notification_read', {'id': 'NOTIF_ID'}) }}" data-delete-url-template="{{ path('app_marketplace_notification_delete', {'id': 'NOTIF_ID'}) }}" data-feed-url="{{ path('app_marketplace_notifications_feed') }}">
+                      {% if notifications|default([])|length > 0 %}
+                        {% for notif in notifications|slice(0, 12) %}
+                          <article class="market-notif-item {{ notif.lue ? '' : 'is-unread' }}" data-notif-id="{{ notif.id }}">
+                            <div class="market-notif-item-body">
+                              <h5>{{ notif.titre }}</h5>
+                              <p>{{ notif.message }}</p>
+                              <small>{{ notif.dateCreation ? notif.dateCreation|date('d/m/Y H:i') : '' }}</small>
+                            </div>
+
+                            <div class="market-notif-actions">
+                              {% if not notif.lue %}
+                                <button type="button" class="market-notif-readone" data-notif-id="{{ notif.id }}">Vu</button>
+                              {% endif %}
+                              <button type="button" class="market-notif-delete" data-notif-id="{{ notif.id }}" aria-label="Supprimer notification">
+                                <i class="bi bi-trash3-fill"></i>
+                              </button>
+                            </div>
+                          </article>
+                        {% endfor %}
+                      {% else %}
+                        <div class="market-notif-empty">Aucune notification pour le moment.</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <a href="{{ path('app_marketplace_catalogue') }}" class="category-item">
                 <div class="category-icon"><i class="bi bi-cart-fill"></i></div>
@@ -104,5 +153,269 @@
         </div>
       </div>
     </section>
+
+    <style>
+      .categories-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .categories-panel-header .categories-panel-title { margin: 0; }
+      .market-notif-wrap { position: relative; display: flex; justify-content: flex-end; margin-bottom: 0; }
+      .market-notif-toggle {
+        margin-bottom: 14px;
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.12);
+        color: #fff;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+      }
+      .market-notif-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        min-width: 21px;
+        height: 21px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #e74c3c;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .market-notif-panel {
+        position: absolute;
+        top: 54px;
+        right: 0;
+        width: min(420px, 92vw);
+        max-height: 420px;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: #0f1c1a;
+        box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+        display: none;
+        z-index: 20;
+      }
+      .market-notif-panel.is-open { display: block; }
+      .market-notif-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+      .market-notif-head h4 { margin: 0; color: #f1f5f3; font-size: 14px; }
+      .market-notif-readall {
+        border: none;
+        background: transparent;
+        color: #7df2bb;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .market-notif-list { max-height: 360px; overflow-y: auto; }
+      .market-notif-item {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      .market-notif-item.is-unread { background: rgba(29, 161, 117, 0.12); }
+      .market-notif-item-body h5 { margin: 0 0 4px; color: #f7fffc; font-size: 13px; }
+      .market-notif-item-body p { margin: 0 0 4px; color: #d4e8e1; font-size: 12px; line-height: 1.35; }
+      .market-notif-item-body small { color: #98b8ad; font-size: 11px; }
+      .market-notif-readone {
+        border: 1px solid #5cd6a5;
+        background: transparent;
+        color: #a0f7cd;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+      .market-notif-actions { display: flex; gap: 6px; align-items: center; }
+      .market-notif-delete {
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(231, 76, 60, 0.12);
+        color: #ffb4ac;
+        border-radius: 8px;
+        font-size: 11px;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+      .market-notif-empty { padding: 18px; color: #b6cec5; text-align: center; font-size: 13px; }
+    </style>
+
+    <script>
+      const marketNotifToggle = document.getElementById('marketNotifToggle');
+      const marketNotifPanel = document.getElementById('marketNotifPanel');
+      const marketNotifBadge = document.getElementById('marketNotifBadge');
+      const marketNotifReadAllBtn = document.getElementById('marketNotifReadAllBtn');
+      const marketNotifList = document.getElementById('marketNotifList');
+
+      const feedUrl = marketNotifList?.dataset.feedUrl;
+      const readUrlTemplate = marketNotifList?.dataset.readUrlTemplate || '';
+      const deleteUrlTemplate = marketNotifList?.dataset.deleteUrlTemplate || '';
+
+      const escapeHtml = (value) => {
+        return (value ?? '').toString()
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      };
+
+      const updateUnreadBadge = (count) => {
+        if (!marketNotifBadge) return;
+
+        const safeCount = Number(count || 0);
+        marketNotifBadge.textContent = `${safeCount}`;
+        marketNotifBadge.style.display = safeCount > 0 ? 'inline-flex' : 'none';
+
+        if (marketNotifReadAllBtn) {
+          marketNotifReadAllBtn.style.display = safeCount > 0 ? 'inline-block' : 'none';
+        }
+      };
+
+      const renderNotifications = (notifications) => {
+        if (!marketNotifList) return;
+
+        if (!notifications || notifications.length === 0) {
+          marketNotifList.innerHTML = '<div class="market-notif-empty">Aucune notification pour le moment.</div>';
+          return;
+        }
+
+        marketNotifList.innerHTML = notifications.map((notif) => {
+          const readBtn = !notif.lue
+            ? `<button type="button" class="market-notif-readone" data-notif-id="${notif.id}">Vu</button>`
+            : '';
+          const deleteBtn = `<button type="button" class="market-notif-delete" data-notif-id="${notif.id}" aria-label="Supprimer notification"><i class="bi bi-trash3-fill"></i></button>`;
+
+          return `
+            <article class="market-notif-item ${notif.lue ? '' : 'is-unread'}" data-notif-id="${notif.id}">
+              <div class="market-notif-item-body">
+                <h5>${escapeHtml(notif.titre)}</h5>
+                <p>${escapeHtml(notif.message)}</p>
+                <small>${escapeHtml(notif.dateCreation)}</small>
+              </div>
+              <div class="market-notif-actions">${readBtn}${deleteBtn}</div>
+            </article>
+          `;
+        }).join('');
+      };
+
+      const fetchNotifications = async () => {
+        if (!feedUrl) return;
+
+        try {
+          const response = await fetch(feedUrl, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) return;
+
+          updateUnreadBadge(data.unreadCount);
+          renderNotifications(data.notifications || []);
+        } catch (e) {
+          console.error('Erreur AJAX notifications feed:', e);
+        }
+      };
+
+      if (marketNotifToggle && marketNotifPanel) {
+        marketNotifToggle.addEventListener('click', () => {
+          marketNotifPanel.classList.toggle('is-open');
+          const isOpen = marketNotifPanel.classList.contains('is-open');
+          marketNotifPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+          if (isOpen) {
+            fetchNotifications();
+          }
+        });
+
+        document.addEventListener('click', (event) => {
+          if (!marketNotifPanel.contains(event.target) && !marketNotifToggle.contains(event.target)) {
+            marketNotifPanel.classList.remove('is-open');
+            marketNotifPanel.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
+
+      if (marketNotifList) {
+        marketNotifList.addEventListener('click', async (event) => {
+          const btn = event.target.closest('.market-notif-readone');
+          const deleteBtn = event.target.closest('.market-notif-delete');
+
+          if (deleteBtn) {
+            const notifId = deleteBtn.dataset.notifId;
+            if (!notifId) return;
+
+            const deleteUrl = deleteUrlTemplate.replace('NOTIF_ID', notifId);
+
+            try {
+              const response = await fetch(deleteUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              });
+              const data = await response.json();
+              if (!response.ok || !data.success) return;
+
+              fetchNotifications();
+            } catch (e) {
+              console.error('Erreur AJAX notification delete:', e);
+            }
+
+            return;
+          }
+
+          if (!btn) return;
+
+          const notifId = btn.dataset.notifId;
+          if (!notifId) return;
+
+          const readUrl = readUrlTemplate.replace('NOTIF_ID', notifId);
+
+          try {
+            const response = await fetch(readUrl, {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) return;
+
+            fetchNotifications();
+          } catch (e) {
+            console.error('Erreur AJAX notification read:', e);
+          }
+        });
+      }
+
+      if (marketNotifReadAllBtn) {
+        marketNotifReadAllBtn.addEventListener('click', async () => {
+          const url = marketNotifReadAllBtn.dataset.url;
+          if (!url) return;
+
+          try {
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) return;
+
+            fetchNotifications();
+          } catch (e) {
+            console.error('Erreur AJAX notification read-all:', e);
+          }
+        });
+      }
+
+      // Refresh passif du compteur/liste sans F5.
+      setInterval(fetchNotifications, 20000);
+    </script>
 
 {% endblock %}

@@ -7,6 +7,7 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\AvisRepository;
 use App\Repository\Marketplace\CommandeRepository;
+use App\Repository\Marketplace\NotifMarketRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,6 +64,7 @@ class AvisController extends AbstractController
         Request $request,
         ProduitsRepository $produitsRepository,
         CommandeRepository $commandeRepository,
+        NotifMarketRepository $notifMarketRepository,
         AvisRepository $avisRepository,
         EntityManagerInterface $entityManager
     ): JsonResponse {
@@ -99,13 +101,25 @@ class AvisController extends AbstractController
             ->setCommentaire($commentaire !== '' ? $commentaire : null)
             ->setIsVerifiedBuyer($isVerifiedBuyer);
 
+        $fullName = trim((string) ($user->getPrenom() ?? '') . ' ' . (string) ($user->getNom() ?? ''));
+
         $entityManager->persist($avis);
         $entityManager->flush();
+
+        $seller = $produit->getUser();
+        if ($seller instanceof User && $seller->getId() !== $user->getId()) {
+            $notifMarketRepository->notifierNouvelAvis(
+                $seller->getId(),
+                (int) $produit->getId(),
+                (string) ($produit->getNom() ?? 'Produit'),
+                $fullName !== '' ? $fullName : 'Utilisateur',
+                $note
+            );
+        }
 
         $stats = $avisRepository->getStatsForProduits([$produit]);
         $produitStats = $stats[$produit->getId()] ?? ['avg' => 0.0, 'count' => 0];
 
-        $fullName = trim((string) ($user->getPrenom() ?? '') . ' ' . (string) ($user->getNom() ?? ''));
 
         return $this->json([
             'success' => true,

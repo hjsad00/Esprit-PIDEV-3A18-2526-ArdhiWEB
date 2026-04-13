@@ -117,6 +117,42 @@ class NotifMarketRepository extends ServiceEntityRepository
     }
 
     /**
+     * Notifie un acheteur que le statut de sa commande a change.
+     */
+    public function notifierChangementStatutCommande(
+        int $idAcheteur,
+        int $idCommande,
+        string $nouveauStatut,
+        float $totalCommande
+    ): bool {
+        $em = $this->getEntityManager();
+
+        $labelMap = [
+            'en_attente' => 'En attente',
+            'en_cours' => 'En cours',
+            'livree' => 'Livree',
+            'annulee' => 'Annulee',
+        ];
+
+        $statutLabel = $labelMap[$nouveauStatut] ?? ucfirst($nouveauStatut);
+
+        $notif = new NotifMarket();
+        $notif
+            ->setUser($em->getReference(User::class, $idAcheteur))
+            ->setCommande($em->getReference(Commande::class, $idCommande))
+            ->setType(NotifMarket::TYPE_ACHAT)
+            ->setTitre('Mise a jour de votre commande')
+            ->setMessage(sprintf(
+                'Votre commande #%d est maintenant: %s (Total: %.2f DT).',
+                $idCommande,
+                $statutLabel,
+                $totalCommande
+            ));
+
+        return $this->creerNotification($notif);
+    }
+
+    /**
      * Retourne toutes les notifications d'un vendeur, non lues en premier.
      */
     public function getNotificationsParVendeur(int $idVendeur): array

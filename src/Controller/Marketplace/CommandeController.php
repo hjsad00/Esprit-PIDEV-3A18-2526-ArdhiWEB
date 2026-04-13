@@ -5,6 +5,7 @@ namespace App\Controller\Marketplace;
 use App\Entity\Marketplace\Commande;
 use App\Entity\Marketplace\DetailsCommande;
 use App\Repository\Marketplace\CommandeRepository;
+use App\Repository\Marketplace\NotifMarketRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
@@ -132,7 +133,8 @@ class CommandeController extends AbstractController
         string $status, 
         CommandeRepository $commandeRepo, 
         EntityManagerInterface $em,
-        OrderEmailService $orderEmailService
+        OrderEmailService $orderEmailService,
+        NotifMarketRepository $notifMarketRepository
     ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -193,6 +195,16 @@ class CommandeController extends AbstractController
         // Notification de l'acheteur si le statut passe à "En cours" ou "Annulée"
         if ($status === 'en_cours' || $status === 'annulee') {
             $orderEmailService->sendOrderStatusUpdateBuyerNotification($commande);
+        }
+
+        // Notification in-app pour l'acheteur sur tout changement de statut.
+        if ($commande->getUser()) {
+            $notifMarketRepository->notifierChangementStatutCommande(
+                $commande->getUser()->getId(),
+                $commande->getId(),
+                $status,
+                $commande->getTotal()
+            );
         }
 
         return $this->json([
@@ -270,7 +282,8 @@ class CommandeController extends AbstractController
         CouponRepository $couponRepo, 
         EntityManagerInterface $em,
         WishlistNotificationService $notificationService,
-        OrderEmailService $orderEmailService
+        OrderEmailService $orderEmailService,
+        NotifMarketRepository $notifMarketRepository
     ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -443,6 +456,20 @@ class CommandeController extends AbstractController
 
         // Envoi des notifications (Email aux vendeurs + WhatsApp favoris)
         foreach ($commandesCreees ?? [] as $cmd) {
+            $firstDetail = $cmd->getDetails()->first();
+            if ($firstDetail && $firstDetail->getProduit() && $firstDetail->getProduit()->getUser()) {
+                $seller = $firstDetail->getProduit()->getUser();
+                $buyerName = trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? ''));
+
+                $notifMarketRepository->notifierNouvelleCommande(
+                    $seller->getId(),
+                    $cmd->getId(),
+                    $firstDetail->getProduit()->getId(),
+                    $buyerName !== '' ? $buyerName : 'Acheteur',
+                    $cmd->getTotal()
+                );
+            }
+
             $orderEmailService->sendNewOrderSellerNotification($cmd);
         }
 
