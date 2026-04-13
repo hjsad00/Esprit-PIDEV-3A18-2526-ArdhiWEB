@@ -21,8 +21,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class CalendarExportService
 {
     // ── Google OAuth2 credentials (your ardhi-evenements project) ────────────
-    private const CLIENT_ID     = '912344954797-12s3iompalitbb3blhkhu17r3hrtcmqo.apps.googleusercontent.com';
-    private const CLIENT_SECRET = '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';
+    private const CLIENT_ID     = '912344954797-p9msvahasun3vp492ssfdvq2909kjvt3.apps.googleusercontent.com';
+    private const CLIENT_SECRET = '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';
     private const REDIRECT_URI  = 'http://localhost:8000/evenement/calendar/callback'; // adjust to your dev URL
     private const SCOPES        = [Calendar::CALENDAR_EVENTS];
     private const APP_NAME      = 'ARDHI - Module Événements';
