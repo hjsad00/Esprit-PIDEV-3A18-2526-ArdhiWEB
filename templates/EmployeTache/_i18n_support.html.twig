@@ -66,15 +66,15 @@
 
         // 2. Traduction dynamique des éléments de la navbar existante
         const navbarTranslations = {
-            'Diagnostic IA': '{{ "navbar.diagnostic"|trans }}',
-            'Marketplace': '{{ "navbar.marketplace"|trans }}',
-            'Matériel & Maintenance': '{{ "navbar.maintenance"|trans }}',
-            'Cultures': '{{ "navbar.cultures"|trans }}',
-            'Évènements': '{{ "navbar.events"|trans }}',
-            'Employés': '{{ "navbar.employees"|trans }}',
-            'Mon Profil': '{{ "navbar.profile"|trans }}',
-            'Déconnexion': '{{ "navbar.logout"|trans }}',
-            'Se connecter': '{{ "navbar.login"|trans }}'
+            'Diagnostic IA': '{{ "navbar.diagnostic"|trans|raw }}',
+            'Marketplace': '{{ "navbar.marketplace"|trans|raw }}',
+            'Matériel & Maintenance': '{{ "navbar.maintenance"|trans|raw }}',
+            'Cultures': '{{ "navbar.cultures"|trans|raw }}',
+            'Évènements': '{{ "navbar.events"|trans|raw }}',
+            'Employés': '{{ "navbar.employees"|trans|raw }}',
+            'Mon Profil': '{{ "navbar.profile"|trans|raw }}',
+            'Déconnexion': '{{ "navbar.logout"|trans|raw }}',
+            'Se connecter': '{{ "navbar.login"|trans|raw }}'
         };
 
         const navLinks = document.querySelectorAll('.navmenu a');
