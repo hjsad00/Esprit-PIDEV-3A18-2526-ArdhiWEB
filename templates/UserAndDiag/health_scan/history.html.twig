@@ -51,7 +51,7 @@
                     </thead>
                     <tbody id="historyTableBody">
                         {% for scan in scans %}
-                            {% set report = scan.reports|first %} <tr class="scan-row" style="cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
+                            {% set report = reportsByScan[scan.id] ?? null %} <tr class="scan-row" style="cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
                                 data-search="{{ scan.cropType|lower }} {{ report ? report.llavaAnalysis|lower : '' }}"
                                 onclick="window.location.href='{{ report ? path('app_health_scan_report', {id: report.id}) : '#' }}'">
                                 

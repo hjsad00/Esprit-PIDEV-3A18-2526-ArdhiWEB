@@ -255,7 +255,8 @@ class GroqService
         $jsonPayload = [
             'model' => 'llama-3.2-90b-vision-preview', // The multi-modal model
             'messages' => [['role' => 'user', 'content' => $content]],
-            'response_format' => ['type' => 'json_object'] // Force JSON output
+            // Note: Groq vision models do not currently support 'response_format' => ['type' => 'json_object']
+            // So we rely entirely on the strict prompt instructions.
         ];
 
         return $this->sendRequest($jsonPayload);

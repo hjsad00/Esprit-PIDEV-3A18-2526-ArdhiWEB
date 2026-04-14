@@ -10,6 +10,15 @@
 <div class="dashboard-background"></div>
 
 <div class="container py-5">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert" style="background: rgba(40,0,0,0.8); color: white;">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
     <div class="glass-panel">
         
         <div class="header-bar mb-4">

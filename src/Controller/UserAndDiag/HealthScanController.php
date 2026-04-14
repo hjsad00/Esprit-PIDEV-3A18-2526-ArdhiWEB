@@ -23,8 +23,16 @@ class HealthScanController extends AbstractController
             ['scanDate' => 'DESC']
         );
 
+        // Fetch reports manually since the relation has been removed to match remote DB
+        $reportsByScan = [];
+        foreach ($scans as $scan) {
+            $report = $em->getRepository(\App\Entity\UserAndDiag\FarmHealthReport::class)->findOneBy(['scan' => $scan], ['generatedAt' => 'DESC']);
+            $reportsByScan[$scan->getId()] = $report;
+        }
+
         return $this->render('UserAndDiag/health_scan/history.html.twig', [
-            'scans' => $scans
+            'scans' => $scans,
+            'reportsByScan' => $reportsByScan
         ]);
     }
 
@@ -32,7 +40,8 @@ class HealthScanController extends AbstractController
     public function new(
         Request $request,
         \Doctrine\ORM\EntityManagerInterface $em,
-        \App\Service\UserAndDiag\GroqService $groqService
+        \App\Service\UserAndDiag\GroqService $groqService,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService
     ): Response {
         if ($request->isMethod('POST')) {
             $user = $this->getUser();
@@ -47,17 +56,25 @@ class HealthScanController extends AbstractController
             $scan->setStatus('COMPLETED'); // Or 'PENDING' if you want to run this asynchronously later
             $scan->setScanDate(new \DateTime());
 
-            $em->persist($scan);
-
-            // 2. Gather the 6 uploaded images
+            // 2. Gather and upload the 6 images
             $imagePaths = [];
             $photoKeys = ['crops', 'soil', 'edges', 'insects', 'spacing', 'overview'];
             foreach ($photoKeys as $key) {
                 $file = $request->files->get("photo_$key");
                 if ($file) {
+                    $imageUrl = $imgBBService->uploadImage($file);
+                    if ($imageUrl) {
+                        $setter = 'setPhoto' . ucfirst($key);
+                        if (method_exists($scan, $setter)) {
+                            $scan->$setter($imageUrl);
+                        }
+                    }
                     $imagePaths[] = $file->getPathname(); // Get temp path for AI processing
                 }
             }
+
+            $em->persist($scan);
+            $em->flush(); // S'assurer que le scan est enregistré avec les images même si l'IA échoue après
 
             // 3. Call the AI
             $scanDetails = [
@@ -68,10 +85,24 @@ class HealthScanController extends AbstractController
             ];
 
             $aiResponseJson = $groqService->analyzeFarmHealth($imagePaths, $scanDetails);
-            $aiData = json_decode($aiResponseJson, true);
+
+            // Si la requête a échoué techniquement, GroqService renvoie un string commençant par ERREUR_
+            if (str_starts_with($aiResponseJson, 'ERREUR_')) {
+                $this->addFlash('danger', 'Erreur de l\'API Groq: ' . $aiResponseJson);
+                return $this->redirectToRoute('app_health_scan_new');
+            }
+
+            // Extract the JSON object vigorously in case the LLM included conversational filler
+            $aiData = null;
+            $startPos = strpos($aiResponseJson, '{');
+            $endPos = strrpos($aiResponseJson, '}');
+            if ($startPos !== false && $endPos !== false && $startPos < $endPos) {
+                $jsonString = substr($aiResponseJson, $startPos, $endPos - $startPos + 1);
+                $aiData = json_decode($jsonString, true);
+            }
 
             if (!$aiData) {
-                $this->addFlash('danger', 'L\'analyse IA a échoué. Veuillez réessayer.');
+                $this->addFlash('danger', 'L\'analyse IA a échoué. Cause : ' . substr($aiResponseJson, 0, 500));
                 return $this->redirectToRoute('app_health_scan_new');
             }
 
@@ -80,7 +111,7 @@ class HealthScanController extends AbstractController
             $report->setScan($scan);
             $report->setHealthScore($aiData['health_score'] ?? 0);
             $report->setBiodiversityScore($aiData['biodiversity_score'] ?? 0);
-            $report->setLlavaAnalysis($aiData['llava_analysis'] ?? 'Analyse non disponible.');
+            $report->setLlavaAnalysis($aiData['llava_analysis'] ?? 'RAW JSON DUMP: ' . substr($aiResponseJson, 0, 800));
             $report->setGeneratedAt(new \DateTime());
             $em->persist($report);
 
@@ -120,10 +151,16 @@ class HealthScanController extends AbstractController
         return $this->render('UserAndDiag/health_scan/form.html.twig');
     }
     #[Route('/{id}/report', name: 'app_health_scan_report', methods: ['GET'])]
-    public function report(\App\Entity\UserAndDiag\FarmHealthReport $report): Response
+    public function report(\App\Entity\UserAndDiag\FarmHealthReport $report, \Doctrine\ORM\EntityManagerInterface $em): Response
     {
+        // Fetch manually since the relation has been removed
+        $vulnerabilities = $em->getRepository(\App\Entity\UserAndDiag\Vulnerability::class)->findBy(['report' => $report]);
+        $preventionPlans = $em->getRepository(\App\Entity\UserAndDiag\PreventionPlan::class)->findBy(['report' => $report]);
+
         return $this->render('UserAndDiag/health_scan/report.html.twig', [
-            'report' => $report
+            'report' => $report,
+            'vulnerabilities' => $vulnerabilities,
+            'preventionPlans' => $preventionPlans
         ]);
     }
 }

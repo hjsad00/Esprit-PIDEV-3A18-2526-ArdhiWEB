@@ -56,9 +56,9 @@
                 </div>
 
                 <div class="glass-panel p-4">
-                    <h5 class="fw-bold mb-4">⚠️ Vulnérabilités Détectées ({{ report.vulnerabilities|length }})</h5>
+                    <h5 class="fw-bold mb-4">⚠️ Vulnérabilités Détectées ({{ vulnerabilities|length }})</h5>
                     
-                    {% for vuln in report.vulnerabilities %}
+                    {% for vuln in vulnerabilities %}
                         <div class="p-3 mb-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid {{ vuln.severity == 'CRITICAL' ? '#e74c3c' : (vuln.severity == 'MEDIUM' ? '#f39c12' : '#27ae60') }};">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="fw-bold text-white m-0">{{ vuln.typeIcon }} {{ vuln.threat }}</h6>
@@ -82,7 +82,7 @@
                     <h5 class="fw-bold mb-4">🛡️ Plans de Prévention Recommandés</h5>
                     
                     <div class="row g-3">
-                    {% for plan in report.preventionPlans %}
+                    {% for plan in preventionPlans %}
                         <div class="col-md-6">
                             <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                                 <h6 class="fw-bold text-white mb-2">{{ plan.title }}</h6>
