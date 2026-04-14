@@ -16,7 +16,8 @@ class RhChatbotController extends AbstractController
     public function send(
         Request $request,
         ChatbotService $chatbotService,
-        AgriculteurContextService $ctx
+        AgriculteurContextService $ctx,
+        \Symfony\Contracts\Translation\TranslatorInterface $translator
     ): JsonResponse {
         $idAgriculteur = $ctx->getActiveAgriculteurId();
         if (!$idAgriculteur) {
@@ -52,8 +53,8 @@ class RhChatbotController extends AbstractController
                 'scoreExperience' => $r->scoreExperience,
                 'indiceConfiance' => $r->indiceConfiance,
                 'raisonRecommandation' => $r->raisonRecommandation,
-                'appreciation' => $r->getAppreciation(),
-                'confianceLabel' => $r->getConfianceLabel(),
+                'appreciation' => $translator->trans($r->getAppreciationKey()),
+                'confianceLabel' => $translator->trans($r->getConfianceKey()),
                 'emoji' => $r->getEmoji(),
                 'couleur' => $r->getCouleur(),
             ];
