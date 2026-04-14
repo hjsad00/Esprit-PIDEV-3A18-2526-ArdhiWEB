@@ -18,15 +18,20 @@
                 <p class="text-white-50 m-0">Retrouvez vos analyses passées et traitements recommandés.</p>
             </div>
             
-            <form action="{{ path('app_user_and_diag_history') }}" method="GET" class="search-box">
-                <i class="bi bi-search text-white-50"></i>
-                <input type="text" name="q" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." value="{{ keyword }}">
-            </form>
+            <div class="d-flex align-items-center gap-3">
+                <span id="resultCount" class="text-white-50 small">{{ diagnostics|length }} diagnostic(s)</span>
+                <div class="search-box" style="display:flex;align-items:center;">
+                    <i class="bi bi-search text-white-50"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." oninput="filterCards()">
+                </div>
+            </div>
         </div>
 
         <div class="history-list">
             {% for diagnostic in diagnostics %}
-                <div class="history-card" onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
+                <div class="history-card" 
+                     data-search="{{ diagnostic.resultatIa|lower }} {{ diagnostic.locationLabel|lower }}"
+                     onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
                     <img src="{{ diagnostic.imageScannee }}" alt="Thumb" class="diag-thumb">
                     <div class="diag-info">
                         <div class="diag-title">{{ diagnostic.resultatIa }}</div>
@@ -40,7 +45,7 @@
                     </div>
                 </div>
             {% else %}
-                <div class="text-center py-5 text-white">
+                <div class="text-center py-5 text-white empty-state-msg">
                     <i class="bi bi-clipboard-x display-1 opacity-25"></i>
                     <p class="mt-3">Aucun diagnostic trouvé.</p>
                 </div>
@@ -99,30 +104,24 @@
             });
     }
 
-    // Voice Search
-    const btnMic = document.getElementById('btnMic');
-    const searchInput = document.getElementById('searchInput');
+    // Instant Search Filtering
+    function filterCards() {
+        const filterText = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.history-card');
+        let visibleCount = 0;
 
-    if ('webkitSpeechRecognition' in window) {
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = 'fr-FR';
-        
-        btnMic.addEventListener('click', (e) => {
-            e.preventDefault();
-            recognition.start();
-            btnMic.classList.add('active');
+        cards.forEach(card => {
+            const searchableData = card.getAttribute('data-search') || '';
+            if (searchableData.includes(filterText)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
         });
 
-        recognition.onresult = (event) => {
-            searchInput.value = event.results[0][0].transcript;
-            btnMic.classList.remove('active');
-            searchInput.form.submit();
-        };
-
-        recognition.onerror = () => btnMic.classList.remove('active');
-        recognition.onend = () => btnMic.classList.remove('active');
-    } else {
-        btnMic.style.display = 'none';
+        document.getElementById('resultCount').innerText = visibleCount + ' diagnostic(s)';
     }
+
 </script>
 {% endblock %}

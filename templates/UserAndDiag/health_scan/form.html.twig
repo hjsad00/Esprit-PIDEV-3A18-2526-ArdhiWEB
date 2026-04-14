@@ -79,7 +79,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label text-white-50 m-0">Préoccupations (optionnel)</label>
-                                <button type="button" class="btn btn-sm btn-warning rounded-circle" id="btnMic" onclick="toggleDictation()" title="Dicter">🎙️</button>
+
                             </div>
                             <textarea name="concerns" id="txtConcerns" class="form-control bg-light" rows="3" placeholder="Décrivez vos préoccupations..."></textarea>
                         </div>
@@ -147,46 +147,5 @@
         }
     }
 
-    // 2. Web Speech API (Dictation)
-    let recognizing = false;
-    let recognition = null;
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.lang = 'fr-FR'; // Set to French
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onresult = function(event) {
-            const text = event.results[0][0].transcript;
-            const textArea = document.getElementById('txtConcerns');
-            textArea.value += (textArea.value ? ' ' : '') + text;
-        };
-
-        recognition.onend = function() {
-            recognizing = false;
-            document.getElementById('btnMic').innerHTML = '🎙️';
-            document.getElementById('btnMic').classList.remove('btn-danger');
-            document.getElementById('btnMic').classList.add('btn-warning');
-        };
-    } else {
-        document.getElementById('btnMic').style.display = 'none'; // Hide if browser doesn't support it
-    }
-
-    function toggleDictation() {
-        if (!recognition) return alert("Votre navigateur ne supporte pas la dictée vocale.");
-        
-        if (recognizing) {
-            recognition.stop();
-            return;
-        }
-        
-        recognition.start();
-        recognizing = true;
-        document.getElementById('btnMic').innerHTML = '⏹️';
-        document.getElementById('btnMic').classList.remove('btn-warning');
-        document.getElementById('btnMic').classList.add('btn-danger');
-    }
 </script>
 {% endblock %}

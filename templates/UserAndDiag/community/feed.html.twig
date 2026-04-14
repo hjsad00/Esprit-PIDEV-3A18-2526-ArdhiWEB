@@ -12,16 +12,20 @@
 <section class="community-hero">
     <div class="community-header">
         <h1>👥 Communauté</h1>
-        <form class="search-box" method="GET" action="{{ path('app_user_and_diag_community') }}">
-            <input type="text" name="q" placeholder="Rechercher un sujet..." value="{{ keyword }}">
-        </form>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span id="resultCount" style="color:rgba(255,255,255,0.5);font-size:0.85rem;">{{ feedData|length }} post(s)</span>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Rechercher un sujet..." oninput="filterPosts()">
+            </div>
+        </div>
         <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
     </div>
 
     <div class="feed-container">
         {% for item in feedData %}
             {% set post = item.post %}
-            <a href="{{ path('app_user_and_diag_community_detail', {id: post.id}) }}" class="post-card">
+            <a href="{{ path('app_user_and_diag_community_detail', {id: post.id}) }}" class="post-card"
+               data-search="{{ post.title|lower }} {{ post.description|lower }} {{ post.user.prenom|lower }} {{ post.user.nom|lower }}">
                 <div class="post-header">
                     {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                     {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
@@ -59,4 +63,26 @@
         {% endfor %}
     </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    function filterPosts() {
+        const filterText = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.post-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const searchableData = card.getAttribute('data-search') || '';
+            if (searchableData.includes(filterText)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        document.getElementById('resultCount').innerText = visibleCount + ' post(s)';
+    }
+</script>
 {% endblock %}

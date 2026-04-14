@@ -50,7 +50,6 @@
     const messageArea = document.getElementById('messageArea');
     const chatInput = document.getElementById('chatInput');
     const btnSend = document.getElementById('btnSend');
-    const btnMic = document.getElementById('btnMic');
     const typingIndicator = document.getElementById('typingIndicator');
 
     // Scroll to bottom
@@ -112,49 +111,5 @@
         if (e.key === 'Enter') sendMessage();
     });
 
-    // Speech to Text Integration
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'fr-FR';
-        recognition.interimResults = false;
-
-        let isRecording = false;
-
-        btnMic.addEventListener('click', () => {
-            if (!isRecording) {
-                recognition.start();
-                btnMic.classList.add('active');
-                btnMic.innerHTML = '<i class="bi bi-stop-fill"></i>';
-                isRecording = true;
-            } else {
-                recognition.stop();
-            }
-        });
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            chatInput.value = transcript;
-            btnMic.classList.remove('active');
-            btnMic.innerHTML = '<i class="bi bi-mic"></i>';
-            isRecording = false;
-            sendMessage(); // Auto-send
-        };
-
-        recognition.onend = () => {
-            btnMic.classList.remove('active');
-            btnMic.innerHTML = '<i class="bi bi-mic"></i>';
-            isRecording = false;
-        };
-
-        recognition.onerror = (event) => {
-            console.error('STT Error:', event.error);
-            btnMic.classList.remove('active');
-            btnMic.innerHTML = '<i class="bi bi-mic"></i>';
-            isRecording = false;
-        };
-    } else {
-        btnMic.style.display = 'none';
-    }
 </script>
 {% endblock %}
