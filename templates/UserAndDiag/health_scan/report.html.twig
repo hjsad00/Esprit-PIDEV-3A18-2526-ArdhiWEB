@@ -61,7 +61,7 @@
                     {% for vuln in vulnerabilities %}
                         <div class="p-3 mb-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid {{ vuln.severity == 'CRITICAL' ? '#e74c3c' : (vuln.severity == 'MEDIUM' ? '#f39c12' : '#27ae60') }};">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold text-white m-0">{{ vuln.typeIcon }} {{ vuln.threat }}</h6>
+                                <h6 class="fw-bold text-white m-0">{% set v_icon = vuln.type == 'PEST_OUTBREAK_RISK' ? '🐛' : (vuln.type == 'DISEASE_RISK' ? '🦠' : (vuln.type == 'NUTRIENT_DEFICIENCY' ? '🍂' : (vuln.type == 'LOW_POLLINATION' ? '🐝' : '🪨'))) %}{{ v_icon }} {{ vuln.threat }}</h6>
                                 <span class="badge bg-{{ vuln.severity == 'CRITICAL' ? 'danger' : (vuln.severity == 'MEDIUM' ? 'warning text-dark' : 'success') }}">{{ vuln.severity }}</span>
                             </div>
                             <p class="text-white-50 small mb-2">{{ vuln.description }}</p>

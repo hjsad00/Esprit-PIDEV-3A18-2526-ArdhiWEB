@@ -225,19 +225,31 @@ class GroqService
      */
     public function analyzeFarmHealth(array $imagePaths, array $scanDetails): string
     {
-        $prompt = "Tu es un expert agronome de niveau mondial. Analyse ces photos d'une exploitation agricole. " .
-            "Détails: Culture: {$scanDetails['crop']}, Date de plantation: {$scanDetails['plantingDate']}, Stade: {$scanDetails['stage']}, Préoccupations: {$scanDetails['concerns']}. " .
-            "Évalue la santé globale, la biodiversité, et identifie les vulnérabilités et plans de prévention. " .
+        $prompt = "Tu es un expert agronome spécialisé dans la prévention agricole. " .
+            "Contexte du champ : Culture: {$scanDetails['crop']}, Date de plantation: {$scanDetails['plantingDate']}, Stade: {$scanDetails['stage']}, Préoccupations: {$scanDetails['concerns']}. " .
+            "INSTRUCTIONS : \n" .
+            "1. Analyse ces images pour identifier les RISQUES POTENTIELS.\n" .
+            "2. Cherche des signes de : ravageurs potentiels, conditions favorables aux maladies, carences nutritives, problèmes de pollinisation, dégradation du sol.\n" .
+            "3. En plus de lister les vulnérabilités, évalue la santé globale (0-100), la biodiversité (0-100), et fournis des plans de prévention structurés.\n" .
             "Tu DOIS répondre EXCLUSIVEMENT avec un objet JSON valide, sans aucun texte avant ou après, en respectant cette structure exacte :\n" .
             "{\n" .
             "  \"health_score\": (entier de 0 à 100),\n" .
             "  \"biodiversity_score\": (entier de 0 à 100),\n" .
             "  \"llava_analysis\": \"Résumé textuel de ton analyse\",\n" .
             "  \"vulnerabilities\": [\n" .
-            "    {\"type_icon\": \"🐛\", \"threat\": \"Nom de la menace\", \"severity\": \"MEDIUM\", \"description\": \"...\", \"risk_score\": 0.4, \"timeframe_days\": 14, \"yield_loss\": 15, \"cost\": 500}\n" .
+            "    // GÉNÈRE AUTANT D'OBJETS QUE NÉCESSAIRE SI PLUSIEURS MENACES SONT DÉTECTÉES\n" .
+            "    {\"type\": \"PEST_OUTBREAK_RISK|DISEASE_RISK|NUTRIENT_DEFICIENCY|LOW_POLLINATION|SOIL_DEGRADATION\", \"threat\": \"Nom de la menace\", \"severity\": \"MEDIUM\", \"description\": \"...\", \"risk_score\": 0.4, \"timeframe_days\": 14, \"yield_loss\": 15, \"cost\": 500}\n" .
             "  ],\n" .
             "  \"prevention_plans\": [\n" .
-            "    {\"title\": \"Plan d'action\", \"timeline_days\": 30, \"impact_level\": \"HIGH\", \"total_tasks\": 5}\n" .
+            "    {\n" .
+            "      \"title\": \"Plan d'action\",\n" .
+            "      \"timeline_days\": 14,\n" .
+            "      \"impact_level\": \"HIGH\",\n" .
+            "      \"tasks\": [\n" .
+            "        {\"day\": 1, \"description\": \"Inspecter les feuilles\"},\n" .
+            "        {\"day\": 3, \"description\": \"Appliquer traitement préventif\"}\n" .
+            "      ]\n" .
+            "    }\n" .
             "  ]\n" .
             "}";
 

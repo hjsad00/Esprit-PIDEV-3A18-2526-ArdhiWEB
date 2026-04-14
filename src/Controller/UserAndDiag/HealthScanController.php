@@ -136,8 +136,22 @@ class HealthScanController extends AbstractController
                 $plan->setTitle($pData['title'] ?? 'Plan de prévention');
                 $plan->setTimelineDays($pData['timeline_days'] ?? 0);
                 $plan->setImpactLevel($pData['impact_level'] ?? 'MEDIUM');
-                $totalT = $pData['total_tasks'] ?? 0;
-                $plan->setSteps("Recommandation: $totalT tâches au total.");
+
+                $stepsArray = [];
+                foreach ($pData['tasks'] ?? [] as $taskData) {
+                    $day = $taskData['day'] ?? 1;
+                    $desc = $taskData['description'] ?? 'Tâche de prévention';
+                    $stepsArray[] = "$day|$desc";
+
+                    $pTask = new \App\Entity\UserAndDiag\PreventionTask();
+                    $pTask->setPreventionPlan($plan);
+                    $pTask->setDayOffset($day);
+                    $pTask->setTaskDescription($desc);
+                    // Default status is 'PENDING', added naturally by the entity
+                    $em->persist($pTask);
+                }
+
+                $plan->setSteps(empty($stepsArray) ? "1|Inspection générale recommandée" : implode("\n", $stepsArray));
                 $em->persist($plan);
             }
 
