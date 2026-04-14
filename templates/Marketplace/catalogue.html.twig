@@ -49,6 +49,17 @@
           </div>
 
           <div class="cat-top-indicators">
+            <a href="#" class="cart-indicator compare-indicator disabled" id="compareLaunchLink" aria-disabled="true">
+              <div class="cart-icon-wrapper" style="background: rgba(13, 110, 253, 0.12); color: #0d6efd; border: 1px solid rgba(13, 110, 253, 0.2);">
+                <i class="bi bi-columns-gap"></i>
+                <span class="cart-badge" id="compareSelectedCount">0</span>
+              </div>
+              <div class="cart-info">
+                <span>Comparateur</span>
+                <strong id="compareSelectedLabel">0 / 2 produits</strong>
+              </div>
+            </a>
+
             {# Indicateur Panier #}
             <a href="{{ path('app_marketplace_panier') }}" class="cart-indicator">
               <div class="cart-icon-wrapper">
@@ -405,6 +416,14 @@
                           <i class="bi bi-cart-plus"></i> Ajouter
                         </button>
                       </form>
+                      <button
+                        type="button"
+                        class="product-btn-cart compare-toggle-btn"
+                        data-product-id="{{ produit.id }}"
+                        onclick="toggleCompareSelection({{ produit.id }}, this)"
+                      >
+                        <i class="bi bi-columns-gap"></i> Comparer
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -563,6 +582,7 @@ const hiddenCheckbox = document.getElementById('filter-en-solde');
 // ── Auto-submit Form (AJAX sans rafraîchissement) ───────────────────
 const filterForm = document.getElementById('filterForm');
 let timeout = null;
+const compareStorageKey = 'marketplace_compare_products';
 
 const applyFiltersAjax = async () => {
     if (!filterForm) return;
@@ -600,6 +620,7 @@ const applyFiltersAjax = async () => {
             
             // Réinitialiser les événements (ex: panier et favoris) après remplacement du DOM
             initCartListeners();
+          syncCompareUi();
 
             // Mettre à jour les prix si une devise est sélectionnée
             const savedCurrency = localStorage.getItem('marketplace_currency');
@@ -629,6 +650,93 @@ const applyFiltersAjax = async () => {
         if (productContent) productContent.style.opacity = '1';
     }
 };
+
+const getCompareIds = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(compareStorageKey) || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, 2);
+  } catch (e) {
+    return [];
+  }
+};
+
+const setCompareIds = (ids) => {
+  localStorage.setItem(compareStorageKey, JSON.stringify(ids.slice(0, 2)));
+};
+
+const syncCompareUi = () => {
+  const ids = getCompareIds();
+  const countEl = document.getElementById('compareSelectedCount');
+  const labelEl = document.getElementById('compareSelectedLabel');
+  const launchLink = document.getElementById('compareLaunchLink');
+
+  if (countEl) countEl.textContent = String(ids.length);
+  if (labelEl) labelEl.textContent = `${ids.length} / 2 produits`;
+
+  if (launchLink) {
+    if (ids.length === 2) {
+      launchLink.classList.remove('disabled');
+      launchLink.setAttribute('aria-disabled', 'false');
+      launchLink.href = `/marketplace/comparer?x=${ids[0]}&y=${ids[1]}`;
+    } else {
+      launchLink.classList.add('disabled');
+      launchLink.setAttribute('aria-disabled', 'true');
+      launchLink.href = '#';
+    }
+  }
+
+  document.querySelectorAll('.compare-toggle-btn').forEach((btn) => {
+    const productId = Number(btn.dataset.productId || 0);
+    const isActive = ids.includes(productId);
+    btn.classList.toggle('active', isActive);
+    btn.innerHTML = isActive
+      ? '<i class="bi bi-check2-circle"></i> Selectionne'
+      : '<i class="bi bi-columns-gap"></i> Comparer';
+  });
+};
+
+window.toggleCompareSelection = (productId, btn) => {
+  const id = Number(productId);
+  if (!Number.isInteger(id) || id <= 0) return;
+
+  let ids = getCompareIds();
+  const idx = ids.indexOf(id);
+
+  if (idx >= 0) {
+    ids.splice(idx, 1);
+    setCompareIds(ids);
+    syncCompareUi();
+    showToast('Produit retire du comparateur.', false, 'Comparaison');
+    return;
+  }
+
+  if (ids.length >= 2) {
+    showToast('Vous pouvez comparer seulement 2 produits.', true, 'Comparaison');
+    return;
+  }
+
+  ids.push(id);
+  setCompareIds(ids);
+  syncCompareUi();
+
+  if (ids.length === 2) {
+    showToast('2 produits selectionnes. Ouvrez le comparateur.', false, 'Comparaison');
+  } else {
+    showToast('Produit ajoute au comparateur.', false, 'Comparaison');
+  }
+};
+
+document.getElementById('compareLaunchLink')?.addEventListener('click', (e) => {
+  const ids = getCompareIds();
+  if (ids.length !== 2) {
+    e.preventDefault();
+    showToast('Selectionnez 2 produits pour comparer.', true, 'Comparaison');
+  }
+});
 
 if (checkboxEl && hiddenCheckbox) {
     checkboxEl.addEventListener('click', () => {
@@ -729,6 +837,7 @@ function initCartListeners() {
     });
 }
 initCartListeners();
+syncCompareUi();
 
 // ── AJAX Toggle Wishlist ────────────────────────────────────────────
 async function toggleWishlist(productId, btn) {
@@ -1314,6 +1423,23 @@ input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: 
 .search-result-item { padding: 10px 15px; color: #fff; font-size: 13px; cursor: pointer; border-bottom: 1px solid #353b48; transition: 0.2s; }
 .search-result-item:hover { background: #4a8c3f; }
 .search-result-item:last-child { border-bottom: none; }
+
+.compare-indicator.disabled {
+  opacity: 0.6;
+  pointer-events: auto;
+}
+
+.compare-toggle-btn {
+  background: #edf4ff;
+  color: #0d6efd;
+  border: 1px solid #cfe2ff;
+}
+
+.compare-toggle-btn.active {
+  background: #e8f9ee;
+  border-color: #badbcc;
+  color: #146c43;
+}
 
 .product-rating-inline {
   display: inline-flex;
