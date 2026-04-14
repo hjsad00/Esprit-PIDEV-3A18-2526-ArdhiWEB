@@ -56,9 +56,9 @@ class HealthScanController extends AbstractController
             $scan->setStatus('COMPLETED'); // Or 'PENDING' if you want to run this asynchronously later
             $scan->setScanDate(new \DateTime());
 
-            // 2. Gather and upload the 6 images
+            // 2. Gather and upload the 5 images
             $imagePaths = [];
-            $photoKeys = ['crops', 'soil', 'edges', 'insects', 'spacing', 'overview'];
+            $photoKeys = ['crops', 'soil', 'edges', 'insects', 'spacing'];
             foreach ($photoKeys as $key) {
                 $file = $request->files->get("photo_$key");
                 if ($file) {
@@ -88,8 +88,7 @@ class HealthScanController extends AbstractController
 
             // Si la requête a échoué techniquement, GroqService renvoie un string commençant par ERREUR_
             if (str_starts_with($aiResponseJson, 'ERREUR_')) {
-                $this->addFlash('danger', 'Erreur de l\'API Groq: ' . $aiResponseJson);
-                return $this->redirectToRoute('app_health_scan_new');
+                die("<body style='background: #1e1e1e; color: #fff; padding: 50px; font-family: sans-serif;'><h2 style='color:#ff4757'>CRASH API GROQ</h2><p style='font-size:18px'>" . htmlspecialchars($aiResponseJson) . "</p></body>");
             }
 
             // Extract the JSON object vigorously in case the LLM included conversational filler

@@ -243,8 +243,9 @@ class GroqService
 
         $content = [['type' => 'text', 'text' => $prompt]];
 
-        // Attach all 6 images to the prompt
-        foreach ($imagePaths as $path) {
+        // Attach images to the prompt (Max 5 for vision model limit)
+        $limitedPaths = array_slice($imagePaths, 0, 5);
+        foreach ($limitedPaths as $path) {
             if (file_exists($path)) {
                 $base64 = base64_encode(file_get_contents($path));
                 // Assuming jpeg for simplicity, though Groq usually auto-detects
@@ -253,7 +254,7 @@ class GroqService
         }
 
         $jsonPayload = [
-            'model' => 'llama-3.2-90b-vision-preview', // The multi-modal model
+            'model' => 'meta-llama/llama-4-scout-17b-16e-instruct', // The multi-modal model
             'messages' => [['role' => 'user', 'content' => $content]],
             // Note: Groq vision models do not currently support 'response_format' => ['type' => 'json_object']
             // So we rely entirely on the strict prompt instructions.
