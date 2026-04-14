@@ -20,13 +20,13 @@ class HealthScanController extends AbstractController
         // Fetch all scans for the current user, ordered by most recent
         $scans = $em->getRepository(\App\Entity\UserAndDiag\FarmHealthScan::class)->findBy(
             ['user' => $user],
-            ['scanDate' => 'DESC']
+            ['scan_date' => 'DESC']
         );
 
         // Fetch reports manually since the relation has been removed to match remote DB
         $reportsByScan = [];
         foreach ($scans as $scan) {
-            $report = $em->getRepository(\App\Entity\UserAndDiag\FarmHealthReport::class)->findOneBy(['scan' => $scan], ['generatedAt' => 'DESC']);
+            $report = $em->getRepository(\App\Entity\UserAndDiag\FarmHealthReport::class)->findOneBy(['scan' => $scan], ['generated_at' => 'DESC']);
             $reportsByScan[$scan->getId()] = $report;
         }
 
