@@ -58,7 +58,10 @@
                         <button class="action-btn" style="background: #25D366; width: 100%;" onclick="triggerWhatsApp({{ plan.id }}, this)">
                             <i class="bi bi-whatsapp"></i> Envoyer un Rappel WhatsApp
                         </button>    
-                        
+                        <button type="button" class="action-btn btn-expert" style="background: rgba(41, 128, 185, 0.85);" onclick="document.getElementById('expertInput').click()">
+                            <i class="bi bi-person-badge"></i> Demander à l'Agronome    
+                        </button>
+                        <input type="file" id="expertInput" style="display:none" accept="image/*" onchange="askExpertAjax(this)">
                     </div>
                 {% endif %}
             </div>
@@ -373,6 +376,44 @@
                 btn.innerHTML = '✅ Appliquer le nouveau plan';
                 btn.disabled = false;
             }
+        });
+    }
+    // Expert Request AJAX Logic
+    function askExpertAjax(inputElement) {
+        if (!inputElement.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', inputElement.files[0]);
+
+        // UI Loading State
+        const btn = document.querySelector('.btn-expert');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi en cours...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_ask_expert', {id: plan.id}) }}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            inputElement.value = ""; // Reset the file input so they can upload again later if needed
+
+            if (data.error) {
+                alert("❌ " + data.error);
+            } else {
+                alert("✅ " + data.message);
+                // Optional: Reload the page to refresh data, or just let them stay on the page
+                window.location.reload(); 
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert("Erreur réseau lors de la communication avec le serveur.");
         });
     }
 </script>

@@ -220,4 +220,44 @@ class GroqService
 
         return $this->sendRequest($jsonPayload);
     }
+    /**
+     * Analyses multiple farm photos and returns a structured JSON report.
+     */
+    public function analyzeFarmHealth(array $imagePaths, array $scanDetails): string
+    {
+        $prompt = "Tu es un expert agronome de niveau mondial. Analyse ces photos d'une exploitation agricole. " .
+            "Détails: Culture: {$scanDetails['crop']}, Date de plantation: {$scanDetails['plantingDate']}, Stade: {$scanDetails['stage']}, Préoccupations: {$scanDetails['concerns']}. " .
+            "Évalue la santé globale, la biodiversité, et identifie les vulnérabilités et plans de prévention. " .
+            "Tu DOIS répondre EXCLUSIVEMENT avec un objet JSON valide, sans aucun texte avant ou après, en respectant cette structure exacte :\n" .
+            "{\n" .
+            "  \"health_score\": (entier de 0 à 100),\n" .
+            "  \"biodiversity_score\": (entier de 0 à 100),\n" .
+            "  \"llava_analysis\": \"Résumé textuel de ton analyse\",\n" .
+            "  \"vulnerabilities\": [\n" .
+            "    {\"type_icon\": \"🐛\", \"threat\": \"Nom de la menace\", \"severity\": \"MEDIUM\", \"description\": \"...\", \"risk_score\": 0.4, \"timeframe_days\": 14, \"yield_loss\": 15, \"cost\": 500}\n" .
+            "  ],\n" .
+            "  \"prevention_plans\": [\n" .
+            "    {\"title\": \"Plan d'action\", \"timeline_days\": 30, \"impact_level\": \"HIGH\", \"total_tasks\": 5}\n" .
+            "  ]\n" .
+            "}";
+
+        $content = [['type' => 'text', 'text' => $prompt]];
+
+        // Attach all 6 images to the prompt
+        foreach ($imagePaths as $path) {
+            if (file_exists($path)) {
+                $base64 = base64_encode(file_get_contents($path));
+                // Assuming jpeg for simplicity, though Groq usually auto-detects
+                $content[] = ['type' => 'image_url', 'image_url' => ['url' => "data:image/jpeg;base64,{$base64}"]];
+            }
+        }
+
+        $jsonPayload = [
+            'model' => 'llama-3.2-90b-vision-preview', // The multi-modal model
+            'messages' => [['role' => 'user', 'content' => $content]],
+            'response_format' => ['type' => 'json_object'] // Force JSON output
+        ];
+
+        return $this->sendRequest($jsonPayload);
+    }
 }

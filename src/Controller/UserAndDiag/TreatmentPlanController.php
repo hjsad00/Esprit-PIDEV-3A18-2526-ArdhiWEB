@@ -354,4 +354,55 @@ class TreatmentPlanController extends AbstractController
 
         return $this->json(['success' => true]);
     }
+    #[Route('/{id}/ask-expert', name: 'app_user_and_diag_treatment_plan_ask_expert', methods: ['POST'])]
+    public function askExpert(
+        TreatmentPlan $plan,
+        Request $request,
+        EntityManagerInterface $em,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService
+    ): JsonResponse {
+        // 1. Security Check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        // 2. Anti-Spam Check: Does the user already have a pending review for this plan?
+        $existingReview = $em->getRepository(\App\Entity\UserAndDiag\Review::class)->findOneBy([
+            'treatment_plan' => $plan,
+            'status' => 'PENDING'
+        ]);
+
+        if ($existingReview) {
+            return $this->json(['error' => 'Vous avez déjà une demande en attente d\'analyse par nos experts.'], 400);
+        }
+
+        // 3. Process the Image
+        $file = $request->files->get('image');
+        if (!$file)
+            return $this->json(['error' => 'Une image est requise pour demander l\'avis d\'un expert.'], 400);
+
+        try {
+            $imgUrl = $imgBBService->uploadImage($file);
+
+            // 4. Create the Review Ticket
+            $review = new \App\Entity\UserAndDiag\Review();
+            $review->setDiagnostic($plan->getDiagnostic());
+            $review->setTreatmentPlan($plan);
+            $review->setReviewType('PROGRESS'); // Indicates it's a mid-treatment checkup
+            $review->setStatus('PENDING');
+            $review->setPhotoUrl($imgUrl);
+            $review->setCreatedAt(new \DateTime()); // Or whatever your date setter is named
+
+            $em->persist($review);
+            $em->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Votre photo a été envoyée avec succès ! Nos agronomes l\'analyseront sous peu.'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur technique lors de l\'envoi: ' . $e->getMessage()], 500);
+        }
+    }
 }

@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapport de Santé du Champ{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/health-scan-report.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container py-5">
+    
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ path('app_health_scan_history') }}" class="btn btn-outline-light rounded-circle me-3">←</a>
+        <h2 class="text-white fw-bold mb-0">📊 Rapport de Santé</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="glass-panel text-center p-4 h-100">
+                <h5 class="text-white-50 mb-3">Score de Santé Globale</h5>
+                
+                {% set scoreColor = report.healthScore >= 80 ? '#27ae60' : (report.healthScore >= 50 ? '#f39c12' : '#e74c3c') %}
+                
+                <h1 class="display-1 fw-bold" style="color: {{ scoreColor }}; text-shadow: 0 0 20px {{ scoreColor }}40;">
+                    {{ report.healthScore }}<span class="fs-4 text-white-50">/100</span>
+                </h1>
+                
+                <div class="progress mt-3 mb-4" style="height: 10px; background: rgba(255,255,255,0.1);">
+                    <div class="progress-bar" role="progressbar" style="width: {{ report.healthScore }}%; background-color: {{ scoreColor }};"></div>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <h5 class="text-white-50 mb-3">Biodiversité</h5>
+                <h2 class="fw-bold text-info">{{ report.biodiversityScore }}<span class="fs-5 text-white-50">/100</span></h2>
+                <div class="progress mt-2 mb-4" style="height: 10px; background: rgba(255,255,255,0.1);">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ report.biodiversityScore }}%;"></div>
+                </div>
+
+                <div class="text-start mt-4 p-3 rounded" style="background: rgba(0,0,0,0.2);">
+                    <p class="text-white mb-2"><i class="bi bi-calendar-check text-success"></i> Scan du: {{ report.generatedAt|date('d/m/Y') }}</p>
+                    <p class="text-white mb-2"><i class="bi bi-seedling text-success"></i> Culture: {{ report.scan.cropType }}</p>
+                    <p class="text-white m-0"><i class="bi bi-graph-up text-success"></i> Stade: {{ report.scan.growthStage }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-4">
+                
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-robot text-primary"></i> Analyse de l'IA</h5>
+                    <p class="text-white-75 lh-lg m-0">{{ report.llavaAnalysis }}</p>
+                </div>
+
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-4">⚠️ Vulnérabilités Détectées ({{ report.vulnerabilities|length }})</h5>
+                    
+                    {% for vuln in report.vulnerabilities %}
+                        <div class="p-3 mb-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid {{ vuln.severity == 'CRITICAL' ? '#e74c3c' : (vuln.severity == 'MEDIUM' ? '#f39c12' : '#27ae60') }};">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-white m-0">{{ vuln.typeIcon }} {{ vuln.threat }}</h6>
+                                <span class="badge bg-{{ vuln.severity == 'CRITICAL' ? 'danger' : (vuln.severity == 'MEDIUM' ? 'warning text-dark' : 'success') }}">{{ vuln.severity }}</span>
+                            </div>
+                            <p class="text-white-50 small mb-2">{{ vuln.description }}</p>
+                            <div class="d-flex gap-3 small text-white-50">
+                                {% if vuln.riskScore > 0 %}<span><strong>Risque:</strong> {{ (vuln.riskScore * 100)|round }}%</span>{% endif %}
+                                {% if vuln.timeframeDays > 0 %}<span><strong>Délai:</strong> {{ vuln.timeframeDays }} jours</span>{% endif %}
+                                {% if vuln.estimatedYieldLossPercent > 0 %}<span><strong>Perte:</strong> {{ vuln.estimatedYieldLossPercent }}%</span>{% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success bg-transparent border-success text-success">
+                            ✅ Aucune vulnérabilité critique détectée. Votre champ est en excellente santé !
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-4">🛡️ Plans de Prévention Recommandés</h5>
+                    
+                    <div class="row g-3">
+                    {% for plan in report.preventionPlans %}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                <h6 class="fw-bold text-white mb-2">{{ plan.title }}</h6>
+                                <p class="text-white-50 small mb-2">Durée: {{ plan.timelineDays }} jours | Impact: <span class="text-{{ plan.impactLevel == 'HIGH' ? 'danger' : 'warning' }}">{{ plan.impactLevel }}</span></p>
+                                <button class="btn btn-sm btn-outline-light w-100 mt-2">📋 Voir les détails</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
