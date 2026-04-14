@@ -21,6 +21,81 @@
             margin-bottom: 20px;
             display: block;
         }
+
+        .wishlist-pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 22px;
+        }
+
+        .wishlist-pagination .pagination {
+            margin: 0;
+            gap: 0;
+        }
+
+        .wishlist-pagination .page-item .page-link {
+            color: #3d6f3a;
+            border: 1px solid #d6dfd2;
+            background: #fff;
+            padding: 8px 14px;
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        .wishlist-pagination .page-item.active .page-link {
+            background: #2f6faa;
+            border-color: #2f6faa;
+            color: #fff;
+        }
+
+        .wishlist-pagination .page-item.disabled .page-link {
+            color: #9aa5b1;
+            background: #f6f8fa;
+            border-color: #d6dfd2;
+        }
+
+        .wishlist-pagination .page-item .page-link:hover {
+            background: #f0f4f8;
+            color: #2f6faa;
+        }
+
+        #wishlist-main-content.wishlist-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        #wishlist-main-content.wishlist-loading > * {
+            opacity: 0.45;
+        }
+
+        #wishlist-main-content.wishlist-loading::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.65);
+            z-index: 20;
+        }
+
+        #wishlist-main-content.wishlist-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44px;
+            height: 44px;
+            margin-top: -22px;
+            margin-left: -22px;
+            border-radius: 50%;
+            border: 4px solid #d7e5d3;
+            border-top-color: #4a8c3f;
+            animation: wishlistSpin 0.8s linear infinite;
+            z-index: 21;
+        }
+
+        @keyframes wishlistSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 {% endblock %}
 
@@ -56,7 +131,7 @@
             <i class="bi bi-heart"></i> Retrouvez tous vos coups de cœur
           </span>
           <span class="mp-info-count">
-            <i class="bi bi-bookmark-heart-fill"></i> Total favoris : <strong>{{ favorites|length }}</strong>
+                        <i class="bi bi-bookmark-heart-fill"></i> Total favoris : <strong>{{ favorites.getTotalItemCount }}</strong>
           </span>
         </div>
       </div>
@@ -73,7 +148,9 @@
           <p>Retrouvez les articles que vous avez aimés</p>
         </div>
 
-        {% if favorites is empty %}
+                <div id="wishlist-main-content">
+
+        {% if favorites.getTotalItemCount == 0 %}
             <div class="wishlist-empty">
                 <i class="bi bi-heartbreak"></i>
                 <h3>Votre liste est vide</h3>
@@ -143,7 +220,13 @@
                     </div>
                 {% endfor %}
             </div>
+
+            <div class="wishlist-pagination">
+                {{ knp_pagination_render(favorites, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig') }}
+            </div>
         {% endif %}
+
+        </div>
 
       </div>
     </section>
@@ -210,5 +293,44 @@ async function toggleWishlist(productId, btn) {
         if (btn) btn.disabled = false;
     }
 }
+
+async function loadFavoritesPage(url) {
+    const target = document.getElementById('wishlist-main-content');
+    if (!target) return;
+
+    target.classList.add('wishlist-loading');
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const next = doc.getElementById('wishlist-main-content');
+
+        if (next) {
+            target.innerHTML = next.innerHTML;
+            window.history.replaceState({}, '', url);
+        }
+    } catch (err) {
+        showToast('Erreur lors du chargement de la page.', true);
+    } finally {
+        target.classList.remove('wishlist-loading');
+    }
+}
+
+document.addEventListener('click', (event) => {
+    const pageLink = event.target.closest('.wishlist-pagination a');
+    if (!pageLink) return;
+
+    event.preventDefault();
+    const href = pageLink.getAttribute('href');
+    if (!href || href === '#') return;
+
+    const pageUrl = new URL(href, window.location.origin);
+    loadFavoritesPage(pageUrl);
+});
 </script>
 {% endblock %}

@@ -11,6 +11,7 @@ use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
 use App\Service\Marketplace\WishlistNotificationService;
 use App\Service\Marketplace\OrderEmailService;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,14 +30,23 @@ class CommandeController extends AbstractController
      * Page "Mes Commandes" — Vue acheteur.
      */
     #[Route('/marketplace/mes-commandes', name: 'app_marketplace_mes_commandes')]
-    public function mesCommandes(CommandeRepository $commandeRepo): Response
+    public function mesCommandes(
+        Request $request,
+        CommandeRepository $commandeRepo,
+        PaginatorInterface $paginator
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
-        $commandes = $commandeRepo->findByUser($user);
+        $commandesRaw = $commandeRepo->findByUser($user);
+        $commandes = $paginator->paginate(
+            $commandesRaw,
+            max(1, $request->query->getInt('page', 1)),
+            6
+        );
         $stats     = $commandeRepo->getStatsForBuyer($user);
 
         return $this->render('Marketplace/mes_commandes.html.twig', [
@@ -49,14 +59,23 @@ class CommandeController extends AbstractController
      * Page "Commandes Reçues" — Vue vendeur.
      */
     #[Route('/marketplace/commandes-recues', name: 'app_marketplace_commandes_recues')]
-    public function commandesRecues(CommandeRepository $commandeRepo): Response
+    public function commandesRecues(
+        Request $request,
+        CommandeRepository $commandeRepo,
+        PaginatorInterface $paginator
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
-        $commandes = $commandeRepo->findOrdersBySeller($user);
+        $commandesRaw = $commandeRepo->findOrdersBySeller($user);
+        $commandes = $paginator->paginate(
+            $commandesRaw,
+            max(1, $request->query->getInt('page', 1)),
+            6
+        );
         $stats     = $commandeRepo->getStatsForSeller($user);
 
         return $this->render('Marketplace/commandes_recues.html.twig', [

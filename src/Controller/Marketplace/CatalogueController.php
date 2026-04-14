@@ -7,6 +7,7 @@ use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\WishlistRepository;
 use App\Service\Marketplace\CityCoordinatesService;
+use Knp\Component\Pager\PaginatorInterface;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +26,8 @@ class CatalogueController extends AbstractController
         AvisRepository $avisRepository,
         PanierRepository $panierRepository,
         WishlistRepository $wishlistRepository,
-        CityCoordinatesService $cityCoordinatesService
+        CityCoordinatesService $cityCoordinatesService,
+        PaginatorInterface $paginator
     ): Response
     {
         /** @var \App\Entity\UserAndDiag\User $user */
@@ -83,10 +85,20 @@ class CatalogueController extends AbstractController
             }
         }
 
-        $produits    = $produitsRepository->findAllWithFilters($filters, $userId);
+        $produitsFiltres = $produitsRepository->findAllWithFilters($filters, $userId);
+        $produits = $paginator->paginate(
+            $produitsFiltres,
+            max(1, $request->query->getInt('page', 1)),
+            6
+        );
 
-        $reviewsStats = $avisRepository->getStatsForProduits($produits);
-        foreach ($produits as $produit) {
+        $produitsPage = $produits->getItems();
+        if (!is_array($produitsPage)) {
+            $produitsPage = iterator_to_array($produitsPage);
+        }
+
+        $reviewsStats = $avisRepository->getStatsForProduits($produitsPage);
+        foreach ($produitsPage as $produit) {
             $stats = $reviewsStats[$produit->getId()] ?? ['avg' => 0.0, 'count' => 0];
             $produit
                 ->setAverageRating((float) $stats['avg'])

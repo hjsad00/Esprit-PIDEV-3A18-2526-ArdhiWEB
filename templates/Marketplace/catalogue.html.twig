@@ -268,7 +268,7 @@
               <div class="active-filters-badge">
                 <i class="bi bi-funnel-fill"></i>
                 Filtres actifs —
-                <strong>{{ produits|length }} résultat(s)</strong>
+                <strong>{{ produits.getTotalItemCount }} résultat(s)</strong>
               </div>
               {% endif %}
 
@@ -287,7 +287,7 @@
 
             {# Résumé de la recherche #}
             <div class="product-results-summary">
-              <span><strong>{{ produits|length }}</strong> produit(s) trouvé(s)</span>
+              <span><strong>{{ produits.getTotalItemCount }}</strong> produit(s) trouvé(s)</span>
               {% if filters.categorie %}
                 <span class="summary-tag"><i class="bi bi-tag-fill"></i> {{ filters.categorie }}</span>
               {% endif %}
@@ -441,6 +441,10 @@
               {% endfor %}
 
             </div>{# end .product-grid #}
+
+            <div class="catalogue-pagination" style="display:flex; justify-content:center; margin-top:18px;">
+              {{ knp_pagination_render(produits, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig') }}
+            </div>
           </div>{# end .product-content #}
         </div>{# end .cat-main-layout #}
 
@@ -584,24 +588,10 @@ const filterForm = document.getElementById('filterForm');
 let timeout = null;
 const compareStorageKey = 'marketplace_compare_products';
 
-const applyFiltersAjax = async () => {
-    if (!filterForm) return;
-    
+const fetchCatalogueContent = async (url, keepQueryInAddressBar = false) => {
     // Feedback visuel pendant le chargement
     const productContent = document.querySelector('.product-content');
-    if (productContent) productContent.style.opacity = '0.5';
-
-    // Construire l'URL avec les paramètres
-    const url = new URL(filterForm.action);
-    const formData = new FormData(filterForm);
-    const searchParams = new URLSearchParams();
-    
-    for (let [key, value] of formData.entries()) {
-        if (value !== '') {
-            searchParams.append(key, value);
-        }
-    }
-    url.search = searchParams.toString();
+  if (productContent) productContent.classList.add('ajax-loading');
 
     try {
         const response = await fetch(url, {
@@ -642,14 +632,37 @@ const applyFiltersAjax = async () => {
             currentBadge.remove();
         }
 
-        // On garde l'URL propre dans le navigateur (on masque les paramètres)
-        window.history.replaceState({}, '', window.location.pathname);
+        if (keepQueryInAddressBar) {
+          window.history.replaceState({}, '', url.toString());
+        } else {
+          // On garde l'URL propre dans le navigateur (on masque les paramètres)
+          window.history.replaceState({}, '', window.location.pathname);
+        }
 
     } catch (err) {
         console.error('Erreur AJAX filtre:', err);
-        if (productContent) productContent.style.opacity = '1';
+      if (productContent) productContent.classList.remove('ajax-loading');
+    } finally {
+      if (productContent) productContent.classList.remove('ajax-loading');
     }
 };
+
+    const applyFiltersAjax = async () => {
+      if (!filterForm) return;
+
+      const url = new URL(filterForm.action, window.location.origin);
+      const formData = new FormData(filterForm);
+      const searchParams = new URLSearchParams();
+
+      for (let [key, value] of formData.entries()) {
+        if (value !== '') {
+          searchParams.append(key, value);
+        }
+      }
+      url.search = searchParams.toString();
+
+      await fetchCatalogueContent(url, false);
+    };
 
 const getCompareIds = () => {
   try {
@@ -736,6 +749,18 @@ document.getElementById('compareLaunchLink')?.addEventListener('click', (e) => {
     e.preventDefault();
     showToast('Selectionnez 2 produits pour comparer.', true, 'Comparaison');
   }
+});
+
+document.addEventListener('click', (event) => {
+    const pageLink = event.target.closest('.catalogue-pagination a');
+    if (!pageLink) return;
+
+    event.preventDefault();
+    const href = pageLink.getAttribute('href');
+    if (!href || href === '#') return;
+
+    const pageUrl = new URL(href, window.location.origin);
+    fetchCatalogueContent(pageUrl, true);
 });
 
 if (checkboxEl && hiddenCheckbox) {
@@ -1439,6 +1464,75 @@ input[type=range].custom-range-slider:active::-webkit-slider-thumb { transform: 
   background: #e8f9ee;
   border-color: #badbcc;
   color: #146c43;
+}
+
+.catalogue-pagination .pagination {
+  margin: 0;
+  gap: 0;
+}
+
+.catalogue-pagination .page-item .page-link {
+  color: #3d6f3a;
+  border: 1px solid #d6dfd2;
+  background: #fff;
+  padding: 8px 14px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.catalogue-pagination .page-item.active .page-link {
+  background: #2f6faa;
+  border-color: #2f6faa;
+  color: #fff;
+}
+
+.catalogue-pagination .page-item.disabled .page-link {
+  color: #9aa5b1;
+  background: #f6f8fa;
+  border-color: #d6dfd2;
+}
+
+.catalogue-pagination .page-item .page-link:hover {
+  background: #f0f4f8;
+  color: #2f6faa;
+}
+
+.product-content.ajax-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.product-content.ajax-loading > * {
+  opacity: 0.45;
+}
+
+.product-content.ajax-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.65);
+  z-index: 20;
+}
+
+.product-content.ajax-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  margin-left: -22px;
+  border-radius: 50%;
+  border: 4px solid #d7e5d3;
+  border-top-color: #4a8c3f;
+  animation: ajaxSpin 0.8s linear infinite;
+  z-index: 21;
+}
+
+@keyframes ajaxSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .product-rating-inline {

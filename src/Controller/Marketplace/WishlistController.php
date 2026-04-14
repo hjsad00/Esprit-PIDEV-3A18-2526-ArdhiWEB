@@ -7,8 +7,10 @@ use App\Entity\Marketplace\Wishlist;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\WishlistRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -18,10 +20,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class WishlistController extends AbstractController
 {
     #[Route('/', name: 'app_marketplace_favoris')]
-    public function index(WishlistRepository $wishlistRepository): Response
+    public function index(
+        Request $request,
+        WishlistRepository $wishlistRepository,
+        PaginatorInterface $paginator
+    ): Response
     {
         $user = $this->getUser();
-        $favorites = $wishlistRepository->findBy(['user' => $user], ['dateAjout' => 'DESC']);
+        $favoritesRaw = $wishlistRepository->findBy(['user' => $user], ['dateAjout' => 'DESC']);
+        $favorites = $paginator->paginate(
+            $favoritesRaw,
+            max(1, $request->query->getInt('page', 1)),
+            8
+        );
 
         return $this->render('Marketplace/favoris.html.twig', [
             'favorites' => $favorites,
