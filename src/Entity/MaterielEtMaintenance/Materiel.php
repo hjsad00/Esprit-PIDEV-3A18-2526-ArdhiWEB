@@ -48,6 +48,15 @@ class Materiel
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
+    #[ORM\Column(length: 50)]
+    private string $statut = 'en_service';
+
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $heuresUtilisation = 0;
+
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $seuilMaintenanceHeures = 500;
+
     #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, orphanRemoval: true)]
     private Collection $maintenances;
 
@@ -227,5 +236,50 @@ class Materiel
         }
 
         return $this;
+    }
+
+    public function getStatut(): string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): self
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    public function getHeuresUtilisation(): int
+    {
+        return $this->heuresUtilisation;
+    }
+
+    public function setHeuresUtilisation(int $heuresUtilisation): self
+    {
+        $this->heuresUtilisation = $heuresUtilisation;
+        return $this;
+    }
+
+    public function getSeuilMaintenanceHeures(): int
+    {
+        return $this->seuilMaintenanceHeures;
+    }
+
+    public function setSeuilMaintenanceHeures(int $seuilMaintenanceHeures): self
+    {
+        $this->seuilMaintenanceHeures = $seuilMaintenanceHeures;
+        return $this;
+    }
+
+    public function initialiserSeuilParDefaut(): void
+    {
+        $this->seuilMaintenanceHeures = match ($this->type) {
+            'Tracteur' => 500,
+            'Moissonneuse' => 300,
+            'Pulvérisateur' => 250,
+            'Semoir' => 200,
+            'Charrue', 'Herse' => 400,
+            default => 500,
+        };
     }
 }

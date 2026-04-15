@@ -2,6 +2,30 @@
 
 {% block title %}Mes Notifications - Ardhi{% endblock %}
 
+{% block body_class %}materiel-theme premium-page{% endblock %}
+
+{% block stylesheets %}
+<style>
+    /* Force solid header even at top for this page - Ultima Ratio */
+    body.premium-header-active header#header.header {
+        background: rgba(26, 45, 27, 0.95) !important;
+        background-color: rgba(26, 45, 27, 0.95) !important;
+        backdrop-filter: blur(25px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 4px 40px rgba(0,0,0,0.4) !important;
+    }
+    
+    /* Ensure text is white and visible */
+    body.premium-header-active header#header.header .sitename,
+    body.premium-header-active header#header.header .navmenu ul li a {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container py-5" style="margin-top: 80px;">
     <div class="row mb-4 align-items-center">

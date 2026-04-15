@@ -4,6 +4,7 @@ namespace App\Entity\MaterielEtMaintenance;
 
 use App\Repository\MaterielEtMaintenance\NotificationMaintenanceRepository;
 use App\Entity\UserAndDiag\User;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: NotificationMaintenanceRepository::class)]
@@ -23,8 +24,14 @@ class NotificationMaintenance
     #[ORM\JoinColumn(name: 'materiel_id', referencedColumnName: 'id_materiel', nullable: true, onDelete: 'SET NULL')]
     private ?Materiel $materiel = null;
 
-    #[ORM\Column(name: 'nouveau_statut', type: 'string', length: 50)]
+    #[ORM\Column(name: 'nouveau_statut', type: 'string', length: 50, nullable: true)]
     private ?string $nouveauStatut = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $titre = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $message = null;
 
     #[ORM\Column(name: 'is_read', type: 'boolean', options: ['default' => false])]
     private bool $isRead = false;
@@ -94,6 +101,28 @@ class NotificationMaintenance
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    public function getTitre(): ?string
+    {
+        return $this->titre;
+    }
+
+    public function setTitre(?string $titre): self
+    {
+        $this->titre = $titre;
+        return $this;
+    }
+
+    public function getMessage(): ?string
+    {
+        return $this->message;
+    }
+
+    public function setMessage(?string $message): self
+    {
+        $this->message = $message;
         return $this;
     }
 }

@@ -69,7 +69,7 @@ class AdminMaintenanceController extends AbstractController
                     }
                 }
 
-                // Notification pour le propriétaire du matériel
+                // Notification pour le propriétaire du matériel avec message automatique
                 $materiel = $maintenance->getMateriel();
                 if ($materiel) {
                     $userId = $materiel->getUserId();
@@ -79,6 +79,30 @@ class AdminMaintenanceController extends AbstractController
                         $notif->setUser($user);
                         $notif->setMateriel($materiel);
                         $notif->setNouveauStatut($nouveauStatut);
+                        
+                        // Logique de message manuel choisi par l'Admin
+                        $msg = "Le statut de votre matériel a été mis à jour.";
+                        $reponseType = $request->request->get('reponse_type');
+
+                        if ($nouveauStatut === 'en_cours') {
+                            if ($reponseType === 'urgent_apportez') {
+                                $msg = "ADMIN : Veuillez apporter votre matériel à l'atelier dès que possible.";
+                            } elseif ($reponseType === 'non_urgent_planifier') {
+                                $msg = "ADMIN : Veuillez planifier une maintenance via le calendrier pour cette machine.";
+                            } else {
+                                // Fallback auto si pas de type précis
+                                $desc = strtolower($maintenance->getDescription() ?? '');
+                                if ($maintenance->getTypeMaintenance() === 'urgente' || str_contains($desc, 'urgent')) {
+                                    $msg = "ADMIN : Veuillez apporter votre matériel à l'atelier dès que possible.";
+                                }
+                            }
+                        } elseif ($nouveauStatut === 'terminee') {
+                            $msg = "Maintenance terminée. Votre matériel est de nouveau opérationnel.";
+                        }
+                        
+                        $notif->setMessage($msg);
+                        $notif->setTitre("Mise à jour Maintenance : " . $materiel->getNom());
+                        
                         $em->persist($notif);
                     }
                 }

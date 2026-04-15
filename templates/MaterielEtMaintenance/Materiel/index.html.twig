@@ -143,6 +143,18 @@
   }
   .btn-add { background: #4a7c3f; color: #fff; border-radius: 10px; padding: 0.6rem 1.4rem; font-weight: 600; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
   .btn-add:hover { background: #3a6030; color: #fff; }
+  .btn-add:hover { background: #3a6030; color: #fff; }
+
+  .badge-statut {
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .bg-statut-en_service { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+  .bg-statut-en_maintenance { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+  .bg-statut-reforme { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
 </style>
 {% endblock %}
 
@@ -239,6 +251,10 @@
          <span class="mat-badge bg-{{ etatClass[m.etat] ?? 'secondary' }} text-white" style="position: absolute; top: 15px; right: 15px;">
            {{ m.etat }}
          </span>
+
+         <span class="badge badge-statut bg-statut-{{ m.statut }}" style="position: absolute; top: 15px; left: 15px;">
+           {{ m.statut|replace({'_': ' '}) }}
+         </span>
       </div>
       
       <div class="mat-card-body">
@@ -265,6 +281,16 @@
                 {% else %}
                    <span class="text-muted ms-1">Non planifiée</span>
                 {% endif %}
+             </li>
+             <li class="mt-2">
+                 <div class="d-flex justify-content-between small text-muted mb-1">
+                     <span>Progression heures</span>
+                     <span>{{ m.heuresUtilisation }}/{{ m.seuilMaintenanceHeures }}h</span>
+                 </div>
+                 {% set progress = (m.heuresUtilisation / m.seuilMaintenanceHeures * 100)|round %}
+                 <div class="progress" style="height: 5px;">
+                     <div class="progress-bar bg-{{ progress >= 90 ? 'danger' : (progress >= 75 ? 'warning' : 'success') }}" style="width: {{ progress > 100 ? 100 : progress }}%"></div>
+                 </div>
              </li>
          </ul>
          

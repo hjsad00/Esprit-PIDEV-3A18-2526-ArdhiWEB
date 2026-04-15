@@ -25,7 +25,8 @@
   <!-- Main CSS File -->
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
   
-  {% block stylesheets %}{% endblock %}
+  
+
 
   <style>
     /* Correction Ultime Header - Priorité Maximale */
@@ -75,6 +76,7 @@
       background: #f8f9fa !important;
     }
   </style>
+  {% block stylesheets %}{% endblock %}
 </head>
 
 <body class="{% block body_class %}index-page{% endblock %} premium-header-active">
@@ -115,7 +117,7 @@
             </div></a>
             <ul>
               <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              <li><a href="{{ path('app_reclamation_index') }}"><i class="bi bi-megaphone me-1"></i> Mes Réclamations</a></li>
+              <li><a href="{{ path('app_reclamation_index') }}">Mes Réclamations</a></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
             </ul>
           </li>

@@ -47,6 +47,7 @@
     "symfony/ux-turbo": "^2.34",
     "symfony/validator": "6.4.*",
     "symfony/web-link": "6.4.*",
+    "symfony/workflow": "6.4.*",
     "symfony/yaml": "6.4.*",
     "symfonycasts/reset-password-bundle": "^1.25",
     "tecnickcom/tcpdf": "^6.11",

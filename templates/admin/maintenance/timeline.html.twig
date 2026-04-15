@@ -4,6 +4,61 @@
 {% block page_title %}Timeline des Maintenances{% endblock %}
 
 {% block body %}
+{# --- SECTION URGENCES --- #}
+{% set urgent_maintenances = maintenances|filter(m => m.typeMaintenance == 'urgente' and m.statutMaintenance in ['en_attente', 'planifiee']) %}
+{% if urgent_maintenances|length > 0 %}
+<div class="card shadow-sm border-0 mb-4 border-start border-4 border-danger">
+    <div class="card-header bg-danger text-white py-3">
+        <h5 class="mb-0 fw-bold">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+            ⚠️ MAINTENANCES EN URGENTE (Signalements récents)
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="list-group list-group-flush">
+            {% for m in urgent_maintenances %}
+            {% set owner = userMap[m.materiel.userId] ?? null %}
+            <div class="list-group-item px-0 py-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold fs-5 text-danger">{{ m.materiel.nom }} ({{ m.materiel.type }})</div>
+                        <div class="text-muted small">
+                            <i class="bi bi-person-fill"></i> Agriculteur : <strong>{{ owner.prenom ?? 'Inconnu' }} {{ owner.nom ?? '' }}</strong> | 
+                            <i class="bi bi-calendar"></i> Signalé le : {{ m.dateMaintenance|date('d/m/Y H:i') }}
+                        </div>
+                        <div class="mt-2 p-2 bg-light rounded border-start border-3 border-danger italic" style="font-size: 0.9rem;">
+                            <i class="bi bi-chat-left-text me-2"></i><strong>Description de la panne :</strong> {{ m.description }}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="d-flex flex-column gap-2">
+                            <form method="post" action="{{ path('admin_maintenance_status_update', {id: m.idMaintenance}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('update_status_' ~ m.idMaintenance) }}">
+                                <input type="hidden" name="statut_maintenance" value="en_cours">
+                                <input type="hidden" name="reponse_type" value="urgent_apportez">
+                                <button type="submit" class="btn btn-sm btn-dark w-100 shadow-sm fw-bold">
+                                    <i class="bi bi-truck me-1"></i> Urgent : Apportez le matériel
+                                </button>
+                            </form>
+                            
+                            <form method="post" action="{{ path('admin_maintenance_status_update', {id: m.idMaintenance}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('update_status_' ~ m.idMaintenance) }}">
+                                <input type="hidden" name="statut_maintenance" value="en_cours">
+                                <input type="hidden" name="reponse_type" value="non_urgent_planifier">
+                                <button type="submit" class="btn btn-sm btn-light border w-100 shadow-sm fw-bold">
+                                    <i class="bi bi-calendar-plus me-1"></i> Non-urgent : Planifiez
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold" style="color: #2b5876;">

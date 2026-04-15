@@ -51,6 +51,18 @@ class MaterielType extends AbstractType
                 'widget' => 'single_text',
                 'required' => false,
             ])
+            ->add('heuresUtilisation', IntegerType::class, [
+                'label' => 'Heures d\'utilisation actuelles',
+                'required' => false,
+                'attr' => ['min' => 0]
+            ])
+            ->add('seuilMaintenanceHeures', IntegerType::class, [
+                'label' => 'Seuil de maintenance souhaité (heures)',
+                'help' => 'La machine passera en maintenance une fois ce seuil atteint, mais vous devez planifier une maintenance une fois le seuil atteint.',
+                'required' => false,
+                'empty_data' => '500',
+                'attr' => ['min' => 1]
+            ])
 
             ->add('image', FileType::class, [
                 'label' => 'Image du matériel (JPG, PNG)',

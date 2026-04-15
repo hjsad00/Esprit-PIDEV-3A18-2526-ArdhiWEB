@@ -4,6 +4,17 @@
 
 {% block stylesheets %}
 <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<style>
+    /* Force solid header even at top for this page */
+    body.premium-header-active #header.header {
+        background: rgba(26, 45, 27, 0.95) !important;
+        backdrop-filter: blur(25px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 4px 40px rgba(0,0,0,0.4) !important;
+    }
+</style>
 {% endblock %}
 
 {% block body %}

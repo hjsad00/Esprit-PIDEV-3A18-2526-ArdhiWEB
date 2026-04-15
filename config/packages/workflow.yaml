@@ -1,0 +1,26 @@
+framework:
+    workflows:
+        materiel_lifecycle:
+            type: 'state_machine'
+            audit_trail:
+                enabled: true
+            marking_store:
+                type: 'method'
+                property: 'statut'
+            supports:
+                - App\Entity\MaterielEtMaintenance\Materiel
+            initial_marking: en_service
+            places:
+                - en_service
+                - en_maintenance
+                - reforme
+            transitions:
+                mettre_en_maintenance:
+                    from: en_service
+                    to:   en_maintenance
+                confirmer_maintenance:
+                    from: en_maintenance
+                    to:   en_service
+                reformer:
+                    from: en_service
+                    to:   reforme
