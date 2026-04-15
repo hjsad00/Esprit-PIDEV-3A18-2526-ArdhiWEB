@@ -20,4 +20,19 @@ class PreventionPlanRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, PreventionPlan::class);
     }
+
+    /**
+     * @return PreventionPlan[]
+     */
+    public function findByUser(int $userId): array
+    {
+        return $this->createQueryBuilder('pp')
+            ->join('pp.report', 'r')
+            ->join('r.scan', 's')
+            ->where('s.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('pp.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

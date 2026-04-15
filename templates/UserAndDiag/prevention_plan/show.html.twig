@@ -1,0 +1,246 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Prévention: {{ plan.title }}{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/prevention-show.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container py-5">
+    <div class="glass-panel">
+        
+        <div class="header-bar">
+            <div>
+                <a href="{{ path('app_user_and_diag_prevention_plan_list') }}" class="text-white text-decoration-none fs-4 me-3 opacity-75 hover-opacity-100">← Retour</a>
+                <div class="d-inline-block align-middle">
+                    <h3 class="m-0 fw-bold">{{ plan.title }}</h3>
+                    <small class="text-white-50">{{ plan.problemSummary ?? '' }} | Débuté le: {{ plan.startDate ? plan.startDate|date('d/m/Y') : plan.createdAt|date('d/m/Y') }}</small>
+                </div>
+            </div>
+            <div>
+                {% if plan.status == 'ACTIVE' %}
+                    <span class="badge bg-success fs-6 px-3 py-2">Plan Actif</span>
+                {% elseif plan.status == 'COMPLETED' %}
+                    <span class="badge bg-success fs-6 px-3 py-2" style="background-color: #2ecc71 !important;">Plan Terminé</span>
+                {% else %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">Abandonné</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <h5 class="mb-3 fw-bold">Mon Exploitation (Visualisation)</h5>
+                
+                <div class="image-wrapper mb-4">
+                    <img src="{{ report.scan.photoCrops ?? report.scan.photoOverview ?? '/assets/img/placeholder-plant.png' }}" alt="Mon Exploitation">
+                </div>
+
+                {% if plan.impactLevel or plan.estimatedCost or plan.expectedOutcome or plan.timelineDays %}
+                    <div class="info-panel mb-4">
+                        {% if plan.impactLevel %}
+                            <div class="info-item">
+                                <span class="info-label">Niveau d'impact</span>
+                                <span class="info-value">
+                                    {% if plan.impactLevel == 'HIGH' %}🔴 Élevé
+                                    {% elseif plan.impactLevel == 'MEDIUM' %}🟠 Moyen
+                                    {% else %}🟢 Faible{% endif %}
+                                </span>
+                            </div>
+                        {% endif %}
+                        {% if plan.timelineDays %}
+                            <div class="info-item">
+                                <span class="info-label">Durée estimée</span>
+                                <span class="info-value">{{ plan.timelineDays }} jours</span>
+                            </div>
+                        {% endif %}
+                        {% if plan.estimatedCost %}
+                            <div class="info-item">
+                                <span class="info-label">Coût estimé</span>
+                                <span class="info-value">{{ plan.estimatedCost|number_format(2, ',', ' ') }} DT</span>
+                            </div>
+                        {% endif %}
+                        {% if plan.expectedOutcome %}
+                            <div class="info-item">
+                                <span class="info-label">Résultat attendu</span>
+                                <span class="info-value">{{ plan.expectedOutcome }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if plan.status == 'ACTIVE' %}
+                    <div class="d-flex flex-column gap-2">
+                        
+                        <form action="{{ path('app_user_and_diag_prevention_plan_abandon', {id: plan.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir abandonner ce plan ? Cette action est irréversible.');">
+                            <button type="submit" class="action-btn" style="background: rgba(231, 76, 60, 0.85); width: 100%;">
+                                <i class="bi bi-x-circle"></i> Abandonner le plan
+                            </button>
+                        </form>
+                        <button class="action-btn" style="background: #25D366; width: 100%;" onclick="triggerWhatsApp({{ plan.id }}, this)">
+                            <i class="bi bi-whatsapp"></i> Envoyer un Rappel WhatsApp
+                        </button>    
+                        <button type="button" class="action-btn btn-expert" style="background: rgba(41, 128, 185, 0.85);" onclick="document.getElementById('expertInput').click()">
+                            <i class="bi bi-person-badge"></i> Demander à l'Agronome    
+                        </button>
+                        <input type="file" id="expertInput" style="display:none" accept="image/*" onchange="askExpertAjax(this)">
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-7">
+                <h5 class="mb-4 fw-bold">Calendrier des Interventions</h5>
+                
+                {% for task in tasks %}
+                    {% set isCompleted = task.status == 'COMPLETED' %}
+                    
+                    <div class="task-row {{ isCompleted ? 'completed' : '' }}" id="task-row-{{ task.id }}">
+                        
+                        <div class="task-day">J-{{ task.dayOffset }}</div>
+                        
+                        <div class="task-desc">{{ task.taskDescription }}</div>
+                        
+                        <div class="d-flex align-items-center gap-3 ms-auto">
+                            <span class="badge-status {{ isCompleted ? 'status-completed' : 'status-pending' }}" id="badge-{{ task.id }}">
+                                {{ isCompleted ? 'ACCOMPLI' : 'EN ATTENTE' }}
+                            </span>
+                            
+                            {% if plan.status == 'ACTIVE' %}
+                                <div class="form-check m-0">
+                                    <input type="checkbox" class="form-check-input" style="width: 22px; height: 22px; cursor: pointer;" 
+                                           id="check-{{ task.id }}" 
+                                           {{ isCompleted ? 'checked disabled' : '' }}
+                                           onchange="completeTaskAjax({{ task.id }}, this)">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary bg-transparent border-light text-white text-center">
+                        Aucune tâche générée pour ce plan de prévention.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        </div>
+</div>
+
+{% endblock %}
+
+
+{% block javascripts %}
+<script>
+    // Task Completion AJAX Logic
+    function completeTaskAjax(taskId, checkboxElement) {
+        if (!checkboxElement.checked) return;
+
+        checkboxElement.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_prevention_task_complete', {'id': 'TASK_ID'}) }}`.replace('TASK_ID', taskId), {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById(`task-row-${taskId}`);
+                const badge = document.getElementById(`badge-${taskId}`);
+                
+                row.classList.add('completed');
+                badge.className = 'badge-status status-completed';
+                badge.innerText = 'ACCOMPLI';
+
+                if (data.plan_completed) {
+                    setTimeout(() => {
+                        alert("🎉 Félicitations ! Vous avez accompli toutes les tâches de ce plan de prévention !");
+                        window.location.reload();
+                    }, 300);
+                }
+                
+            } else {
+                checkboxElement.checked = false;
+                checkboxElement.disabled = false;
+                alert(data.error || "Une erreur est survenue.");
+            }
+        })
+        .catch(err => {
+            checkboxElement.checked = false;
+            checkboxElement.disabled = false;
+            alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+
+    // WhatsApp Reminder Trigger
+    function triggerWhatsApp(planId, buttonElement) {
+        buttonElement.disabled = true;
+        const originalHtml = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+
+        fetch(`{{ path('app_user_and_diag_prevention_plan_whatsapp', {'id': 'PLAN_ID'}) }}`.replace('PLAN_ID', planId), {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            if (data.success) {
+                alert("✅ " + data.message);
+            } else {
+                alert("❌ Erreur : " + data.error);
+            }
+        })
+        .catch(err => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+
+    // Expert Request AJAX Logic
+    function askExpertAjax(inputElement) {
+        if (!inputElement.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', inputElement.files[0]);
+
+        const btn = document.querySelector('.btn-expert');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi en cours...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_prevention_plan_ask_expert', {id: plan.id}) }}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            inputElement.value = "";
+
+            if (data.error) {
+                alert("❌ " + data.error);
+            } else {
+                alert("✅ " + data.message);
+                window.location.reload(); 
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert("Erreur réseau lors de la communication avec le serveur.");
+        });
+    }
+</script>
+{% endblock %}
