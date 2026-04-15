@@ -63,6 +63,13 @@
 
 {% block javascripts %}
 <script>
+    // Force reload when navigating via back button (bfcache)
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+
     // Animate progress bars on load
     window.addEventListener('load', () => {
         const bars = document.querySelectorAll('.progress-bar');
