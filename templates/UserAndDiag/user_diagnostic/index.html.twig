@@ -12,6 +12,12 @@
 <div class="dashboard-background"></div>
 
 <div class="container diagnostic-container">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+            <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Diagnostic IA</li>
+        </ol>
+    </nav>
     <div class="header-bar">
         <div class="badge-premium" id="badgePremium">
             {% if limit == -1 %}

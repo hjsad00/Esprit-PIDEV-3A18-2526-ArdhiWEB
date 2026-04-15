@@ -9,19 +9,22 @@
 {% block body %}
 <div class="dashboard-background"></div>
 
-<div class="container py-5">
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
     <div class="glass-panel">
         
-        <div class="header-bar pb-3">
+        <div class="mb-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
                     <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_treatment_plan_list') }}" class="text-white-50 text-decoration-none">Plans de Traitement</a></li>
                     <li class="breadcrumb-item active text-white" aria-current="page">Détails du Plan</li>
                 </ol>
             </nav>
+        </div>
+        
+        <div class="header-bar pb-3">
             <div class="mt-2">
                 <div class="d-inline-block align-middle">
-                    <h3 class="m-0 fw-bold">Protocole: {{ diagnostic.resultatIa|split('-')[0] }}</h3>
+                    <h3 class="m-0 fw-bold text-white">Protocole: {{ diagnostic.resultatIa|split('-')[0] }}</h3>
                     <small class="text-white-50">Diagnostic: {{ diagnostic.resultatIa|split('-')[1]|default('') }} | Débuté le: {{ plan.startDate|date('d/m/Y') }}</small>
                 </div>
             </div>
@@ -38,7 +41,7 @@
 
         <div class="row g-5">
             <div class="col-lg-5">
-                <h5 class="mb-3 fw-bold">Ma Plante (Visualisation)</h5>
+                <h5 class="mb-3 fw-bold text-white">Ma Plante (Visualisation)</h5>
                 
                 <div class="image-wrapper mb-4" id="plantImageWrapper">
                     <img id="mainPlantImage" src="{{ diagnostic.imageScannee }}" alt="Ma Plante">
@@ -72,7 +75,7 @@
             </div>
 
             <div class="col-lg-7">
-                <h5 class="mb-4 fw-bold">Calendrier des Interventions</h5>
+                <h5 class="mb-4 fw-bold text-white">Calendrier des Interventions</h5>
                 
                 {% for item in tasksWithMarkers %}
                     {% set task = item.entity %}

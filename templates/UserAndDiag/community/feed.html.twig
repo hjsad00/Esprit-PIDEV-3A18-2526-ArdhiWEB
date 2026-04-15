@@ -10,8 +10,16 @@
 
 {% block body %}
 <section class="community-hero">
+    <div style="max-width: 820px; margin: 0 auto; padding: 0 20px;">
+        <nav aria-label="breadcrumb" class="mb-4 text-start">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Communauté</li>
+            </ol>
+        </nav>
+    </div>
     <div class="community-header">
-        <h1>👥 Communauté</h1>
+        <h1 class="mb-3">👥 Communauté</h1>
         <div style="display:flex;align-items:center;gap:12px;">
             <span id="resultCount" style="color:rgba(255,255,255,0.5);font-size:0.85rem;">{{ feedData|length }} post(s)</span>
             <div class="search-box">
