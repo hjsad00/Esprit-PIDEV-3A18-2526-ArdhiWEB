@@ -13,13 +13,25 @@
     <div class="glass-panel">
         <div class="header-actions">
             <div>
-                <a href="{{ path('app_client_dashboard') }}" class="btn btn-outline-light rounded-pill px-4 mb-2">← Retour</a>
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                        <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Historique des Diagnostics</li>
+                    </ol>
+                </nav>
                 <h1 class="text-white m-0">Historique des Diagnostics</h1>
                 <p class="text-white-50 m-0">Retrouvez vos analyses passées et traitements recommandés.</p>
             </div>
             
             <div class="d-flex align-items-center gap-3">
                 <span id="resultCount" class="text-white-50 small">{{ diagnostics|length }} diagnostic(s)</span>
+                
+                <select id="sortSelect" class="form-select bg-transparent text-white border-light" style="width: auto;" onchange="sortCards()">
+                    <option value="date-desc" class="text-dark">Plus récent</option>
+                    <option value="date-asc" class="text-dark">Plus ancien</option>
+                    <option value="score-desc" class="text-dark">Fiabilité (Haute > Basse)</option>
+                </select>
+
                 <div class="search-box" style="display:flex;align-items:center;">
                     <i class="bi bi-search text-white-50"></i>
                     <input type="text" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." oninput="filterCards()">
@@ -31,6 +43,8 @@
             {% for diagnostic in diagnostics %}
                 <div class="history-card" 
                      data-search="{{ diagnostic.resultatIa|lower }} {{ diagnostic.locationLabel|lower }}"
+                     data-date="{{ diagnostic.dateScan ? diagnostic.dateScan|date('U') : 0 }}"
+                     data-score="{{ diagnostic.confiance|default(0) }}"
                      onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
                     <img src="{{ diagnostic.imageScannee }}" alt="Thumb" class="diag-thumb">
                     <div class="diag-info">
@@ -121,6 +135,26 @@
         });
 
         document.getElementById('resultCount').innerText = visibleCount + ' diagnostic(s)';
+    }
+
+    // Instant Sorting
+    function sortCards() {
+        const sortValue = document.getElementById('sortSelect').value;
+        const container = document.querySelector('.history-list');
+        const cards = Array.from(container.querySelectorAll('.history-card'));
+        
+        cards.sort((a, b) => {
+            if (sortValue === 'date-desc') {
+                return b.dataset.date - a.dataset.date;
+            } else if (sortValue === 'date-asc') {
+                return a.dataset.date - b.dataset.date;
+            } else if (sortValue === 'score-desc') {
+                return b.dataset.score - a.dataset.score;
+            }
+        });
+
+        // Re-append to container in sorted order
+        cards.forEach(card => container.appendChild(card));
     }
 
 </script>

@@ -11,8 +11,13 @@
 
 <div class="container py-5">
     
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ path('app_health_scan_history') }}" class="btn btn-outline-light rounded-circle me-3">←</a>
+    <div class="mb-4">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_health_scan_history') }}" class="text-white-50 text-decoration-none">Historique des Scans</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Rapport de Santé</li>
+            </ol>
+        </nav>
         <h2 class="text-white fw-bold mb-0">📊 Rapport de Santé</h2>
     </div>
 

@@ -11,7 +11,12 @@
 {% block body %}
 <section class="create-hero">
     <div class="create-card">
-        <a href="{{ path('app_user_and_diag_community') }}" class="btn-back">← Retour à la communauté</a>
+        <nav aria-label="breadcrumb" class="mb-4 text-start">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_community') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Communauté</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Poser une question</li>
+            </ol>
+        </nav>
         <h2>Poser une question</h2>
         <p class="subtitle">Partagez votre problème avec la communauté Ardhi.</p>
 

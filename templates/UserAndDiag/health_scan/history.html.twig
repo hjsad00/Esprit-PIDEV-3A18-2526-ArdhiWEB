@@ -12,13 +12,25 @@
 <div class="container py-5">
     
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div class="d-flex align-items-center">
-            <a href="{{ path('app_user_and_diag_user_diagnostic') }}" class="btn btn-outline-light rounded-circle me-3">←</a>
+        <div>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_user_diagnostic') }}" class="text-white-50 text-decoration-none">Diagnostic IA</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Historique des Scans</li>
+                </ol>
+            </nav>
             <h2 class="text-white fw-bold mb-0">Historique des Scans</h2>
         </div>
         
         <div class="d-flex align-items-center gap-3">
             <span id="resultCount" class="text-white-50 small">{{ scans|length }} scan(s) trouvé(s)</span>
+            
+            <select id="sortSelect" class="form-select bg-transparent text-white border-light" style="width: auto;" onchange="sortScans()">
+                <option value="date-desc" class="text-dark">Plus récent</option>
+                <option value="date-asc" class="text-dark">Plus ancien</option>
+                <option value="score-desc" class="text-dark">Score (Haut > Bas)</option>
+            </select>
+
             <div class="input-group" style="width: 300px;">
                 <span class="input-group-text bg-transparent border-light text-white"><i class="bi bi-search"></i></span>
                 <input type="text" id="searchInput" class="form-control bg-transparent border-light text-white" placeholder="Rechercher (culture, analyse)...">
@@ -51,8 +63,11 @@
                     </thead>
                     <tbody id="historyTableBody">
                         {% for scan in scans %}
-                            {% set report = reportsByScan[scan.id] ?? null %} <tr class="scan-row" style="cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
+                            {% set report = reportsByScan[scan.id] ?? null %} 
+                            <tr class="scan-row" style="cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
                                 data-search="{{ scan.cropType|lower }} {{ report ? report.llavaAnalysis|lower : '' }}"
+                                data-date="{{ scan.scanDate ? scan.scanDate|date('U') : 0 }}"
+                                data-score="{{ report ? report.healthScore : 0 }}"
                                 onclick="window.location.href='{{ report ? path('app_health_scan_report', {id: report.id}) : '#' }}'">
                                 
                                 <td class="py-3">{{ scan.scanDate|date('d/m/Y H:i') }}</td>
@@ -121,6 +136,26 @@
 
         // Update the counter text
         document.getElementById('resultCount').innerText = visibleCount + ' scan(s) trouvé(s)';
+    }
+
+    // Instant Sorting
+    function sortScans() {
+        const sortValue = document.getElementById('sortSelect').value;
+        const tbody = document.getElementById('historyTableBody');
+        const rows = Array.from(tbody.querySelectorAll('.scan-row'));
+        
+        rows.sort((a, b) => {
+            if (sortValue === 'date-desc') {
+                return b.dataset.date - a.dataset.date;
+            } else if (sortValue === 'date-asc') {
+                return a.dataset.date - b.dataset.date;
+            } else if (sortValue === 'score-desc') {
+                return b.dataset.score - a.dataset.score;
+            }
+        });
+
+        // Re-append to container in sorted order
+        rows.forEach(row => tbody.appendChild(row));
     }
 </script>
 {% endblock %}

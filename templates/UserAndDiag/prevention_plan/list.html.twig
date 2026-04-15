@@ -11,8 +11,12 @@
 
 <div class="container-list">
     <div class="header-section">
-        <div>
-            <a href="{{ path('app_client_dashboard') }}" class="btn btn-outline-light rounded-pill px-4 mb-3">← Dashboard</a>
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Plans de Prévention</li>
+                </ol>
+            </nav>
             <h1 class="text-white m-0">Plans de Prévention</h1>
             <p class="text-white-50 m-0">Suivez l'évolution de vos plans de prévention actifs.</p>
         </div>
@@ -63,13 +67,6 @@
 
 {% block javascripts %}
 <script>
-    // Force reload when navigating via back button (bfcache)
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-            window.location.reload();
-        }
-    });
-
     // Animate progress bars on load
     window.addEventListener('load', () => {
         const bars = document.querySelectorAll('.progress-bar');
