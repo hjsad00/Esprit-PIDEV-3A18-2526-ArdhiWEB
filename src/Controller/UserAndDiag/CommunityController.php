@@ -363,4 +363,42 @@ class CommunityController extends AbstractController
 
         return $this->json(['success' => true, 'message' => 'Publication signalée. Nos modérateurs vont examiner le contenu.']);
     }
+
+    // ────────────────────── REPORT COMMENT ───────────────────────
+
+    #[Route('/comment/{id}/report', name: 'app_user_and_diag_community_comment_report', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function reportComment(
+        CommunityComment $comment,
+        Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($comment->getUser()->getId() === $user->getId()) {
+            return $this->json(['error' => 'Vous ne pouvez pas signaler votre propre commentaire.'], 400);
+        }
+
+        // Check if report already exists for this comment by this user
+        $existing = $em->getRepository(\App\Entity\UserAndDiag\CommunityReport::class)->findOneBy([
+            'reporter' => $user,
+            'comment' => $comment
+        ]);
+
+        if ($existing) {
+            return $this->json(['error' => 'Vous avez déjà signalé ce commentaire.'], 400);
+        }
+
+        $reason = trim($request->request->get('reason', 'Commentaire inapproprié'));
+
+        $report = new \App\Entity\UserAndDiag\CommunityReport();
+        $report->setReporter($user);
+        $report->setComment($comment);
+        $report->setReason($reason);
+
+        $em->persist($report);
+        $em->flush();
+
+        return $this->json(['success' => true, 'message' => 'Commentaire signalé avec succès.']);
+    }
 }

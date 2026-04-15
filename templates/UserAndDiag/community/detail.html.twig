@@ -91,6 +91,9 @@
                         {% if post.user.id == currentUserId and not post.resolved and not comment.solution %}
                             <button class="btn-solve" onclick="markSolution({{ post.id }}, {{ comment.id }})">✓ Marquer comme solution</button>
                         {% endif %}
+                        {% if app.user and comment.user.id != app.user.id %}
+                            <button style="color:#fbc02d;font-size:11px;" onclick="reportComment({{ comment.id }})">🚩 Signaler</button>
+                        {% endif %}
                         {% if is_granted('ROLE_MODERATOR') %}
                             <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Supprimer</button>
                         {% endif %}
@@ -275,6 +278,23 @@
             if (d.success) location.reload();
             else alert(d.error || 'Erreur');
         });
+    }
+
+    // ── Report Comment ──
+    function reportComment(commentId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/comment/${commentId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
     }
 </script>
 {% endblock %}

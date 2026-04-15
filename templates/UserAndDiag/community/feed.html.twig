@@ -72,7 +72,9 @@
                     <span>💬 {{ item.commentCount }}</span>
                     <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
                     <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
-                    <span class="report-btn" onclick="event.preventDefault();reportPost({{ post.id }})" title="Signaler">🚩</span>
+                    {% if app.user and post.user.id != app.user.id %}
+                        <span class="report-btn" onclick="event.preventDefault();reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
+                    {% endif %}
                 </div>
             </a>
         {% else %}
