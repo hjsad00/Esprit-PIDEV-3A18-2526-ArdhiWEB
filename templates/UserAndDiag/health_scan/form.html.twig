@@ -9,7 +9,7 @@
 {% block body %}
 <div class="dashboard-background"></div>
 
-<div class="container py-5">
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
     {% for label, messages in app.flashes %}
         {% for message in messages %}
             <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert" style="background: rgba(40,0,0,0.8); color: white;">
@@ -21,14 +21,17 @@
 
     <div class="glass-panel">
         
-        <div class="header-bar mb-4">
+        <div class="mb-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
                     <li class="breadcrumb-item"><a href="{{ path('app_health_scan_history') }}" class="text-white-50 text-decoration-none">Historique des Scans</a></li>
                     <li class="breadcrumb-item active text-white" aria-current="page">Nouveau Scan</li>
                 </ol>
             </nav>
-            <h3 class="m-0 mt-3 fw-bold align-middle">🌿 Scan Santé du Champ</h3>
+        </div>
+        
+        <div class="header-bar mb-4">
+            <h3 class="m-0 fw-bold align-middle">🌿 Scan Santé du Champ</h3>
         </div>
 
         <form action="{{ path('app_health_scan_new') }}" method="POST" enctype="multipart/form-data">

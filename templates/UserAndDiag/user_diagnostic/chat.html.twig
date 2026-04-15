@@ -10,13 +10,15 @@
 <div class="dashboard-background"></div>
 
 <div class="chat-container">
-    <div class="header-bar mb-3">
+    <div class="mb-3">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
                 <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_user_diagnostic') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Diagnostic IA</a></li>
                 <li class="breadcrumb-item active text-white" aria-current="page">Assistant IA</li>
             </ol>
         </nav>
+    </div>
+    <div class="header-bar mb-3">
         <div class="mt-2">
             <h1 class="header-title text-white m-0" style="font-size: 20px; font-weight: 700;">Ardhi Assistant IA</h1>
             <small class="text-white-50">Sujet : {{ diagnostic.resultatIa }}</small>

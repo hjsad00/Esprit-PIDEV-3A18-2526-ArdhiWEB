@@ -10,13 +10,17 @@
 <div class="dashboard-background"></div>
 
 <div class="container-list">
-    <div class="header-section">
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
-                    <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item active text-white" aria-current="page">Plans de Prévention</li>
-                </ol>
-            </nav>
+    <div class="mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Plans de Prévention</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <div class="header-section mb-4">
+        <div>
             <h1 class="text-white m-0">Plans de Prévention</h1>
             <p class="text-white-50 m-0">Suivez l'évolution de vos plans de prévention actifs.</p>
         </div>
