@@ -28,7 +28,15 @@
                     {{ post.user.prenom|default('U')|first|upper }}
                 </div>
                 <div class="post-meta">
-                    <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
+                    <div class="author">
+                        {{ post.user.prenom }} {{ post.user.nom }}
+                        {% if post.user.role == 'AGRONOME' %}
+                            <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
+                        {% endif %}
+                        {% if post.user.role == 'ADMIN' or post.user.moderator %}
+                            <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
+                        {% endif %}
+                    </div>
                     <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
                 </div>
                 {% if post.resolved %}
@@ -37,7 +45,7 @@
             </div>
 
             <div class="post-title">{{ post.title }}</div>
-            <div class="post-body">{{ post.description }}</div>
+            <div class="post-body">{{ post.description|emojify|social_embed }}</div>
 
             {% if post.imageUrl %}
                 <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy">
@@ -75,13 +83,16 @@
                         {% if isOp %}<span class="badge-op">OP</span>{% endif %}
                         {% if comment.solution %}<span class="badge-solution">✓ SOLUTION</span>{% endif %}
                     </div>
-                    <div class="comment-body">{{ comment.content }}</div>
+                    <div class="comment-body">{{ comment.content|emojify }}</div>
                     <div class="comment-actions">
                         <button class="{{ vote == 'LIKE' ? 'active-like' : '' }}" onclick="voteComment({{ comment.id }}, 'LIKE', this)">👍 <span>{{ comment.likes }}</span></button>
                         <button class="{{ vote == 'DISLIKE' ? 'active-dislike' : '' }}" onclick="voteComment({{ comment.id }}, 'DISLIKE', this)">👎 <span>{{ comment.dislikes }}</span></button>
                         <button onclick="replyTo({{ comment.id }}, '{{ comment.user.prenom }}')">Répondre</button>
                         {% if post.user.id == currentUserId and not post.resolved and not comment.solution %}
                             <button class="btn-solve" onclick="markSolution({{ post.id }}, {{ comment.id }})">✓ Marquer comme solution</button>
+                        {% endif %}
+                        {% if is_granted('ROLE_MODERATOR') %}
+                            <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Supprimer</button>
                         {% endif %}
                     </div>
                 </div>
@@ -107,8 +118,40 @@
         <button class="cancel-reply" onclick="cancelReply()">✕</button>
     </div>
     <div class="comment-input-inner">
-        <textarea id="txtComment" placeholder="Écrire un commentaire..." rows="1"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;width:100%;">
+            <button type="button" class="emoji-toggle" onclick="toggleEmojiPicker()" title="Emojis" style="background:none;border:none;font-size:20px;cursor:pointer;">😊</button>
+            <textarea id="txtComment" placeholder="Écrire un commentaire... (utilisez :plant: :tomato: :fire: etc.)" rows="1" style="flex:1;"></textarea>
+        </div>
         <button class="btn-send" onclick="sendComment()">Envoyer</button>
+    </div>
+    <div id="emojiPicker" style="display:none;background:rgba(30,30,30,0.95);border-radius:12px;padding:10px;margin-top:8px;flex-wrap:wrap;gap:6px;max-width:400px;">
+        <span class="ep" onclick="insertEmote(':plant:')" title=":plant:">🌱</span>
+        <span class="ep" onclick="insertEmote(':sun:')" title=":sun:">☀️</span>
+        <span class="ep" onclick="insertEmote(':rain:')" title=":rain:">🌧️</span>
+        <span class="ep" onclick="insertEmote(':bug:')" title=":bug:">🐛</span>
+        <span class="ep" onclick="insertEmote(':leaf:')" title=":leaf:">🍃</span>
+        <span class="ep" onclick="insertEmote(':tomato:')" title=":tomato:">🍅</span>
+        <span class="ep" onclick="insertEmote(':corn:')" title=":corn:">🌽</span>
+        <span class="ep" onclick="insertEmote(':tractor:')" title=":tractor:">🚜</span>
+        <span class="ep" onclick="insertEmote(':check:')" title=":check:">✅</span>
+        <span class="ep" onclick="insertEmote(':warning:')" title=":warning:">⚠️</span>
+        <span class="ep" onclick="insertEmote(':fire:')" title=":fire:">🔥</span>
+        <span class="ep" onclick="insertEmote(':heart:')" title=":heart:">❤️</span>
+        <span class="ep" onclick="insertEmote(':thumbsup:')" title=":thumbsup:">👍</span>
+        <span class="ep" onclick="insertEmote(':star:')" title=":star:">⭐</span>
+        <span class="ep" onclick="insertEmote(':idea:')" title=":idea:">💡</span>
+        <span class="ep" onclick="insertEmote(':trophy:')" title=":trophy:">🏆</span>
+        <span class="ep" onclick="insertEmote(':wave:')" title=":wave:">👋</span>
+        <span class="ep" onclick="insertEmote(':clap:')" title=":clap:">👏</span>
+        <span class="ep" onclick="insertEmote(':eyes:')" title=":eyes:">👀</span>
+        <span class="ep" onclick="insertEmote(':pray:')" title=":pray:">🙏</span>
+        <span class="ep" onclick="insertEmote(':muscle:')" title=":muscle:">💪</span>
+        <span class="ep" onclick="insertEmote(':wheat:')" title=":wheat:">🌾</span>
+        <span class="ep" onclick="insertEmote(':olive:')" title=":olive:">🫒</span>
+        <span class="ep" onclick="insertEmote(':droplet:')" title=":droplet:">💧</span>
+        <span class="ep" onclick="insertEmote(':bee:')" title=":bee:">🐝</span>
+        <span class="ep" onclick="insertEmote(':ant:')" title=":ant:">🐜</span>
+        <span class="ep" onclick="insertEmote(':mushroom:')" title=":mushroom:">🍄</span>
     </div>
 </div>
 {% endblock %}
@@ -206,5 +249,32 @@
         this.style.height = '44px';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
+
+    // ── Emoji Picker ──
+    function toggleEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+    }
+    function insertEmote(code) {
+        const ta = document.getElementById('txtComment');
+        ta.value += ' ' + code + ' ';
+        ta.focus();
+    }
+
+    // ── Mod: Delete Comment ──
+    function modDeleteComment(commentId) {
+        const reason = prompt('Raison de la suppression :');
+        if (!reason) return;
+        fetch(`/user-and-diag/moderation/comment/${commentId}/delete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) location.reload();
+            else alert(d.error || 'Erreur');
+        });
+    }
 </script>
 {% endblock %}

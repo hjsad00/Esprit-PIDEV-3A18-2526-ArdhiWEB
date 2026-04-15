@@ -36,7 +36,7 @@ class CommunityController extends AbstractController
         $posts = $keyword
             ? $postRepo->searchByKeyword($keyword)
             : $postRepo->findAllOrderedByDate();
-        
+
         $feedData = [];
         foreach ($posts as $post) {
             $commentCount = $commentRepo->countByPost($post);
@@ -52,6 +52,7 @@ class CommunityController extends AbstractController
         return $this->render('UserAndDiag/community/feed.html.twig', [
             'feedData' => $feedData,
             'keyword' => $keyword,
+            'isModerator' => $this->isGranted('ROLE_MODERATOR'),
         ]);
     }
 
@@ -61,6 +62,19 @@ class CommunityController extends AbstractController
     public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService): Response
     {
         if ($request->isMethod('POST')) {
+            /** @var \App\Entity\UserAndDiag\User $user */
+            $user = $this->getUser();
+
+            // ── Mute/Ban Gate ──
+            if ($user->isBanned()) {
+                $this->addFlash('danger', '⛔ Votre compte a été banni de la communauté.');
+                return $this->redirectToRoute('app_user_and_diag_community');
+            }
+            if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+                $this->addFlash('danger', '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.');
+                return $this->redirectToRoute('app_user_and_diag_community');
+            }
+
             $title = trim($request->request->get('title', ''));
             $description = trim($request->request->get('description', ''));
 
@@ -220,6 +234,15 @@ class CommunityController extends AbstractController
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        // ── Mute/Ban Gate ──
+        if ($user->isBanned()) {
+            return $this->json(['error' => '⛔ Votre compte a été banni de la communauté.'], 403);
+        }
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.'], 403);
+        }
+
         $content = trim($request->request->get('content', ''));
         $parentId = $request->request->get('parent_id');
 
@@ -304,5 +327,40 @@ class CommunityController extends AbstractController
         } else {
             $comment->setDislikes(max(0, $comment->getDislikes() + $delta));
         }
+    }
+
+    // ────────────────────── REPORT POST ───────────────────────
+
+    #[Route('/{id}/report', name: 'app_user_and_diag_community_report', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function reportPost(
+        CommunityPost $post,
+        Request $request,
+        EntityManagerInterface $em,
+        \App\Repository\UserAndDiag\CommunityReportRepository $reportRepo
+    ): JsonResponse {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // Can't report your own post
+        if ($post->getUser()->getId() === $user->getId()) {
+            return $this->json(['error' => 'Vous ne pouvez pas signaler votre propre publication.'], 400);
+        }
+
+        // Duplicate check
+        if ($reportRepo->hasUserReportedPost($user, $post)) {
+            return $this->json(['error' => 'Vous avez déjà signalé cette publication.'], 400);
+        }
+
+        $reason = trim($request->request->get('reason', 'Contenu inapproprié'));
+
+        $report = new \App\Entity\UserAndDiag\CommunityReport();
+        $report->setReporter($user);
+        $report->setPost($post);
+        $report->setReason($reason);
+
+        $em->persist($report);
+        $em->flush();
+
+        return $this->json(['success' => true, 'message' => 'Publication signalée. Nos modérateurs vont examiner le contenu.']);
     }
 }

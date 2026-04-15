@@ -1,0 +1,233 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modération — Communauté Ardhi{% endblock %}
+
+{% block body_class %}community-page{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/community-feed.css') }}" rel="stylesheet">
+<style>
+    .mod-dashboard { max-width: 1000px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 2; }
+    .mod-section { background: rgba(20, 25, 30, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .mod-section h2 { font-size: 1.2rem; margin-bottom: 16px; color: #fff; }
+    .flagged-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 10px; border-left: 3px solid #e53935; flex-wrap: wrap; gap: 10px; }
+    .flagged-item .info { flex: 1; min-width: 200px; }
+    .flagged-item .info .title { color: #fff; font-weight: 600; font-size: 0.95rem; }
+    .flagged-item .info .meta { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 2px; }
+    .flagged-item .count { background: #e53935; color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; font-weight: 700; margin-right: 12px; white-space: nowrap; }
+    .mod-btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+    .mod-btn-danger { background: rgba(229,57,53,0.2); color: #ff6659; }
+    .mod-btn-danger:hover { background: #e53935; color: #fff; }
+    .mod-btn-warn { background: rgba(255,152,0,0.2); color: #ffb74d; }
+    .mod-btn-warn:hover { background: #ff9800; color: #fff; }
+    .mod-btn-success { background: rgba(76,175,80,0.2); color: #81c784; }
+    .mod-btn-success:hover { background: #4caf50; color: #fff; }
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .audit-table th { color: rgba(255,255,255,0.6); font-weight: 600; text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .audit-table td { color: rgba(255,255,255,0.85); padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .audit-table tr:hover td { background: rgba(255,255,255,0.04); }
+    .action-badge { padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; }
+    .action-MUTE { background: rgba(255,152,0,0.25); color: #ffb74d; }
+    .action-BAN { background: rgba(229,57,53,0.25); color: #ff6659; }
+    .action-UNBAN, .action-UNMUTE { background: rgba(76,175,80,0.25); color: #81c784; }
+    .action-DELETE_POST, .action-DELETE_COMMENT { background: rgba(244,67,54,0.25); color: #ef5350; }
+    .action-GRANT_MOD { background: rgba(33,150,243,0.25); color: #64b5f6; }
+    .action-REVOKE_MOD { background: rgba(156,39,176,0.25); color: #ba68c8; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="community-hero">
+    <div class="mod-dashboard">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_community') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Communauté</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Modération</li>
+            </ol>
+        </nav>
+
+        <h1 style="font-size:1.6rem;margin-bottom:24px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);">🛡️ Tableau de Bord Modération</h1>
+
+        {# ─── Flagged Posts ─── #}
+        <div class="mod-section">
+            <h2>🚩 Publications Signalées</h2>
+            {% if flaggedPosts|length > 0 %}
+                {% for item in flaggedPosts %}
+                    <div class="flagged-item" id="flagged-{{ item.post.id }}">
+                        <span class="count">{{ item.reportCount }} signalement(s)</span>
+                        <div class="info">
+                            <div class="title">{{ item.post.title }}</div>
+                            <div class="meta">par {{ item.post.user.prenom }} {{ item.post.user.nom }} — {{ item.post.createdAt|date('d/m/Y H:i') }}</div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <a href="{{ path('app_user_and_diag_community_detail', {id: item.post.id}) }}" class="mod-btn mod-btn-success">👁️ Voir</a>
+                            <button class="mod-btn mod-btn-danger" onclick="modDeletePost({{ item.post.id }})">🗑️ Supprimer</button>
+                            <button class="mod-btn mod-btn-warn" onclick="modMuteUser({{ item.post.user.id }})">🔇 Muter</button>
+                            <button class="mod-btn mod-btn-danger" onclick="modBanUser({{ item.post.user.id }})">⛔ Bannir</button>
+                            <button class="mod-btn mod-btn-success" onclick="resolveReports({{ item.post.id }})">✓ Résoudre</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">✨ Aucun signalement en attente. La communauté est sage !</p>
+            {% endif %}
+        </div>
+
+        {# ─── Audit Log ─── #}
+        <div class="mod-section">
+            <h2>📋 Journal d'Audit</h2>
+            {% if auditLog|length > 0 %}
+                <div style="overflow-x:auto;">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Modérateur</th>
+                                <th>Action</th>
+                                <th>Cible</th>
+                                <th>Raison</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in auditLog %}
+                                <tr>
+                                    <td>{{ entry.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td>{{ entry.moderator.prenom }} {{ entry.moderator.nom }}</td>
+                                    <td><span class="action-badge action-{{ entry.action }}">{{ entry.action }}</span></td>
+                                    <td>{{ entry.targetUser.prenom }} {{ entry.targetUser.nom }}</td>
+                                    <td>{{ entry.reason|default('—') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Aucune action de modération enregistrée.</p>
+            {% endif %}
+        </div>
+
+        {# ─── User Management (Admin Only) ─── #}
+        {% if isAdmin and allUsers|length > 0 %}
+        <div class="mod-section">
+            <h2>👤 Gestion des Utilisateurs</h2>
+            <div style="overflow-x:auto;">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in allUsers %}
+                            <tr id="user-row-{{ u.id }}">
+                                <td>{{ u.prenom }} {{ u.nom }}</td>
+                                <td style="opacity:0.6;">{{ u.email }}</td>
+                                <td>
+                                    <span style="text-transform:capitalize;font-size:0.8rem;">{{ u.role|lower }}</span>
+                                </td>
+                                <td>
+                                    {% if u.banned %}
+                                        <span class="action-badge action-BAN">BANNI</span>
+                                    {% elseif u.mutedUntil and u.mutedUntil > "now"|date('Y-m-d H:i:s') %}
+                                        <span class="action-badge action-MUTE">MUET</span>
+                                    {% else %}
+                                        <span style="color:rgba(255,255,255,0.3);font-size:0.8rem;">Actif</span>
+                                    {% endif %}
+                                    {% if u.moderator %}
+                                        <span class="action-badge action-GRANT_MOD" style="margin-left:4px;">MOD</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="mod-btn {{ u.moderator ? 'mod-btn-danger' : 'mod-btn-success' }}"
+                                            onclick="toggleMod({{ u.id }}, this)">
+                                        {{ u.moderator ? '❌ Retirer Mod' : '🛡️ Promouvoir Mod' }}
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    function modDeletePost(postId) {
+        const reason = prompt('Raison de la suppression :');
+        if (!reason) return;
+        fetch(`/user-and-diag/moderation/post/${postId}/delete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) { alert('✅ Post supprimé.'); location.reload(); }
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        });
+    }
+
+    function modMuteUser(userId) {
+        const duration = prompt('Durée du mute (1h / 1d / 7d / 30d) :', '1d');
+        if (!duration) return;
+        const reason = prompt('Raison :');
+        if (!reason) return;
+        fetch(`/user-and-diag/moderation/user/${userId}/mute`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `duration=${encodeURIComponent(duration)}&reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.success ? '✅ ' + d.message : '⚠️ ' + (d.error || 'Erreur'));
+            if (d.success) location.reload();
+        });
+    }
+
+    function modBanUser(userId) {
+        if (!confirm('⛔ Bannir définitivement cet utilisateur ?')) return;
+        const reason = prompt('Raison du bannissement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/moderation/user/${userId}/ban`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.success ? '✅ ' + d.message : '⚠️ ' + (d.error || 'Erreur'));
+            if (d.success) location.reload();
+        });
+    }
+
+    function resolveReports(postId) {
+        fetch(`/user-and-diag/moderation/post/${postId}/resolve-reports`, { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) { alert('✅ Signalements résolus.'); location.reload(); }
+        });
+    }
+
+    function toggleMod(userId, btn) {
+        fetch(`/user-and-diag/moderation/user/${userId}/toggle-mod`, { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                alert('✅ ' + d.message);
+                location.reload();
+            } else {
+                alert('⚠️ ' + (d.error || 'Erreur'));
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -27,6 +27,9 @@
             </div>
         </div>
         <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+        {% if isModerator|default(false) %}
+            <a href="{{ path('app_user_and_diag_moderation_dashboard') }}" class="btn-new-post" style="background:linear-gradient(135deg,#e53935,#ff7043);margin-left:8px;">🛡️ Modération</a>
+        {% endif %}
     </div>
 
     <div class="feed-container">
@@ -42,7 +45,15 @@
                         {{ post.user.prenom|default('U')|first|upper }}
                     </div>
                     <div class="post-meta">
-                        <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
+                        <div class="author">
+                            {{ post.user.prenom }} {{ post.user.nom }}
+                            {% if post.user.role == 'AGRONOME' %}
+                                <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
+                            {% endif %}
+                            {% if post.user.role == 'ADMIN' or post.user.moderator %}
+                                <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
+                            {% endif %}
+                        </div>
                         <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
                     </div>
                     {% if post.resolved %}
@@ -61,6 +72,7 @@
                     <span>💬 {{ item.commentCount }}</span>
                     <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
                     <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
+                    <span class="report-btn" onclick="event.preventDefault();reportPost({{ post.id }})" title="Signaler">🚩</span>
                 </div>
             </a>
         {% else %}
@@ -91,6 +103,22 @@
         });
 
         document.getElementById('resultCount').innerText = visibleCount + ' post(s)';
+    }
+
+    function reportPost(postId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/${postId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
     }
 </script>
 {% endblock %}

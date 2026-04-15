@@ -95,6 +95,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[Assert\Length(max: 255, maxMessage: 'La localisation ne peut pas dépasser 255 caractères.')]
     private ?string $location = null;
 
+    #[ORM\Column(options: ["default" => false])]
+    private ?bool $is_moderator = false;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $muted_until = null;
+
+    #[ORM\Column(options: ["default" => false])]
+    private ?bool $is_banned = false;
+
     /**
      * @var Collection<int, Parcelle>
      */
@@ -134,6 +143,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
             $roles[] = 'ROLE_' . strtoupper($this->role);
         }
         $roles[] = 'ROLE_USER';
+
+        // Admins are always moderators; non-admins can be promoted
+        if ($this->role === 'ADMIN' || $this->is_moderator) {
+            $roles[] = 'ROLE_MODERATOR';
+        }
+
         return array_unique($roles);
     }
 
@@ -308,6 +323,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     public function setLocation(?string $location): static
     {
         $this->location = $location;
+        return $this;
+    }
+
+    public function isModerator(): ?bool
+    {
+        return $this->is_moderator;
+    }
+
+    public function setIsModerator(bool $is_moderator): static
+    {
+        $this->is_moderator = $is_moderator;
+        return $this;
+    }
+
+    public function getMutedUntil(): ?\DateTimeInterface
+    {
+        return $this->muted_until;
+    }
+
+    public function setMutedUntil(?\DateTimeInterface $muted_until): static
+    {
+        $this->muted_until = $muted_until;
+        return $this;
+    }
+
+    public function isBanned(): ?bool
+    {
+        return $this->is_banned;
+    }
+
+    public function setIsBanned(bool $is_banned): static
+    {
+        $this->is_banned = $is_banned;
         return $this;
     }
 
