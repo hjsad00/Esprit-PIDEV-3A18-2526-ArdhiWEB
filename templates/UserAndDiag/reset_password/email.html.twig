@@ -1,12 +1,13 @@
 <h1>Bonjour !</h1>
 
-<p>Pour réinitialiser votre mot de passe, veuillez cliquer sur le lien suivant :</p>
+<p>Pour réinitialiser votre mot de passe, veuillez utiliser le code de vérification suivant :</p>
 
-<a href="{{ url('app_reset_password', {token: resetToken.token}) }}">{{ url('app_reset_password', {token: resetToken.token}) }}</a>
+<h2 style="text-align: center; font-size: 24px; letter-spacing: 5px; padding: 10px; background-color: #f4f4f4; border-radius: 5px; width: fit-content; margin: 20px auto;">
+    {{ verificationCode }}
+</h2>
 
 <p class="text-muted mb-4">
-            Un email contenant un lien pour réinitialiser votre mot de passe a été envoyé. 
-            Ce lien expirera dans <strong>15 minutes</strong>.
-        </p>
+    Ce code expirera dans <strong>15 minutes</strong>.
+</p>
 
 <p>Cordialement,<br>L'équipe Ardhi</p>

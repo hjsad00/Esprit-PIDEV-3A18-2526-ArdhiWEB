@@ -1,0 +1,10 @@
+ID: 6
+RAW LENGTH: 10
+RAW: {"selector
+DECODE FAILED: Control character error, possibly incorrectly encoded
+---
+ID: 26
+RAW LENGTH: 10
+RAW: {"selector
+DECODE FAILED: Control character error, possibly incorrectly encoded
+---

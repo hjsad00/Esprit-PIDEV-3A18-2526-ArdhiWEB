@@ -262,11 +262,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getResetPasswordCode(): ?string
     {
-        // If the reset link has expired, treat it as non-existent
-        if ($this->reset_password_expires_at !== null && $this->reset_password_expires_at < new \DateTime()) {
-            return null;
-        }
-
         return $this->reset_password_code;
     }
 

@@ -12,6 +12,13 @@
             <h1 class="h3 font-weight-normal" style="color: var(--heading-color);">Email envoyé</h1>
         </div>
 
+        {% if debugUrl1 is defined %}
+        <div class="alert alert-info">
+            <p><strong>URL WITH TOKEN:</strong> {{ debugUrl1 }}</p>
+            <p><strong>URL WITHOUT TOKEN:</strong> {{ debugUrl2 }}</p>
+        </div>
+        {% endif %}
+
         <p class="text-muted mb-4">
             Un email contenant un lien pour réinitialiser votre mot de passe a été envoyé. 
             Ce lien expirera dans <strong>15 minutes</strong>.
