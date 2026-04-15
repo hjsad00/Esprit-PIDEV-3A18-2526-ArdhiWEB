@@ -74,6 +74,16 @@
       color: #116530 !important; /* Vert Ardhi au survol */
       background: #f8f9fa !important;
     }
+
+    /* Override global de lisibilité UserAndDiag (force le blanc sur les interfaces sombres) */
+    .dashboard-background { background-color: rgba(0, 0, 0, 0.45) !important; }
+    
+    .dashboard-background ~ * h1, .dashboard-background ~ * h2, .dashboard-background ~ * h3, 
+    .dashboard-background ~ * h4, .dashboard-background ~ * h5, .dashboard-background ~ * h6,
+    .glass-panel h1, .glass-panel h2, .glass-panel h3, .glass-panel h4, .glass-panel h5, .glass-panel h6,
+    [class*='diagnostic-container'] h1, [class*='diagnostic-container'] h2, [class*='diagnostic-container'] h3, [class*='diagnostic-container'] h4, [class*='diagnostic-container'] h5, [class*='diagnostic-container'] h6 {
+      color: #ffffff !important;
+    }
   </style>
 </head>
 
