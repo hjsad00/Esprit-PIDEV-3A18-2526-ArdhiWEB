@@ -405,6 +405,11 @@
       const data = await res.json();
 
       if (data.success) {
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+
         alert(data.message);
         window.location.href = '{{ path('app_marketplace_catalogue') }}';
       } else {

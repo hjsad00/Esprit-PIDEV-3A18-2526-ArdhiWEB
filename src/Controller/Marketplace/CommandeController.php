@@ -11,6 +11,7 @@ use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
 use App\Service\Marketplace\WishlistNotificationService;
 use App\Service\Marketplace\OrderEmailService;
+use App\Service\Marketplace\StripeCheckoutService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -302,7 +303,8 @@ class CommandeController extends AbstractController
         EntityManagerInterface $em,
         WishlistNotificationService $notificationService,
         OrderEmailService $orderEmailService,
-        NotifMarketRepository $notifMarketRepository
+        NotifMarketRepository $notifMarketRepository,
+        StripeCheckoutService $stripeCheckoutService
     ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -320,10 +322,175 @@ class CommandeController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $modeLivraison = $data['mode_livraison'] ?? 'RECUPERATION';
         $paymentMethod = $data['payment_method'] ?? 'stripe';
-        $fraisParVendeur = ($modeLivraison === 'LIVRAISON') ? 7.0 : 0.0;
         $couponCode = $data['coupon_code'] ?? null;
 
-        // 2.5 Validation Sécurisée du Coupon à l'instant T
+        $prepared = $this->prepareCheckoutData($user, $panier, $modeLivraison, $couponCode, $couponRepo, $em);
+        if (!$prepared['success']) {
+            return $this->json(['success' => false, 'message' => $prepared['message']], 400);
+        }
+
+        if ($paymentMethod === 'points') {
+            if ($user->getPointsFidelite() < $prepared['totalFinalGlobal']) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Points de fidélité insuffisants (Solde : ' . $user->getPointsFidelite() . ' pts).',
+                ], 400);
+            }
+
+            $user->setPointsFidelite($user->getPointsFidelite() - $prepared['totalFinalGlobal']);
+            $result = $this->finalizeCheckout(
+                $user,
+                $panier,
+                $prepared,
+                'points',
+                $em,
+                $notificationService,
+                $orderEmailService,
+                $notifMarketRepository
+            );
+
+            return $this->json([
+                'success' => true,
+                'message' => $result['nbCommandes'] > 1
+                    ? $result['nbCommandes'] . ' commandes créées avec succès !'
+                    : 'Commande créée avec succès !',
+                'nbCommandes' => $result['nbCommandes'],
+            ]);
+        }
+
+        if ($paymentMethod === 'stripe') {
+            $metadata = [
+                'module' => 'marketplace',
+                'user_id' => (string) $user->getId(),
+                'mode_livraison' => $modeLivraison,
+                'coupon_code' => (string) ($prepared['couponCode'] ?? ''),
+            ];
+
+            $checkout = $stripeCheckoutService->createCheckoutSession(
+                $prepared['totalFinalGlobal'],
+                'Commande Ardhi Marketplace',
+                $metadata
+            );
+
+            if (!$checkout['success']) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Erreur Stripe: ' . ($checkout['error'] ?? 'Inconnue'),
+                ], 500);
+            }
+
+            return $this->json([
+                'success' => true,
+                'checkoutUrl' => $checkout['checkoutUrl'],
+                'message' => 'Redirection vers Stripe en cours...',
+            ]);
+        }
+
+        return $this->json(['success' => false, 'message' => 'Méthode de paiement invalide.'], 400);
+    }
+
+    #[Route('/marketplace/payment/success', name: 'app_marketplace_payment_success', methods: ['GET'])]
+    public function paymentSuccess(
+        Request $request,
+        PanierRepository $panierRepo,
+        CouponRepository $couponRepo,
+        EntityManagerInterface $em,
+        WishlistNotificationService $notificationService,
+        OrderEmailService $orderEmailService,
+        NotifMarketRepository $notifMarketRepository,
+        StripeCheckoutService $stripeCheckoutService
+    ): Response {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+        $sessionId = $request->query->get('session_id');
+
+        if (!$sessionId) {
+            $this->addFlash('danger', 'Session Stripe invalide.');
+            return $this->redirectToRoute('app_marketplace_panier');
+        }
+
+        $session = $request->getSession();
+        $processedSessions = $session->get('marketplace_processed_stripe_sessions', []);
+        if (in_array($sessionId, $processedSessions, true)) {
+            $this->addFlash('info', 'Cette session Stripe a déjà été traitée.');
+            return $this->redirectToRoute('app_marketplace_mes_commandes');
+        }
+
+        $sessionData = $stripeCheckoutService->checkSessionStatus($sessionId);
+        if (!$sessionData || ($sessionData['payment_status'] ?? null) !== 'paid') {
+            $this->addFlash('danger', 'Le paiement n\'a pas été validé.');
+            return $this->redirectToRoute('app_marketplace_panier');
+        }
+
+        $metadata = $sessionData['metadata'] ?? [];
+        if ((string) ($metadata['module'] ?? '') !== 'marketplace') {
+            $this->addFlash('danger', 'Session Stripe non autorisée.');
+            return $this->redirectToRoute('app_marketplace_panier');
+        }
+
+        if ((string) ($metadata['user_id'] ?? '') !== (string) $user->getId()) {
+            $this->addFlash('danger', 'Cette session Stripe ne vous appartient pas.');
+            return $this->redirectToRoute('app_marketplace_panier');
+        }
+
+        $panier = $panierRepo->findOneBy(['user' => $user]);
+        if (!$panier || $panier->getPanierProduits()->isEmpty()) {
+            $this->addFlash('warning', 'Votre panier est vide, aucune commande n\'a été créée.');
+            return $this->redirectToRoute('app_marketplace_catalogue');
+        }
+
+        $modeLivraison = ($metadata['mode_livraison'] ?? 'RECUPERATION') === 'LIVRAISON' ? 'LIVRAISON' : 'RECUPERATION';
+        $couponCode = trim((string) ($metadata['coupon_code'] ?? ''));
+        $couponCode = $couponCode !== '' ? $couponCode : null;
+
+        $prepared = $this->prepareCheckoutData($user, $panier, $modeLivraison, $couponCode, $couponRepo, $em);
+        if (!$prepared['success']) {
+            $this->addFlash('danger', $prepared['message']);
+            return $this->redirectToRoute('app_marketplace_panier');
+        }
+
+        $this->finalizeCheckout(
+            $user,
+            $panier,
+            $prepared,
+            'stripe',
+            $em,
+            $notificationService,
+            $orderEmailService,
+            $notifMarketRepository
+        );
+
+        $processedSessions[] = $sessionId;
+        $session->set('marketplace_processed_stripe_sessions', array_values(array_unique($processedSessions)));
+
+        $this->addFlash('success', 'Paiement validé, votre commande a été créée.');
+        return $this->redirectToRoute('app_marketplace_mes_commandes');
+    }
+
+    #[Route('/marketplace/payment/cancelled', name: 'app_marketplace_payment_cancelled', methods: ['GET'])]
+    public function paymentCancelled(): Response
+    {
+        $this->addFlash('warning', 'Le paiement a été annulé.');
+        return $this->redirectToRoute('app_marketplace_panier');
+    }
+
+    /**
+     * Prépare les données de checkout (coupon, stock, totaux, groupes vendeurs).
+     *
+     * @return array<string, mixed>
+     */
+    private function prepareCheckoutData(
+        $user,
+        $panier,
+        string $modeLivraison,
+        ?string $couponCode,
+        CouponRepository $couponRepo,
+        EntityManagerInterface $em
+    ): array {
+        $fraisParVendeur = ($modeLivraison === 'LIVRAISON') ? 7.0 : 0.0;
+
         $coupon = null;
         if ($couponCode) {
             $coupon = $couponRepo->findOneBy(['code' => strtoupper($couponCode), 'actif' => true]);
@@ -340,42 +507,42 @@ class CommandeController extends AbstractController
             }
         }
 
-        // 3. Grouper les articles par vendeur et calculer Total Global pour algorithme proportionnel
         $groupesParVendeur = [];
         $totalBasket = 0.0;
         foreach ($panier->getPanierProduits() as $ligne) {
             $produit = $ligne->getProduit();
+            if (!$produit) {
+                continue;
+            }
+
             $vendeur = $produit->getUser();
             if ($vendeur === null) {
                 continue;
             }
+
+            if ($produit->getQuantiteStock() < $ligne->getQuantite()) {
+                return [
+                    'success' => false,
+                    'message' => 'Stock insuffisant pour le produit : ' . $produit->getNom() . '. Disponible : ' . $produit->getQuantiteStock(),
+                ];
+            }
+
             $vendeurId = $vendeur->getId();
             if (!isset($groupesParVendeur[$vendeurId])) {
                 $groupesParVendeur[$vendeurId] = [];
             }
             $groupesParVendeur[$vendeurId][] = $ligne;
-            
-            // Total réel des items
             $totalBasket += $produit->getPrixFinal() * $ligne->getQuantite();
         }
 
-        // Si total minimum non atteint pour ce coupon, ignorer coupon
+        if (empty($groupesParVendeur)) {
+            return ['success' => false, 'message' => 'Votre panier ne contient aucun produit commandable.'];
+        }
+
         if ($coupon && $totalBasket < $coupon->getMontantMin()) {
             $coupon = null;
         }
 
-        // 3.5. Vérifier les stocks avant création
-        foreach ($panier->getPanierProduits() as $ligne) {
-            $produit = $ligne->getProduit();
-            if ($produit && $produit->getQuantiteStock() < $ligne->getQuantite()) {
-                return $this->json([
-                    'success' => false, 
-                    'message' => 'Stock insuffisant pour le produit : ' . $produit->getNom() . '. Disponible : ' . $produit->getQuantiteStock()
-                ], 400);
-            }
-        }
-
-        // 3.8. Calcul du Total Global Final pour validation des Points
         $totalFinalGlobal = $totalBasket + (count($groupesParVendeur) * $fraisParVendeur);
         if ($coupon) {
             if ($coupon->getTypeReduction() === 'POURCENTAGE') {
@@ -386,21 +553,50 @@ class CommandeController extends AbstractController
         }
         $totalFinalGlobal = round($totalFinalGlobal, 2);
 
-        // 3.9. Gestion des Points de Fidélité
-        if ($paymentMethod === 'points') {
-            if ($user->getPointsFidelite() < $totalFinalGlobal) {
-                return $this->json(['success' => false, 'message' => 'Points de fidélité insuffisants (Solde : ' . $user->getPointsFidelite() . ' pts).'], 400);
-            }
-            $user->setPointsFidelite($user->getPointsFidelite() - $totalFinalGlobal);
-        } else {
-            // Gain de 10% lors du paiement normal (Stripe/Carte)
+        return [
+            'success' => true,
+            'coupon' => $coupon,
+            'couponCode' => $coupon ? $coupon->getCode() : null,
+            'groupesParVendeur' => $groupesParVendeur,
+            'totalBasket' => $totalBasket,
+            'totalFinalGlobal' => $totalFinalGlobal,
+            'fraisParVendeur' => $fraisParVendeur,
+            'modeLivraison' => $modeLivraison,
+        ];
+    }
+
+    /**
+     * Finalise la création des commandes et notifications.
+     *
+     * @return array{nbCommandes:int}
+     */
+    private function finalizeCheckout(
+        $user,
+        $panier,
+        array $prepared,
+        string $paymentMethod,
+        EntityManagerInterface $em,
+        WishlistNotificationService $notificationService,
+        OrderEmailService $orderEmailService,
+        NotifMarketRepository $notifMarketRepository
+    ): array {
+        $coupon = $prepared['coupon'];
+        $groupesParVendeur = $prepared['groupesParVendeur'];
+        $totalBasket = $prepared['totalBasket'];
+        $fraisParVendeur = $prepared['fraisParVendeur'];
+        $modeLivraison = $prepared['modeLivraison'];
+        $totalFinalGlobal = $prepared['totalFinalGlobal'];
+
+        if ($paymentMethod !== 'points') {
             $pointsGagnes = $totalFinalGlobal * 0.1;
             $user->setPointsFidelite($user->getPointsFidelite() + $pointsGagnes);
         }
 
-        // 4. Créer une commande par vendeur
+        $commandesCreees = [];
+        $stockUpdates = [];
         $nbCommandes = 0;
-        foreach ($groupesParVendeur as $vendeurId => $lignes) {
+
+        foreach ($groupesParVendeur as $lignes) {
             $commande = new Commande();
             $commande->setUser($user);
             $commande->setDateCommande(new \DateTime());
@@ -410,7 +606,6 @@ class CommandeController extends AbstractController
             $commande->setPayeeParPoints($paymentMethod === 'points');
 
             $sousTotal = 0.0;
-            $stockUpdates = []; // Pour les notifications
             foreach ($lignes as $ligne) {
                 $detail = new DetailsCommande();
                 $detail->setProduit($ligne->getProduit());
@@ -428,30 +623,26 @@ class CommandeController extends AbstractController
                 $sousTotal += $ligne->getProduit()->getPrixFinal() * $ligne->getQuantite();
             }
 
-            // APPLIQUER LA RÉPARTITION DE LA REMISE
             $remiseSurCetteCommande = 0.0;
             if ($coupon) {
                 if ($coupon->getTypeReduction() === 'POURCENTAGE') {
                     $remiseSurCetteCommande = $sousTotal * ($coupon->getValeur() / 100);
                 } else {
-                    // Montant Fixe : Pondération Proportionnelle
                     $poids = ($totalBasket > 0) ? ($sousTotal / $totalBasket) : 0;
                     $remiseSurCetteCommande = $coupon->getValeur() * $poids;
                 }
-                
+
                 $remiseSurCetteCommande = min($remiseSurCetteCommande, $sousTotal);
-                
                 $commande->setCoupon($coupon);
                 $commande->setMontantRemise(round($remiseSurCetteCommande, 3));
             }
 
             $commande->setTotal(round(($sousTotal - $remiseSurCetteCommande) + $fraisParVendeur, 2));
             $em->persist($commande);
-            $commandesCreees[] = $commande; // Pour l'envoi des emails après flush
+            $commandesCreees[] = $commande;
             $nbCommandes++;
         }
 
-        // 4.5. Enregistrement Utilisations Coupon
         if ($coupon) {
             $coupon->setUtilisationActuelle($coupon->getUtilisationActuelle() + 1);
             $utilisation = $em->getRepository(CouponUtilisation::class)->findOneBy(['coupon' => $coupon, 'user' => $user]);
@@ -464,7 +655,6 @@ class CommandeController extends AbstractController
             $utilisation->setNombreUtilisation($utilisation->getNombreUtilisation() + 1);
         }
 
-        // 5. Vider le panier
         foreach ($panier->getPanierProduits()->toArray() as $ligne) {
             $em->remove($ligne);
         }
@@ -473,8 +663,7 @@ class CommandeController extends AbstractController
 
         $em->flush();
 
-        // Envoi des notifications (Email aux vendeurs + WhatsApp favoris)
-        foreach ($commandesCreees ?? [] as $cmd) {
+        foreach ($commandesCreees as $cmd) {
             $firstDetail = $cmd->getDetails()->first();
             if ($firstDetail && $firstDetail->getProduit() && $firstDetail->getProduit()->getUser()) {
                 $seller = $firstDetail->getProduit()->getUser();
@@ -492,17 +681,11 @@ class CommandeController extends AbstractController
             $orderEmailService->sendNewOrderSellerNotification($cmd);
         }
 
-        foreach ($stockUpdates ?? [] as $update) {
+        foreach ($stockUpdates as $update) {
             $notificationService->notifyLowStock($update['produit'], $update['oldStock']);
         }
 
-        return $this->json([
-            'success' => true,
-            'message' => $nbCommandes > 1
-                ? "$nbCommandes commandes créées avec succès !"
-                : 'Commande créée avec succès !',
-            'nbCommandes' => $nbCommandes,
-        ]);
+        return ['nbCommandes' => $nbCommandes];
     }
 
     /**
