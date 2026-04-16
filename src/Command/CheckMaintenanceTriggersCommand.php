@@ -82,22 +82,20 @@ class CheckMaintenanceTriggersCommand extends Command
                 $triggerDate = true;
             }
 
-            // 2. Vérification des heures
-            if ($materiel->getHeuresUtilisation() >= $materiel->getSeuilMaintenanceHeures()) {
+            // 2. Vérification des heures (Relative à la dernière maintenance)
+            $heuresDepuisDerniere = $materiel->getHeuresUtilisation() - $materiel->getDerniereMaintenanceHeures();
+            if ($heuresDepuisDerniere >= $materiel->getSeuilMaintenanceHeures()) {
                 $triggerHours = true;
             }
 
             if ($triggerDate || $triggerHours) {
-                if ($this->materielLifecycleStateMachine->can($materiel, 'mettre_en_maintenance')) {
-                    $this->materielLifecycleStateMachine->apply($materiel, 'mettre_en_maintenance');
-                    $io->text(sprintf(
-                        '➤ <comment>%s</comment> : Passage en maintenance (%s)',
-                        $materiel->getNom(),
-                        $triggerDate ? 'Date atteinte' : 'Seuil heures atteint'
-                    ));
-                     $count++;
-                     $thresholdCount++;
-                }
+                // On ne bascule plus AUTOMATIQUEMENT ici car l'utilisateur veut planifier lui-même.
+                // On pourrait ajouter une notification ici.
+                $io->text(sprintf(
+                    '⚠️ <comment>%s</comment> : Seuil atteint (%s). L\'agriculteur doit planifier une maintenance.',
+                    $materiel->getNom(),
+                    $triggerDate ? 'Date conseillée' : 'Heures atteintes'
+                ));
             }
         }
 

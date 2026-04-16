@@ -58,8 +58,18 @@ class MaintenanceSyncSubscriber implements EventSubscriber
 
         // 1. Si la maintenance est mise "En cours" -> On bascule le matériel en "Maintenance"
         if ($statutMaint === 'en_cours') {
-            if ($this->materielLifecycleStateMachine->can($materiel, 'mettre_en_maintenance')) {
+            // Si le matériel est en état 'panne_signalee', on le valide
+            if ($this->materielLifecycleStateMachine->can($materiel, 'valider_maintenance')) {
+                $this->materielLifecycleStateMachine->apply($materiel, 'valider_maintenance');
+                $changed = true;
+            } 
+            // Cas de secours : si on est encore en service (ouverture directe par l'admin)
+            elseif ($this->materielLifecycleStateMachine->can($materiel, 'mettre_en_maintenance')) {
                 $this->materielLifecycleStateMachine->apply($materiel, 'mettre_en_maintenance');
+                // Puis on le valide immédiatement pour être en maintenance
+                if ($this->materielLifecycleStateMachine->can($materiel, 'valider_maintenance')) {
+                    $this->materielLifecycleStateMachine->apply($materiel, 'valider_maintenance');
+                }
                 $changed = true;
             }
         }
@@ -68,6 +78,10 @@ class MaintenanceSyncSubscriber implements EventSubscriber
         if ($statutMaint === 'terminee') {
             if ($this->materielLifecycleStateMachine->can($materiel, 'confirmer_maintenance')) {
                 $this->materielLifecycleStateMachine->apply($materiel, 'confirmer_maintenance');
+                
+                // Réinitialisation du marqueur d'heures de référence
+                $materiel->setDerniereMaintenanceHeures($materiel->getHeuresUtilisation());
+                
                 $changed = true;
             }
         }

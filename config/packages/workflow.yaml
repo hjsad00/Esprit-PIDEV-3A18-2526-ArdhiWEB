@@ -12,14 +12,18 @@ framework:
             initial_marking: en_service
             places:
                 - en_service
+                - panne_signalee
                 - en_maintenance
                 - reforme
             transitions:
                 mettre_en_maintenance:
                     from: en_service
+                    to:   panne_signalee
+                valider_maintenance:
+                    from: panne_signalee
                     to:   en_maintenance
                 confirmer_maintenance:
-                    from: en_maintenance
+                    from: [en_maintenance, panne_signalee]
                     to:   en_service
                 reformer:
                     from: en_service

@@ -58,7 +58,7 @@ class MaterielType extends AbstractType
             ])
             ->add('seuilMaintenanceHeures', IntegerType::class, [
                 'label' => 'Seuil de maintenance souhaité (heures)',
-                'help' => 'La machine passera en maintenance une fois ce seuil atteint, mais vous devez planifier une maintenance une fois le seuil atteint.',
+                'help' => 'Ce seuil vous servira d\'indicateur. Une fois atteint, vous devrez planifier manuellement votre maintenance via le calendrier.',
                 'required' => false,
                 'empty_data' => '500',
                 'attr' => ['min' => 1]

@@ -57,6 +57,9 @@ class Materiel
     #[ORM\Column(type: Types::INTEGER)]
     private int $seuilMaintenanceHeures = 500;
 
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $derniereMaintenanceHeures = 0;
+
     #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, orphanRemoval: true)]
     private Collection $maintenances;
 
@@ -281,5 +284,16 @@ class Materiel
             'Charrue', 'Herse' => 400,
             default => 500,
         };
+    }
+
+    public function getDerniereMaintenanceHeures(): int
+    {
+        return $this->derniereMaintenanceHeures;
+    }
+
+    public function setDerniereMaintenanceHeures(int $derniereMaintenanceHeures): self
+    {
+        $this->derniereMaintenanceHeures = $derniereMaintenanceHeures;
+        return $this;
     }
 }

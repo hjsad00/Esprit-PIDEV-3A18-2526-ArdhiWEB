@@ -15,6 +15,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Workflow\WorkflowInterface;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/materiel-et-maintenance/materiel', name: 'app_materiel_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -163,7 +165,15 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}/transition/{transition}', name: 'transition', methods: ['POST'])]
-    public function applyTransition(int $id, string $transition, Request $request, MaterielRepository $repo, WorkflowInterface $materielLifecycleStateMachine, EntityManagerInterface $em): Response
+    public function applyTransition(
+        int $id, 
+        string $transition, 
+        Request $request, 
+        MaterielRepository $repo, 
+        WorkflowInterface $materielLifecycleStateMachine, 
+        EntityManagerInterface $em,
+        ValidatorInterface $validator
+    ): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
@@ -172,24 +182,35 @@ class MaterielController extends AbstractController
             return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
         }
 
+        // --- Validation PHP Spécifique pour l'Urgence ---
+        if ($transition === 'mettre_en_maintenance') {
+            $description = trim($request->request->get('description', ''));
+            $errors = $validator->validate($description, [
+                new NotBlank(['message' => 'La description doit être remplie pour signaler une urgence.'])
+            ]);
+
+            if (count($errors) > 0) {
+                $this->addFlash('danger', $errors[0]->getMessage());
+                return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+            }
+        }
+
         if ($materielLifecycleStateMachine->can($materiel, $transition)) {
             $materielLifecycleStateMachine->apply($materiel, $transition);
             
-            // Si c'est un signalement de panne (mettre en maintenance)
             if ($transition === 'mettre_en_maintenance') {
                 $maintenance = new Maintenance();
                 $maintenance->setMateriel($materiel);
-                $maintenance->setStatutMaintenance('en_attente'); // En attente de validation admin
+                $maintenance->setStatutMaintenance('en_attente');
                 $maintenance->setTypeMaintenance('urgente');
                 $maintenance->setDateMaintenance(new \DateTime());
-                $maintenance->setDescription($request->request->get('description', 'Signalement de panne via le bouton Urgence.'));
+                $maintenance->setDescription($request->request->get('description'));
                 
                 $em->persist($maintenance);
             }
 
             $em->flush();
-
-            $this->addFlash('success', 'Signalement enregistré. L\'administrateur a été notifié de l\'urgence.');
+            $this->addFlash('success', 'Action effectuée avec succès.');
         } else {
             $this->addFlash('danger', 'Impossible d\'appliquer cette transition.');
         }

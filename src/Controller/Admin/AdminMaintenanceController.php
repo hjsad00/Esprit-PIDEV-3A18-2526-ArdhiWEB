@@ -129,9 +129,30 @@ class AdminMaintenanceController extends AbstractController
         foreach ($users as $u) {
             $userMap[$u->getId()] = $u;
         }
-
         return $this->render('admin/maintenance/historique.html.twig', [
             'materiels' => $materiels,
+            'userMap' => $userMap,
+        ]);
+    }
+
+    #[Route('/urgente', name: 'urgente', methods: ['GET'])]
+    public function urgente(MaintenanceRepository $repo, UserRepository $userRepo, \App\Repository\MaterielEtMaintenance\MaterielRepository $matRepo): Response
+    {
+        $urgencies = $repo->findBy(['type_maintenance' => 'urgente'], ['date_maintenance' => 'DESC']);
+        
+        // Filtrer pour ne garder que ce qui n'est pas terminé/annulé
+        $urgencies = array_filter($urgencies, function($m) {
+            return !in_array($m->getStatutMaintenance(), ['terminee', 'annulee']);
+        });
+
+        $users = $userRepo->findAll();
+        $userMap = [];
+        foreach ($users as $u) {
+            $userMap[$u->getId()] = $u;
+        }
+
+        return $this->render('admin/maintenance/urgente.html.twig', [
+            'urgencies' => $urgencies,
             'userMap' => $userMap,
         ]);
     }

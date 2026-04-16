@@ -3,6 +3,8 @@
 
 {% block body_class %}materiel-theme{% endblock %}
 
+{% block flashes %}{# On désactive les flashes globaux pour les afficher localement dans le bloc d'urgence #}{% endblock %}
+
 {% block stylesheets %}
 <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
 <style>
@@ -157,10 +159,11 @@
         <p class="small mt-2 opacity-75">Saisissez la valeur lue sur le compteur de la machine.</p>
         {% endif %}
 
-        {% set progress = (materiel.heuresUtilisation / materiel.seuilMaintenanceHeures * 100)|round %}
+        {% set heuresDepuisRevision = materiel.heuresUtilisation - materiel.derniereMaintenanceHeures %}
+        {% set progress = (heuresDepuisRevision / materiel.seuilMaintenanceHeures * 100)|round %}
         <div class="mt-3">
             <div class="d-flex justify-content-between small opacity-75 mb-1">
-                <span>Usure avant maintenance (Seuil : {{ materiel.seuilMaintenanceHeures }}h)</span>
+                <span>Progression : <strong>{{ heuresDepuisRevision }}h / {{ materiel.seuilMaintenanceHeures }}h</strong></span>
                 <span class="fw-bold">{{ progress }}%</span>
             </div>
             <div class="progress" style="height: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
@@ -184,8 +187,33 @@
         </div>
 
         <div class="row g-2">
-            {% if workflow_can(materiel, 'mettre_en_maintenance') %}
+            {% if materiel.statut in ['en_maintenance', 'panne_signalee'] %}
                 <div class="col-12">
+                    <button class="btn btn-success w-100 shadow-sm fw-bold" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> 
+                        {% if materiel.statut == 'panne_signalee' %}
+                            Demande de maintenance envoyée (En attente Admin)
+                        {% else %}
+                            Matériel actuellement en maintenance
+                        {% endif %}
+                    </button>
+                    <p class="small text-muted mt-2 text-center text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                        {% if materiel.statut == 'panne_signalee' %}
+                            <i class="bi bi-clock-history"></i> L'administrateur a été informé et va traiter votre demande.
+                        {% else %}
+                            <i class="bi bi-tools"></i> Une intervention est en cours sur ce matériel.
+                        {% endif %}
+                    </p>
+                </div>
+            {% elseif workflow_can(materiel, 'mettre_en_maintenance') %}
+                <div class="col-12">
+                    {# Affichage local des erreurs de validation pour ce formulaire #}
+                    {% for message in app.flashes('danger') %}
+                        <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mb-3 py-2">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+
                     <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm">
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <label class="form-label fw-bold text-danger"><i class="bi bi-megaphone me-1"></i> Signaler une panne / Urgence</label>
@@ -197,16 +225,6 @@
                 </div>
             {% endif %}
             
-            {% if workflow_can(materiel, 'confirmer_maintenance') %}
-                <div class="col-md-6">
-                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'confirmer_maintenance'}) }}" method="POST">
-                        <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
-                        <button type="submit" class="btn btn-success w-100 shadow-sm fw-bold">
-                            <i class="bi bi-check-circle-fill me-2"></i> Maintenance terminée !
-                        </button>
-                    </form>
-                </div>
-            {% endif %}
 
             {% if workflow_can(materiel, 'reformer') %}
                 <div class="col-md-6">
@@ -283,4 +301,5 @@
 </div>
 </div>
 </div>
+{% include 'MaterielEtMaintenance/materiel/_chatbot.html.twig' %}
 {% endblock %}

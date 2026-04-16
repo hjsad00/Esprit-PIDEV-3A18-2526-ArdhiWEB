@@ -285,9 +285,9 @@
              <li class="mt-2">
                  <div class="d-flex justify-content-between small text-muted mb-1">
                      <span>Progression heures</span>
-                     <span>{{ m.heuresUtilisation }}/{{ m.seuilMaintenanceHeures }}h</span>
+                     <span>{{ m.heuresUtilisation - m.derniereMaintenanceHeures }}/{{ m.seuilMaintenanceHeures }}h</span>
                  </div>
-                 {% set progress = (m.heuresUtilisation / m.seuilMaintenanceHeures * 100)|round %}
+                 {% set progress = ((m.heuresUtilisation - m.derniereMaintenanceHeures) / m.seuilMaintenanceHeures * 100)|round %}
                  <div class="progress" style="height: 5px;">
                      <div class="progress-bar bg-{{ progress >= 90 ? 'danger' : (progress >= 75 ? 'warning' : 'success') }}" style="width: {{ progress > 100 ? 100 : progress }}%"></div>
                  </div>
@@ -319,6 +319,8 @@
 
 </div>
 </div>
+
+{% include 'MaterielEtMaintenance/materiel/_chatbot.html.twig' %}
 {% endblock %}
 
 {% block javascripts %}
