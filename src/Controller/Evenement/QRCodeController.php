@@ -80,7 +80,7 @@ class QRCodeController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $svg      = $this->qrCodeService->genererQRCodeSvg($participation);
+        $svg      = $this->qrCodeService->genererQRCodePng($participation);
         $filename = 'QRCode_' . str_replace(' ', '_', $participation->getNomComplet()) . '.svg';
 
         return new Response($svg, 200, [

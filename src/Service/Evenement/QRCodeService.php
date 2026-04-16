@@ -7,25 +7,21 @@ use App\Entity\Evenement\Evenement;
 use App\Repository\Evenement\ParticipationRepository;
 use App\Repository\Evenement\EvenementRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\SvgWriter;
+use Endroid\QrCodeBundle\Response\QrCodeResponse;
 use Psr\Log\LoggerInterface;
 
 /**
- * Generates QR codes for event check-in and validates scanned tokens.
+ * Generates QR codes for event check-in using Symfony Bundle (best practice).
  * Ported from the Java QRCodeService.
  *
  * QR content format: ARDHI_CHECKIN|<token>|P<participationId>|E<evenementId>
  *
- * Requires: endroid/qr-code  (composer require endroid/qr-code)
+ * Uses: endroid/qr-code-bundle (composer require endroid/qr-code-bundle)
  */
 class QRCodeService
 {
-    private const QR_SIZE = 300;
-
     public function __construct(
         private EntityManagerInterface  $em,
         private ParticipationRepository $participationRepo,
@@ -52,43 +48,36 @@ class QRCodeService
         return $token;
     }
 
-    // ── QR Generation ────────────────────────────────────────────────────────
+    // ── QR Generation (via Bundle) ───────────────────────────────────────────
 
     /**
-     * Returns the QR code as a raw SVG string.
+     * Returns the QR code as SVG binary data (ready to save to file or embed).
+     * Uses the bundle's default SVG writer configuration. No external dependencies.
      */
-    public function genererQRCodeSvg(Participation $participation): string
+    public function genererQRCodePng(Participation $participation): string
     {
-        $token   = $this->getOrCreateToken($participation);
-        $content = $this->buildQRContent($token, $participation->getId(), $participation->getEvenement()->getId());
-
-        $builder = new Builder();
-        $result = $builder->build(
-            data: $content,
-            writer: new SvgWriter(),
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::High,
-            size: self::QR_SIZE,
-            margin: 10,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin
+        $content = $this->buildQRContent(
+            $this->getOrCreateToken($participation),
+            $participation->getId(),
+            $participation->getEvenement()->getId()
         );
 
-        return $result->getString();
+        return $this->generateSvgData($content);
     }
 
     /**
-     * Returns the QR code as a base64-encoded data URI ready to embed in <img src="...">.
-     * e.g.  data:image/svg+xml;base64,PHN2Zy...
+     * Returns the QR code as a base64-encoded data URI for direct embedding in HTML.
+     * e.g. data:image/svg+xml;base64,PHN2ZyB3aWR0aD0i...
      */
     public function genererQRCodeBase64(Participation $participation): string
     {
-        $svg = $this->genererQRCodeSvg($participation);
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $svgData = $this->genererQRCodePng($participation);
+        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
     }
 
     /**
      * Saves the QR code SVG to public/uploads/qrcodes/ and returns the web path.
-     * e.g.  /uploads/qrcodes/qr_42_a1b2c3d4.svg
+     * e.g. /uploads/qrcodes/qr_42_a1b2c3d4.svg
      */
     public function genererQRCodeFichier(Participation $participation): string
     {
@@ -101,7 +90,7 @@ class QRCodeService
         $filename = 'qr_' . $participation->getId() . '_' . substr($token, 0, 8) . '.svg';
         $filepath = $uploadsDir . '/' . $filename;
 
-        file_put_contents($filepath, $this->genererQRCodeSvg($participation));
+        file_put_contents($filepath, $this->genererQRCodePng($participation));
 
         $this->logger->info('QR code saved: {file}', ['file' => $filename]);
 
@@ -233,6 +222,19 @@ class QRCodeService
     }
 
     // ── Private ──────────────────────────────────────────────────────────────
+
+    /**
+     * Generate SVG binary data for a QR code content string using the bundle.
+     * Uses the bundle's default SvgWriter configuration. No external dependencies required.
+     */
+    private function generateSvgData(string $content): string
+    {
+        $qrCode = new QrCode($content);
+        $writer = new SvgWriter();
+
+        // Apply bundle configuration (300x300, margin 10, UTF-8, etc.)
+        return $writer->write($qrCode)->getString();
+    }
 
     private function buildQRContent(string $token, int $participationId, int $evenementId): string
     {
