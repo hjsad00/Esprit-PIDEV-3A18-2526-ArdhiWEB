@@ -8,7 +8,7 @@ use Google\Service\Calendar;
 use Google\Service\Calendar\Event;
 use Google\Service\Calendar\EventDateTime;
 use Google\Service\Calendar\EventReminder;
-use Google\Service\Calendar\Event\Reminders;
+use Google\Service\Calendar\EventReminders;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -21,8 +21,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class CalendarExportService
 {
     // ── Google OAuth2 credentials (your ardhi-evenements project) ────────────
-    private const CLIENT_ID     = '912344954797-p9msvahasun3vp492ssfdvq2909kjvt3.apps.googleusercontent.com';
-    private const CLIENT_SECRET = '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';
+    private const CLIENT_ID     = '912344954797-lcmfd0q95p4enbp2lhtjllhs43563oup.apps.googleusercontent.com';
+    private const CLIENT_SECRET = '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';
     private const REDIRECT_URI  = 'http://localhost:8000/evenement/calendar/callback'; // adjust to your dev URL
     private const SCOPES        = [Calendar::CALENDAR_EVENTS];
     private const APP_NAME      = 'ARDHI - Module Événements';
@@ -188,7 +188,7 @@ class CalendarExportService
         $popupReminder->setMethod('popup');
         $popupReminder->setMinutes(60);
 
-        $reminders = new Reminders();
+        $reminders = new EventReminders();
         $reminders->setUseDefault(false);
         $reminders->setOverrides([$emailReminder, $popupReminder]);
         $event->setReminders($reminders);

@@ -46,10 +46,19 @@ class CalendarController extends AbstractController
     #[Route('/callback', name: 'app_calendar_callback', methods: ['GET'])]
     public function callback(Request $request): Response
     {
+        $session = $request->getSession();
+
+        // If user lost their session during the Google OAuth round-trip,
+        // store the full callback URL so we can replay it after login.
+        if (!$this->getUser()) {
+            $session->set('_security.main.target_path', $request->getUri());
+            $this->addFlash('info', 'Veuillez vous reconnecter pour finaliser la connexion Google Calendar.');
+            return $this->redirectToRoute('app_login');
+        }
+
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         // CSRF-like state check
-        $session       = $request->getSession();
         $expectedState = $session->get('google_calendar_oauth_state');
         $returnedState = $request->query->get('state');
 
@@ -113,7 +122,7 @@ class CalendarController extends AbstractController
         if ($result['mode'] === 'api') {
             // Added directly via API — show success with link
             $this->addFlash('success', '✅ Événement ajouté dans Google Calendar ! <a href="' . htmlspecialchars($result['link']) . '" target="_blank">Voir l\'événement</a>');
-            return $this->redirectToRoute('app_evenement_show', ['id' => $id]);
+            return $this->redirect($result['link']);
         }
 
         // ICS fallback — stream the file as a download
