@@ -80,28 +80,41 @@ class AdminMaintenanceController extends AbstractController
                         $notif->setMateriel($materiel);
                         $notif->setNouveauStatut($nouveauStatut);
                         
-                        // Logique de message manuel choisi par l'Admin
-                        $msg = "Le statut de votre matériel a été mis à jour.";
+                        // Logique de message selon le nouveau statut
+                        $msg = "Le statut de votre matériel a été mis à jour : " . ucfirst($nouveauStatut);
                         $reponseType = $request->request->get('reponse_type');
 
-                        if ($nouveauStatut === 'en_cours') {
-                            if ($reponseType === 'urgent_apportez') {
-                                $msg = "ADMIN : Veuillez apporter votre matériel à l'atelier dès que possible.";
-                            } elseif ($reponseType === 'non_urgent_planifier') {
-                                $msg = "ADMIN : Veuillez planifier une maintenance via le calendrier pour cette machine.";
-                            } else {
-                                // Fallback auto si pas de type précis
-                                $desc = strtolower($maintenance->getDescription() ?? '');
-                                if ($maintenance->getTypeMaintenance() === 'urgente' || str_contains($desc, 'urgent')) {
-                                    $msg = "ADMIN : Veuillez apporter votre matériel à l'atelier dès que possible.";
+                        switch($nouveauStatut) {
+                            case 'planifiee':
+                                $msg = "Votre maintenance a été planifiée. Consultez le calendrier pour les détails.";
+                                break;
+                            case 'en_attente':
+                                if ($reponseType === 'urgent_apportez') {
+                                    $msg = "le responsable a approuvé votre demande de maintenance en urgence veuillez apporter votre matériel dès que possible";
+                                } else {
+                                    $msg = "Votre matériel est en attente d'intervention. Nous vous tiendrons au courant.";
                                 }
-                            }
-                        } elseif ($nouveauStatut === 'terminee') {
-                            $msg = "Maintenance terminée. Votre matériel est de nouveau opérationnel.";
+                                break;
+                            case 'en_cours':
+                                if ($reponseType === 'non_urgent_planifier') {
+                                    $msg = "Action requise : Veuillez planifier un créneau pour votre maintenance via le calendrier.";
+                                } else {
+                                    $msg = "L'intervention sur votre matériel a officiellement commencé.";
+                                }
+                                break;
+                            case 'terminee':
+                                $msg = "Maintenance terminée avec succès. Votre matériel est de nouveau opérationnel et prêt à l'emploi.";
+                                break;
+                            case 'annulee':
+                                $msg = "L'intervention prévue sur votre matériel a été annulée. Contactez l'administration pour plus d'infos.";
+                                break;
+                            case 'verifie':
+                                $msg = "L'intervention a été effectuée et est en cours de vérification par nos techniciens.";
+                                break;
                         }
                         
                         $notif->setMessage($msg);
-                        $notif->setTitre("Mise à jour Maintenance : " . $materiel->getNom());
+                        $notif->setTitre("Mise à jour : " . $materiel->getNom() . " (" . ucfirst($nouveauStatut) . ")");
                         
                         $em->persist($notif);
                     }

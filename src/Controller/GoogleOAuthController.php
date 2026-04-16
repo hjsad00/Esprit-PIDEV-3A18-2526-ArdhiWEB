@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\GoogleCalendarService;
+use App\Service\MaterielEtMaintenance\GoogleCalendarService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

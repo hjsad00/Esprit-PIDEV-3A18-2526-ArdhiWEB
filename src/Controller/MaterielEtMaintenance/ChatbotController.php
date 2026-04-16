@@ -3,7 +3,7 @@
 namespace App\Controller\MaterielEtMaintenance;
 
 use App\Repository\MaterielEtMaintenance\MaterielRepository;
-use App\Service\ChatbotService;
+use App\Service\MaterielEtMaintenance\ChatbotService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

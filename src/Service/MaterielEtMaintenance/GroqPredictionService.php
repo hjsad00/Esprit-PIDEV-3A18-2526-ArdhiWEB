@@ -6,19 +6,20 @@ use App\Entity\MaterielEtMaintenance\Materiel;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Psr\Log\LoggerInterface;
 
-class GeminiService
+class GroqPredictionService
 {
-    private const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    private const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
     
     private HttpClientInterface $httpClient;
     private LoggerInterface $logger;
-    private string $apiKey;
+    private string $groqApiKey;
 
-    public function __construct(HttpClientInterface $httpClient, LoggerInterface $logger, string $geminiApiKey)
+    public function __construct(HttpClientInterface $httpClient, LoggerInterface $logger)
     {
         $this->httpClient = $httpClient;
         $this->logger = $logger;
-        $this->apiKey = trim($geminiApiKey);
+        // La clé Groq utilisée pour le chatbot
+        $this->groqApiKey = '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';
     }
 
     public function generatePrediction(Materiel $materiel): array
@@ -52,7 +53,7 @@ class GeminiService
             2. Donne un CONSEIL TECHNIQUE spécifique pour ce type de machine.
             3. Estime le temps restant avant la prochaine panne critique.
             
-            RÉPONDS EXCLUSIVEMENT AU FORMAT JSON SUIVANT (sans texte avant ou après, sans balises ```json) :
+            RÉPONDS EXCLUSIVEMENT AU FORMAT JSON SUIVANT (sans texte avant ou après, sans balises de code) :
             {
                 \"risque\": \"Faible|Modéré|Élevé\",
                 \"score_risque\": 0-100,
@@ -70,52 +71,37 @@ class GeminiService
         );
 
         try {
-            $response = $this->httpClient->request('POST', self::API_URL . '?key=' . $this->apiKey, [
+            $response = $this->httpClient->request('POST', self::API_URL, [
                 'headers' => [
+                    'Authorization' => 'Bearer ' . $this->groqApiKey,
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
-                    ]
+                    'model' => 'llama-3.3-70b-versatile',
+                    'messages' => [
+                        ['role' => 'user', 'content' => $prompt]
+                    ],
+                    'temperature' => 0.2,
+                    'max_tokens' => 1024,
+                    'response_format' => ['type' => 'json_object']
                 ],
                 'timeout' => 30,
             ]);
 
             $result = $response->toArray();
-            $textResponse = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            $textResponse = $result['choices'][0]['message']['content'] ?? null;
 
             if (!$textResponse) {
-                throw new \Exception("Réponse vide de Gemini.");
+                throw new \Exception("Réponse vide de Groq.");
             }
 
-            // Nettoyage de la réponse au cas où le modèle inclurait des balises markdown ```json
-            $textResponse = preg_replace('/^```json|```$/m', '', $textResponse);
-            $textResponse = trim($textResponse);
-
-            $decoded = json_decode($textResponse, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                // Tentative désespérée : extraire le premier bloc JSON trouvé
-                if (preg_match('/\{.*\}/s', $textResponse, $matches)) {
-                    $decoded = json_decode($matches[0], true);
-                }
-            }
-
-            if (!$decoded) {
-                throw new \Exception("Erreur de décodage JSON : " . json_last_error_msg());
-            }
-
-            return $decoded;
+            return json_decode($textResponse, true);
 
         } catch (\Exception $e) {
-            $this->logger->error("Gemini API Error: " . $e->getMessage());
+            $this->logger->error("Groq Prediction Error: " . $e->getMessage());
             return [
                 'error' => true,
-                'message' => "Impossible de générer la prédiction pour le moment. " . $e->getMessage()
+                'message' => "Impossible de générer la prédiction. " . $e->getMessage()
             ];
         }
     }

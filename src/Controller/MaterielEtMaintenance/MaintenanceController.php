@@ -18,6 +18,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use App\Service\MaterielEtMaintenance\GoogleCalendarService;
 
 #[Route('/materiel-et-maintenance/maintenance', name: 'app_maintenance_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -47,7 +48,7 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/planifier', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar, MailerInterface $mailer, Environment $twig): Response
+    public function new(Request $request, EntityManagerInterface $em, GoogleCalendarService $googleCalendar, MailerInterface $mailer, Environment $twig): Response
     {
         $maintenance = new Maintenance();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
@@ -165,7 +166,7 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar): Response
+    public function edit(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, GoogleCalendarService $googleCalendar): Response
     {
         $maintenance = $this->getMaintenanceOwnedByUser($id, $repo);
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
@@ -234,7 +235,7 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar): Response
+    public function delete(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, GoogleCalendarService $googleCalendar): Response
     {
         $maintenance = $this->getMaintenanceOwnedByUser($id, $repo);
 

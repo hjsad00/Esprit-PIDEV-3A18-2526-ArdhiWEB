@@ -251,11 +251,11 @@ class MaterielController extends AbstractController
         return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
     }
 
-    #[Route('/{id}/ia-analyse', name: 'ia_analyse', methods: ['POST'])]
-    public function iaAnalyse(int $id, MaterielRepository $repo, \App\Service\MaterielEtMaintenance\GeminiService $geminiService): \Symfony\Component\HttpFoundation\JsonResponse
+    #[Route('/{id}/ia-analyse', name: 'ia_analyse', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function iaAnalyse(int $id, MaterielRepository $repo, \App\Service\MaterielEtMaintenance\GroqPredictionService $groqService): \Symfony\Component\HttpFoundation\JsonResponse
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
-        $prediction = $geminiService->generatePrediction($materiel);
+        $prediction = $groqService->generatePrediction($materiel);
 
         return new \Symfony\Component\HttpFoundation\JsonResponse($prediction);
     }

@@ -21,7 +21,7 @@ class MaterielLifecycleSubscriber implements EventSubscriberInterface
     {
         return [
             'workflow.materiel_lifecycle.transition.confirmer_maintenance' => 'onConfirmerMaintenance',
-            'workflow.materiel_lifecycle.transition.mettre_en_maintenance' => 'onMettreEnMaintenance',
+            'workflow.materiel_lifecycle.transition.valider_maintenance' => 'onValiderMaintenance',
         ];
     }
 
@@ -39,27 +39,13 @@ class MaterielLifecycleSubscriber implements EventSubscriberInterface
             // 3. Mise à jour de l'état "santé" si besoin (on le remet à Bon)
             $materiel->setEtat('Bon');
 
-            // 4. Création d'une notification de confirmation
-            $this->createNotification(
-                $materiel, 
-                "Maintenance confirmée", 
-                "La maintenance a été enregistrée. Prochain rappel prévu le " . $materiel->getDateProchaineMaintenance()->format('d/m/Y') . "."
-            );
+            // 4. (Notification désactivée ici pour éviter les doublons avec AdminMaintenanceController)
         }
     }
 
-    public function onMettreEnMaintenance(TransitionEvent $event): void
+    public function onValiderMaintenance(TransitionEvent $event): void
     {
-        $materiel = $event->getSubject();
-
-        if ($materiel instanceof Materiel) {
-            // On peut notifier l'agriculteur que la machine est maintenant "Indisponible"
-            $this->createNotification(
-                $materiel, 
-                "Machine en maintenance", 
-                "Le matériel " . $materiel->getNom() . " est désormais marqué en maintenance."
-            );
-        }
+        // (Notification désactivée ici pour éviter les doublons avec AdminMaintenanceController)
     }
 
     private function createNotification(Materiel $materiel, string $titre, string $message): void

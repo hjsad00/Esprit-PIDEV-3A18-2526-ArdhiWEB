@@ -51,7 +51,7 @@
                                 <!-- Option 1 : Urgent Apportez -->
                                 <form method="post" action="{{ path('admin_maintenance_status_update', {id: m.idMaintenance}) }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('update_status_' ~ m.idMaintenance) }}">
-                                    <input type="hidden" name="statut_maintenance" value="en_cours">
+                                    <input type="hidden" name="statut_maintenance" value="en_attente">
                                     <input type="hidden" name="reponse_type" value="urgent_apportez">
                                     <button type="submit" class="btn btn-danger w-100 py-3 shadow-sm fw-bold">
                                         <i class="bi bi-truck me-2"></i> URGENT : Apportez le matériel
