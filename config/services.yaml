@@ -69,10 +69,4 @@ services:
 
     App\Service\Evenement\InactiveParticipantDetectionService: ~
 
-    App\Service\Evenement\EvenementParticipationMailer:
-        arguments:
-            $mailer: '@mailer'
-            $certificatePdfGenerator: '@App\Service\Evenement\ParticipationCertificatePdfGenerator'
-            $qrCodeService: '@App\Service\Evenement\QRCodeService'
-            $urlGenerator: '@router'
-            $mailFrom: '%app.mail_from%'
+

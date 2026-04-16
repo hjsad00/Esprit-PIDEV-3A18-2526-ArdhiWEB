@@ -68,7 +68,46 @@ class EvenementController extends AbstractController
         ]);
     }
 
-    // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────
+    // ─── FILTER (AJAX) ────────────────────────────────────────────────────
+    #[Route('/filter', name: 'app_evenement_filter', methods: ['GET'])]
+    public function filter(
+        Request $request,
+        EvenementRepository $evenementRepo,
+        EvenementFavorisRepository $favorisRepo
+    ): Response {
+        // Check for AJAX request
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
+
+        $type       = $request->query->get('type');
+        $statut     = $request->query->get('statut');
+        $search     = $request->query->get('search');
+        $evenements = $evenementRepo->findWithFilters($type, $statut, $search);
+
+        $favorisIds = [];
+        if ($this->getUser()) {
+            foreach ($favorisRepo->findByUser($this->getUser()) as $fav) {
+                $favorisIds[] = $fav->getEvenement()->getId();
+            }
+        }
+
+        // Return partial template for AJAX requests
+        if ($isAjax) {
+            return $this->render('evenement/_filter_results.html.twig', [
+                'evenements' => $evenements,
+                'favorisIds' => $favorisIds,
+                'type'       => $type,
+                'statut'     => $statut,
+                'search'     => $search,
+            ]);
+        }
+
+        // Fallback to full page if not AJAX
+        return $this->redirectToRoute('app_evenement_index', [
+            'type'   => $type,
+            'statut' => $statut,
+            'search' => $search,
+        ]);
+    }
     #[Route('/admin-dashboard', name: 'app_evenement_admin_dashboard', methods: ['GET'])]
     public function adminDashboard(
         EvenementRepository $evenementRepo,

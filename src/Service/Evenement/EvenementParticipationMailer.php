@@ -13,7 +13,6 @@ class EvenementParticipationMailer
     public function __construct(
         private MailerInterface $mailer,
         private ParticipationCertificatePdfGenerator $certificatePdfGenerator,
-        private QRCodeService $qrCodeService,  // NEW: Inject QR code service
         private UrlGeneratorInterface $urlGenerator,
         private string $mailFrom
     ) {}
@@ -27,8 +26,6 @@ class EvenementParticipationMailer
             return;
         }
 
-        // Generate QR code for email
-        $qrCodeBase64 = $this->qrCodeService->genererQRCodeBase64($participation);
 
         $email = (new TemplatedEmail())
             ->from(new Address($this->mailFrom, 'Ardhi Evenements'))
@@ -38,7 +35,6 @@ class EvenementParticipationMailer
             ->context([
                 'participation' => $participation,
                 'evenement' => $event,
-                'qrCode' => $qrCodeBase64,  // NEW: Pass QR code
                 'reviewUrl' => $this->urlGenerator->generate(
                     'app_evenement_show',
                     ['id' => $event->getId()],
@@ -58,9 +54,6 @@ class EvenementParticipationMailer
             return;
         }
 
-        // Generate QR code for email
-        $qrCodeBase64 = $this->qrCodeService->genererQRCodeBase64($participation);
-
         $email = (new TemplatedEmail())
             ->from(new Address($this->mailFrom, 'Ardhi Evenements'))
             ->to(new Address($user->getEmail(), trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? ''))))
@@ -69,7 +62,6 @@ class EvenementParticipationMailer
             ->context([
                 'participation' => $participation,
                 'evenement' => $event,
-                'qrCode' => $qrCodeBase64,  // NEW: Pass QR code
                 'daysBefore' => $daysBefore,
                 'eventUrl' => $this->urlGenerator->generate(
                     'app_evenement_show',
@@ -91,9 +83,6 @@ class EvenementParticipationMailer
         }
 
         $pdf = $this->certificatePdfGenerator->generate($participation);
-        
-        // Generate QR code for email
-        $qrCodeBase64 = $this->qrCodeService->genererQRCodeBase64($participation);
 
         $email = (new TemplatedEmail())
             ->from(new Address($this->mailFrom, 'Ardhi Evenements'))
@@ -103,7 +92,6 @@ class EvenementParticipationMailer
             ->context([
                 'participation' => $participation,
                 'evenement' => $event,
-                'qrCode' => $qrCodeBase64,  // NEW: Pass QR code
                 'reviewUrl' => $this->urlGenerator->generate(
                     'app_evenement_show',
                     ['id' => $event->getId()],
