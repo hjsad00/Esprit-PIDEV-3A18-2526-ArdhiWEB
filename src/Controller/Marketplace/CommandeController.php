@@ -18,9 +18,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Karser\Recaptcha3Bundle\Validator\Constraints\Recaptcha3;
 
 /**
  * Contrôleur dédié à la gestion des commandes Marketplace.
@@ -304,7 +306,8 @@ class CommandeController extends AbstractController
         WishlistNotificationService $notificationService,
         OrderEmailService $orderEmailService,
         NotifMarketRepository $notifMarketRepository,
-        StripeCheckoutService $stripeCheckoutService
+        StripeCheckoutService $stripeCheckoutService,
+        ValidatorInterface $validator
     ): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -320,6 +323,19 @@ class CommandeController extends AbstractController
 
         // 2. Récupérer données requête
         $data = json_decode($request->getContent(), true);
+        if (!is_array($data)) {
+            return $this->json(['success' => false, 'message' => 'Payload checkout invalide.'], 400);
+        }
+
+        $captchaToken = $data['captcha_token'] ?? null;
+        $violations = $validator->validate($captchaToken, new Recaptcha3());
+        if (count($violations) > 0) {
+            return $this->json([
+                'success' => false,
+                'message' => $violations[0]->getMessage() ?: 'Captcha invalide, veuillez réessayer.',
+            ], 400);
+        }
+
         $modeLivraison = $data['mode_livraison'] ?? 'RECUPERATION';
         $paymentMethod = $data['payment_method'] ?? 'stripe';
         $couponCode = $data['coupon_code'] ?? null;

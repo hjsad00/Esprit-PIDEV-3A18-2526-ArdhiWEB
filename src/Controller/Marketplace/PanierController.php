@@ -6,6 +6,7 @@ use App\Repository\Marketplace\PanierProduitRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +49,10 @@ class PanierController extends AbstractController
     }
 
     #[Route('/marketplace/panier', name: 'app_marketplace_panier')]
-    public function panier(PanierRepository $panierRepository): Response
+    public function panier(
+        PanierRepository $panierRepository,
+        #[Autowire('%karser_recaptcha3.site_key%')] string $recaptchaSiteKey
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -58,6 +62,7 @@ class PanierController extends AbstractController
 
         return $this->render('Marketplace/panier.html.twig', [
             'panier' => $panier,
+            'recaptchaSiteKey' => $recaptchaSiteKey,
         ]);
     }
 

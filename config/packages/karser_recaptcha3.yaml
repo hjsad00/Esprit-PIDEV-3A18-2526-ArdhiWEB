@@ -1,0 +1,5 @@
+karser_recaptcha3:
+    site_key: '%env(MARKETPLACE_RECAPTCHA3_KEY)%'
+    secret_key: '%env(MARKETPLACE_RECAPTCHA3_SECRET)%'
+    score_threshold: 0.5
+    enabled: '%env(bool:MARKETPLACE_RECAPTCHA3_ENABLED)%'

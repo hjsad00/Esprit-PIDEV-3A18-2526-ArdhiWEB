@@ -7,7 +7,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class StripeCheckoutService
 {
-    private const MIN_AMOUNT_MILLIMES = 50;
+    private const CURRENCY_API_URL = 'https://api.exchangerate-api.com/v4/latest/TND';
+    private const EUR_FALLBACK_RATE = 0.30;
+    private const MIN_AMOUNT_EUR_CENTS = 50;
 
     private string $stripeSecretKey;
 
@@ -30,16 +32,24 @@ class StripeCheckoutService
             return ['success' => false, 'error' => 'Cle Stripe non configuree (MARKETPLACE_STRIPE_SECRET_KEY).'];
         }
 
-        // Stripe attend le plus petit sous-unite de devise: TND => millimes.
-        $amountTndMillimes = (int) round($totalTnd * 1000);
-        if ($amountTndMillimes < self::MIN_AMOUNT_MILLIMES) {
+        if ($totalTnd <= 0) {
+            return ['success' => false, 'error' => 'Montant invalide pour le paiement Stripe.'];
+        }
+
+        $eurRate = $this->getTndToEurRate();
+        $totalEur = round($totalTnd * $eurRate, 2);
+
+        // Stripe attend le plus petit sous-unite de devise: EUR => cents.
+        $amountEurCents = (int) round($totalEur * 100);
+        if ($amountEurCents < self::MIN_AMOUNT_EUR_CENTS) {
             return [
                 'success' => false,
                 'error' => sprintf(
-                    'Montant trop faible pour Stripe : %.2f TND = %d millimes (minimum %d millimes).',
+                    'Montant trop faible pour Stripe : %.2f TND = %.2f EUR (%d cents, minimum %d cents).',
                     $totalTnd,
-                    $amountTndMillimes,
-                    self::MIN_AMOUNT_MILLIMES
+                    $totalEur,
+                    $amountEurCents,
+                    self::MIN_AMOUNT_EUR_CENTS
                 ),
             ];
         }
@@ -54,14 +64,19 @@ class StripeCheckoutService
             'line_items' => [
                 [
                     'price_data' => [
-                        'currency' => 'tnd',
+                        'currency' => 'eur',
                         'product_data' => ['name' => $label],
-                        'unit_amount' => $amountTndMillimes,
+                        'unit_amount' => $amountEurCents,
                     ],
                     'quantity' => 1,
                 ],
             ],
-            'metadata' => $metadata,
+            'metadata' => array_merge($metadata, [
+                'currency' => 'EUR',
+                'amount_tnd' => number_format($totalTnd, 2, '.', ''),
+                'amount_eur' => number_format($totalEur, 2, '.', ''),
+                'tnd_to_eur_rate' => number_format($eurRate, 6, '.', ''),
+            ]),
         ];
 
         try {
@@ -84,6 +99,19 @@ class StripeCheckoutService
             return ['success' => false, 'error' => $message];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function getTndToEurRate(): float
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::CURRENCY_API_URL);
+            $data = $response->toArray();
+            $rate = (float) ($data['rates']['EUR'] ?? 0);
+
+            return $rate > 0 ? $rate : self::EUR_FALLBACK_RATE;
+        } catch (\Throwable) {
+            return self::EUR_FALLBACK_RATE;
         }
     }
 

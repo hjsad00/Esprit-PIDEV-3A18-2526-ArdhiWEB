@@ -270,6 +270,7 @@
                   <button type="button" class="btn-checkout-final" onclick="checkout()">
                     <i class="bi bi-shield-check"></i> Confirmer la commande
                   </button>
+                  <div id="checkout-feedback" style="display:none;margin-top:10px;font-size:13px;font-weight:600;"></div>
                   <form action="{{ path('app_marketplace_panier_clear') }}" method="POST" id="ajax-clear-form">
                     <button type="submit" class="btn-clear w-100">
                       <i class="bi bi-trash"></i> Vider le panier
@@ -289,7 +290,11 @@
 {% endblock %}
 
 {% block javascripts %}
+{% if recaptchaSiteKey is defined and recaptchaSiteKey %}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptchaSiteKey|e('url') }}"></script>
+{% endif %}
 <script>
+  const RECAPTCHA_SITE_KEY = '{{ recaptchaSiteKey|default('')|e('js') }}';
   let BASE_TOTAL = {{ panier ? panier.totalMontant : 0 }};
 
   function selectTile(tile, group) {
@@ -316,6 +321,25 @@
   }
 
   let appliedCoupon = null;
+
+  async function getRecaptchaToken(actionName = 'marketplace_checkout') {
+    if (!RECAPTCHA_SITE_KEY) {
+      throw new Error('Configuration reCAPTCHA manquante.');
+    }
+
+    if (typeof grecaptcha === 'undefined') {
+      throw new Error('reCAPTCHA non chargé. Veuillez réessayer.');
+    }
+
+    return new Promise((resolve, reject) => {
+      grecaptcha.ready(() => {
+        grecaptcha
+          .execute(RECAPTCHA_SITE_KEY, { action: actionName })
+          .then(resolve)
+          .catch(() => reject(new Error('Échec de validation reCAPTCHA.')));
+      });
+    });
+  }
 
   async function applyCoupon() {
     const code = document.getElementById('coupon-code-input').value.trim();
@@ -373,11 +397,34 @@
       document.getElementById('summary-total-amount').textContent = finalTotal.toFixed(2) + ' DT';
   }
 
+  function resetCheckoutButton(btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-shield-check"></i> Confirmer la commande';
+  }
+
+  function setCheckoutFeedback(message, isError = true) {
+    const feedback = document.getElementById('checkout-feedback');
+    if (!feedback) return;
+
+    feedback.style.display = 'block';
+    feedback.style.color = isError ? '#d63031' : '#116530';
+    feedback.textContent = message;
+  }
+
+  function clearCheckoutFeedback() {
+    const feedback = document.getElementById('checkout-feedback');
+    if (!feedback) return;
+
+    feedback.style.display = 'none';
+    feedback.textContent = '';
+  }
+
   // ── Checkout ──
   async function checkout() {
     if (!confirm('Confirmer votre commande ?')) return;
 
     const btn = document.querySelector('.btn-checkout-final');
+    clearCheckoutFeedback();
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement en cours...';
 
@@ -389,6 +436,17 @@
     const paymentRadio = document.querySelector('input[name="payment"]:checked');
     const paymentMethod = paymentRadio ? paymentRadio.value : 'stripe';
 
+    let captchaToken = null;
+    try {
+      captchaToken = await getRecaptchaToken('marketplace_checkout');
+    } catch (captchaError) {
+      const errorMessage = captchaError.message || 'Captcha invalide, veuillez réessayer.';
+      setCheckoutFeedback(errorMessage, true);
+      showCartToast(errorMessage, true);
+      resetCheckoutButton(btn);
+      return;
+    }
+
     try {
       const res = await fetch('/marketplace/panier/checkout', {
         method: 'POST',
@@ -399,7 +457,8 @@
         body: JSON.stringify({ 
             mode_livraison: modeLivraison,
             payment_method: paymentMethod,
-            coupon_code: appliedCoupon ? appliedCoupon.code : null
+          coupon_code: appliedCoupon ? appliedCoupon.code : null,
+          captcha_token: captchaToken
         })
       });
       const data = await res.json();
@@ -410,17 +469,21 @@
           return;
         }
 
-        alert(data.message);
+        const successMessage = data.message || 'Commande validée.';
+        setCheckoutFeedback(successMessage, false);
+        showCartToast(successMessage, false);
         window.location.href = '{{ path('app_marketplace_catalogue') }}';
       } else {
-        alert(data.message || 'Erreur lors de la commande.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-shield-check"></i> Confirmer la commande';
+        const errorMessage = data.message || 'Erreur lors de la commande.';
+        setCheckoutFeedback(errorMessage, true);
+        showCartToast(errorMessage, true);
+        resetCheckoutButton(btn);
       }
     } catch (err) {
-      alert('Erreur réseau. Veuillez réessayer.');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-shield-check"></i> Confirmer la commande';
+      const errorMessage = 'Erreur réseau. Veuillez réessayer.';
+      setCheckoutFeedback(errorMessage, true);
+      showCartToast(errorMessage, true);
+      resetCheckoutButton(btn);
     }
   }
   
