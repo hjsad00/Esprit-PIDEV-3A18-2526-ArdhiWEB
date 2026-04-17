@@ -16,6 +16,37 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class PanierController extends AbstractController
 {
+    #[Route('/marketplace/panier/summary', name: 'app_marketplace_panier_summary', methods: ['GET'])]
+    public function summary(PanierRepository $panierRepository): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $user = $this->getUser();
+        $panier = $panierRepository->findPanierActif($user);
+
+        if (!$panier) {
+            $response = $this->json([
+                'success' => true,
+                'count' => 0,
+                'total' => '0.00',
+            ]);
+            $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+            return $response;
+        }
+
+        $panierFrais = $panierRepository->findPanierWithProduits((int) $panier->getId()) ?? $panier;
+
+        $response = $this->json([
+            'success' => true,
+            'count' => $panierFrais->getTotalProduits(),
+            'total' => number_format($panierFrais->getTotalMontant(), 2, '.', ' '),
+        ]);
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        return $response;
+    }
+
     #[Route('/marketplace/panier', name: 'app_marketplace_panier')]
     public function panier(PanierRepository $panierRepository): Response
     {
