@@ -147,6 +147,34 @@ class ProfileController extends AbstractController
         ]);
     }
 
+    #[Route('/profile/quick-upload', name: 'app_profile_quick_upload', methods: ['POST'])]
+    public function quickUpload(Request $request, ImgBBService $imgBBService, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $avatarFile = $request->files->get('avatar');
+        if ($avatarFile) {
+            $imgUrl = $imgBBService->uploadImage($avatarFile);
+            if ($imgUrl) {
+                $user->setAvatar($imgUrl);
+            }
+        }
+
+        $bannerFile = $request->files->get('banner');
+        if ($bannerFile) {
+            $imgUrl = $imgBBService->uploadImage($bannerFile);
+            if ($imgUrl) {
+                $user->setBanner($imgUrl);
+            }
+        }
+
+        $entityManager->flush();
+
+        return $this->redirectToRoute('app_profile_show', ['id' => $user->getId()]);
+    }
+
     #[Route('/profile/user/{id}/block', name: 'app_profile_toggle_block', methods: ['POST'])]
     public function toggleBlock(User $userToBlock, Request $request, EntityManagerInterface $em): Response
     {

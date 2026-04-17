@@ -10,24 +10,60 @@
     
     <!-- Profile Banner & Header -->
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; overflow: hidden;">
-      {% if user.banner %}
-          <div style="height: 250px; background: url('{{ user.banner }}') center/cover no-repeat; position: relative;"></div>
+      {% if app.user and app.user.id == user.id %}
+          <form id="quickBannerForm" action="{{ path('app_profile_quick_upload') }}" method="POST" enctype="multipart/form-data" class="d-none">
+              <input type="file" id="quickBannerInput" name="banner" accept="image/*" onchange="document.getElementById('quickBannerForm').submit();">
+          </form>
+          <div class="banner-wrapper position-relative" onclick="document.getElementById('quickBannerInput').click();" style="cursor: pointer;">
+              {% if user.banner %}
+                  <div style="height: 250px; background: url('{{ user.banner }}') center/cover no-repeat; position: relative;"></div>
+              {% else %}
+                  <div style="height: 250px; background: linear-gradient(135deg, #1b5e20, #4caf50); position: relative;"></div>
+              {% endif %}
+              <div class="overlay-edit d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s;">
+                  <span class="text-white fw-bold fs-4"><i class="bi bi-camera me-2"></i>Modifier la couverture</span>
+              </div>
+          </div>
       {% else %}
-          <div style="height: 250px; background: linear-gradient(135deg, #1b5e20, #4caf50); position: relative;"></div>
+          {% if user.banner %}
+              <div style="height: 250px; background: url('{{ user.banner }}') center/cover no-repeat; position: relative; cursor: pointer;" onclick="window.open('{{ user.banner }}', '_blank');"></div>
+          {% else %}
+              <div style="height: 250px; background: linear-gradient(135deg, #1b5e20, #4caf50); position: relative;"></div>
+          {% endif %}
       {% endif %}
       
       <div class="card-body position-relative pt-0 px-5 pb-5">
         <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between" style="margin-top: -60px;">
           
           <div class="d-flex flex-column flex-md-row align-items-center gap-4">
-            <div class="position-relative">
-              {% if user.avatar %}
-                  <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle border border-4 border-white shadow" style="width: 140px; height: 140px; object-fit: cover; background: #fff;">
-              {% else %}
-                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white border border-4 border-white shadow" style="width: 140px; height: 140px; font-size: 3.5rem; background: #fff;">
-                      {{ user.prenom|first|upper }}
-                  </div>
+            <div class="{{ app.user and app.user.id == user.id ? 'avatar-editable' : '' }}">
+              {% if app.user and app.user.id == user.id %}
+                  <form id="quickAvatarForm" action="{{ path('app_profile_quick_upload') }}" method="POST" enctype="multipart/form-data" class="d-none">
+                      <input type="file" id="quickAvatarInput" name="avatar" accept="image/*" onchange="document.getElementById('quickAvatarForm').submit();">
+                  </form>
               {% endif %}
+              
+              <div class="position-relative" style="display:inline-block; {{ app.user and app.user.id == user.id ? 'cursor: pointer;' : (user.avatar ? 'cursor: pointer;' : '') }}"
+                   {% if app.user and app.user.id == user.id %}
+                       onclick="document.getElementById('quickAvatarInput').click();"
+                   {% elseif user.avatar %}
+                       onclick="window.open('{{ user.avatar }}', '_blank');"
+                   {% endif %}
+              >
+                  {% if user.avatar %}
+                      <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle border border-4 border-white shadow" style="width: 140px; height: 140px; object-fit: cover; background: #fff;">
+                  {% else %}
+                      <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white border border-4 border-white shadow" style="width: 140px; height: 140px; font-size: 3.5rem; background: #fff;">
+                          {{ user.prenom|first|upper }}
+                      </div>
+                  {% endif %}
+                  
+                  {% if app.user and app.user.id == user.id %}
+                  <div class="overlay-edit rounded-circle d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s;">
+                      <span class="text-white fs-2"><i class="bi bi-camera"></i></span>
+                  </div>
+                  {% endif %}
+              </div>
             </div>
             
             <div class="text-center text-md-start mt-3 mt-md-0">
@@ -171,6 +207,10 @@
   }
   .transition-all {
       transition: all .2s ease-in-out;
+  }
+  .banner-wrapper:hover .overlay-edit,
+  .avatar-editable:hover .overlay-edit {
+      opacity: 1 !important;
   }
 </style>
 {% endblock %}
