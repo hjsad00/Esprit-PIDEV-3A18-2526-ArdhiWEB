@@ -35,7 +35,7 @@
     <div class="feed-container">
         {% for item in feedData %}
             {% set post = item.post %}
-            <a href="{{ path('app_user_and_diag_community_detail', {id: post.id}) }}" class="post-card"
+            <div onclick="window.location.href='{{ path('app_user_and_diag_community_detail', {id: post.id}) }}'" class="post-card" style="cursor: pointer;"
                data-search="{{ post.title|lower }} {{ post.description|lower }} {{ post.user.prenom|lower }} {{ post.user.nom|lower }}">
                 <div class="post-header">
                     {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
@@ -50,7 +50,7 @@
                     {% endif %}
                     <div class="post-meta">
                         <div class="author">
-                            <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                            <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;" onclick="event.stopPropagation();">
                                 {{ post.user.prenom }} {{ post.user.nom }}
                             </a>
                             {% if post.user.role == 'AGRONOME' %}
@@ -79,10 +79,10 @@
                     <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
                     <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
                     {% if app.user and post.user.id != app.user.id %}
-                        <span class="report-btn" onclick="event.preventDefault();reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
+                        <span class="report-btn" onclick="event.stopPropagation(); reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
                     {% endif %}
                 </div>
-            </a>
+            </div>
         {% else %}
             <div class="empty-state">
                 <p style="font-size: 40px; margin-bottom: 12px;">🌱</p>
