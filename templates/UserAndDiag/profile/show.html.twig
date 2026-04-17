@@ -10,10 +10,11 @@
     
     <!-- Profile Banner & Header -->
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; overflow: hidden;">
-      {% set coverBg = user.banner ? user.banner : asset('assets/img/profil_background.jpg') %}
-      <div style="height: 250px; background: url('{{ coverBg }}') center/cover no-repeat; position: relative;">
-        <!-- Cover graphic/pattern -->
-      </div>
+      {% if user.banner %}
+          <div style="height: 250px; background: url('{{ user.banner }}') center/cover no-repeat; position: relative;"></div>
+      {% else %}
+          <div style="height: 250px; background: linear-gradient(135deg, #1b5e20, #4caf50); position: relative;"></div>
+      {% endif %}
       
       <div class="card-body position-relative pt-0 px-5 pb-5">
         <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between" style="margin-top: -60px;">
