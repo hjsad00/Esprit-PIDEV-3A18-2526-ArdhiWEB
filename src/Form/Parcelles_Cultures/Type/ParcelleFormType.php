@@ -37,11 +37,27 @@ class ParcelleFormType extends AbstractType
                     'id' => 'localisation-input',
                 ]
             ])
-            ->add('latitude', HiddenType::class, [
-                'attr' => ['id' => 'latitude-input'],
+            ->add('latitude', NumberType::class, [
+                'label' => 'Latitude',
+                'required' => false,
+                'scale' => 4,
+                'attr' => [
+                    'id' => 'latitude-input',
+                    'class' => 'form-control',
+                    'placeholder' => 'Auto',
+                    'readonly' => 'readonly',
+                ]
             ])
-            ->add('longitude', HiddenType::class, [
-                'attr' => ['id' => 'longitude-input'],
+            ->add('longitude', NumberType::class, [
+                'label' => 'Longitude',
+                'required' => false,
+                'scale' => 4,
+                'attr' => [
+                    'id' => 'longitude-input',
+                    'class' => 'form-control',
+                    'placeholder' => 'Auto',
+                    'readonly' => 'readonly',
+                ]
             ])
             ->add('type_sol', ChoiceType::class, [
                 'label' => 'Type de sol',
