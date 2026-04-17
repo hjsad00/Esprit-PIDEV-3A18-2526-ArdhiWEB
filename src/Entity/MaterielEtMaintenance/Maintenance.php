@@ -63,6 +63,9 @@ class Maintenance
     )]
     private ?string $type_maintenance = 'preventive';
 
+    #[ORM\Column(name: 'decision_admin', type: 'string', length: 50, nullable: true)]
+    private ?string $decisionAdmin = null;
+
     public function getIdMaintenance(): ?int { return $this->id_maintenance; }
 
     public function getMateriel(): ?Materiel { return $this->materiel; }
@@ -88,4 +91,7 @@ class Maintenance
 
     public function getTypeMaintenance(): ?string { return $this->type_maintenance; }
     public function setTypeMaintenance(?string $type): self { $this->type_maintenance = $type; return $this; }
+
+    public function getDecisionAdmin(): ?string { return $this->decisionAdmin; }
+    public function setDecisionAdmin(?string $decision): self { $this->decisionAdmin = $decision; return $this; }
 }

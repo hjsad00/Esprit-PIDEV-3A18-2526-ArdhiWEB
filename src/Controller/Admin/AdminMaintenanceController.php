@@ -90,9 +90,9 @@ class AdminMaintenanceController extends AbstractController
                                 break;
                             case 'en_attente':
                                 if ($reponseType === 'urgent_apportez') {
-                                    $msg = "le responsable a approuvé votre demande de maintenance en urgence veuillez apporter votre matériel dès que possible";
+                                    $msg = "Vous avez accepté la maintenance en urgence de l'agriculteur";
                                 } else {
-                                    $msg = "Votre matériel est en attente d'intervention. Nous vous tiendrons au courant.";
+                                    $msg = "Une demande de plannification est envoyer a l'agriculteur";
                                 }
                                 break;
                             case 'en_cours':
@@ -153,11 +153,7 @@ class AdminMaintenanceController extends AbstractController
     {
         $urgencies = $repo->findBy(['type_maintenance' => 'urgente'], ['date_maintenance' => 'DESC']);
         
-        // Filtrer pour ne garder que ce qui n'est pas terminé/annulé
-        $urgencies = array_filter($urgencies, function($m) {
-            return !in_array($m->getStatutMaintenance(), ['terminee', 'annulee']);
-        });
-
+        // On garde tout pour afficher soit les boutons soit le message de décision
         $users = $userRepo->findAll();
         $userMap = [];
         foreach ($users as $u) {
@@ -168,5 +164,87 @@ class AdminMaintenanceController extends AbstractController
             'urgencies' => $urgencies,
             'userMap' => $userMap,
         ]);
+    }
+
+    #[Route('/{id}/decide', name: 'decide', methods: ['POST'])]
+    public function decide(
+        int $id, 
+        Request $request, 
+        MaintenanceRepository $repo, 
+        EntityManagerInterface $em, 
+        UserRepository $userRepo,
+        \App\Service\MaterielEtMaintenance\MaintenanceMailer $mailer
+    ): Response {
+        $maintenance = $repo->find($id);
+
+        if (!$maintenance) {
+            $this->addFlash('danger', 'Maintenance introuvable.');
+            return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        // Vérification de l'immutabilité (Décision définitive)
+        if ($maintenance->getDecisionAdmin() !== null) {
+            $this->addFlash('warning', 'Une décision a déjà été prise pour cette demande.');
+            return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('decide_'.$maintenance->getIdMaintenance(), $token)) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        $type = $request->request->get('reponse_type');
+        $materiel = $maintenance->getMateriel();
+        $machineName = $materiel ? $materiel->getNom() : 'votre machine';
+        
+        $userId = $materiel ? $materiel->getUserId() : null;
+        $user = $userId ? $userRepo->find($userId) : null;
+
+        if (!$user) {
+            $this->addFlash('danger', 'Propriétaire introuvable.');
+            return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        $notif = new \App\Entity\MaterielEtMaintenance\NotificationMaintenance();
+        $notif->setUser($user);
+        $notif->setMateriel($materiel);
+
+        if ($type === 'urgent_apportez') {
+            $maintenance->setDecisionAdmin('urgent_accepte');
+            $maintenance->setStatutMaintenance('en_attente');
+            
+            $msgNotif = "Le responsable a accepté votre demande de maintenance urgente pour votre machine " . $machineName . ", veuillez apporter votre matériel dès que possible";
+            $msgFlash = "Vous avez accepté la maintenance en urgence de l'agriculteur.";
+            
+            $notif->setMessage($msgNotif);
+            $notif->setTitre("Urgence Acceptée : " . $machineName);
+            $notif->setNouveauStatut('en_attente');
+
+            $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+
+        } elseif ($type === 'non_urgent_planifier') {
+            $maintenance->setDecisionAdmin('planification_demandee');
+            $maintenance->setStatutMaintenance('en_cours');
+            
+            $msgNotif = "Votre demande de maintenance pour votre machine " . $machineName . " a été reçue, veuillez planifier une intervention via la page de maintenance";
+            $msgFlash = "Une demande de plannification a été envoyée à l'agriculteur.";
+            
+            $notif->setMessage($msgNotif);
+            $notif->setTitre("Planification demandée : " . $machineName);
+            $notif->setNouveauStatut('en_cours');
+
+            $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+        } else {
+            $this->addFlash('danger', 'Type de réponse invalide.');
+            return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        $em->persist($notif);
+        $em->flush();
+
+        $this->addFlash('success', $msgFlash);
+
+        return $this->redirectToRoute('admin_maintenance_urgente');
     }
 }
