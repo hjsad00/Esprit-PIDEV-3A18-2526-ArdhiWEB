@@ -13,18 +13,22 @@ framework:
             places:
                 - en_service
                 - panne_signalee
+                - attente_planification
                 - en_maintenance
                 - reforme
             transitions:
                 mettre_en_maintenance:
                     from: en_service
                     to:   panne_signalee
-                valider_maintenance:
+                demander_planification:
                     from: panne_signalee
+                    to:   attente_planification
+                valider_maintenance:
+                    from: [panne_signalee, attente_planification]
                     to:   en_maintenance
                 confirmer_maintenance:
-                    from: [en_maintenance, panne_signalee]
+                    from: [en_maintenance, panne_signalee, attente_planification]
                     to:   en_service
                 reformer:
-                    from: en_service
+                    from: [en_service, panne_signalee, attente_planification]
                     to:   reforme

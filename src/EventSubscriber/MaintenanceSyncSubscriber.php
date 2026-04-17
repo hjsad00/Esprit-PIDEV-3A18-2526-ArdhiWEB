@@ -56,21 +56,33 @@ class MaintenanceSyncSubscriber implements EventSubscriber
 
         $changed = false;
 
-        // 1. Si la maintenance est mise "En cours" -> On bascule le matériel en "Maintenance"
-        if ($statutMaint === 'en_cours') {
-            // Si le matériel est en état 'panne_signalee', on le valide
-            if ($this->materielLifecycleStateMachine->can($materiel, 'valider_maintenance')) {
-                $this->materielLifecycleStateMachine->apply($materiel, 'valider_maintenance');
-                $changed = true;
+        // 1. Si la maintenance est mise "En cours" ou "En attente" (Urgent)
+        if ($statutMaint === 'en_cours' || $statutMaint === 'en_attente') {
+            
+            // Cas spécial : Si c'est une planification demandée par l'admin (non-urgent)
+            if ($entity->getDecisionAdmin() === 'planification_demandee') {
+                if ($this->materielLifecycleStateMachine->can($materiel, 'demander_planification')) {
+                    $this->materielLifecycleStateMachine->apply($materiel, 'demander_planification');
+                    $materiel->setEtat('En panne'); // On reste en panne tant que non planifié? Ou Moyen?
+                    $changed = true;
+                }
             } 
-            // Cas de secours : si on est encore en service (ouverture directe par l'admin)
-            elseif ($this->materielLifecycleStateMachine->can($materiel, 'mettre_en_maintenance')) {
-                $this->materielLifecycleStateMachine->apply($materiel, 'mettre_en_maintenance');
-                // Puis on le valide immédiatement pour être en maintenance
+            // Cas normal : On valide la maintenance (vers 'en_maintenance')
+            else {
                 if ($this->materielLifecycleStateMachine->can($materiel, 'valider_maintenance')) {
                     $this->materielLifecycleStateMachine->apply($materiel, 'valider_maintenance');
+                    $materiel->setEtat('En maintenance');
+                    $changed = true;
+                } 
+                // Cas de secours : si on est encore en service
+                elseif ($this->materielLifecycleStateMachine->can($materiel, 'mettre_en_maintenance')) {
+                    $this->materielLifecycleStateMachine->apply($materiel, 'mettre_en_maintenance');
+                    if ($this->materielLifecycleStateMachine->can($materiel, 'valider_maintenance')) {
+                        $this->materielLifecycleStateMachine->apply($materiel, 'valider_maintenance');
+                        $materiel->setEtat('En maintenance');
+                    }
+                    $changed = true;
                 }
-                $changed = true;
             }
         }
 

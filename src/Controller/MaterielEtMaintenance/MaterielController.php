@@ -210,6 +210,7 @@ class MaterielController extends AbstractController
             $materielLifecycleStateMachine->apply($materiel, $transition);
             
             if ($transition === 'mettre_en_maintenance') {
+                $materiel->setEtat('En panne');
                 $maintenance = new Maintenance();
                 $maintenance->setMateriel($materiel);
                 $maintenance->setStatutMaintenance('en_attente');

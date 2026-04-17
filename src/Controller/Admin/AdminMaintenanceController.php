@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Workflow\Registry;
 
 #[Route('/admin/maintenance', name: 'admin_maintenance_')]
 #[IsGranted('ROLE_ADMIN')]
@@ -173,7 +174,8 @@ class AdminMaintenanceController extends AbstractController
         MaintenanceRepository $repo, 
         EntityManagerInterface $em, 
         UserRepository $userRepo,
-        \App\Service\MaterielEtMaintenance\MaintenanceMailer $mailer
+        \App\Service\MaterielEtMaintenance\MaintenanceMailer $mailer,
+        \Symfony\Component\Workflow\Registry $workflowRegistry
     ): Response {
         $maintenance = $repo->find($id);
 
@@ -210,10 +212,22 @@ class AdminMaintenanceController extends AbstractController
         $notif->setUser($user);
         $notif->setMateriel($materiel);
 
+        // Récupération du Workflow via le registre pour être 100% sûr
+        $workflow = $workflowRegistry->get($materiel, 'materiel_lifecycle');
+
         if ($type === 'urgent_apportez') {
             $maintenance->setDecisionAdmin('urgent_accepte');
             $maintenance->setStatutMaintenance('en_attente');
             
+            // On force le statut et l'état
+            if ($workflow->can($materiel, 'valider_maintenance')) {
+                $workflow->apply($materiel, 'valider_maintenance');
+            } else {
+                // Secours : si la transition est bloquée, on force manuellement la propriété
+                $materiel->setStatut('en_maintenance');
+            }
+            $materiel->setEtat('En maintenance');
+
             $msgNotif = "Le responsable a accepté votre demande de maintenance urgente pour votre machine " . $machineName . ", veuillez apporter votre matériel dès que possible";
             $msgFlash = "Vous avez accepté la maintenance en urgence de l'agriculteur.";
             
@@ -226,6 +240,14 @@ class AdminMaintenanceController extends AbstractController
         } elseif ($type === 'non_urgent_planifier') {
             $maintenance->setDecisionAdmin('planification_demandee');
             $maintenance->setStatutMaintenance('en_cours');
+            
+            // On force le statut (Attente Planification)
+            if ($workflow->can($materiel, 'demander_planification')) {
+                $workflow->apply($materiel, 'demander_planification');
+            } else {
+                $materiel->setStatut('attente_planification');
+            }
+            $materiel->setEtat('En panne');
             
             $msgNotif = "Votre demande de maintenance pour votre machine " . $machineName . " a été reçue, veuillez planifier une intervention via la page de maintenance";
             $msgFlash = "Une demande de plannification a été envoyée à l'agriculteur.";
@@ -240,7 +262,12 @@ class AdminMaintenanceController extends AbstractController
             return $this->redirectToRoute('admin_maintenance_urgente');
         }
 
+        // On persiste et on flush tout explicitement
         $em->persist($notif);
+        if ($materiel) {
+            $em->persist($materiel);
+        }
+        $em->persist($maintenance);
         $em->flush();
 
         $this->addFlash('success', $msgFlash);

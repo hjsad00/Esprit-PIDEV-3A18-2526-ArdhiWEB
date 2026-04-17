@@ -51,6 +51,7 @@
   .badge-statut-en_cours { background: #fff8e1; color: #e65100; }
   .badge-statut-terminee { background: #e8f5e9; color: #2e7d32; }
   .badge-statut-annulee { background: #f5f5f5; color: #888; }
+  .badge-statut-attente_planification { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; }
   .badge-statut-en_service { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
   .badge-statut-en_maintenance { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
   .badge-statut-reforme { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
@@ -201,19 +202,25 @@
         </div>
 
         <div class="row g-2">
-            {% if materiel.statut in ['en_maintenance', 'panne_signalee'] %}
+            {% if materiel.statut in ['en_maintenance', 'panne_signalee', 'attente_planification'] %}
                 <div class="col-12">
-                    <button class="btn btn-success w-100 shadow-sm fw-bold" disabled>
-                        <i class="bi bi-check-circle-fill me-2"></i> 
-                        {% if materiel.statut == 'panne_signalee' %}
-                            Demande de maintenance envoyée (En attente Admin)
-                        {% else %}
-                            Matériel actuellement en maintenance
-                        {% endif %}
-                    </button>
+                    <div class="btn-group w-100 shadow-sm">
+                        <button class="btn btn-{{ materiel.statut == 'panne_signalee' ? 'warning' : (materiel.statut == 'en_maintenance' ? 'success' : 'info') }} w-100 fw-bold" disabled>
+                            <i class="bi bi-info-circle-fill me-2"></i> 
+                            {% if materiel.statut == 'panne_signalee' %}
+                                Panne Signalée (En attente Admin)
+                            {% elseif materiel.statut == 'attente_planification' %}
+                                En Attente de Planification
+                            {% else %}
+                                Matériel en Maintenance
+                            {% endif %}
+                        </button>
+                    </div>
                     <p class="small text-muted mt-2 text-center text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                         {% if materiel.statut == 'panne_signalee' %}
-                            <i class="bi bi-clock-history"></i> L'administrateur a été informé et va traiter votre demande.
+                            <i class="bi bi-clock-history"></i> L'administrateur va traiter votre demande d'urgence.
+                        {% elseif materiel.statut == 'attente_planification' %}
+                            <i class="bi bi-calendar-event"></i> L'urgence a été refusée. Veuillez planifier une maintenance standard.
                         {% else %}
                             <i class="bi bi-tools"></i> Une intervention est en cours sur ce matériel.
                         {% endif %}
