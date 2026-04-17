@@ -135,7 +135,7 @@ class ProfileController extends AbstractController
 
         return $this->render('UserAndDiag/profile/show.html.twig', [
             'user' => $user,
-            'posts' => $postRepo->findBy(['user' => $user], ['createdAt' => 'DESC']),
+            'posts' => $postRepo->findBy(['user' => $user], ['created_at' => 'DESC']),
         ]);
     }
 
