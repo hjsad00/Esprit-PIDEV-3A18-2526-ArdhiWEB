@@ -2,49 +2,65 @@
 
 {% block title %}Profil de {{ user.prenom }} {{ user.nom }} - Ardhi{% endblock %}
 
-{% block body %}
-<section class="section py-5">
-  <div class="container">
-    <div class="row">
-      <!-- Sidebar Info -->
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body text-center">
-            {% if user.avatar %}
-                <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle mb-3 border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
-            {% else %}
-                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mx-auto mb-3 shadow-sm" style="width: 120px; height: 120px; font-size: 3rem;">
-                    {{ user.prenom|first|upper }}
-                </div>
-            {% endif %}
-            
-            <h4 class="mb-1 fw-bold" style="color: var(--heading-color);">{{ user.prenom }} {{ user.nom }}</h4>
-            <p class="text-muted mb-2">
-                {% if user.role == 'AGRICULTEUR' %} Agriculteur
-                {% elseif user.role == 'AGRONOME' %} Agronome
-                {% else %} Membre de la communauté
-                {% endif %}
-                <br>
-                <small><i class="bi bi-geo-alt"></i> {{ user.location|default('Localisation non spécifiée') }}</small>
-            </p>
-            
-            {% if user.bio %}
-                <p class="small text-muted mt-3 p-3 bg-light rounded shadow-sm text-start" style="font-style: italic;">
-                    "{{ user.bio }}"
-                </p>
-            {% endif %}
+{% block body_class %}premium-header-active{% endblock %}
 
+{% block body %}
+<section class="section" style="padding-top: 100px; padding-bottom: 60px;">
+  <div class="container">
+    
+    <!-- Profile Banner & Header -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; overflow: hidden;">
+      {% set coverBg = user.banner ? user.banner : asset('assets/img/profil_background.jpg') %}
+      <div style="height: 250px; background: url('{{ coverBg }}') center/cover no-repeat; position: relative;">
+        <!-- Cover graphic/pattern -->
+      </div>
+      
+      <div class="card-body position-relative pt-0 px-5 pb-5">
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between" style="margin-top: -60px;">
+          
+          <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+            <div class="position-relative">
+              {% if user.avatar %}
+                  <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle border border-4 border-white shadow" style="width: 140px; height: 140px; object-fit: cover; background: #fff;">
+              {% else %}
+                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white border border-4 border-white shadow" style="width: 140px; height: 140px; font-size: 3.5rem; background: #fff;">
+                      {{ user.prenom|first|upper }}
+                  </div>
+              {% endif %}
+            </div>
+            
+            <div class="text-center text-md-start mt-3 mt-md-0">
+              <h2 class="fw-bold mb-1" style="color: var(--heading-color);">{{ user.prenom }} {{ user.nom }}</h2>
+              <div class="text-muted d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                <span>
+                  <i class="bi bi-person-badge text-success me-1"></i>
+                  {% if user.role == 'AGRICULTEUR' %} Agriculteur
+                  {% elseif user.role == 'AGRONOME' %} Agronome
+                  {% elseif user.role == 'ADMIN' %} Administrateur
+                  {% else %} Utilisateur
+                  {% endif %}
+                </span>
+                <span>
+                  <i class="bi bi-geo-alt text-primary me-1"></i> {{ user.location|default('Non spécifié') }}
+                </span>
+                <span>
+                  <i class="bi bi-stars text-warning me-1"></i> Niveau {{ user.level|default(1) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 mt-md-0">
             {% if app.user and app.user.id != user.id %}
-              <hr class="my-3">
-              <form action="{{ path('app_profile_toggle_block', {'id': user.id}) }}" method="POST" class="mt-3">
+              <form action="{{ path('app_profile_toggle_block', {'id': user.id}) }}" method="POST">
                   <input type="hidden" name="_token" value="{{ csrf_token('toggle_block_' ~ user.id) }}">
                   {% if app.user.isBlocking(user) %}
-                      <button type="submit" class="btn btn-outline-secondary btn-sm w-100 rounded-pill">
-                          <i class="bi bi-unlock me-1"></i> Débloquer
+                      <button type="submit" class="btn btn-secondary px-4 rounded-pill shadow-sm">
+                          <i class="bi bi-unlock me-2"></i> Débloquer l'utilisateur
                       </button>
                   {% else %}
-                      <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill">
-                          <i class="bi bi-slash-circle me-1"></i> Bloquer
+                      <button type="submit" class="btn btn-outline-danger px-4 rounded-pill shadow-sm">
+                          <i class="bi bi-slash-circle me-2"></i> Bloquer
                       </button>
                   {% endif %}
               </form>
@@ -52,51 +68,108 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Main Content (Posts) -->
-      <div class="col-md-8">
-        <h4 class="mb-4" style="color: var(--heading-color);">Publications de {{ user.prenom }}</h4>
+    <div class="row">
+      <!-- Profile Details -->
+      <div class="col-lg-5 mb-4">
         
-        {% if posts is empty %}
-            <div class="alert alert-light text-center border rounded shadow-sm py-5">
-                <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
-                Cet utilisateur n'a pas encore publié dans la communauté.
-            </div>
-        {% else %}
-            {% for post in posts %}
-                <div class="card mb-4 shadow-sm border-0" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title fw-bold m-0">
-                                <a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" class="text-decoration-none" style="color: var(--heading-color);">
-                                    {{ post.title }}
-                                </a>
-                            </h5>
-                            {% if post.isResolved %}
-                                <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle me-1"></i>Résolu</span>
-                            {% endif %}
-                        </div>
-                        <p class="card-text text-muted small mb-3">
-                            <i class="bi bi-clock me-1"></i> Publié le {{ post.createdAt|date('d/m/Y H:i') }}
-                        </p>
-                        <p class="card-text text-dark">
-                            {{ post.description|length > 200 ? post.description|slice(0, 200) ~ '...' : post.description }}
-                        </p>
-                        
-                        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
-                            <div class="text-muted small">
-                                <span class="me-3"><i class="bi bi-chat-dots me-1"></i> Réponses</span>
-                                <span class="me-3"><i class="bi bi-hand-thumbs-up me-1"></i> {{ post.likes }}</span>
-                                <span><i class="bi bi-hand-thumbs-down me-1"></i> {{ post.dislikes }}</span>
-                            </div>
-                            <a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" class="btn btn-sm btn-primary rounded-pill px-3">Lire la suite</a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
+        <!-- Bio Card -->
+        <div class="card shadow-sm border-0 mb-4 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-card-text text-success me-2"></i> À propos</h5>
+            {% if user.bio %}
+                <p class="text-muted mb-0" style="line-height: 1.6; font-size: 1.05rem;">{{ user.bio }}</p>
+            {% else %}
+                <p class="text-muted fst-italic mb-0">Cet utilisateur n'a pas encore rédigé sa biographie.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Contact & Stats Card -->
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i> Détails & Contact</h5>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span class="text-muted"><i class="bi bi-envelope me-2"></i> Email</span>
+                <span class="fw-medium">{{ user.email|default('Non public') }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span class="text-muted"><i class="bi bi-telephone me-2"></i> Téléphone</span>
+                <span class="fw-medium">{{ user.phone|default('Non renseigné') }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span class="text-muted"><i class="bi bi-award me-2"></i> Points d'expérience</span>
+                <span class="badge bg-success rounded-pill px-3 py-2">{{ user.points|default(0) }} pts</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0">
+                <span class="text-muted"><i class="bi bi-gift me-2"></i> Points de fidélité</span>
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-2">{{ user.pointsFidelite|default(0) }} pts</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
       </div>
+
+      <!-- User Posts -->
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-4 d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-journals text-secondary me-2"></i> Publications récentes</span>
+              <span class="badge bg-light text-dark border">{{ posts|length }}</span>
+            </h5>
+            
+            {% if posts is empty %}
+                <div class="text-center py-5">
+                    <div class="display-1 text-light mb-3"><i class="bi bi-chat-square-text"></i></div>
+                    <p class="text-muted fs-5">Aucune publication pour l'instant.</p>
+                </div>
+            {% else %}
+                <div class="d-flex flex-column gap-3">
+                  {% for post in posts|slice(0, 5) %}
+                      <div class="p-3 border rounded-3 hover-shadow transition-all">
+                          <div class="d-flex justify-content-between align-items-start mb-2">
+                              <h6 class="fw-bold m-0 text-truncate" style="max-width: 75%;">
+                                  <a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" class="text-decoration-none text-dark">
+                                      {{ post.title }}
+                                  </a>
+                              </h6>
+                              {% if post.isResolved %}
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.7rem;"><i class="bi bi-check me-1"></i>Résolu</span>
+                              {% endif %}
+                          </div>
+                          <p class="text-muted small mb-2 text-truncate">{{ post.description }}</p>
+                          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                              <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ post.createdAt|date('d/m/Y') }}</small>
+                              <a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" class="btn btn-sm btn-link text-decoration-none px-0">Consulter <i class="bi bi-arrow-right"></i></a>
+                          </div>
+                      </div>
+                  {% endfor %}
+                  {% if posts|length > 5 %}
+                    <div class="text-center mt-2">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-4">Voir toutes les publications</button>
+                    </div>
+                  {% endif %}
+                </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
     </div>
   </div>
 </section>
+
+<style>
+  .hover-shadow:hover {
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+      transform: translateY(-2px);
+  }
+  .transition-all {
+      transition: all .2s ease-in-out;
+  }
+</style>
 {% endblock %}

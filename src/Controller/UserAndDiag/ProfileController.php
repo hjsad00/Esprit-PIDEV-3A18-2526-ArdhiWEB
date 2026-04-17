@@ -61,6 +61,14 @@ class ProfileController extends AbstractController
                 }
             }
 
+            $bannerFile = $request->files->get('banner');
+            if ($bannerFile) {
+                $imgUrl = $imgBBService->uploadImage($bannerFile);
+                if ($imgUrl) {
+                    $user->setBanner($imgUrl);
+                }
+            }
+
             $validationGroups = ['Default'];
             if (!empty($password)) {
                 $user->setPassword($password); // Temporarily set plain password for length validation
