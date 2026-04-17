@@ -185,7 +185,11 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `vote=${type}`
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
         .then(d => {
             document.getElementById('postLikes').textContent = d.likes;
             document.getElementById('postDislikes').textContent = d.dislikes;
@@ -193,7 +197,8 @@
             const btnD = document.getElementById('btnDislikePost');
             btnL.className = 'vote-btn' + (d.userVote === 'LIKE' ? ' active-like' : '');
             btnD.className = 'vote-btn' + (d.userVote === 'DISLIKE' ? ' active-dislike' : '');
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Comment Voting ──
@@ -203,7 +208,11 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `vote=${type}`
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
         .then(d => {
             const card = btn.closest('.comment-card');
             const btns = card.querySelectorAll('.comment-actions button');
@@ -211,7 +220,8 @@
             btns[0].querySelector('span').textContent = d.likes;
             btns[1].className = d.userVote === 'DISLIKE' ? 'active-dislike' : '';
             btns[1].querySelector('span').textContent = d.dislikes;
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Reply ──
@@ -242,12 +252,17 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
         .then(() => {
             txt.value = '';
             cancelReply();
             location.reload(); // Reload to show threaded comment correctly
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Mark Solution ──

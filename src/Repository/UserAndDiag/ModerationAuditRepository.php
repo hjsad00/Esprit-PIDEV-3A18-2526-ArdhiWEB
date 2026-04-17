@@ -23,4 +23,18 @@ class ModerationAuditRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findLatestMuteReasonForUser(\App\Entity\UserAndDiag\User $user): ?string
+    {
+        $audit = $this->createQueryBuilder('a')
+            ->andWhere('a.targetUser = :user')
+            ->andWhere("a.action = 'MUTE'")
+            ->setParameter('user', $user)
+            ->orderBy('a.created_at', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $audit ? $audit->getReason() : null;
+    }
 }

@@ -59,7 +59,7 @@ class CommunityController extends AbstractController
     // ────────────────────── CREATE POST ───────────────────────
 
     #[Route('/new', name: 'app_user_and_diag_community_new', methods: ['GET', 'POST'])]
-    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService): Response
+    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): Response
     {
         if ($request->isMethod('POST')) {
             /** @var \App\Entity\UserAndDiag\User $user */
@@ -71,7 +71,9 @@ class CommunityController extends AbstractController
                 return $this->redirectToRoute('app_user_and_diag_community');
             }
             if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
-                $this->addFlash('danger', '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.');
+                $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
+                $reason = $latestMute ? ' Raison : ' . $latestMute : '';
+                $this->addFlash('danger', '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason);
                 return $this->redirectToRoute('app_user_and_diag_community');
             }
 
@@ -238,7 +240,7 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/{id}/comment', name: 'app_user_and_diag_community_add_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService): JsonResponse
+    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -248,7 +250,9 @@ class CommunityController extends AbstractController
             return $this->json(['error' => '⛔ Votre compte a été banni de la communauté.'], 403);
         }
         if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
-            return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.'], 403);
+            $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
+            $reason = $latestMute ? ' Raison : ' . $latestMute : '';
+            return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason], 403);
         }
 
         if ($post->getUser()->isBlocking($user)) {
