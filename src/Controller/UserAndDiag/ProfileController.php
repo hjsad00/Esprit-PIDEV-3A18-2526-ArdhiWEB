@@ -2,6 +2,9 @@
 
 namespace App\Controller\UserAndDiag;
 
+use App\Entity\UserAndDiag\User;
+use App\Repository\UserAndDiag\CommunityPostRepository;
+use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +21,7 @@ class ProfileController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
+        ImgBBService $imgBBService
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -36,6 +40,7 @@ class ProfileController extends AbstractController
             $phone = trim($request->request->get('phone', ''));
             $location = trim($request->request->get('location', ''));
             $role = trim($request->request->get('role', ''));
+            $bio = trim($request->request->get('bio', ''));
             $password = $request->request->get('password', '');
             $passwordConfirm = $request->request->get('password_confirm', '');
             $twoFactorEnabled = $request->request->has('two_factor_enabled');
@@ -45,7 +50,16 @@ class ProfileController extends AbstractController
             $user->setPhone($phone ?: null);
             $user->setLocation($location ?: null);
             $user->setRole($role);
+            $user->setBio($bio ?: null);
             $user->setTwoFactorEnabled($twoFactorEnabled);
+
+            $avatarFile = $request->files->get('avatar');
+            if ($avatarFile) {
+                $imgUrl = $imgBBService->uploadImage($avatarFile);
+                if ($imgUrl) {
+                    $user->setAvatar($imgUrl);
+                }
+            }
 
             $validationGroups = ['Default'];
             if (!empty($password)) {
@@ -112,5 +126,46 @@ class ProfileController extends AbstractController
 
         $this->addFlash('danger', 'Token CSRF invalide.');
         return $this->redirectToRoute('app_profile');
+    }
+
+    #[Route('/profile/user/{id}', name: 'app_profile_show', methods: ['GET'])]
+    public function show(User $user, CommunityPostRepository $postRepo): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        return $this->render('UserAndDiag/profile/show.html.twig', [
+            'user' => $user,
+            'posts' => $postRepo->findBy(['user' => $user], ['createdAt' => 'DESC']),
+        ]);
+    }
+
+    #[Route('/profile/user/{id}/block', name: 'app_profile_toggle_block', methods: ['POST'])]
+    public function toggleBlock(User $userToBlock, Request $request, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        /** @var \App\Entity\UserAndDiag\User $currentUser */
+        $currentUser = $this->getUser();
+
+        if ($currentUser->getId() === $userToBlock->getId()) {
+            $this->addFlash('danger', 'Vous ne pouvez pas vous bloquer vous-même.');
+            return $this->redirectToRoute('app_profile_show', ['id' => $userToBlock->getId()]);
+        }
+
+        $csrfToken = $request->request->get('_token', '');
+        if ($this->isCsrfTokenValid('toggle_block_' . $userToBlock->getId(), $csrfToken)) {
+            if ($currentUser->isBlocking($userToBlock)) {
+                $currentUser->removeBlockedUser($userToBlock);
+                $this->addFlash('success', 'Utilisateur débloqué avec succès.');
+            } else {
+                $currentUser->addBlockedUser($userToBlock);
+                $this->addFlash('success', 'Utilisateur bloqué avec succès.');
+            }
+            $em->flush();
+        } else {
+            $this->addFlash('danger', 'Token CSRF invalide.');
+        }
+
+        return $this->redirectToRoute('app_profile_show', ['id' => $userToBlock->getId()]);
     }
 }

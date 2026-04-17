@@ -110,9 +110,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[ORM\OneToMany(targetEntity: Parcelle::class, mappedBy: 'agriculteur', cascade: ['remove'])]
     private Collection $parcelles;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $bio = null;
+
+    /**
+     * @var Collection<int, UserBlock>
+     */
+    #[ORM\OneToMany(targetEntity: UserBlock::class, mappedBy: 'blocker', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $userBlocks;
+
     public function __construct()
     {
         $this->parcelles = new ArrayCollection();
+        $this->userBlocks = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -455,5 +468,69 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
                 ->atPath('password_confirm')
                 ->addViolation();
         }
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
+        return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): static
+    {
+        $this->bio = $bio;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserBlock>
+     */
+    public function getUserBlocks(): Collection
+    {
+        return $this->userBlocks;
+    }
+
+    public function addBlockedUser(self $user): static
+    {
+        if (!$this->isBlocking($user)) {
+            $userBlock = new UserBlock();
+            $userBlock->setBlocker($this);
+            $userBlock->setBlocked($user);
+            $this->userBlocks->add($userBlock);
+        }
+
+        return $this;
+    }
+
+    public function removeBlockedUser(self $user): static
+    {
+        foreach ($this->userBlocks as $userBlock) {
+            if ($userBlock->getBlocked() === $user) {
+                $this->userBlocks->removeElement($userBlock);
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    public function isBlocking(self $user): bool
+    {
+        foreach ($this->userBlocks as $userBlock) {
+            if ($userBlock->getBlocked() === $user) {
+                return true;
+            }
+        }
+        return false;
     }
 }

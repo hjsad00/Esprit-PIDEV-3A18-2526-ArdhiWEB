@@ -12,7 +12,7 @@
           <p class="text-muted">Gérez vos informations personnelles</p>
         </div>
 
-        <form method="post" novalidate>
+        <form method="post" enctype="multipart/form-data" novalidate>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
@@ -58,7 +58,31 @@
 
             <hr class="my-4">
 
-            <div class="mb-3">
+            <!-- Avatar & Bio Section -->
+            <div class="mb-4">
+              <h5 class="mb-3">Profil Public</h5>
+              <div class="row align-items-center mb-3">
+                <div class="col-auto">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 80px; height: 80px; font-size: 2rem;">
+                            {{ user.prenom|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <label for="inputAvatar" class="form-label">Photo de profil <small class="text-muted">(optionnel)</small></label>
+                    <input class="form-control" type="file" id="inputAvatar" name="avatar" accept="image/*">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="inputBio" class="form-label">Bio / À propos</label>
+                <textarea class="form-control" id="inputBio" name="bio" rows="3" placeholder="Parlez de vous à la communauté...">{{ user.bio }}</textarea>
+              </div>
+            </div>
+
+            <hr class="my-4">            <div class="mb-3">
               <h5 class="mb-3">Sécurité & Authentification</h5>
               
               <div class="card bg-light border-0 mb-4">

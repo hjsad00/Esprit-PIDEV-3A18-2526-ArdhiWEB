@@ -166,6 +166,10 @@ class CommunityController extends AbstractController
         $user = $this->getUser();
         $voteType = $request->request->get('vote'); // LIKE or DISLIKE
 
+        if ($post->getUser()->isBlocking($user)) {
+            return $this->json(['error' => '❌ Vous avez été bloqué par l\'auteur de cette publication.'], 403);
+        }
+
         $existing = $likeRepo->findPostVote($user, $post);
 
         if ($existing) {
@@ -201,6 +205,10 @@ class CommunityController extends AbstractController
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
         $voteType = $request->request->get('vote');
+
+        if ($comment->getUser()->isBlocking($user)) {
+            return $this->json(['error' => '❌ Vous avez été bloqué par l\'auteur de ce commentaire.'], 403);
+        }
 
         $existing = $likeRepo->findCommentVote($user, $comment);
 
@@ -243,6 +251,10 @@ class CommunityController extends AbstractController
             return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.'], 403);
         }
 
+        if ($post->getUser()->isBlocking($user)) {
+            return $this->json(['error' => '❌ Vous avez été bloqué par l\'auteur de cette publication.'], 403);
+        }
+
         $content = trim($request->request->get('content', ''));
         $parentId = $request->request->get('parent_id');
 
@@ -258,6 +270,9 @@ class CommunityController extends AbstractController
         if ($parentId) {
             $parent = $em->getRepository(CommunityComment::class)->find($parentId);
             if ($parent) {
+                if ($parent->getUser()->isBlocking($user)) {
+                    return $this->json(['error' => '❌ Vous avez été bloqué par l\'auteur de ce commentaire.'], 403);
+                }
                 $comment->setParentComment($parent);
             }
         }

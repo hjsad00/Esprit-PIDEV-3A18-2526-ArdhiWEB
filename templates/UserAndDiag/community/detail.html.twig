@@ -24,12 +24,18 @@
                 {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                 {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                 {% set idx = post.user.id % 5 %}
-                <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                    {{ post.user.prenom|default('U')|first|upper }}
-                </div>
+                {% if post.user.avatar %}
+                    <img src="{{ post.user.avatar }}" class="avatar" style="object-fit: cover;" alt="Avatar">
+                {% else %}
+                    <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                        {{ post.user.prenom|default('U')|first|upper }}
+                    </div>
+                {% endif %}
                 <div class="post-meta">
                     <div class="author">
-                        {{ post.user.prenom }} {{ post.user.nom }}
+                        <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                            {{ post.user.prenom }} {{ post.user.nom }}
+                        </a>
                         {% if post.user.role == 'AGRONOME' %}
                             <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
                         {% endif %}
@@ -76,10 +82,18 @@
                         {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                         {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                         {% set idx = comment.user.id % 5 %}
-                        <div class="avatar-sm" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                            {{ comment.user.prenom|default('U')|first|upper }}
-                        </div>
-                        <span class="comment-author">{{ comment.user.prenom }} {{ comment.user.nom }}</span>
+                        {% if comment.user.avatar %}
+                            <img src="{{ comment.user.avatar }}" class="avatar-sm" style="object-fit: cover; border-radius: 50%;" alt="Avatar">
+                        {% else %}
+                            <div class="avatar-sm" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                                {{ comment.user.prenom|default('U')|first|upper }}
+                            </div>
+                        {% endif %}
+                        <span class="comment-author">
+                            <a href="{{ path('app_profile_show', {'id': comment.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                                {{ comment.user.prenom }} {{ comment.user.nom }}
+                            </a>
+                        </span>
                         {% if isOp %}<span class="badge-op">OP</span>{% endif %}
                         {% if comment.solution %}<span class="badge-solution">✓ SOLUTION</span>{% endif %}
                     </div>

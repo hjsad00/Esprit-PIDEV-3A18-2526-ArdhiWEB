@@ -41,12 +41,18 @@
                     {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                     {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                     {% set idx = loop.index0 % 5 %}
-                    <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                        {{ post.user.prenom|default('U')|first|upper }}
-                    </div>
+                    {% if post.user.avatar %}
+                        <img src="{{ post.user.avatar }}" class="avatar" style="object-fit: cover;" alt="Avatar">
+                    {% else %}
+                        <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                            {{ post.user.prenom|default('U')|first|upper }}
+                        </div>
+                    {% endif %}
                     <div class="post-meta">
                         <div class="author">
-                            {{ post.user.prenom }} {{ post.user.nom }}
+                            <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                                {{ post.user.prenom }} {{ post.user.nom }}
+                            </a>
                             {% if post.user.role == 'AGRONOME' %}
                                 <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
                             {% endif %}
