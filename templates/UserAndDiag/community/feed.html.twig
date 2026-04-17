@@ -26,7 +26,11 @@
                 <input type="text" id="searchInput" placeholder="Rechercher un sujet..." oninput="filterPosts()">
             </div>
         </div>
-        <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+        {% if app.user and app.user.mutedUntil and app.user.mutedUntil > date() %}
+            <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.{% if latestMuteReason %} Raison : {{ latestMuteReason|escape('js') }}{% endif %}'); return false;" class="btn-new-post">+ Poser une question</a>
+        {% else %}
+            <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+        {% endif %}
         {% if isModerator|default(false) %}
             <a href="{{ path('app_user_and_diag_moderation_dashboard') }}" class="btn-new-post" style="background:linear-gradient(135deg,#e53935,#ff7043);margin-left:8px;">🛡️ Modération</a>
         {% endif %}

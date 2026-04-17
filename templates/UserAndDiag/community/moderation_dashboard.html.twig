@@ -106,6 +106,54 @@
             {% endif %}
         </div>
 
+        {# ─── Restricted Users ─── #}
+        {% if restrictedUsers|length > 0 %}
+        <div class="mod-section">
+            <h2>🔒 Utilisateurs Restreints</h2>
+            <div style="overflow-x:auto;">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Statut</th>
+                            <th>Fin de restriction</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in restrictedUsers %}
+                            <tr>
+                                <td><a href="{{ path('app_profile_show', {id: u.id}) }}" class="text-white text-decoration-none fw-bold">{{ u.prenom }} {{ u.nom }}</a></td>
+                                <td>
+                                    {% if u.banned %}
+                                        <span class="action-badge action-BAN">BANNI</span>
+                                    {% elseif u.mutedUntil and u.mutedUntil > "now"|date('Y-m-d H:i:s') %}
+                                        <span class="action-badge action-MUTE">MUET</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.mutedUntil and not u.banned %}
+                                        {{ u.mutedUntil|date('d/m/Y H:i') }}
+                                    {% else %}
+                                        Définitive
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.mutedUntil and u.mutedUntil > "now"|date('Y-m-d H:i:s') and not u.banned %}
+                                        <button class="mod-btn mod-btn-success" onclick="modUnmuteUser({{ u.id }})">🔊 Démuter</button>
+                                    {% endif %}
+                                    {% if u.banned %}
+                                        <button class="mod-btn mod-btn-success" onclick="modUnbanUser({{ u.id }})">🔓 Débannir</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
         {# ─── User Management (Admin Only) ─── #}
         {% if isAdmin and allUsers|length > 0 %}
         <div class="mod-section">
@@ -227,6 +275,26 @@
             } else {
                 alert('⚠️ ' + (d.error || 'Erreur'));
             }
+        });
+    }
+
+    function modUnmuteUser(userId) {
+        if (!confirm('🔊 Êtes-vous sûr de vouloir démuter cet utilisateur ?')) return;
+        fetch(`/user-and-diag/moderation/user/${userId}/unmute`, { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.success ? '✅ ' + d.message : '⚠️ ' + (d.error || 'Erreur'));
+            if (d.success) location.reload();
+        });
+    }
+
+    function modUnbanUser(userId) {
+        if (!confirm('🔓 Êtes-vous sûr de vouloir débannir cet utilisateur ?')) return;
+        fetch(`/user-and-diag/moderation/user/${userId}/unban`, { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.success ? '✅ ' + d.message : '⚠️ ' + (d.error || 'Erreur'));
+            if (d.success) location.reload();
         });
     }
 </script>

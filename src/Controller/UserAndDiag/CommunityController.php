@@ -27,7 +27,8 @@ class CommunityController extends AbstractController
         Request $request,
         CommunityPostRepository $postRepo,
         CommunityCommentRepository $commentRepo,
-        CommunityLikeRepository $likeRepo
+        CommunityLikeRepository $likeRepo,
+        \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo
     ): Response {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -49,10 +50,16 @@ class CommunityController extends AbstractController
             ];
         }
 
+        $latestMuteReason = null;
+        if ($user && $user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $latestMuteReason = $auditRepo->findLatestMuteReasonForUser($user);
+        }
+
         return $this->render('UserAndDiag/community/feed.html.twig', [
             'feedData' => $feedData,
             'keyword' => $keyword,
             'isModerator' => $this->isGranted('ROLE_MODERATOR'),
+            'latestMuteReason' => $latestMuteReason,
         ]);
     }
 
@@ -61,32 +68,24 @@ class CommunityController extends AbstractController
     #[Route('/new', name: 'app_user_and_diag_community_new', methods: ['GET', 'POST'])]
     public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): Response
     {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // ── Mute/Ban Gate ──
+        if ($user->isBanned()) {
+            $this->addFlash('danger', '⛔ Votre compte a été banni de la communauté.');
+            return $this->redirectToRoute('app_user_and_diag_community');
+        }
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
+            $reason = $latestMute ? ' Raison : ' . $latestMute : '';
+            $this->addFlash('danger', '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason);
+            return $this->redirectToRoute('app_user_and_diag_community');
+        }
+
         if ($request->isMethod('POST')) {
-            /** @var \App\Entity\UserAndDiag\User $user */
-            $user = $this->getUser();
-
-            // ── Mute/Ban Gate ──
-            if ($user->isBanned()) {
-                $this->addFlash('danger', '⛔ Votre compte a été banni de la communauté.');
-                return $this->redirectToRoute('app_user_and_diag_community');
-            }
-            if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
-                $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
-                $reason = $latestMute ? ' Raison : ' . $latestMute : '';
-                $this->addFlash('danger', '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason);
-                return $this->redirectToRoute('app_user_and_diag_community');
-            }
-
             $title = trim($request->request->get('title', ''));
             $description = trim($request->request->get('description', ''));
-
-            if (!$title || !$description) {
-                $this->addFlash('danger', 'Le titre et la description sont obligatoires.');
-                return $this->redirectToRoute('app_user_and_diag_community_new');
-            }
-
-            /** @var \App\Entity\UserAndDiag\User $user */
-            $user = $this->getUser();
 
             $post = new CommunityPost();
             $post->setUser($user);
@@ -162,10 +161,17 @@ class CommunityController extends AbstractController
     // ────────────────────────── AJAX APIs ──────────────────────────
 
     #[Route('/{id}/vote', name: 'app_user_and_diag_community_vote_post', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function votePost(CommunityPost $post, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo): JsonResponse
+    public function votePost(CommunityPost $post, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
+            $reason = $latestMute ? ' Raison : ' . $latestMute : '';
+            return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason], 403);
+        }
+
         $voteType = $request->request->get('vote'); // LIKE or DISLIKE
 
         if ($post->getUser()->isBlocking($user)) {
@@ -202,10 +208,17 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/comment/{id}/vote', name: 'app_user_and_diag_community_vote_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function voteComment(CommunityComment $comment, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo): JsonResponse
+    public function voteComment(CommunityComment $comment, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
+            $reason = $latestMute ? ' Raison : ' . $latestMute : '';
+            return $this->json(['error' => '🔇 Vous êtes muet jusqu\'au ' . $user->getMutedUntil()->format('d/m/Y H:i') . '.' . $reason], 403);
+        }
+
         $voteType = $request->request->get('vote');
 
         if ($comment->getUser()->isBlocking($user)) {

@@ -59,10 +59,20 @@ class CommunityModerationController extends AbstractController
                 ->getResult();
         }
 
+        // Restricted users (muted or banned) available for all moderators
+        $restrictedUsers = $em->getRepository(User::class)->createQueryBuilder('u')
+            ->where('u.is_banned = true')
+            ->orWhere('u.muted_until > :now')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('u.prenom', 'ASC')
+            ->getQuery()
+            ->getResult();
+
         return $this->render('UserAndDiag/community/moderation_dashboard.html.twig', [
             'flaggedPosts' => $flaggedPosts,
             'auditLog' => $auditLog,
             'allUsers' => $allUsers,
+            'restrictedUsers' => $restrictedUsers,
             'isAdmin' => in_array('ROLE_ADMIN', $user->getRoles()),
         ]);
     }
