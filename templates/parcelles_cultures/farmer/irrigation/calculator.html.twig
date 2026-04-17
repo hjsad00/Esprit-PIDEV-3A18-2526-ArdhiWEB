@@ -34,6 +34,26 @@
     .conseil-box { background: linear-gradient(135deg, rgba(17,101,48,0.1), rgba(62,207,142,0.1)); border-radius: 16px; padding: 20px; border-left: 4px solid #116530; margin-top: 20px; }
     .conseil-title { font-weight: 700; color: #116530; margin-bottom: 10px; font-size: 1.1rem; }
     
+    .nav-tabs { border-bottom: 2px solid #eee; }
+    .nav-tabs .nav-link { color: #999; font-weight: 500; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .nav-tabs .nav-link:hover { color: #116530; border-bottom-color: #116530; }
+    .nav-tabs .nav-link.active { color: #116530; border-bottom-color: #116530; }
+    
+    .weather-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 12px 15px; margin-bottom: 10px; }
+    .weather-current { font-size: 2rem; font-weight: 700; }
+    .weather-desc { font-size: 0.85rem; opacity: 0.9; margin-top: 3px; }
+    .weather-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    .weather-detail-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; }
+    .weather-detail-label { font-size: 0.65rem; opacity: 0.8; text-transform: uppercase; }
+    .weather-detail-value { font-size: 1rem; font-weight: 700; margin-top: 3px; }
+    
+    .forecast-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
+    .forecast-day { font-weight: 600; color: #116530; font-size: 0.85rem; }
+    .forecast-temp { font-size: 1.2rem; font-weight: 700; color: #2d3436; margin: 5px 0; }
+    .forecast-temps { font-size: 0.75rem; color: #999; }
+    .forecast-item { background: #f8faf7; padding: 8px; border-radius: 8px; text-align: center; }
+    .forecast-emoji { font-size: 1.5rem; }
+    
     #results { min-height: 200px; }
 </style>
 {% endblock %}
@@ -57,6 +77,21 @@
             <div class="page-header" data-aos="fade-down">
                 <h1 class="page-title">🤖 Calculateur d'Irrigation IA</h1>
                 <p class="text-muted lead mt-2">Estimez les besoins en eau de votre parcelle selon les conditions climatiques en temps réel.</p>
+            </div>
+
+            <!-- SECTION MÉTÉO EN HAUT -->
+            <div class="mb-4" data-aos="fade-up" data-aos-delay="50">
+                <div class="premium-card" style="padding: 15px 20px;">
+                    <span class="card-label" style="margin-bottom: 12px; font-size: 11px;"><i class="bi bi-cloud"></i> Météo</span>
+                    
+                    <div id="weather">
+                        <div class="text-center py-3 text-muted" style="font-size: 0.85rem;">
+                            <i class="bi bi-cloud-fog2" style="font-size: 2.5rem; color: #cce8d8;"></i>
+                            <h5 class="mt-2" style="color: #bbb; font-size: 0.95rem;">Météo</h5>
+                            <p style="margin: 0; font-size: 0.8rem;">Sélectionnez une parcelle ci-dessous.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row g-4">
@@ -125,7 +160,7 @@
                 <!-- Résultats à droite -->
                 <div class="col-lg-7" data-aos="fade-left" data-aos-delay="150">
                     <div class="premium-card">
-                        <span class="card-label"><i class="bi bi-bar-chart-line-fill"></i> Résultats</span>
+                        <span class="card-label"><i class="bi bi-bar-chart-line-fill"></i> Résultats du Calcul</span>
                         
                         <div id="results">
                             <div class="text-center py-5 text-muted">
@@ -281,6 +316,17 @@ document.getElementById('parcelleSelect').addEventListener('change', async funct
                 cultureSelect.innerHTML = '<option value="">-- Aucune culture pour cette parcelle --</option>';
                 document.getElementById('culturesParcelleList').style.display = 'none';
             }
+            
+            // Charger la météo pour cette parcelle
+            if (parcelle.latitude && parcelle.longitude) {
+                await loadWeather(parcelle.latitude, parcelle.longitude);
+            } else {
+                document.getElementById('weather').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Coordonnées manquantes pour cette parcelle.
+                    </div>
+                `;
+            }
         } else {
             console.error('API error:', parcelle.error || 'Unknown error');
         }
@@ -431,5 +477,155 @@ function getNiveauDescription(niveau) {
     };
     return descriptions[niveau] || '';
 }
+
+// Charger les données météo
+async function loadWeather(latitude, longitude) {
+    try {
+        console.log('Loading weather for:', latitude, longitude);
+        const response = await fetch(`/api/irrigation/weather?latitude=${latitude}&longitude=${longitude}`);
+        
+        if (!response.ok) {
+            throw new Error('Weather API error');
+        }
+        
+        const data = await response.json();
+        console.log('Weather data:', data);
+        
+        displayWeather(data);
+    } catch (error) {
+        console.error('Erreur météo:', error);
+        document.getElementById('weather').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> Erreur lors du chargement de la météo
+            </div>
+        `;
+    }
+}
+
+function displayWeather(data) {
+    const weatherDiv = document.getElementById('weather');
+    const current = data.current || {};
+    const daily = data.daily || {};
+    
+    // Code météo WMO
+    const weatherDescription = getWeatherDescription(current.weather_code);
+    const weatherEmoji = getWeatherEmoji(current.weather_code);
+    
+    let html = `
+        <div class="weather-card">
+            <div style="font-size: 2.2rem;">${weatherEmoji}</div>
+            <div class="weather-current">${Math.round(current.temperature_2m || 0)}°C</div>
+            <div class="weather-desc">${weatherDescription}</div>
+            
+            <div class="weather-details">
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">💧 Humidité</div>
+                    <div class="weather-detail-value">${current.relative_humidity_2m || 0}%</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">💨 Vent</div>
+                    <div class="weather-detail-value">${Math.round(current.wind_speed_10m || 0)} km/h</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">🌧️ Pluie</div>
+                    <div class="weather-detail-value">${current.precipitation || 0} mm</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">📍 Zone</div>
+                    <div class="weather-detail-value">${data.timezone || 'UTC'}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size: 0.8rem; color: #116530; font-weight: 600; margin-top: 8px; margin-bottom: 6px;">📅 Prévisions</div>
+        <div class="forecast-container">
+    `;
+    
+    // Ajouter les prévisions
+    if (daily.time && daily.time.length > 0) {
+        for (let i = 0; i < Math.min(5, daily.time.length); i++) {
+            const date = new Date(daily.time[i]);
+            const day = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+            const emoji = getWeatherEmoji(daily.weather_code[i]);
+            const tempMax = daily.temperature_2m_max[i];
+            const tempMin = daily.temperature_2m_min[i];
+            const precip = daily.precipitation_sum[i];
+            
+            html += `
+                <div class="forecast-item">
+                    <div class="forecast-emoji">${emoji}</div>
+                    <div class="forecast-day">${day}</div>
+                    <div class="forecast-temp">${Math.round(tempMax)}°</div>
+                    <div class="forecast-temps">${Math.round(tempMin)}° | ${precip}mm</div>
+                </div>
+            `;
+        }
+    }
+    
+    html += `</div>`;
+    
+    weatherDiv.innerHTML = html;
+}
+
+function getWeatherDescription(code) {
+    const descriptions = {
+        0: 'Dégagé',
+        1: 'Partiellement nuageux',
+        2: 'Très nuageux',
+        3: 'Couvert',
+        45: 'Brumeux',
+        48: 'Dépôt de givre',
+        51: 'Bruine légère',
+        53: 'Bruine modérée',
+        55: 'Bruine dense',
+        61: 'Pluie faible',
+        63: 'Pluie modérée',
+        65: 'Pluie forte',
+        71: 'Neige faible',
+        73: 'Neige modérée',
+        75: 'Neige forte',
+        77: 'Grains de neige',
+        80: 'Averses faibles',
+        81: 'Averses modérées',
+        82: 'Averses fortes',
+        85: 'Averses de neige faibles',
+        86: 'Averses de neige fortes',
+        95: 'Orage faible',
+        96: 'Orage avec grêle faible',
+        99: 'Orage avec grêle forte',
+    };
+    return descriptions[code] || 'Conditions inconnues';
+}
+
+function getWeatherEmoji(code) {
+    const emojis = {
+        0: '☀️',
+        1: '🌤️',
+        2: '⛅',
+        3: '☁️',
+        45: '🌫️',
+        48: '🌫️',
+        51: '🌦️',
+        53: '🌧️',
+        55: '⛈️',
+        61: '🌧️',
+        63: '🌧️',
+        65: '⛈️',
+        71: '🌨️',
+        73: '🌨️',
+        75: '❄️',
+        77: '🌨️',
+        80: '🌧️',
+        81: '⛈️',
+        82: '⛈️',
+        85: '🌨️',
+        86: '🌨️',
+        95: '⛈️',
+        96: '⛈️',
+        99: '⛈️',
+    };
+    return emojis[code] || '🌤️';
+}
+
 </script>
 {% endblock %}
