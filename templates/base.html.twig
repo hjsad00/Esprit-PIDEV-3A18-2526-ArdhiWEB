@@ -270,7 +270,7 @@
                     
                     let link = '#';
                     if (n.relatedType === 'POST') link = '/user-and-diag/community/' + n.relatedId;
-                    if (n.relatedType === 'REVIEW') link = '/user-and-diag'; // Dashboard/history route
+                    if (n.relatedType === 'REVIEW') link = '/user-and-diag/client-dashboard';
 
                     let icon = 'bi-info-circle text-primary';
                     if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
