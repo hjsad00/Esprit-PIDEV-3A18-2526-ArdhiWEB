@@ -375,6 +375,9 @@
                         <button class="cmd-action-btn btn-ship" onclick="updateStatus({{ commande.id }}, 'en_cours')">
                           <i class="bi bi-truck"></i> Expédier
                         </button>
+                        <button class="cmd-action-btn" onclick="updateStatus({{ commande.id }}, 'annulee')" style="border-color:#e74c3c; color:#e74c3c;">
+                          <i class="bi bi-x-circle"></i> Annuler
+                        </button>
                       {% elseif etat == 'en_cours' %}
                         <button class="cmd-action-btn btn-deliver" onclick="updateStatus({{ commande.id }}, 'livree')">
                           <i class="bi bi-check-circle"></i> Marquer livrée
@@ -572,6 +575,9 @@ async function openDetails(id) {
     const cmd = data.commande;
     title.textContent = `Commande #${cmd.id} — ${cmd.date}`;
     total.textContent = `${cmd.total} DT`;
+
+    const deliveryRow = document.getElementById('modal-delivery-row');
+    const deliveryCost = document.getElementById('modal-delivery-cost');
 
     if (cmd.fraisLivraison && cmd.fraisLivraison !== "0,00") {
       deliveryRow.style.display = 'block';

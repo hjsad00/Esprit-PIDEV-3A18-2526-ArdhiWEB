@@ -730,6 +730,7 @@ class CommandeController extends AbstractController
 
         foreach ($stockUpdates as $update) {
             $notificationService->notifyLowStock($update['produit'], $update['oldStock']);
+            $notificationService->notifySellerOutOfStock($update['produit'], $update['oldStock']);
         }
 
         return ['nbCommandes' => $nbCommandes];

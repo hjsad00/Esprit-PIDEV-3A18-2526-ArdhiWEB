@@ -5,6 +5,7 @@ namespace App\Controller\Marketplace;
 use App\Entity\Marketplace\Produits;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Service\Marketplace\WishlistNotificationService;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -147,6 +148,7 @@ class ProduitController extends AbstractController
         // Notification si stock faible
         if (!$isNew) {
             $notificationService->notifyLowStock($produit, $oldStock);
+            $notificationService->notifySellerOutOfStock($produit, $oldStock);
         }
 
         if ($isAjax) {
@@ -197,14 +199,38 @@ class ProduitController extends AbstractController
             return $this->redirectToRoute('app_marketplace_mes_produits');
         }
 
-        if ($produit->getImage()) {
-            $path = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $produit->getImage();
-            if (file_exists($path))
-                unlink($path);
+        $imageName = $produit->getImage();
+
+        try {
+            $em->remove($produit);
+            $em->flush();
+        } catch (ForeignKeyConstraintViolationException) {
+            $message = 'Suppression impossible: ce produit a deja ete achete par des clients, vous ne pouvez pas le supprimer.';
+
+            if ($isAjax) {
+                return $this->json(['success' => false, 'message' => $message], 409);
+            }
+
+            $this->addFlash('warning', $message);
+            return $this->redirectToRoute('app_marketplace_mes_produits');
+        } catch (\Throwable $e) {
+            if ($isAjax) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Erreur serveur lors de la suppression du produit.',
+                ], 500);
+            }
+
+            $this->addFlash('danger', 'Erreur serveur lors de la suppression du produit.');
+            return $this->redirectToRoute('app_marketplace_mes_produits');
         }
 
-        $em->remove($produit);
-        $em->flush();
+        if ($imageName) {
+            $path = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $imageName;
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+        }
 
         if ($isAjax)
             return $this->json(['success' => true, 'message' => 'Produit supprimé avec succès !']);

@@ -129,6 +129,7 @@ class ProduitsRepository extends ServiceEntityRepository
         if (!$isAdmin) {
             $qb->andWhere('p.visible = :true')
                ->andWhere('p.visibleAdmin = :true')
+             ->andWhere('p.quantiteStock > 0')
                ->setParameter('true', true);
         }
 
@@ -224,6 +225,7 @@ class ProduitsRepository extends ServiceEntityRepository
         if (!$isAdmin) {
             $qb->andWhere('p.visible = :true')
                ->andWhere('p.visibleAdmin = :true')
+             ->andWhere('p.quantiteStock > 0')
                ->setParameter('true', true);
         }
 

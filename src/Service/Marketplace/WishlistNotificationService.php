@@ -134,4 +134,34 @@ class WishlistNotificationService
             }
         }
     }
+
+    /**
+     * Notifie le vendeur quand le stock du produit atteint 0.
+     */
+    public function notifySellerOutOfStock(Produits $produit, int $oldStock): void
+    {
+        $newStock = $produit->getQuantiteStock();
+
+        // Notification uniquement lors du passage vers 0.
+        if (!($oldStock > 0 && $newStock === 0)) {
+            return;
+        }
+
+        $seller = $produit->getUser();
+        if (!$seller || !$seller->getPhone()) {
+            return;
+        }
+
+        $message = sprintf(
+            "⚠️ *Ardhi Marketplace* ⚠️\n\n" .
+            "Salut %s ! 👋\n\n" .
+            "Le produit *%s* est en rupture de stock (0).\n" .
+            "Il est retire automatiquement du catalogue public.\n\n" .
+            "La republication nécessite un stock disponible.",
+            $seller->getPrenom() ?: 'Vendeur',
+            $produit->getNom()
+        );
+
+        $this->twilioService->sendWhatsAppMessage($seller->getPhone(), $message);
+    }
 }
