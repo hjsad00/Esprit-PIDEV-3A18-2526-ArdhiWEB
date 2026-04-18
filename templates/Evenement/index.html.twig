@@ -88,6 +88,9 @@
         {% if app.user and app.user.role in ['AGRICULTEUR','ADMIN'] %}
           <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
         {% endif %}
+        {% if app.user and app.user.role == 'AGRICULTEUR' %}
+          <a href="{{ path('app_evenement_mes') }}" class="hero-btn-secondary">Mes événements</a>
+        {% endif %}
         <a href="#events" class="hero-btn-secondary">Voir les événements</a>
       </div>
     </div>
@@ -122,6 +125,14 @@
           <div class="service-sidebar-icon"><i class="bi bi-calendar3"></i></div>
           <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
         </a>
+
+        {% if app.user.role == 'AGRICULTEUR' %}
+        <a href="{{ path('app_evenement_mes') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_mes' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar2-check"></i></div>
+          <div class="service-sidebar-text"><h4>Mes événements</h4><span>Événements créés</span></div>
+        </a>
+        {% endif %}
 
         {% if app.user.role in ['AGRICULTEUR','ADMIN'] %}
         <a href="{{ path('app_evenement_statistics') }}"

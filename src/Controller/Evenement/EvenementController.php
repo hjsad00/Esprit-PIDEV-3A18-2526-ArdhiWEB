@@ -227,6 +227,31 @@ class EvenementController extends AbstractController
         ]);
     }
 
+    // ─── MES ÉVÉNEMENTS ──────────────────────────────────────────────────────
+    #[Route('/mes-evenements', name: 'app_evenement_mes', methods: ['GET'])]
+    public function mesEvenements(Request $request, EvenementRepository $evenementRepo): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
+
+        if ($this->getUser()->getRole() !== 'AGRICULTEUR') {
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $type   = $request->query->get('type');
+        $statut = $request->query->get('statut');
+        $search = $request->query->get('search');
+
+        $evenements = $evenementRepo->findByCreateurWithFilters($this->getUser(), $type, $statut, $search);
+
+        return $this->render('evenement/mes_evenements.html.twig', [
+            'evenements' => $evenements,
+            'type'       => $type,
+            'statut'     => $statut,
+            'search'     => $search,
+        ]);
+    }
+
     // ─── PARTICIPATIONS (admin/creator) ──────────────────────────────────────
     #[Route('/participations', name: 'app_evenement_participations', methods: ['GET'])]
     public function participations(ParticipationRepository $participationRepo): Response

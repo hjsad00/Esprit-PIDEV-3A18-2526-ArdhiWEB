@@ -25,6 +25,27 @@ class EvenementRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function findByCreateurWithFilters($createur, ?string $type, ?string $statut, ?string $search): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->andWhere('e.createur = :createur')
+            ->setParameter('createur', $createur)
+            ->orderBy('e.dateDebut', 'ASC');
+
+        if ($type) {
+            $qb->andWhere('e.type = :type')->setParameter('type', $type);
+        }
+        if ($statut) {
+            $qb->andWhere('e.statut = :statut')->setParameter('statut', $statut);
+        }
+        if ($search) {
+            $qb->andWhere('e.titre LIKE :s OR e.lieu LIKE :s OR e.organisateur LIKE :s')
+               ->setParameter('s', '%'.$search.'%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     /**
      * Events eligible for automatic status sync.
      */
