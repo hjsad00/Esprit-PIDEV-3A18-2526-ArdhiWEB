@@ -42,6 +42,7 @@
         {% for item in feedData %}
             {% set post = item.post %}
             <div onclick="window.location.href='{{ path('app_user_and_diag_community_detail', {id: post.id}) }}'" class="post-card" style="cursor: pointer;"
+               data-track-type="post-feed" data-track-id="{{ post.id }}"
                data-search="{{ post.title|lower }} {{ post.description|lower }} {{ post.user.prenom|lower }} {{ post.user.nom|lower }}">
                 <div class="post-header">
                     {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
@@ -93,6 +94,9 @@
                             <span class="report-btn" onclick="event.stopPropagation(); reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
                         {% endif %}
                     {% endif %}
+                    {% if app.user and post.user.id == app.user.id %}
+                        <span style="color:#64b5f6;" title="Vues page">👁️ {{ post.views|default(0) }}</span>
+                    {% endif %}
                 </div>
             </div>
         {% else %}
@@ -106,6 +110,7 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="{{ asset('assets/js/UserAndDiag/community-analytics.js') }}"></script>
 <script>
     function filterPosts() {
         const filterText = document.getElementById('searchInput').value.toLowerCase();

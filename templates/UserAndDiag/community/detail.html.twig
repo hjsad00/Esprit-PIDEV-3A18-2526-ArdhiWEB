@@ -19,7 +19,7 @@
         </nav>
 
         {# ─── Post Card ─── #}
-        <div class="glass-card">
+        <div class="glass-card" data-track-type="post-detail" data-track-id="{{ post.id }}">
             <div class="post-header">
                 {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                 {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
@@ -74,6 +74,30 @@
                 </div>
             {% endif %}
 
+            {% if app.user and post.user.id == app.user.id %}
+                <div class="advanced-stats mt-3 p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                    <h6 style="color: #64b5f6; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">📊 Statistiques Avancées</h6>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.views|default(0) }}</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Vues (Page Detail)</div>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.feedImpressions|default(0) }}</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Impressions (Feed)</div>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime / 60)|round(1, 'floor') ~ 'm' : '< 1m' }}</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Temps de lecture complet</div>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalFeedDwellTime is defined and post.totalFeedDwellTime > 0 ? (post.totalFeedDwellTime / 60)|round(1, 'floor') ~ 'm' : '< 1m' }}</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Temps d'arrêt (Feed)</div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
             <div class="action-bar">
                 <button class="vote-btn {{ postVote == 'LIKE' ? 'active-like' : '' }}" id="btnLikePost" onclick="votePost('LIKE')">
                     👍 <span id="postLikes">{{ post.likes }}</span>
@@ -103,7 +127,7 @@
                 {% set ml = depth * 35 %}
                 {% if ml > 200 %}{% set ml = 200 %}{% endif %}
 
-                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}">
+                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}" data-track-type="comment" data-track-id="{{ comment.id }}">
                     <div class="comment-header">
                         {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                         {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
@@ -218,6 +242,7 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="{{ asset('assets/js/UserAndDiag/community-analytics.js') }}"></script>
 <script>
     let replyingToId = null;
     const postId = {{ post.id }};
