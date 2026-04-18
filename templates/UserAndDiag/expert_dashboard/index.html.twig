@@ -373,13 +373,25 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                const container = document.getElementById('taskListContainer');
-                container.appendChild(createTaskRow({
+                // Add to internal state
+                if (!currentReviewData.tasks) currentReviewData.tasks = [];
+                currentReviewData.tasks.push({
                     id: data.task_id,
                     day_offset: parseInt(day),
                     description: desc,
                     status: 'PENDING'
-                }));
+                });
+
+                // Sort tasks chronologically
+                currentReviewData.tasks.sort((a, b) => a.day_offset - b.day_offset);
+
+                // Re-render task list
+                const container = document.getElementById('taskListContainer');
+                container.innerHTML = '';
+                currentReviewData.tasks.forEach(task => {
+                    container.appendChild(createTaskRow(task));
+                });
+
                 document.getElementById('txtNewTaskDay').value = '';
                 document.getElementById('txtNewTaskDescription').value = '';
                 showToast('Nouvelle tâche ajoutée !');
