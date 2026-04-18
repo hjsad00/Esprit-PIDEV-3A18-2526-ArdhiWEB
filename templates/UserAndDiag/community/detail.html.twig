@@ -43,7 +43,7 @@
                             <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
                         {% endif %}
                     </div>
-                    <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                    <div class="date" title="{{ post.createdAt|date('d/m/Y à H:i') }}" style="text-transform: capitalize;">{{ post.createdAt|ago(locale='fr') }}</div>
                 </div>
                 {% if post.resolved %}
                     <span class="badge-resolved">✓ RÉSOLU</span>
@@ -128,6 +128,7 @@
                         </span>
                         {% if isOp %}<span class="badge-op">OP</span>{% endif %}
                         {% if comment.solution %}<span class="badge-solution">✓ SOLUTION</span>{% endif %}
+                        <span class="comment-date" style="margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: capitalize;" title="{{ comment.createdAt|date('d/m/Y à H:i') }}">{{ comment.createdAt|ago(locale='fr') }}</span>
                     </div>
                     <div class="comment-body">{{ comment.content|emojify }}</div>
                     <div class="comment-actions">

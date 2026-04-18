@@ -46,6 +46,31 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
+            // reCAPTCHA check
+            $recaptchaToken = $request->request->get('g-recaptcha-response');
+            if (empty($recaptchaToken)) {
+                $this->addFlash('danger', 'Échec de validation reCAPTCHA (Jeton vide).');
+                return $this->redirectToRoute('app_register');
+            }
+
+            $secret = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+
+            // Skip SSL certificate issues on local Windows environments
+            $context = stream_context_create([
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ]
+            ]);
+
+            $verifyResponse = @file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$recaptchaToken}", false, $context);
+            $data = json_decode((string) $verifyResponse, true);
+
+            if (empty($data['success']) || ($data['score'] ?? 0) < 0.5) {
+                $this->addFlash('danger', 'Votre score reCAPTCHA est trop faible (suspicion de bot).');
+                return $this->redirectToRoute('app_register');
+            }
+
             // Create user object for validation
             $user = new User();
             $user->setNom($nom);

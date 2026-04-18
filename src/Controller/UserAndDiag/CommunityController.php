@@ -62,7 +62,8 @@ class CommunityController extends AbstractController
         CommunityPostRepository $postRepo,
         CommunityCommentRepository $commentRepo,
         CommunityLikeRepository $likeRepo,
-        \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo
+        \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo,
+        \Knp\Component\Pager\PaginatorInterface $paginator
     ): Response {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -112,8 +113,14 @@ class CommunityController extends AbstractController
             $latestMuteReason = $auditRepo->findLatestMuteReasonForUser($user);
         }
 
+        $pagination = $paginator->paginate(
+            $feedData,
+            $request->query->getInt('page', 1),
+            5 // limit to 5 posts per page
+        );
+
         return $this->render('UserAndDiag/community/feed.html.twig', [
-            'feedData' => $feedData,
+            'pagination' => $pagination,
             'keyword' => $keyword,
             'isModerator' => $this->isGranted('ROLE_MODERATOR'),
             'latestMuteReason' => $latestMuteReason,

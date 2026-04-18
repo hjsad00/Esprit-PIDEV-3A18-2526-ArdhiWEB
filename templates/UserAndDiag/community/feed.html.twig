@@ -21,7 +21,7 @@
     <div class="community-header">
         <h1 class="mb-3">👥 Communauté</h1>
         <div style="display:flex;align-items:center;gap:12px;">
-            <span id="resultCount" style="color:rgba(255,255,255,0.5);font-size:0.85rem;">{{ feedData|length }} post(s)</span>
+            <span id="resultCount" style="color:rgba(255,255,255,0.5);font-size:0.85rem;">{{ pagination.getTotalItemCount }} post(s)</span>
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="Rechercher un sujet..." oninput="filterPosts()">
             </div>
@@ -39,7 +39,7 @@
     </div>
 
     <div class="feed-container">
-        {% for item in feedData %}
+        {% for item in pagination %}
             {% set post = item.post %}
             <div onclick="window.location.href='{{ path('app_user_and_diag_community_detail', {id: post.id}) }}'" class="post-card" style="cursor: pointer;"
                data-track-type="post-feed" data-track-id="{{ post.id }}"
@@ -67,7 +67,7 @@
                                 <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
                             {% endif %}
                         </div>
-                        <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                        <div class="date" title="{{ post.createdAt|date('d/m/Y à H:i') }}" style="text-transform: capitalize;">{{ post.createdAt|ago(locale='fr') }}</div>
                     </div>
                     {% if post.resolved %}
                         <span class="badge-resolved">✓ RÉSOLU</span>
@@ -105,6 +105,10 @@
                 <p>Aucun post pour le moment.<br>Soyez le premier à poser une question !</p>
             </div>
         {% endfor %}
+    </div>
+
+    <div class="navigation mt-4 mb-4" style="display: flex; justify-content: center;">
+        {{ knp_pagination_render(pagination) }}
     </div>
 </section>
 {% endblock %}

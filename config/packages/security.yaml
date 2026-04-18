@@ -28,7 +28,7 @@ security:
 
       login_throttling:
         max_attempts: 5
-        interval: '15 minutes'
+        interval: '2 minutes'
 
       two_factor:
         auth_form_path: 2fa_login
