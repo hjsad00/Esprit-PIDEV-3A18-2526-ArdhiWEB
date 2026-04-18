@@ -25,7 +25,7 @@ use App\Service\MaterielEtMaintenance\GoogleCalendarService;
 class MaintenanceController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, MaintenanceRepository $repo, MaterielRepository $materielRepo): Response
+    public function index(Request $request, MaintenanceRepository $repo, MaterielRepository $materielRepo, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
     {
         $userId = $this->getUser()->getId();
         $type   = $request->query->get('type', '');
@@ -33,17 +33,20 @@ class MaintenanceController extends AbstractController
         $search = $request->query->get('search', '');
 
         $maintenances = $repo->searchByUser($userId, $type ?: null, $statut ?: null, $search ?: null);
+        $totalUnreadCount = $alerteRepo->countUnreadForAgriculteur($userId);
+        
         $stats        = $repo->getStatsByUser($userId);
         $materielStats = $materielRepo->getStatsByUser($userId);
 
         return $this->render('MaterielEtMaintenance/maintenance/index.html.twig', [
-            'maintenances'  => $maintenances,
-            'stats'         => $stats,
-            'materielStats' => $materielStats,
-            'type'          => $type,
-            'statut'        => $statut,
-            'search'        => $search,
-            'enRetard'      => $materielRepo->findEnRetardByUser($userId),
+            'maintenances'      => $maintenances,
+            'stats'             => $stats,
+            'materielStats'     => $materielStats,
+            'type'              => $type,
+            'statut'            => $statut,
+            'search'            => $search,
+            'totalUnreadCount'  => $totalUnreadCount,
+            'enRetard'          => $materielRepo->findEnRetardByUser($userId),
         ]);
     }
 
