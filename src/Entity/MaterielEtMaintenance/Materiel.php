@@ -126,12 +126,14 @@ class Materiel
 
     public function calculerProchaineMaintenance(): void
     {
-        $baseDate = $this->getDerniereMaintenance() ?: clone $this->getDateAchat();
+        $baseDate = $this->getDerniereMaintenance() ?: $this->getDateAchat();
+        
         if (!$baseDate) {
             $baseDate = new \DateTime();
         } else {
             $baseDate = clone $baseDate;
         }
+
         $baseDate->modify('+6 months');
         $this->setDateProchaineMaintenance($baseDate);
     }
