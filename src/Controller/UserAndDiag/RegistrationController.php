@@ -55,19 +55,23 @@ class RegistrationController extends AbstractController
 
             $secret = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
 
-            // Skip SSL certificate issues on local Windows environments
-            $context = stream_context_create([
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                ]
-            ]);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'secret' => $secret,
+                'response' => $recaptchaToken
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $verifyResponse = curl_exec($ch);
+            $error = curl_error($ch);
+            curl_close($ch);
 
-            $verifyResponse = @file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$recaptchaToken}", false, $context);
             $data = json_decode((string) $verifyResponse, true);
 
-            if (empty($data['success']) || ($data['score'] ?? 0) < 0.5) {
-                $this->addFlash('danger', 'Votre score reCAPTCHA est trop faible (suspicion de bot).');
+            if (empty($data['success']) || (isset($data['score']) && $data['score'] < 0.5)) {
+                $this->addFlash('danger', 'Votre score reCAPTCHA est trop faible. Details: ' . substr((string) $verifyResponse, 0, 100) . ' cURL Error: ' . $error);
                 return $this->redirectToRoute('app_register');
             }
 
