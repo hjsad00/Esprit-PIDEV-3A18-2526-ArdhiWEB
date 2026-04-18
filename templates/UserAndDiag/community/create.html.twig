@@ -27,7 +27,7 @@
             </div>
             <div class="form-group">
                 <label>Description détaillée</label>
-                <textarea name="description" placeholder="Décrivez les symptômes, le contexte, les traitements déjà essayés..." required></textarea>
+                <textarea name="description" id="postDescription" placeholder="Décrivez les symptômes, le contexte, les traitements déjà essayés..." required></textarea>
             </div>
             <div class="form-group">
                 <label>Image jointe (optionnel)</label>
@@ -44,6 +44,7 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="{{ asset('assets/js/UserAndDiag/community-mentions.js') }}"></script>
 <script>
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('imgPreview');
@@ -53,6 +54,10 @@
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setupMentions('postDescription');
     });
 </script>
 {% endblock %}

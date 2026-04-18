@@ -38,20 +38,44 @@ class NotificationService
 
     public function notifyPostLike(User $postAuthor, string $likerName, int $postId): void
     {
-        $message = sprintf("%s a réagi à votre post dans la communauté.", $likerName);
+        $message = sprintf("%s a aimé votre publication.", $likerName);
         $this->createNotification($postAuthor, 'LIKE', $message, $postId, 'POST');
     }
 
-    public function notifyCommentLike(User $commentAuthor, string $likerName, int $postId): void
+    public function notifyPostDislike(User $postAuthor, string $likerName, int $postId): void
     {
-        $message = sprintf("%s a réagi à votre commentaire.", $likerName);
-        $this->createNotification($commentAuthor, 'LIKE', $message, $postId, 'POST');
+        $message = sprintf("%s a n'a pas aimé (dislike) votre publication.", $likerName);
+        $this->createNotification($postAuthor, 'DISLIKE', $message, $postId, 'POST');
     }
 
-    public function notifyMention(User $mentionedUser, string $authorName, int $postId): void
+    public function notifyCommentLike(User $commentAuthor, string $likerName, int $commentId): void
+    {
+        $message = sprintf("%s a aimé votre commentaire.", $likerName);
+        $this->createNotification($commentAuthor, 'LIKE', $message, $commentId, 'COMMENT');
+    }
+
+    public function notifyCommentDislike(User $commentAuthor, string $likerName, int $commentId): void
+    {
+        $message = sprintf("%s a n'a pas aimé (dislike) votre commentaire.", $likerName);
+        $this->createNotification($commentAuthor, 'DISLIKE', $message, $commentId, 'COMMENT');
+    }
+
+    public function notifyPostComment(User $postAuthor, string $commenterName, int $commentId): void
+    {
+        $message = sprintf("%s a commenté votre publication.", $commenterName);
+        $this->createNotification($postAuthor, 'COMMENT', $message, $commentId, 'COMMENT');
+    }
+
+    public function notifyCommentReply(User $commentAuthor, string $replierName, int $commentId): void
+    {
+        $message = sprintf("%s a répondu à votre commentaire.", $replierName);
+        $this->createNotification($commentAuthor, 'COMMENT_REPLY', $message, $commentId, 'COMMENT');
+    }
+
+    public function notifyMention(User $mentionedUser, string $authorName, int $entityId, string $entityType = 'POST'): void
     {
         $message = sprintf("%s vous a mentionné dans la communauté.", $authorName);
-        $this->createNotification($mentionedUser, 'MENTION', $message, $postId, 'POST');
+        $this->createNotification($mentionedUser, 'MENTION', $message, $entityId, $entityType);
     }
 
     private function createNotification(User $user, string $type, string $message, ?int $relatedId = null, ?string $relatedType = null): void

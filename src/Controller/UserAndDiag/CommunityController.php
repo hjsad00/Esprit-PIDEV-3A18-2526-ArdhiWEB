@@ -21,6 +21,39 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class CommunityController extends AbstractController
 {
+    // ────────────────────────── MENTIONS API ──────────────────────────
+
+    #[Route('/api/users/search', name: 'app_user_and_diag_community_users_search', methods: ['GET'])]
+    public function searchUsers(Request $request, \App\Repository\UserAndDiag\UserRepository $userRepo): JsonResponse
+    {
+        $q = trim($request->query->get('q', ''));
+
+        if (strlen($q) < 1) {
+            $users = $userRepo->createQueryBuilder('u')
+                ->setMaxResults(5)
+                ->getQuery()
+                ->getResult();
+        } else {
+            $users = $userRepo->createQueryBuilder('u')
+                ->where('u.prenom LIKE :q OR u.nom LIKE :q')
+                ->setParameter('q', $q . '%')
+                ->setMaxResults(5)
+                ->getQuery()
+                ->getResult();
+        }
+
+        $data = [];
+        foreach ($users as $u) {
+            $data[] = [
+                'prenom' => $u->getPrenom(),
+                'nom' => $u->getNom(),
+                'avatar' => $u->getAvatar()
+            ];
+        }
+
+        return $this->json($data);
+    }
+
     // ────────────────────────── FEED ──────────────────────────
 
     #[Route('', name: 'app_user_and_diag_community', methods: ['GET'])]
@@ -333,6 +366,8 @@ class CommunityController extends AbstractController
 
                 if ($voteType === 'LIKE' && $post->getUser()->getId() !== $user->getId()) {
                     $notificationService->notifyPostLike($post->getUser(), $user->getPrenom(), $post->getId());
+                } elseif ($voteType === 'DISLIKE' && $post->getUser()->getId() !== $user->getId()) {
+                    $notificationService->notifyPostDislike($post->getUser(), $user->getPrenom(), $post->getId());
                 }
 
                 return $this->json(['likes' => $post->getLikes(), 'dislikes' => $post->getDislikes(), 'userVote' => $voteType]);
@@ -348,6 +383,8 @@ class CommunityController extends AbstractController
 
             if ($voteType === 'LIKE' && $post->getUser()->getId() !== $user->getId()) {
                 $notificationService->notifyPostLike($post->getUser(), $user->getPrenom(), $post->getId());
+            } elseif ($voteType === 'DISLIKE' && $post->getUser()->getId() !== $user->getId()) {
+                $notificationService->notifyPostDislike($post->getUser(), $user->getPrenom(), $post->getId());
             }
 
             return $this->json(['likes' => $post->getLikes(), 'dislikes' => $post->getDislikes(), 'userVote' => $voteType]);
@@ -391,7 +428,9 @@ class CommunityController extends AbstractController
                 $em->flush();
 
                 if ($voteType === 'LIKE' && $comment->getUser()->getId() !== $user->getId()) {
-                    $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getPost()->getId());
+                    $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getId());
+                } elseif ($voteType === 'DISLIKE' && $comment->getUser()->getId() !== $user->getId()) {
+                    $notificationService->notifyCommentDislike($comment->getUser(), $user->getPrenom(), $comment->getId());
                 }
 
                 return $this->json(['likes' => $comment->getLikes(), 'dislikes' => $comment->getDislikes(), 'userVote' => $voteType]);
@@ -406,7 +445,9 @@ class CommunityController extends AbstractController
             $em->flush();
 
             if ($voteType === 'LIKE' && $comment->getUser()->getId() !== $user->getId()) {
-                $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getPost()->getId());
+                $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getId());
+            } elseif ($voteType === 'DISLIKE' && $comment->getUser()->getId() !== $user->getId()) {
+                $notificationService->notifyCommentDislike($comment->getUser(), $user->getPrenom(), $comment->getId());
             }
 
             return $this->json(['likes' => $comment->getLikes(), 'dislikes' => $comment->getDislikes(), 'userVote' => $voteType]);
@@ -458,13 +499,20 @@ class CommunityController extends AbstractController
         $em->persist($comment);
         $em->flush();
 
+        if ($parentId && isset($parent) && $parent->getUser()->getId() !== $user->getId()) {
+            $notificationService->notifyCommentReply($parent->getUser(), $user->getPrenom(), $comment->getId());
+        } elseif (!$parentId && $post->getUser()->getId() !== $user->getId()) {
+            $notificationService->notifyPostComment($post->getUser(), $user->getPrenom(), $comment->getId());
+        }
+        $em->flush();
+
         // ── Detect Mentions ──
         preg_match_all('/@([a-zA-ZÀ-ÿ-]+)/', $content, $matches);
         if (!empty($matches[1])) {
             foreach (array_unique($matches[1]) as $prenomMention) {
                 $mentionedUser = $userRepo->findOneBy(['prenom' => $prenomMention]);
                 if ($mentionedUser && $mentionedUser->getId() !== $user->getId()) {
-                    $notificationService->notifyMention($mentionedUser, $user->getPrenom(), $post->getId());
+                    $notificationService->notifyMention($mentionedUser, $user->getPrenom(), $comment->getId(), 'COMMENT');
                 }
             }
         }

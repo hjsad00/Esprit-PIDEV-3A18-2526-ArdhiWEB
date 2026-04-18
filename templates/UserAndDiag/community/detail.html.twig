@@ -109,7 +109,7 @@
                 {% set ml = depth * 35 %}
                 {% if ml > 200 %}{% set ml = 200 %}{% endif %}
 
-                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}" data-track-type="comment" data-track-id="{{ comment.id }}">
+                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" id="comment-{{ comment.id }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}" data-track-type="comment" data-track-id="{{ comment.id }}">
                     <div class="comment-header">
                         {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                         {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const margin = replyingToId ? 35 : 0; // Simple approximation for UI
             
             const html = `
-                <div class="comment-card" style="margin-left: ${margin}px" data-id="${data.id}">
+                <div class="comment-card" id="comment-${data.id}" style="margin-left: ${margin}px" data-id="${data.id}">
                     <div class="comment-header">
                         <div class="avatar-sm" style="background:#E0F2F1;color:#00695C">${initialId}</div>
                         <span class="comment-author">
@@ -598,5 +598,11 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(() => alert('Erreur réseau.'));
     }
+</script>
+<script src="{{ asset('assets/js/UserAndDiag/community-mentions.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupMentions('txtComment');
+    });
 </script>
 {% endblock %}

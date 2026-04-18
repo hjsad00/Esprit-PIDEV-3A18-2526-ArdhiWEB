@@ -283,6 +283,8 @@
 
                     let icon = 'bi-info-circle text-primary';
                     if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
+                    if (n.type === 'DISLIKE') icon = 'bi-hand-thumbs-down-fill text-secondary';
+                    if (n.type === 'COMMENT' || n.type === 'COMMENT_REPLY') icon = 'bi-chat-left-text-fill text-info';
                     if (n.type === 'MENTION') icon = 'bi-at text-success';
                     if (n.type === 'REVIEW') icon = 'bi-clipboard-check text-warning';
 

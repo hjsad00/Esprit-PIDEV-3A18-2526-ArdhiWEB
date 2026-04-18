@@ -60,7 +60,15 @@ class NotificationController extends AbstractController
 
         if ($rt === 'POST')
             $link = '/user-and-diag/community/' . $rid;
-        elseif ($rt === 'TREATMENT')
+        elseif ($rt === 'COMMENT' || $rt === 'COMMENT_REPLY') {
+            $comment = $em->getRepository(\App\Entity\UserAndDiag\CommunityComment::class)->find($rid);
+            if ($comment && $comment->getPost()) {
+                $link = '/user-and-diag/community/' . $comment->getPost()->getId() . '#comment-' . $comment->getId();
+            } else {
+                // Flash message or default fallback if comment was deleted
+                $link = '/user-and-diag/community';
+            }
+        } elseif ($rt === 'TREATMENT')
             $link = '/user-and-diag/treatment-plan/' . $rid . '/details';
         elseif ($rt === 'PREVENTION')
             $link = '/user-and-diag/prevention-plan/' . $rid . '/details';
