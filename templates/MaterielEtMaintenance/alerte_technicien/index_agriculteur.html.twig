@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Alertes Technicien{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-bell text-warning"></i> Signalements du Technicien</h1>
+    </div>
+
+    <div class="row">
+        {% for alerte in alertes %}
+            <div class="col-md-12 mb-3">
+                <div class="card border-left-{{ alerte.statut == 'non_lu' ? 'danger' : 'secondary' }} shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title mb-1">
+                                    {{ alerte.materiel.nom }} 
+                                    {% if alerte.statut == 'non_lu' %}
+                                        <span class="badge bg-danger ml-2 animate__animated animate__pulse animate__infinite">Nouveau</span>
+                                    {% endif %}
+                                </h5>
+                                <p class="text-muted small mb-2">
+                                    <i class="far fa-calendar-alt"></i> Signalé le {{ alerte.dateSignalement|date('d/m/Y à H:i') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 p-3 bg-light rounded border">
+                            <i class="fas fa-quote-left text-muted opacity-50 mr-2"></i>
+                            {{ alerte.description|nl2br }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-check-circle fa-3x mb-3 text-success d-block"></i>
+                    <p class="h4">Aucune alerte enregistrée pour votre matériel.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .border-left-danger { border-left: 5px solid #dc3545 !important; }
+    .border-left-secondary { border-left: 5px solid #6c757d !important; }
+    .animate__animated { animation-duration: 1.5s; }
+</style>
+{% endblock %}

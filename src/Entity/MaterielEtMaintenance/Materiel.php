@@ -2,6 +2,7 @@
 
 namespace App\Entity\MaterielEtMaintenance;
 
+use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\MaterielEtMaintenance\MaterielRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -11,6 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MaterielRepository::class)]
 #[ORM\Table(name: 'materiel')]
+#[ORM\HasLifecycleCallbacks]
 class Materiel
 {
     #[ORM\Id]
@@ -46,6 +48,15 @@ class Materiel
     private ?string $etat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    private ?string $prochaine_maintenance_alerte = null;
+
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    private ?string $qrCodeToken = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $qrCodePath = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
     #[ORM\Column(length: 50)]
@@ -60,12 +71,16 @@ class Materiel
     #[ORM\Column(type: Types::INTEGER)]
     private int $derniereMaintenanceHeures = 0;
 
+    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: AlerteTechnicien::class, orphanRemoval: true)]
+    private Collection $alerteTechniciens;
+
     #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, orphanRemoval: true)]
     private Collection $maintenances;
 
     public function __construct()
     {
         $this->maintenances = new ArrayCollection();
+        $this->alerteTechniciens = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -252,6 +267,36 @@ class Materiel
         return $this;
     }
 
+    public function getQrCodeToken(): ?string
+    {
+        return $this->qrCodeToken;
+    }
+
+    public function setQrCodeToken(?string $qrCodeToken): self
+    {
+        $this->qrCodeToken = $qrCodeToken;
+        return $this;
+    }
+
+    public function getQrCodePath(): ?string
+    {
+        return $this->qrCodePath;
+    }
+
+    public function setQrCodePath(?string $qrCodePath): self
+    {
+        $this->qrCodePath = $qrCodePath;
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function generateToken(): void
+    {
+        if (null === $this->qrCodeToken) {
+            $this->qrCodeToken = bin2hex(random_bytes(16));
+        }
+    }
+
     public function getHeuresUtilisation(): int
     {
         return $this->heuresUtilisation;
@@ -295,5 +340,47 @@ class Materiel
     {
         $this->derniereMaintenanceHeures = $derniereMaintenanceHeures;
         return $this;
+    }
+
+    /**
+     * @return Collection<int, AlerteTechnicien>
+     */
+    public function getAlerteTechniciens(): Collection
+    {
+        return $this->alerteTechniciens;
+    }
+
+    public function addAlerteTechnicien(AlerteTechnicien $alerteTechnicien): static
+    {
+        if (!$this->alerteTechniciens->contains($alerteTechnicien)) {
+            $this->alerteTechniciens->add($alerteTechnicien);
+            $alerteTechnicien->setMateriel($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAlerteTechnicien(AlerteTechnicien $alerteTechnicien): static
+    {
+        if ($this->alerteTechniciens->removeElement($alerteTechnicien)) {
+            // set the owning side to null (unless already changed)
+            if ($alerteTechnicien->getMateriel() === $this) {
+                $alerteTechnicien->setMateriel(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Récupère l'agriculteur propriétaire (User) à partir du userId stocké.
+     * On passe par l'EntityManager pour charger l'entité User associée.
+     */
+    public function getAgriculteur(EntityManagerInterface $em): ?\App\Entity\UserAndDiag\User
+    {
+        if (!$this->userId) {
+            return null;
+        }
+        return $em->getRepository(\App\Entity\UserAndDiag\User::class)->find($this->userId);
     }
 }

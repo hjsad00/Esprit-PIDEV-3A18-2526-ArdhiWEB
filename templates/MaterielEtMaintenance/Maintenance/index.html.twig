@@ -158,6 +158,8 @@
                             <a href="{{ path('app_reclamation_new', {materielId: m.materiel.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #c0392b; color: #c0392b;" title="Signaler un retard de maintenance"><i class="bi bi-megaphone fs-6"></i></a>
                             
                             <a href="{{ path('app_maintenance_edit', {'id': m.idMaintenance}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #e67e22; color: #e67e22;" title="Modifier"><i class="bi bi-pencil fs-6"></i></a>
+
+                            <a href="{{ path('app_admin_alertes_materiel', {'id': m.materiel.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #f1c40f; color: #f1c40f;" title="Alertes du technicien"><i class="bi bi-bell-fill fs-6"></i></a>
                             
                             <form method="post" action="{{ path('app_maintenance_delete', {'id': m.idMaintenance}) }}" onsubmit="return confirm('Supprimer cette intervention ?');" style="margin:0;">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_maintenance_' ~ m.idMaintenance) }}">

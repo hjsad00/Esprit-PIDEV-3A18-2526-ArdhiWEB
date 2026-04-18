@@ -41,8 +41,15 @@ security:
     - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
     - { path: ^/login, roles: PUBLIC_ACCESS }
     - { path: ^/register, roles: PUBLIC_ACCESS }
+    - { path: ^/machine/, roles: PUBLIC_ACCESS }
     - { path: ^/admin, roles: ROLE_ADMIN }
-    # - { path: ^/profile, roles: ROLE_USER }
+    - { path: ^/materiel-et-maintenance, roles: ROLE_USER }
+    - { path: ^/diagnostic, roles: ROLE_USER }
+    - { path: ^/marketplace, roles: ROLE_USER }
+    - { path: ^/cultures, roles: ROLE_USER }
+    - { path: ^/evenements, roles: ROLE_USER }
+    - { path: ^/employes, roles: ROLE_USER }
+    - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
   security:

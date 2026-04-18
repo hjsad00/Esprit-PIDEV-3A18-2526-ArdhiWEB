@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\MaterielEtMaintenance\QrCodeService;
 
 #[Route('/materiel-et-maintenance/materiel', name: 'app_materiel_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -45,7 +46,7 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/ajouter', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, QrCodeService $qrCodeService): Response
     {
         $materiel = new Materiel();
         $form = $this->createForm(MaterielType::class, $materiel);
@@ -79,9 +80,14 @@ class MaterielController extends AbstractController
             $materiel->calculerProchaineMaintenance();
 
             $em->persist($materiel);
+            $em->flush(); // Nécessaire pour avoir le token généré par PrePersist
+
+            // Génération du QR Code
+            $qrPath = $qrCodeService->generateForMateriel($materiel);
+            $materiel->setQrCodePath($qrPath);
             $em->flush();
 
-            $this->addFlash('success', 'Matériel "' . $materiel->getNom() . '" ajouté avec succès !');
+            $this->addFlash('success', 'Matériel "' . $materiel->getNom() . '" ajouté avec succès ! QR Code généré.');
             return $this->redirectToRoute('app_materiel_index');
         }
 
@@ -92,20 +98,39 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/ia-dashboard', name: 'ia_dashboard', methods: ['GET'])]
-    public function iaDashboard(MaterielRepository $repo): Response
+    public function iaDashboard(MaterielRepository $repo, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
     {
-        $userId = $this->getUser()->getId();
+        $user = $this->getUser();
+        $userId = $user->getId();
         $materiels = $repo->findBy(['userId' => $userId]);
+        
+        // Compter les alertes non lues pour l'agriculteur
+        $countUnread = $alerteRepo->countUnreadForAgriculteur($userId);
 
         return $this->render('MaterielEtMaintenance/materiel/ia_dashboard.html.twig', [
             'materiels' => $materiels,
+            'countUnread' => $countUnread
         ]);
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function show(int $id, MaterielRepository $repo): Response
+    public function show(int $id, MaterielRepository $repo, QrCodeService $qrCodeService, EntityManagerInterface $em): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
+
+        // Si le QR code n'existe pas encore ou si le fichier physique a été supprimé, on le génère à la volée
+        $projectDir = $this->getParameter('kernel.project_dir');
+        $fullPath = $materiel->getQrCodePath() ? $projectDir . '/public/' . $materiel->getQrCodePath() : null;
+
+        if (!$materiel->getQrCodePath() || ($fullPath && !file_exists($fullPath))) {
+            // S'assurer qu'un token existe déjà (pour les anciens matériels créés avant la mise à jour)
+            if (!$materiel->getQrCodeToken()) {
+                $materiel->setQrCodeToken(bin2hex(random_bytes(16)));
+            }
+            $qrPath = $qrCodeService->generateForMateriel($materiel);
+            $materiel->setQrCodePath($qrPath);
+            $em->flush();
+        }
 
         return $this->render('MaterielEtMaintenance/materiel/show.html.twig', [
             'materiel' => $materiel,

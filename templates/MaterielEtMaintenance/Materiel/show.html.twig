@@ -112,6 +112,9 @@
         <a href="{{ path('app_reclamation_new', {materielId: materiel.id}) }}" class="btn btn-sm rounded-pill btn-danger shadow-sm">
           <i class="bi bi-megaphone-fill me-1"></i> Faire une réclamation
         </a>
+        <a href="{{ path('app_admin_alertes_materiel', {id: materiel.id}) }}" class="btn btn-sm rounded-pill btn-warning shadow-sm">
+          <i class="bi bi-bell-fill me-1"></i> Alertes Technicien
+        </a>
       </div>
     </div>
 </div>
@@ -119,6 +122,35 @@
 <div class="py-4">
   <div class="row g-4">
     <div class="col-lg-5">
+      {# --- SECTION QR CODE --- #}
+      <div class="detail-card text-center" style="border-top: 5px solid #2d4a1e;">
+        <h3 class="text-start"><i class="bi bi-qr-code-scan me-2"></i>Identification QR</h3>
+        {% if materiel.qrCodePath %}
+            <div class="qr-container p-3 bg-white rounded-3 shadow-sm mb-3 d-inline-block border">
+                <img src="{{ asset(materiel.qrCodePath) }}" alt="QR Code" class="img-fluid" style="max-width: 150px;">
+            </div>
+            <div class="d-grid gap-2">
+                <a href="{{ asset(materiel.qrCodePath) }}" download="QR_Machine_{{ materiel.id }}.svg" class="btn btn-outline-dark btn-sm rounded-pill">
+                    <i class="bi bi-download me-1"></i>Télécharger le SVG
+                </a>
+                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <i class="bi bi-printer me-1"></i>Imprimer
+                </button>
+            </div>
+            <div class="mt-3 text-start">
+                <p class="small text-muted mb-0" style="line-height: 1.2;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Usage terrain :</strong> Scannable par n'importe quel smartphone pour signaler une panne instantanément.
+                </p>
+            </div>
+        {% else %}
+            <div class="py-4">
+                <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+                <p class="small text-muted mt-2">Génération du code...</p>
+            </div>
+        {% endif %}
+      </div>
+
       <div class="detail-card">
         <h3>Informations Générales</h3>
         <div class="info-row"><span class="info-key">Nom</span><span class="info-val">{{ materiel.nom }}</span></div>
