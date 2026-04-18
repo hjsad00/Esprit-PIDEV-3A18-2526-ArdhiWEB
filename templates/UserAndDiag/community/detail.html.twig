@@ -58,25 +58,21 @@
             {% endif %}
 
             {% if app.user and post.user.id == app.user.id %}
-                <div class="post-owner-actions mt-3 mb-3">
+                <div class="post-owner-actions mt-3 mb-3" style="display: flex; gap: 8px; flex-wrap: wrap;">
                     {% if app.user.banned %}
-                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
                         <button onclick="alert('⛔ Votre compte a été banni de la communauté.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
                     {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
-                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
                         <button onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Suppression impossible.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
                     {% else %}
-                        <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
-                        <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
+                        <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
                             <button type="submit" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
                         </form>
                     {% endif %}
-                </div>
-            {% endif %}
-
-            {% if app.user and post.user.id == app.user.id %}
-                <div class="mt-3">
-                    <button class="btn btn-sm" onclick="document.getElementById('analyticsModal').style.display='flex';" style="background: rgba(100,181,246,0.1); border: 1px solid rgba(100,181,246,0.3); color: #64b5f6; border-radius: 20px; padding: 6px 16px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                    
+                    <button class="btn btn-sm" onclick="document.getElementById('analyticsModal').style.display='flex';" style="background: rgba(100,181,246,0.1); border: 1px solid rgba(100,181,246,0.3); color: #64b5f6; border-radius: 20px; padding: 4px 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
                         📊 Outils d'Analyse
                     </button>
                 </div>
