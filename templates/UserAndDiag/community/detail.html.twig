@@ -77,7 +77,7 @@
             {% if app.user and post.user.id == app.user.id %}
                 <div class="advanced-stats mt-3 p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                     <h6 style="color: #64b5f6; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">📊 Statistiques Avancées</h6>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; color: #fff;">
                         <div style="flex: 1; min-width: 120px;">
                             <div style="font-size: 20px; font-weight: bold;">{{ post.views|default(0) }}</div>
                             <div style="font-size: 11px; opacity: 0.7;">Vues (Page Detail)</div>
@@ -87,11 +87,11 @@
                             <div style="font-size: 11px; opacity: 0.7;">Impressions (Feed)</div>
                         </div>
                         <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime / 60)|round(1, 'floor') ~ 'm' : '< 1m' }}</div>
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime < 60 ? post.totalReadTime ~ 's' : (post.totalReadTime / 60)|round(1, 'floor') ~ 'm') : '0s' }}</div>
                             <div style="font-size: 11px; opacity: 0.7;">Temps de lecture complet</div>
                         </div>
                         <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalFeedDwellTime is defined and post.totalFeedDwellTime > 0 ? (post.totalFeedDwellTime / 60)|round(1, 'floor') ~ 'm' : '< 1m' }}</div>
+                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalFeedDwellTime is defined and post.totalFeedDwellTime > 0 ? (post.totalFeedDwellTime < 60 ? post.totalFeedDwellTime ~ 's' : (post.totalFeedDwellTime / 60)|round(1, 'floor') ~ 'm') : '0s' }}</div>
                             <div style="font-size: 11px; opacity: 0.7;">Temps d'arrêt (Feed)</div>
                         </div>
                     </div>
