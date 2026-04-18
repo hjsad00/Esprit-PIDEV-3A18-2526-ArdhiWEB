@@ -5,6 +5,7 @@ namespace App\Controller\MaterielEtMaintenance;
 use App\Entity\MaterielEtMaintenance\Maintenance;
 use App\Entity\MaterielEtMaintenance\Materiel;
 use App\Form\MaterielEtMaintenance\MaterielType;
+use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\MaterielEtMaintenance\MaterielRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -188,14 +189,34 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(int $id, Request $request, MaterielRepository $repo, EntityManagerInterface $em): Response
+    public function delete(int $id, Request $request, MaterielRepository $repo, ProduitsRepository $produitsRepository, EntityManagerInterface $em): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
         if ($this->isCsrfTokenValid('delete_materiel_' . $id, $request->request->get('_token'))) {
+            // Supprimer d'abord les produits liés à ce matériel pour éviter la violation FK.
+            $produitsAssocies = $produitsRepository->findBy(['materiel' => $materiel]);
+            $nombreProduitsSupprimes = count($produitsAssocies);
+
+            foreach ($produitsAssocies as $produit) {
+                if ($produit->getImage()) {
+                    $imageProduitPath = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $produit->getImage();
+                    if (is_file($imageProduitPath)) {
+                        unlink($imageProduitPath);
+                    }
+                }
+
+                $em->remove($produit);
+            }
+
             $em->remove($materiel);
             $em->flush();
-            $this->addFlash('success', 'Matériel supprimé avec succès.');
+
+            if ($nombreProduitsSupprimes > 0) {
+                $this->addFlash('success', sprintf('Matériel supprimé avec succès. %d produit(s) lié(s) ont aussi été supprimé(s).', $nombreProduitsSupprimes));
+            } else {
+                $this->addFlash('success', 'Matériel supprimé avec succès.');
+            }
         } else {
             $this->addFlash('danger', 'Action non autorisée.');
         }

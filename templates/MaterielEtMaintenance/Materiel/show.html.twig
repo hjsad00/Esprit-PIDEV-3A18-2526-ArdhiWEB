@@ -89,6 +89,60 @@
   .risk-Faible { background: #e8f5e9; color: #2e7d32; }
   .risk-Modéré { background: #fff3e0; color: #e65100; }
   .risk-Élevé { background: #ffebee; color: #c62828; }
+
+  .sale-cta-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0.25rem 0 0.75rem;
+  }
+  .btn-sale-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border: 1px solid #2f5d29;
+    border-radius: 999px;
+    padding: 0.56rem 1.05rem;
+    min-width: 320px;
+    background: linear-gradient(135deg, #2d4a1e 0%, #4a7c3f 100%);
+    color: #fff;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 8px 20px rgba(45, 74, 30, 0.28);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  .btn-sale-cta:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(45, 74, 30, 0.33);
+    filter: brightness(1.04);
+  }
+  .btn-sale-cta:focus-visible {
+    color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(74, 124, 63, 0.35), 0 10px 22px rgba(45, 74, 30, 0.28);
+  }
+  .btn-sale-cta .icon-chip {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  @media (max-width: 576px) {
+    .sale-cta-wrap {
+      justify-content: center;
+    }
+    .btn-sale-cta {
+      width: 100%;
+      justify-content: center;
+      min-width: 0;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -295,17 +349,18 @@
                     </form>
                 </div>
             {% endif %}
-
-            {% if workflow_can(materiel, 'mettre_en_vente') %}
-                <div class="col-md-6">
-                    <button type="button" class="btn btn-success w-100 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalMettreEnVente">
-                        <i class="bi bi-shop me-2"></i> Mettre en vente
-                    </button>
-                </div>
-            {% endif %}
         </div>
       </div>
         
+        {% if workflow_can(materiel, 'mettre_en_vente') %}
+          <div class="sale-cta-wrap">
+            <button type="button" class="btn btn-sale-cta" data-bs-toggle="modal" data-bs-target="#modalMettreEnVente">
+              <span class="icon-chip"><i class="bi bi-shop"></i></span>
+              Mettre en vente
+            </button>
+          </div>
+        {% endif %}
+
         {% if materiel.statut == 'en_vente' %}
             <div class="alert alert-success border-0 mt-3 shadow-sm">
                 <i class="bi bi-shop-window me-2"></i> <strong>Ce matériel est actuellement en vente sur le Marketplace.</strong>

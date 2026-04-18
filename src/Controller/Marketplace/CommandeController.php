@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Workflow\WorkflowInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Karser\Recaptcha3Bundle\Validator\Constraints\Recaptcha3;
@@ -155,6 +156,7 @@ class CommandeController extends AbstractController
         string $status, 
         CommandeRepository $commandeRepo, 
         EntityManagerInterface $em,
+        WorkflowInterface $materielLifecycleStateMachine,
         OrderEmailService $orderEmailService,
         NotifMarketRepository $notifMarketRepository
     ): JsonResponse
@@ -188,6 +190,35 @@ class CommandeController extends AbstractController
 
         $oldStatus = $commande->getEtat();
         $commande->setEtat($status);
+
+        // Quand le vendeur accepte la commande, tout matériel en vente passe à vendu
+        // et son produit lié est verrouillé à 0 stock.
+        if ($status === 'en_cours' && $oldStatus !== 'en_cours') {
+            foreach ($commande->getDetails() as $detail) {
+                $produit = $detail->getProduit();
+                if (!$produit || !$produit->getMateriel()) {
+                    continue;
+                }
+
+                $materiel = $produit->getMateriel();
+                $etatMateriel = mb_strtolower((string) $materiel->getEtat());
+                $estEnVente = $materiel->getStatut() === 'en_vente' || $etatMateriel === 'en vente';
+
+                if (!$estEnVente) {
+                    continue;
+                }
+
+                if ($materielLifecycleStateMachine->can($materiel, 'vendre')) {
+                    $materielLifecycleStateMachine->apply($materiel, 'vendre');
+                } else {
+                    $materiel->setStatut('vendu');
+                }
+
+                if ($produit->getQuantiteStock() !== 0) {
+                    $produit->setQuantiteStock(0);
+                }
+            }
+        }
 
         // Gérer le stock et les points en cas d'annulation
         if ($status === 'annulee' && $oldStatus !== 'annulee') {

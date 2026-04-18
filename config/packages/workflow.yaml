@@ -16,6 +16,7 @@ framework:
                 - attente_planification
                 - en_maintenance
                 - en_vente
+                - vendu
                 - reforme
             transitions:
                 mettre_en_maintenance:
@@ -33,6 +34,9 @@ framework:
                 mettre_en_vente:
                     from: en_service
                     to:   en_vente
+                vendre:
+                    from: en_vente
+                    to:   vendu
                 reformer:
                     from: [en_service, panne_signalee, attente_planification]
                     to:   reforme
