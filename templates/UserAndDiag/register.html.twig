@@ -85,6 +85,10 @@
               <div class="col-md-6 mb-3">
                 <label for="inputPassword" class="form-label">Mot de passe <span class="text-danger">*</span></label>
                 <input type="password" name="password" id="inputPassword" class="form-control {{ errors.password is defined ? 'is-invalid' : '' }}" autocomplete="new-password">
+                <div class="progress mt-2" style="height: 6px; display: none; border-radius: 4px;" id="pwStrengthBarWrapper">
+                  <div class="progress-bar" id="pwStrengthBar" role="progressbar" style="width: 0%; transition: width 0.3s ease, background-color 0.3s ease;"></div>
+                </div>
+                <small id="pwFeedback" class="form-text d-block mt-1 mb-2"></small>
                 {% if errors.password is defined %}
                   <div class="premium-invalid-feedback">{{ errors.password }}</div>
                 {% endif %}
@@ -117,4 +121,49 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const pwInput = document.getElementById('inputPassword');
+        const pwBarWrapper = document.getElementById('pwStrengthBarWrapper');
+        const pwBar = document.getElementById('pwStrengthBar');
+        const pwFeedback = document.getElementById('pwFeedback');
+        
+        if (pwInput) {
+            pwInput.addEventListener('input', function() {
+                const val = pwInput.value;
+                if (val.length === 0) {
+                    pwBarWrapper.style.display = 'none';
+                    pwFeedback.innerHTML = '';
+                    return;
+                }
+                
+                pwBarWrapper.style.display = 'flex';
+                const result = zxcvbn(val);
+                const score = result.score; // 0 to 4
+                
+                let width = (score + 1) * 20;
+                let color = '#dc3545'; // danger/red
+                let text = 'Très faible';
+                
+                if (score === 1) { width = 40; color = '#ffc107'; text = 'Faible'; }
+                if (score === 2) { width = 60; color = '#fd7e14'; text = 'Moyen'; }
+                if (score === 3) { width = 80; color = '#20c997'; text = 'Fort'; }
+                if (score === 4) { width = 100; color = '#198754'; text = 'Très fort'; }
+                
+                pwBar.style.width = width + '%';
+                pwBar.style.backgroundColor = color;
+                
+                let feedbackHtml = `<span style="color: ${color}; font-weight: 500;">Sécurité : ${text}</span>`;
+                if (result.feedback.warning) {
+                    feedbackHtml += ` <span style="font-size: 0.9em; opacity: 0.8; margin-left: 5px;">- ${result.feedback.warning}</span>`;
+                }
+                pwFeedback.innerHTML = feedbackHtml;
+            });
+        }
+    });
+</script>
 {% endblock %}
