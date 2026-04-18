@@ -156,7 +156,7 @@
           <i class="bi bi-tractor me-2"></i>{{ materiel.nom }}
         </h1>
         <p style="color:rgba(255,255,255,0.75);margin:0;">
-          {{ materiel.type }} — {{ materiel.etat }}
+          {{ materiel.type }}
           <span class="ms-2 badge badge-statut-{{ materiel.statut }}">{{ materiel.statut|replace({'_': ' '})|upper }}</span>
         </p>
       </div>
@@ -215,13 +215,6 @@
         <h3>Informations Générales</h3>
         <div class="info-row"><span class="info-key">Nom</span><span class="info-val">{{ materiel.nom }}</span></div>
         <div class="info-row"><span class="info-key">Type</span><span class="info-val">{{ materiel.type }}</span></div>
-        <div class="info-row">
-          <span class="info-key">État</span>
-          <span class="info-val">
-            {% set ec = {'Neuf':'neuf','Bon':'bon','Moyen':'moyen','En panne':'panne','En maintenance':'maintenance'} %}
-            <span class="badge-etat badge-{{ ec[materiel.etat] ?? 'bon' }}">{{ materiel.etat }}</span>
-          </span>
-        </div>
         <div class="info-row"><span class="info-key">Date d'achat</span><span class="info-val">{{ materiel.dateAchat ? materiel.dateAchat|date('d/m/Y') : '—' }}</span></div>
         <div class="info-row"><span class="info-key">Seuil de maintenance</span><span class="info-val">{{ materiel.seuilMaintenanceHeures }} heures</span></div>
         <div class="info-row"><span class="info-key">Fréquence temps</span><span class="info-val">Tous les 6 mois (automatique)</span></div>

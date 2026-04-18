@@ -250,12 +250,8 @@
              <i class="bi bi-tractor"></i>
          {% endif %}
          
-         {% set etatClass = {'Neuf':'success','Bon':'info','Moyen':'warning','En panne':'danger','En maintenance':'primary'} %}
-         <span class="mat-badge bg-{{ etatClass[m.etat] ?? 'secondary' }} text-white" style="position: absolute; top: 15px; right: 15px;">
-           {{ m.etat }}
-         </span>
-
          <span class="badge badge-statut bg-statut-{{ m.statut }}" style="position: absolute; top: 15px; left: 15px;">
+
            {{ m.statut|replace({'_': ' '}) }}
          </span>
       </div>
