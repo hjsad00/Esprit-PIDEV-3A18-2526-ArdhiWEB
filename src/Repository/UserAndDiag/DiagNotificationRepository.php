@@ -20,13 +20,11 @@ class DiagNotificationRepository extends ServiceEntityRepository
     /**
      * @return DiagNotification[] Returns an array of DiagNotification objects
      */
-    public function findUnreadByUser(User $user): array
+    public function findRecentByUser(User $user): array
     {
         return $this->createQueryBuilder('d')
             ->andWhere('d.user = :val')
-            ->andWhere('d.isRead = :is_read')
             ->setParameter('val', $user)
-            ->setParameter('is_read', false)
             ->orderBy('d.createdAt', 'DESC')
             ->setMaxResults(50)
             ->getQuery()

@@ -18,7 +18,7 @@ class NotificationController extends AbstractController
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
-        $notifications = $notifRepo->findUnreadByUser($user);
+        $notifications = $notifRepo->findRecentByUser($user);
 
         $data = array_map(function ($n) {
             return [
@@ -27,7 +27,8 @@ class NotificationController extends AbstractController
                 'message' => $n->getMessage(),
                 'date' => $n->getCreatedAt()->format('d/m/Y H:i'),
                 'relatedId' => $n->getRelatedEntityId(),
-                'relatedType' => $n->getRelatedEntityType()
+                'relatedType' => $n->getRelatedEntityType(),
+                'isRead' => $n->isRead()
             ];
         }, $notifications);
 

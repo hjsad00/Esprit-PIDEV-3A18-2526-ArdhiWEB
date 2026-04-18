@@ -256,8 +256,16 @@
 
             const notifs = data.notifications || [];
             if (notifs.length > 0) {
-                badge.style.display = 'block';
-                badge.textContent = notifs.length > 99 ? '99+' : notifs.length;
+                // Count unread
+                const unreadCount = notifs.filter(n => !n.isRead).length;
+
+                if (unreadCount > 0) {
+                    badge.style.display = 'block';
+                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+
                 emptyMsg.style.display = 'none';
 
                 // Clear existing old items but keep header
@@ -277,11 +285,16 @@
                     if (n.type === 'MENTION') icon = 'bi-at text-success';
                     if (n.type === 'REVIEW') icon = 'bi-clipboard-check text-warning';
 
+                    // Style depending on read status
+                    const bgStyle = n.isRead ? 'background-color: transparent; opacity: 0.7;' : 'background-color: rgba(93, 184, 122, 0.05); border-left: 3px solid #5db87a;';
+                    const textColor = n.isRead ? '#777' : '#333';
+                    const boldWeight = n.isRead ? 'normal' : '600';
+
                     li.innerHTML = `
-                        <a href="${link}" style="display: flex; gap: 12px; padding: 12px 15px; border-bottom: 1px solid #f8f9fa; text-decoration: none; align-items: start;">
+                        <a href="${link}" style="display: flex; gap: 12px; padding: 12px 15px; border-bottom: 1px solid #eee; text-decoration: none; align-items: start; transition: 0.3s; ${bgStyle}">
                             <i class="bi ${icon}" style="font-size: 1.1rem; margin-top: 2px;"></i>
                             <div>
-                                <span style="font-size: 0.85rem; color: #444; display: block; line-height: 1.4;">${n.message}</span>
+                                <span style="font-size: 0.85rem; color: ${textColor}; display: block; line-height: 1.4; font-weight: ${boldWeight};">${n.message}</span>
                                 <span style="font-size: 0.7rem; color: #aaa;">${n.date}</span>
                             </div>
                         </a>
@@ -305,6 +318,21 @@
             })
             .then(() => {
                 badge.style.display = 'none';
+                // Find all unread items and grey them out visually
+                const list = document.getElementById('notificationList');
+                if (list) {
+                    const links = list.querySelectorAll('.notif-item a');
+                    links.forEach(a => {
+                        a.style.backgroundColor = 'transparent';
+                        a.style.opacity = '0.7';
+                        a.style.borderLeft = 'none';
+                        const textSpan = a.querySelector('div > span:first-child');
+                        if (textSpan) {
+                            textSpan.style.color = '#777';
+                            textSpan.style.fontWeight = 'normal';
+                        }
+                    });
+                }
             })
             .catch(err => console.error("Error marking read", err));
         }
