@@ -3,6 +3,7 @@
 namespace App\Form\Evenement;
 
 use App\Entity\Evenement\Participation;
+use App\Validator\Evenement\NoBadWords;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -38,6 +39,7 @@ class AvisType extends AbstractType
                     'placeholder' => 'Partagez votre expérience sur cet événement...',
                 ],
                 'label_attr' => ['class' => 'form-label fw-bold'],
+                'constraints' => [new NoBadWords()],
             ])
         ;
     }

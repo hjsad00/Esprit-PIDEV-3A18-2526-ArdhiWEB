@@ -5,19 +5,23 @@ namespace App\Controller\Evenement;
 use App\Entity\Evenement\Evenement;
 use App\Entity\Evenement\EvenementFavoris;
 use App\Entity\Evenement\Participation;
+use App\Entity\Evenement\ReviewComment;
 use App\Form\Evenement\EvenementType;
 use App\Form\Evenement\AvisType;
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\EvenementFavorisRepository;
 use App\Repository\Evenement\ParticipationRepository;
+use App\Repository\Evenement\ReviewCommentRepository;
 use App\Service\Evenement\EvenementParticipationMailer;
 use App\Service\Evenement\EvenementStatusSyncService;
 use App\Service\Evenement\GeminiAIEventService;
 use App\Service\Evenement\ParticipationPredictionService;
 use App\Service\Evenement\StatisticsService;
+use App\Service\Evenement\BadWordFilterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -446,14 +450,30 @@ class EvenementController extends AbstractController
         $avisForm          = null;
 
         if ($this->getUser()) {
-            $isFavori          = (bool) $favorisRepo->findByUserAndEvenement($this->getUser(), $evenement);
-            $userParticipation = $participationRepo->findByUserAndEvenement($this->getUser(), $evenement);
+            $isFavori = (bool) $favorisRepo->findByUserAndEvenement($this->getUser(), $evenement);
+
+            // Handle potential duplicates: pick the one with a note, or the most recent one
+            $participations = $participationRepo->findBy(['utilisateur' => $this->getUser(), 'evenement' => $evenement], ['id' => 'DESC']);
+            $userParticipation = null;
+            if (count($participations) > 0) {
+                // Try to find one that already has a note
+                foreach ($participations as $p) {
+                    if ($p->getNote() > 0) {
+                        $userParticipation = $p;
+                        break;
+                    }
+                }
+                // Fallback to the most recent one
+                if (!$userParticipation) {
+                    $userParticipation = $participations[0];
+                }
+            }
 
             if (
                 $userParticipation
                 && $evenement->getStatut() === 'TERMINE'
                 && $userParticipation->getStatut() === 'PRESENT'
-                && $userParticipation->getNote() == 0
+                && ($userParticipation->getNote() === null || $userParticipation->getNote() == 0)
             ) {
                 $avisForm = $this->createForm(AvisType::class, $userParticipation)->createView();
             }
@@ -479,8 +499,10 @@ class EvenementController extends AbstractController
     public function ajouterAvis(
         Evenement $evenement,
         ParticipationRepository $participationRepo,
+        EvenementFavorisRepository $favorisRepo,
         EntityManagerInterface $em,
-        Request $request
+        Request $request,
+        BadWordFilterService $badWordFilterService
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $this->eventStatusSync->syncOne($evenement);
@@ -492,6 +514,12 @@ class EvenementController extends AbstractController
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
         }
 
+        // ✅ Prevent rating twice
+        if ($participation->getNote() > 0) {
+            $this->addFlash('warning', 'Vous avez déjà noté cet événement. Vous ne pouvez noter qu\'une seule fois.');
+            return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+        }
+
         if ($evenement->getStatut() !== 'TERMINE') {
             $this->addFlash('danger', "L'événement n'est pas encore terminé.");
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
@@ -500,14 +528,95 @@ class EvenementController extends AbstractController
         $form = $this->createForm(AvisType::class, $participation);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
-            $this->addFlash('success', 'Votre avis a été enregistré, merci !');
-        } else {
-            $this->addFlash('danger', 'Veuillez sélectionner une note.');
+        if ($form->isSubmitted()) {
+            // ✅ Check for bad words BEFORE validation
+            $avisText = $participation->getAvis();
+            if ($avisText && $badWordFilterService->containsBadWords($avisText)) {
+                $badWords = $badWordFilterService->hasBadWords($avisText);
+                $this->addFlash('danger', $badWordFilterService->getErrorMessage($badWords));
+                return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+            }
+
+            if ($form->isValid()) {
+                $em->flush();
+                $this->addFlash('success', 'Votre avis a été enregistré, merci !');
+            } else {
+                // Check for validation errors
+                $errors = $form->getErrors(true);
+                if (count($errors) > 0) {
+                    foreach ($errors as $error) {
+                        $this->addFlash('danger', $error->getMessage());
+                    }
+                } else {
+                    $this->addFlash('danger', 'Veuillez sélectionner une note.');
+                }
+            }
         }
 
         return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+    }
+
+    // ─── AJOUTER AVIS AJAX ────────────────────────────────────────────────────
+    #[Route('/{id}/soumettre-avis', name: 'app_evenement_avis_ajax', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function ajouterAvisAjax(
+        Evenement $evenement,
+        ParticipationRepository $participationRepo,
+        EntityManagerInterface $em,
+        Request $request,
+        BadWordFilterService $badWordFilterService
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
+
+        $participations = $participationRepo->findBy(['utilisateur' => $this->getUser(), 'evenement' => $evenement], ['id' => 'DESC']);
+        $participation = null;
+        if (count($participations) > 0) {
+            foreach ($participations as $p) {
+                if ($p->getNote() > 0) {
+                    $participation = $p;
+                    break;
+                }
+            }
+            if (!$participation) $participation = $participations[0];
+        }
+
+        if (!$participation || $participation->getStatut() !== 'PRESENT') {
+            return $this->json(['error' => 'Vous devez avoir assisté à cet événement.'], 403);
+        }
+        if ($participation->getNote() !== null && $participation->getNote() > 0) {
+            return $this->json(['error' => 'Vous avez déjà noté cet événement.'], 409);
+        }
+        if ($evenement->getStatut() !== 'TERMINE') {
+            return $this->json(['error' => "L'événement n'est pas encore terminé."], 400);
+        }
+
+        $note = (int) $request->request->get('note', 0);
+        
+        // Capture avis using the unified key avis[avis]
+        $avisData = $request->request->all('avis');
+        $avisText = trim((string) ($avisData['avis'] ?? ''));
+
+        if ($note < 1 || $note > 5) {
+            return $this->json(['error' => 'Veuillez sélectionner une note entre 1 et 5.'], 400);
+        }
+
+        // ← This is the critical check — must run before flush
+        if ($avisText !== '' && $badWordFilterService->containsBadWords($avisText)) {
+            $badWords = $badWordFilterService->hasBadWords($avisText);
+            return $this->json([
+                'error'    => $badWordFilterService->getErrorMessage($badWords),
+                'badWords' => true,
+            ], 400);
+        }
+
+        $participation->setNote($note);
+        $participation->setAvis($avisText !== '' ? $avisText : null);
+        $em->flush();
+
+        return $this->json([
+            'success' => true, 
+            'message' => 'Votre avis a été enregistré (Note: ' . $note . ', Avis: ' . ($avisText ?: 'vide') . '), merci !'
+        ]);
     }
 
     // ─── DELETE ──────────────────────────────────────────────────────────────
@@ -718,5 +827,181 @@ class EvenementController extends AbstractController
         $result = $this->predictionService->predireParticipation($tempEvent);
 
         return $this->json($result);
+    }
+
+    // ─── AJOUTER COMMENTAIRE À UN AVIS ────────────────────────────────────────
+    #[Route('/{id}/avis/{participationId}/commentaire', name: 'app_evenement_avis_commentaire', methods: ['POST'], requirements: ['id' => '\d+', 'participationId' => '\d+'])]
+    public function ajouterCommentaireAvis(
+        int $id,
+        int $participationId,
+        ReviewCommentRepository $reviewCommentRepo,
+        EntityManagerInterface $em,
+        Request $request,
+        BadWordFilterService $badWordFilterService,
+        ParticipationRepository $participationRepo,
+        \Psr\Log\LoggerInterface $logger
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $participation = $participationRepo->find($participationId);
+        if (!$participation) {
+            $logger->error('Comment submission failed: Participation {id} not found.', ['id' => $participationId]);
+            return $this->json(['error' => 'Participation introuvable.'], 404);
+        }
+
+        $content = trim($request->request->get('content', ''));
+        $parentId = $request->request->get('parent_id');
+
+        if (!$content) {
+            return $this->json(['error' => 'Contenu vide'], 400);
+        }
+
+        // Check for bad words
+        if ($badWordFilterService->containsBadWords($content)) {
+            $badWords = $badWordFilterService->hasBadWords($content);
+            return $this->json(['error' => $badWordFilterService->getErrorMessage($badWords)], 400);
+        }
+
+        $comment = new ReviewComment();
+        $comment->setParticipation($participation);
+        $comment->setUser($this->getUser());
+        $comment->setContent($content);
+
+        if ($parentId) {
+            $parent = $reviewCommentRepo->find($parentId);
+            if ($parent) {
+                $comment->setParentComment($parent);
+            }
+        }
+
+        $em->persist($comment);
+        $em->flush();
+
+        return $this->json([
+            'id'        => $comment->getId(),
+            'userName'  => $this->getUser()->getPrenom() . ' ' . $this->getUser()->getNom(),
+            'content'   => $comment->getContent(),
+            'date'      => $comment->getCreatedAt()->format('d/m/Y H:i'),
+            'parentId'  => $comment->getParentComment()?->getId(),
+        ]);
+    }
+
+    #[Route('/{id}/avis/supprimer', name: 'app_evenement_avis_supprimer', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function supprimerAvisAjax(
+        Evenement $evenement,
+        ParticipationRepository $participationRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
+
+        $participation = $participationRepo->findByUserAndEvenement($this->getUser(), $evenement);
+        if (!$participation) {
+            return $this->json(['error' => 'Avis introuvable.'], 404);
+        }
+
+        // Reset the review fields
+        $participation->setNote(0);
+        $participation->setAvis(null);
+        
+        $em->flush();
+
+        return $this->json(['message' => 'Avis supprimé avec succès.']);
+    }
+
+    // ─── RÉCUPÉRER COMMENTAIRES D'UN AVIS ────────────────────────────────────
+    #[Route('/{id}/avis/{participationId}/commentaires', name: 'app_evenement_avis_commentaires', methods: ['GET'], requirements: ['id' => '\d+', 'participationId' => '\d+'])]
+    public function getCommentairesAvis(
+        int $participationId,
+        ReviewCommentRepository $reviewCommentRepo,
+        ParticipationRepository $participationRepo
+    ): JsonResponse {
+        $participation = $participationRepo->find($participationId);
+        if (!$participation) {
+            return $this->json([], 200);
+        }
+
+        $currentUserId = $this->getUser()?->getId();
+        $comments = $reviewCommentRepo->findByParticipation($participation);
+
+        $data = [];
+        foreach ($comments as $comment) {
+            $replies = $reviewCommentRepo->findReplies($comment);
+            $data[] = [
+                'id'        => $comment->getId(),
+                'userName'  => $comment->getUser()->getPrenom() . ' ' . $comment->getUser()->getNom(),
+                'content'   => $comment->getContent(),
+                'date'      => $comment->getCreatedAt()->format('d/m/Y H:i'),
+                'isOwner'   => $comment->getUser()->getId() === $currentUserId,
+                'replies'   => array_map(fn($r) => [
+                    'id'       => $r->getId(),
+                    'userName' => $r->getUser()->getPrenom() . ' ' . $r->getUser()->getNom(),
+                    'content'  => $r->getContent(),
+                    'date'     => $r->getCreatedAt()->format('d/m/Y H:i'),
+                    'isOwner'  => $r->getUser()->getId() === $currentUserId,
+                ], $replies),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/commentaire/{commentId}/modifier', name: 'app_evenement_commentaire_edit', methods: ['POST'], requirements: ['commentId' => '\d+'])]
+    public function editCommentaire(
+        int $commentId,
+        Request $request,
+        EntityManagerInterface $em,
+        ReviewCommentRepository $reviewCommentRepo,
+        BadWordFilterService $badWordFilterService
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $comment = $reviewCommentRepo->find($commentId);
+        if (!$comment) {
+            return $this->json(['error' => 'Commentaire introuvable.'], 404);
+        }
+        if ($comment->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Non autorisé.'], 403);
+        }
+
+        $content = trim($request->request->get('content', ''));
+        if (!$content) {
+            return $this->json(['error' => 'Contenu vide.'], 400);
+        }
+        if ($badWordFilterService->containsBadWords($content)) {
+            return $this->json(['error' => $badWordFilterService->getErrorMessage($badWordFilterService->hasBadWords($content))], 400);
+        }
+
+        $comment->setContent($content);
+        $em->flush();
+
+        return $this->json([
+            'id'      => $comment->getId(),
+            'content' => $comment->getContent(),
+            'edited'  => true,
+        ]);
+    }
+
+    #[Route('/commentaire/{commentId}/supprimer', name: 'app_evenement_commentaire_delete', methods: ['POST'], requirements: ['commentId' => '\d+'])]
+    public function deleteCommentaire(
+        int $commentId,
+        ReviewCommentRepository $reviewCommentRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $comment = $reviewCommentRepo->find($commentId);
+        if (!$comment) {
+            return $this->json(['error' => 'Commentaire introuvable.'], 404);
+        }
+        if ($comment->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Non autorisé.'], 403);
+        }
+
+        $participationId = $comment->getParticipation()->getId();
+        $em->remove($comment);
+        $em->flush();
+
+        return $this->json(['deleted' => true, 'participationId' => $participationId]);
     }
 }

@@ -114,6 +114,17 @@
 
 <section class="services section" style="padding-top:40px;">
   <div class="container">
+    {# ── Global flash messages ── #}
+    <div class="mb-3">
+      {% for type, messages in app.flashes %}
+        {% for message in messages %}
+          <div class="alert alert-{{ type == 'success' ? 'success' : type == 'info' ? 'info' : type == 'warning' ? 'warning' : 'danger' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
     <div class="row g-4">
 
       <!-- LEFT -->
@@ -181,28 +192,39 @@
             {% endif %}
           </h4>
 
+          {# Flash messages (bad-word errors, etc.) #}
+          {% for label, messages in app.flashes %}
+            {% for message in messages %}
+              <div class="alert alert-{{ label == 'success' ? 'success' : (label == 'info' ? 'info' : 'danger') }} alert-dismissible fade show mb-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endfor %}
+
           {# Form: add new avis #}
           {% if avisForm %}
-          <div class="avis-form-wrap mb-4">
+          <div class="avis-form-wrap mb-4" id="avis-form-section">
             <h6 class="fw-bold mb-3" style="color:#667A3F;"><i class="bi bi-pencil-square me-1"></i>Laisser un avis</h6>
-            <form method="post" action="{{ path('app_evenement_avis', {id: evenement.id}) }}">
-              {{ form_errors(avisForm) }}
-              <div class="mb-3">
-                {{ form_label(avisForm.note) }}
-                {{ form_widget(avisForm.note) }}
-                {{ form_errors(avisForm.note) }}
-              </div>
-              <div class="mb-3">
-                {{ form_label(avisForm.avis) }}
-                {{ form_widget(avisForm.avis) }}
-              </div>
-              {{ form_rest(avisForm) }}
-              <button type="submit" class="btn btn-success">
-                <i class="bi bi-send-fill me-1"></i>Publier mon avis
-              </button>
-            </form>
+
+            {# Inline error/success shown by JS — no page reload #}
+            <div id="avis-form-feedback" style="display:none;" class="alert mb-3"></div>
+
+            {# We keep the Twig form widgets for rendering but intercept submit via JS #}
+            <div class="mb-3">
+              {{ form_label(avisForm.note) }}
+              {{ form_widget(avisForm.note, {attr: {id: 'avis_note'}}) }}
+            </div>
+            <div class="mb-3">
+              {{ form_label(avisForm.avis) }}
+              {{ form_widget(avisForm.avis, {attr: {id: 'avis_avis'}}) }}
+            </div>
+            <button type="button" id="avis-submit-btn" class="btn btn-success"
+                    onclick="submitAvisForm({{ evenement.id }})">
+              <i class="bi bi-send-fill me-1"></i>Publier mon avis
+            </button>
           </div>
-          {% elseif app.user and userParticipation and userParticipation.statut == 'PRESENT' and userParticipation.note > 0 %}
+          {% elseif app.user and userParticipation and userParticipation.statut == 'PRESENT' and (userParticipation.note is not null and userParticipation.note > 0) %}
           <div class="alert alert-success py-2 mb-3">
             <i class="bi bi-check-circle-fill me-1"></i>Vous avez déjà laissé un avis pour cet événement.
           </div>
@@ -213,7 +235,7 @@
             <p class="text-muted" style="font-size:.9rem;">Aucun avis pour l'instant. Soyez le premier à partager votre expérience !</p>
           {% else %}
             {% for p in avis %}
-            <div class="avis-card">
+            <div class="avis-card" id="avis-{{ p.id }}">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <div class="d-flex align-items-center gap-2">
                   <div style="width:36px;height:36px;border-radius:50%;background:#667A3F22;display:flex;align-items:center;justify-content:center;">
@@ -226,16 +248,51 @@
                     <div style="font-size:.75rem;color:#9ca3af;">{{ p.dateInscription|date('d/m/Y') }}</div>
                   </div>
                 </div>
-                <div>
-                  {% for i in 1..5 %}
-                    <i class="bi bi-star-fill {{ i <= p.note ? 'star-filled' : 'star-empty' }}" style="font-size:.9rem;"></i>
-                  {% endfor %}
-                  <span style="font-size:.82rem;font-weight:700;color:#F39C12;margin-left:4px;">{{ p.note }}/5</span>
+                <div class="d-flex align-items-center gap-2">
+                  <div>
+                    {% for i in 1..5 %}
+                      <i class="bi bi-star-fill {{ i <= p.note ? 'star-filled' : 'star-empty' }}" style="font-size:.9rem;"></i>
+                    {% endfor %}
+                    <span style="font-size:.82rem;font-weight:700;color:#F39C12;margin-left:4px;">{{ p.note }}/5</span>
+                  </div>
+                  {% if app.user and p.utilisateur == app.user %}
+                    <button type="button" class="btn btn-sm p-0 text-danger" 
+                            style="font-size:1rem;margin-left:5px;"
+                            onclick="deleteAvis({{ evenement.id }}, {{ p.id }})"
+                            title="Supprimer mon avis">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  {% endif %}
                 </div>
               </div>
               {% if p.avis %}
                 <p style="margin:0;font-size:.9rem;color:#4b5563;line-height:1.6;">{{ p.avis }}</p>
               {% endif %}
+
+              {# Comments section #}
+              <div class="avis-comments mt-3" style="border-top:1px solid #e5e7eb;padding-top:12px;">
+                <div id="comments-{{ p.id }}" class="comments-list mb-2"></div>
+
+                {% if app.user %}
+                <button type="button" class="btn btn-link btn-sm p-0 mb-2" 
+                        style="color:#667A3F;text-decoration:none;font-size:.82rem;display:inline-flex;align-items:center;gap:3px;"
+                        onclick="toggleMainReviewReply({{ p.id }})">
+                  <i class="bi bi-reply"></i> Répondre
+                </button>
+
+                <div id="comment-input-{{ p.id }}" style="display:none;gap:8px;margin-top:10px;align-items:center;">
+                  <input type="text" class="comment-input form-control form-control-sm"
+                         placeholder="Ajouter un commentaire..."
+                         style="flex:1;font-size:.84rem;"
+                         onkeydown="if(event.key==='Enter'){submitComment({{ p.id }},this);}">
+                  <button type="button" class="btn btn-sm btn-success"
+                          onclick="submitComment({{ p.id }}, document.querySelector('#comment-input-{{ p.id }} .comment-input'))"
+                          style="font-size:.84rem;padding:5px 10px;">
+                    <i class="bi bi-send-fill"></i>
+                  </button>
+                </div>
+                {% endif %}
+              </div>
             </div>
             {% endfor %}
           {% endif %}
@@ -379,4 +436,414 @@
     </div>
   </div>
 </section>
+
+<script>
+  const eventId = {{ evenement.id }};
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.avis-card').forEach(function(el) {
+      loadComments(el.id.replace('avis-', ''));
+    });
+  });
+
+  /* ── Delete the main avis (review) ── */
+  function deleteAvis(evenementId, participationId) {
+    if (!confirm('Supprimer votre avis ? Cette action est irréversible.')) return;
+
+    fetch('/evenement/' + evenementId + '/avis/supprimer', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) {
+      return r.json().then(function(p) {
+        if (!r.ok) throw new Error(p.error || 'Erreur serveur (' + r.status + ')');
+        return p;
+      });
+    })
+    .then(function() {
+      location.reload(); // Reset state to show original review form
+    })
+    .catch(function(e) { alert(e.message); });
+  }
+
+  /* ── AJAX review form submit ── */
+  function submitAvisForm(evenementId) {
+    var noteEl   = document.getElementById('avis_note');
+    var avisEl   = document.getElementById('avis_avis');
+    var feedback = document.getElementById('avis-form-feedback');
+    var btn      = document.getElementById('avis-submit-btn');
+    var formSect = document.getElementById('avis-form-section');
+
+    // Clear any previous error
+    feedback.style.display = 'none';
+    feedback.innerHTML = '';
+
+    if (!noteEl || !noteEl.value) {
+      showFormFeedback(feedback, 'danger', 'Veuillez sélectionner une note.', null);
+      return;
+    }
+
+    var avisText = avisEl ? avisEl.value.trim() : '';
+    console.log('Submitting review: note=' + noteEl.value + ', avis="' + avisText + '"');
+
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Envoi...';
+
+    // Use URLSearchParams for reliable x-www-form-urlencoded construction
+    var params = new URLSearchParams();
+    params.append('note', noteEl.value);
+    if (avisText) {
+      params.append('avis[avis]', avisText);
+    }
+
+    fetch('/evenement/' + evenementId + '/soumettre-avis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: params.toString()
+    })
+    .then(function(r) {
+      return r.json().then(function(payload) {
+        console.log('Server response:', payload);
+        if (!r.ok) throw { message: payload.error || 'Erreur serveur (' + r.status + ')', badWords: payload.badWords };
+        return payload;
+      });
+    })
+    .then(function(data) {
+      // Replace form with success message
+      formSect.innerHTML =
+        '<div class="alert alert-success d-flex align-items-center gap-2">' +
+        '<i class="bi bi-check-circle-fill"></i>' +
+        '<span>' + escapeHtml(data.message) + '</span>' +
+        '</div>';
+
+      // Reload the reviews section so new review appears without page refresh
+      setTimeout(function() { location.reload(); }, 1200);
+    })
+    .catch(function(err) {
+      console.error('Submission error:', err);
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Publier mon avis';
+
+      // err could be a plain object {message, badWords} or a real Error
+      var msg = (err && err.message) ? err.message : 'Une erreur est survenue.';
+      var isBadWord = (err && err.badWords === true);
+
+      showFormFeedback(feedback, 'danger', msg, isBadWord ? avisEl : null);
+    });
+  }
+
+  /* Dismissible feedback banner inside the review form */
+  function showFormFeedback(el, type, msg, fieldToReset) {
+    el.style.display = 'flex';
+    el.className = 'alert alert-' + type + ' mb-3 d-flex align-items-center justify-content-between gap-2';
+
+    var text = document.createElement('span');
+    text.textContent = msg;
+
+    el.innerHTML = '';
+    el.appendChild(text);
+
+    if (fieldToReset) {
+      var fixBtn = document.createElement('button');
+      fixBtn.type = 'button';
+      fixBtn.textContent = 'Corriger';
+      fixBtn.style.cssText =
+        'border:1px solid #E74C3C;background:#fff;color:#E74C3C;border-radius:4px;' +
+        'padding:3px 10px;font-size:.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+      fixBtn.onclick = function() {
+        el.style.display = 'none';
+        fieldToReset.value = '';
+        fieldToReset.focus();
+      };
+      el.appendChild(fixBtn);
+    } else {
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'btn-close';
+      closeBtn.onclick = function() { el.style.display = 'none'; };
+      el.appendChild(closeBtn);
+    }
+  }
+
+  /* ── Load all comments for a review ── */
+  function loadComments(participationId) {
+    fetch('/evenement/' + eventId + '/avis/' + participationId + '/commentaires')
+      .then(function(r) { return r.json(); })
+      .then(function(comments) {
+        var list = document.getElementById('comments-' + participationId);
+        if (!list) return;
+        list.innerHTML = '';
+
+        comments.forEach(function(comment) {
+          var wrapper = document.createElement('div');
+          wrapper.id  = 'comment-wrapper-' + comment.id;
+          wrapper.style.marginBottom = '8px';
+
+          wrapper.appendChild(buildCommentEl(comment, participationId, false));
+
+          if (comment.replies && comment.replies.length > 0) {
+            var rBlock = document.createElement('div');
+            rBlock.style.cssText = 'margin-left:18px;padding-left:10px;border-left:2px solid #e5e7eb;margin-top:4px;';
+            comment.replies.forEach(function(reply) {
+              rBlock.appendChild(buildCommentEl(reply, participationId, true));
+            });
+            wrapper.appendChild(rBlock);
+          }
+
+          var slot = document.createElement('div');
+          slot.id   = 'reply-slot-' + comment.id;
+          slot.style.marginLeft = '18px';
+          wrapper.appendChild(slot);
+
+          list.appendChild(wrapper);
+        });
+      })
+      .catch(function(e) { console.error('loadComments error:', e); });
+  }
+
+  /* ── Build one comment element (no edit, delete only for owner) ── */
+  function buildCommentEl(comment, participationId, isReply) {
+    var div = document.createElement('div');
+    div.id  = 'comment-el-' + comment.id;
+    div.style.cssText =
+      'background:#f9fafb;padding:7px 10px;margin-bottom:4px;font-size:.84rem;' +
+      'border-left:3px solid ' + (isReply ? '#bfdbfe' : '#8BC34A') + ';border-radius:0 6px 6px 0;';
+
+    /* Header */
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;';
+
+    var meta = document.createElement('div');
+    meta.innerHTML =
+      '<strong style="color:#1a2e05;font-size:.84rem;">' + escapeHtml(comment.userName) + '</strong>' +
+      ' <small style="color:#9ca3af;">' + escapeHtml(comment.date) + '</small>';
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:4px;align-items:center;';
+
+    if (comment.isOwner) {
+      var delBtn = document.createElement('button');
+      delBtn.type  = 'button';
+      delBtn.title = 'Supprimer';
+      delBtn.style.cssText = 'background:none;border:none;padding:2px 5px;cursor:pointer;color:#E74C3C;font-size:.78rem;border-radius:4px;';
+      delBtn.innerHTML = '<i class="bi bi-trash3-fill"></i>';
+      delBtn.onmouseover = function() { this.style.background = '#fff0f0'; };
+      delBtn.onmouseout  = function() { this.style.background = 'none'; };
+      delBtn.onclick = function() { deleteComment(comment.id, participationId); };
+      actions.appendChild(delBtn);
+    }
+
+    hdr.appendChild(meta);
+    hdr.appendChild(actions);
+    div.appendChild(hdr);
+
+    /* Body */
+    var body = document.createElement('p');
+    body.style.cssText = 'margin:0 0 4px;color:#374151;line-height:1.5;';
+    body.textContent   = comment.content;
+    div.appendChild(body);
+
+    /* Répondre — top-level only */
+    if (!isReply) {
+      var replyBtn = document.createElement('button');
+      replyBtn.type = 'button';
+      replyBtn.style.cssText =
+        'background:none;border:none;padding:0;font-size:.78rem;color:#667A3F;' +
+        'cursor:pointer;display:inline-flex;align-items:center;gap:3px;';
+      replyBtn.innerHTML = '<i class="bi bi-reply" style="font-size:.78rem;"></i> Répondre';
+      replyBtn.onclick   = function() { toggleReplyForm(participationId, comment.id, comment.userName); };
+      div.appendChild(replyBtn);
+    }
+
+    return div;
+  }
+
+  /* ── Toggle the main input for a review ── */
+  function toggleMainReviewReply(participationId) {
+    var div = document.getElementById('comment-input-' + participationId);
+    if (!div) return;
+    if (div.style.display === 'none') {
+      div.style.display = 'flex';
+      var input = div.querySelector('input');
+      if (input) input.focus();
+    } else {
+      div.style.display = 'none';
+      clearInlineError(div);
+    }
+  }
+
+  /* ── Submit top-level comment ── */
+  function submitComment(participationId, inputEl) {
+    if (!inputEl) return;
+    var content   = inputEl.value.trim();
+    var inputArea = document.getElementById('comment-input-' + participationId);
+    var sendBtn   = inputArea ? inputArea.querySelector('button') : null;
+
+    clearInlineError(inputArea);
+
+    if (!content) { if (inputEl) inputEl.focus(); return; }
+
+    if (sendBtn) setLoading(sendBtn, true);
+
+    postComment(participationId, content, null)
+      .then(function() { 
+        inputEl.value = ''; 
+        if (inputArea) inputArea.style.display = 'none';
+        loadComments(participationId); 
+      })
+      .catch(function(e) {
+        /* Bad word error: show dismissible banner with "Corriger" that clears the input */
+        if (inputArea) showDismissibleError(inputArea, e.message, inputEl);
+      })
+      .finally(function() { if (sendBtn) setLoading(sendBtn, false); });
+  }
+
+  /* ── Toggle inline reply form ── */
+  function toggleReplyForm(participationId, commentId, userName) {
+    var slot = document.getElementById('reply-slot-' + commentId);
+    if (!slot) return;
+    if (slot.hasChildNodes()) { slot.innerHTML = ''; return; }
+
+    var inner = document.createElement('div');
+    inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:6px;';
+
+    var inputRow = document.createElement('div');
+    inputRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+
+    var input = document.createElement('input');
+    input.type        = 'text';
+    input.className   = 'form-control form-control-sm reply-input';
+    input.placeholder = 'Répondre à ' + escapeHtml(userName) + '...';
+    input.style.cssText = 'flex:1;font-size:.83rem;';
+
+    var sendBtn = document.createElement('button');
+    sendBtn.type      = 'button';
+    sendBtn.className = 'btn btn-sm btn-success';
+    sendBtn.style.fontSize = '.83rem';
+    sendBtn.innerHTML = '<i class="bi bi-send-fill"></i>';
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type      = 'button';
+    cancelBtn.className = 'btn btn-sm btn-light';
+    cancelBtn.style.fontSize = '.83rem';
+    cancelBtn.textContent = '✕';
+    cancelBtn.onclick = function() { slot.innerHTML = ''; };
+
+    input.onkeydown = function(e) { if (e.key === 'Enter') doSend(); };
+    sendBtn.onclick = doSend;
+
+    inputRow.appendChild(input);
+    inputRow.appendChild(sendBtn);
+    inputRow.appendChild(cancelBtn);
+    inner.appendChild(inputRow);
+    slot.appendChild(inner);
+    input.focus();
+
+    function doSend() {
+      var content = input.value.trim();
+      if (!content) return;
+      clearInlineError(inner);
+      setLoading(sendBtn, true);
+
+      postComment(participationId, content, commentId)
+        .then(function() { slot.innerHTML = ''; loadComments(participationId); })
+        .catch(function(e) { showDismissibleError(inner, e.message, input); })
+        .finally(function() { setLoading(sendBtn, false); });
+    }
+  }
+
+  /* ── Delete comment ── */
+  function deleteComment(commentId, participationId) {
+    if (!confirm('Supprimer ce commentaire ?')) return;
+
+    fetch('/evenement/commentaire/' + commentId + '/supprimer', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) {
+      return r.json().then(function(p) {
+        if (!r.ok) throw new Error(p.error || 'Erreur serveur (' + r.status + ')');
+        return p;
+      });
+    })
+    .then(function() {
+      var wrapper = document.getElementById('comment-wrapper-' + commentId);
+      if (wrapper) {
+        wrapper.style.transition = 'opacity .2s';
+        wrapper.style.opacity    = '0';
+        setTimeout(function() { wrapper.remove(); }, 200);
+      }
+    })
+    .catch(function(e) { alert(e.message); });
+  }
+
+  /* ── Shared fetch ── */
+  function postComment(participationId, content, parentId) {
+    var body = 'content=' + encodeURIComponent(content);
+    if (parentId) body += '&parent_id=' + parentId;
+
+    return fetch('/evenement/' + eventId + '/avis/' + participationId + '/commentaire', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      body: body
+    }).then(function(r) {
+      return r.json().then(function(payload) {
+        if (!r.ok) throw new Error(payload.error || 'Erreur serveur (' + r.status + ')');
+        return payload;
+      });
+    });
+  }
+
+  /* ── Error banner with "Corriger" button ── */
+  function showDismissibleError(container, msg, inputToReset) {
+    clearInlineError(container);
+    var banner = document.createElement('div');
+    banner.className = 'inline-err';
+    banner.style.cssText =
+      'display:flex;align-items:center;justify-content:space-between;gap:8px;' +
+      'background:#fff5f5;border:1px solid #fca5a5;border-radius:6px;' +
+      'padding:6px 10px;margin-top:6px;font-size:.82rem;color:#991b1b;';
+
+    var text = document.createElement('span');
+    text.textContent = msg;
+
+    var fixBtn = document.createElement('button');
+    fixBtn.type      = 'button';
+    fixBtn.textContent = 'Corriger';
+    fixBtn.style.cssText =
+      'border:1px solid #E74C3C;background:#fff;color:#E74C3C;border-radius:4px;' +
+      'padding:2px 8px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+    fixBtn.onclick = function() {
+      banner.remove();
+      if (inputToReset) { inputToReset.value = ''; inputToReset.focus(); }
+    };
+
+    banner.appendChild(text);
+    banner.appendChild(fixBtn);
+    container.appendChild(banner);
+  }
+
+  /* ── Helpers ── */
+  function setLoading(btn, on) {
+    btn.disabled  = on;
+    btn.innerHTML = on
+      ? '<span class="spinner-border spinner-border-sm"></span>'
+      : '<i class="bi bi-send-fill"></i>';
+  }
+
+  function clearInlineError(container) {
+    if (!container) return;
+    var e = container.querySelector('.inline-err');
+    if (e) e.remove();
+  }
+
+  function escapeHtml(t) {
+    return String(t).replace(/[&<>"']/g, function(c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c];
+    });
+  }
+</script>
 {% endblock %}
