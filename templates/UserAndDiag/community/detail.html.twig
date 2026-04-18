@@ -59,10 +59,18 @@
 
             {% if app.user and post.user.id == app.user.id %}
                 <div class="post-owner-actions mt-3 mb-3">
-                    <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
-                    <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
-                        <button type="submit" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
-                    </form>
+                    {% if app.user.banned %}
+                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white; opacity:0.5;">✏️ Modifier</a>
+                        <button onclick="alert('⛔ Votre compte a été banni de la communauté.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px; opacity:0.5;">🗑️ Supprimer</button>
+                    {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white; opacity:0.5;">✏️ Modifier</a>
+                        <button onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Suppression impossible.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px; opacity:0.5;">🗑️ Supprimer</button>
+                    {% else %}
+                        <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
+                            <button type="submit" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
+                        </form>
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -115,14 +123,28 @@
                             <button class="btn-solve" onclick="markSolution({{ post.id }}, {{ comment.id }})">✓ Marquer comme solution</button>
                         {% endif %}
                         {% if app.user and comment.user.id != app.user.id %}
-                            <button style="color:#fbc02d;font-size:11px;" onclick="reportComment({{ comment.id }})">🚩 Signaler</button>
+                            {% if app.user.banned %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">🚩 Signaler</button>
+                            {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="alert('🔇 Vous êtes muet. Signalement impossible.')">🚩 Signaler</button>
+                            {% else %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="reportComment({{ comment.id }})">🚩 Signaler</button>
+                            {% endif %}
                         {% endif %}
                         {% if is_granted('ROLE_MODERATOR') %}
                             <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Mod Supprimer</button>
                         {% endif %}
                         {% if app.user and comment.user.id == app.user.id %}
-                            <button style="color:#64b5f6;font-size:11px;" onclick="editComment({{ comment.id }})">✏️ Éditer</button>
-                            <button style="color:#e53935;font-size:11px;" onclick="deleteComment({{ comment.id }})">🗑️ Supprimer</button>
+                            {% if app.user.banned %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">🗑️ Supprimer</button>
+                            {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.')">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.')">🗑️ Supprimer</button>
+                            {% else %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="editComment({{ comment.id }})">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="deleteComment({{ comment.id }})">🗑️ Supprimer</button>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>

@@ -85,7 +85,13 @@
                     <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
                     <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
                     {% if app.user and post.user.id != app.user.id %}
-                        <span class="report-btn" onclick="event.stopPropagation(); reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
+                        {% if app.user.banned %}
+                            <span class="report-btn" onclick="event.stopPropagation(); alert('⛔ Votre compte a été banni de la communauté.')" title="Signaler la publication">🚩</span>
+                        {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                            <span class="report-btn" onclick="event.stopPropagation(); alert('🔇 Vous êtes muet. Signalement impossible.')" title="Signaler la publication">🚩</span>
+                        {% else %}
+                            <span class="report-btn" onclick="event.stopPropagation(); reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
