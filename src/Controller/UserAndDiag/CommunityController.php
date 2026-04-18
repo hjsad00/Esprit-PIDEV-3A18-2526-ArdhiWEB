@@ -511,6 +511,13 @@ class CommunityController extends AbstractController
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
+        if ($user->isBanned()) {
+            return $this->json(['error' => '⛔ Action bloquée (compte banni).'], 403);
+        }
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            return $this->json(['error' => '🔇 Action bloquée (compte muet).'], 403);
+        }
+
         // Can't report your own post
         if ($post->getUser()->getId() === $user->getId()) {
             return $this->json(['error' => 'Vous ne pouvez pas signaler votre propre publication.'], 400);
@@ -544,6 +551,13 @@ class CommunityController extends AbstractController
     ): JsonResponse {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        if ($user->isBanned()) {
+            return $this->json(['error' => '⛔ Action bloquée (compte banni).'], 403);
+        }
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            return $this->json(['error' => '🔇 Action bloquée (compte muet).'], 403);
+        }
 
         if ($comment->getUser()->getId() === $user->getId()) {
             return $this->json(['error' => 'Vous ne pouvez pas signaler votre propre commentaire.'], 400);

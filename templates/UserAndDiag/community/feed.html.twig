@@ -26,7 +26,9 @@
                 <input type="text" id="searchInput" placeholder="Rechercher un sujet..." oninput="filterPosts()">
             </div>
         </div>
-        {% if app.user and app.user.mutedUntil and app.user.mutedUntil > date() %}
+        {% if app.user and app.user.banned %}
+            <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn-new-post" style="opacity:0.5;">+ Poser une question</a>
+        {% elseif app.user and app.user.mutedUntil and app.user.mutedUntil > date() %}
             <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.{% if latestMuteReason %} Raison : {{ latestMuteReason|escape('js') }}{% endif %}'); return false;" class="btn-new-post">+ Poser une question</a>
         {% else %}
             <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>

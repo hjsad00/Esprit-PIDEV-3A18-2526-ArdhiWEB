@@ -270,7 +270,7 @@
             if (data.error) throw new Error(data.error);
             return data;
         })
-        .then(() => {
+        .then((data) => {
             // Emulate the rendered comment insertion to avoid reload
             const initialId = data.userName.charAt(0).toUpperCase();
             
