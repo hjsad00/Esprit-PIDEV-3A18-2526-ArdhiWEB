@@ -3,66 +3,7 @@
    Dark premium theme matching JavaFX reference
    ═══════════════════════════════════════════ */
 
-.expert-wrapper {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    z-index: 1;
-}
-
-/* ─── HEADER ─── */
-.expert-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    height: 62px;
-    min-height: 62px;
-    background: rgba(8, 14, 11, 0.82);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
-    position: relative;
-    z-index: 10;
-}
-
-.btn-back {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: rgba(200, 230, 210, 0.8);
-    padding: 7px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.btn-back:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
-
-.header-accent {
-    width: 3px;
-    height: 22px;
-    background: #5db87a;
-    border-radius: 2px;
-}
-
-.header-sub {
-    color: rgba(160, 210, 175, 0.55);
-    font-size: 9px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-.header-title {
-    color: #eef4f0;
-    font-size: 17px;
-    font-weight: bold;
-    font-family: 'Georgia', serif;
-}
-
+/* ─── REFRESH BUTTON ─── */
 .btn-refresh {
     background: rgba(93, 184, 122, 0.12);
     border: 1px solid rgba(93, 184, 122, 0.3);
@@ -79,16 +20,15 @@
     background: rgba(93, 184, 122, 0.25);
 }
 
-.header-border {
-    height: 1px;
-    background: rgba(93, 184, 122, 0.18);
-}
-
 /* ─── MAIN BODY ─── */
 .expert-body {
     display: flex;
-    flex: 1;
+    min-height: 550px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* ─── LEFT PANEL: Queue ─── */
@@ -98,6 +38,7 @@
     max-width: 290px;
     background: rgba(6, 12, 9, 0.6);
     border-right: 1px solid rgba(93, 184, 122, 0.12);
+    border-radius: 16px 0 0 16px;
     padding: 20px 16px;
     overflow-y: auto;
     display: flex;

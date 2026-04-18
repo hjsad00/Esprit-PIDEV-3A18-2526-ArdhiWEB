@@ -9,21 +9,20 @@
 {% block body %}
 <div class="dashboard-background"></div>
 
-<div class="expert-wrapper">
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
 
-    {# ─── HEADER BAR ─── #}
-    <div class="expert-header">
-        <div class="d-flex align-items-center gap-3">
-            <a href="{{ path('app_client_dashboard') }}" class="btn-back">← Retour</a>
-            <div class="header-accent"></div>
-            <div>
-                <div class="header-sub">ESPACE EXPERT</div>
-                <h4 class="header-title m-0">Tableau de Bord Agronome</h4>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Tableau de Bord Agronome</li>
+                </ol>
+            </nav>
+            <h2 class="text-white fw-bold mb-0">🔬 Tableau de Bord Agronome</h2>
         </div>
         <button class="btn-refresh" onclick="window.location.reload()">↻ Actualiser</button>
     </div>
-    <div class="header-border"></div>
 
     {# ─── MAIN BODY ─── #}
     <div class="expert-body">
