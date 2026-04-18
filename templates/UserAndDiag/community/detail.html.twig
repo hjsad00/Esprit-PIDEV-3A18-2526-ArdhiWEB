@@ -603,6 +603,26 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         setupMentions('txtComment');
+
+        // Smoothly hash scroll and elegantly highlight specific linked comments
+        if (window.location.hash && window.location.hash.startsWith('#comment-')) {
+            const target = document.querySelector(window.location.hash);
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Provide a nice premium glow to draw their eye immediately
+                    const originalBorder = target.style.borderColor;
+                    target.style.border = '1px solid #64b5f6';
+                    target.style.boxShadow = '0 0 15px rgba(100, 181, 246, 0.4)';
+                    target.style.transition = 'all 2s ease-out';
+                    
+                    setTimeout(() => {
+                        target.style.border = originalBorder;
+                        target.style.boxShadow = 'none';
+                    }, 3000);
+                }, 400); // 400ms delay ensures browser layout has completely rendered
+            }
+        }
     });
 </script>
 {% endblock %}
