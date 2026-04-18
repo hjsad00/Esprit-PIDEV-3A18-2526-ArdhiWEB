@@ -75,16 +75,4 @@ class AlerteTechnicienController extends AbstractController
             'materiel' => $materiel,
         ]);
     }
-
-    /**
-     * API pour le rafraîchissement automatique (Polling).
-     * Renvoie le nombre total d'alertes non lues pour l'agriculteur connecté.
-     */
-    #[Route('/api/unread-count', name: 'app_alerte_technicien_count', methods: ['GET'])]
-    #[IsGranted('ROLE_AGRICULTEUR')]
-    public function getUnreadCount(AlerteTechnicienRepository $repo): Response
-    {
-        $count = $repo->countUnreadForAgriculteur($this->getUser()->getId());
-        return $this->json(['count' => $count]);
-    }
 }

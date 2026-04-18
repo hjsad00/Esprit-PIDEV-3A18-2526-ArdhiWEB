@@ -175,6 +175,7 @@ class AdminMaintenanceController extends AbstractController
         EntityManagerInterface $em, 
         UserRepository $userRepo,
         \App\Service\MaterielEtMaintenance\MaintenanceMailer $mailer,
+        \App\Service\MaterielEtMaintenance\WhatsAppService $whatsApp,
         \Symfony\Component\Workflow\Registry $workflowRegistry
     ): Response {
         $maintenance = $repo->find($id);
@@ -235,7 +236,13 @@ class AdminMaintenanceController extends AbstractController
             $notif->setTitre("Urgence Acceptée : " . $machineName);
             $notif->setNouveauStatut('en_attente');
 
+            // --- Envoi E-mail ---
             $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+
+            // --- Envoi WhatsApp ---
+            if ($user->getPhone()) {
+                $whatsApp->envoyer($user->getPhone(), $msgNotif);
+            }
 
         } elseif ($type === 'non_urgent_planifier') {
             $maintenance->setDecisionAdmin('planification_demandee');
@@ -256,7 +263,14 @@ class AdminMaintenanceController extends AbstractController
             $notif->setTitre("Planification demandée : " . $machineName);
             $notif->setNouveauStatut('en_cours');
 
+            // --- Envoi E-mail ---
             $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+
+            // --- Envoi WhatsApp ---
+            if ($user->getPhone()) {
+                $whatsApp->envoyer($user->getPhone(), $msgNotif);
+            }
+
         } else {
             $this->addFlash('danger', 'Type de réponse invalide.');
             return $this->redirectToRoute('admin_maintenance_urgente');
