@@ -214,7 +214,7 @@ class UserDiagnosticController extends AbstractController
 
         // 2. Subscription Check: Verify if the user's plan allows treatment plan creation
         $features = $featureService->getFeatures($user);
-        
+
         if (empty($features['accesPlanTraitement'])) {
             return $this->json([
                 'error' => 'Votre abonnement actuel ne permet pas la création de plans de traitement.',
@@ -239,18 +239,18 @@ class UserDiagnosticController extends AbstractController
 
             // 5. Ask AI to generate the tasks
             $aiResponse = $groqService->generateTreatmentPlan($diagnostic->getResultatIa());
-            
+
             if (str_starts_with($aiResponse, 'ERREUR')) {
                 throw new \Exception("L'IA n'a pas pu générer les tâches : " . $aiResponse);
             }
 
             // 6. Parse the AI response and create TreatmentTask entities
             $lignes = explode("\n", str_replace('```', '', trim($aiResponse)));
-            
+
             $tasksCreated = 0;
             foreach ($lignes as $ligne) {
                 $parts = explode('|', trim($ligne));
-                
+
                 if (count($parts) >= 2 && is_numeric(trim($parts[0]))) {
                     $dayOffset = (int) trim($parts[0]);
                     $description = trim($parts[1]);
@@ -260,8 +260,8 @@ class UserDiagnosticController extends AbstractController
                     $task->setDayOffset($dayOffset);
                     $task->setTaskDescription(substr($description, 0, 255));
                     $task->setStatus('PENDING');
-                    $task->setTechX(0); 
-                    $task->setTechY(0); 
+                    $task->setTechX(0);
+                    $task->setTechY(0);
 
                     $entityManager->persist($task);
                     $tasksCreated++;
@@ -270,12 +270,12 @@ class UserDiagnosticController extends AbstractController
 
             // Fallback just in case the AI format was completely broken
             if ($tasksCreated === 0) {
-                 $defaultTask = new \App\Entity\UserAndDiag\TreatmentTask();
-                 $defaultTask->setTreatmentPlan($plan);
-                 $defaultTask->setDayOffset(0);
-                 $defaultTask->setTaskDescription("Consulter l'agronome concernant le traitement à suivre.");
-                 $defaultTask->setStatus('PENDING');
-                 $entityManager->persist($defaultTask);
+                $defaultTask = new \App\Entity\UserAndDiag\TreatmentTask();
+                $defaultTask->setTreatmentPlan($plan);
+                $defaultTask->setDayOffset(0);
+                $defaultTask->setTaskDescription("Consulter l'agronome concernant le traitement à suivre.");
+                $defaultTask->setStatus('PENDING');
+                $entityManager->persist($defaultTask);
             }
 
             // 7. Commit everything to the database
@@ -289,6 +289,52 @@ class UserDiagnosticController extends AbstractController
 
         } catch (\Exception $e) {
             return $this->json(['error' => 'Erreur lors de la création du plan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/ask-second-opinion', name: 'app_user_and_diag_ask_second_opinion', methods: ['POST'])]
+    public function askSecondOpinion(
+        Diagnostic $diagnostic,
+        EntityManagerInterface $em
+    ): Response {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // Security Check
+        if ($diagnostic->getUser() !== $user) {
+            return $this->json(['error' => 'Accès refusé.'], 403);
+        }
+
+        // Anti-Spam: check for existing pending DIAGNOSIS review for this diagnostic
+        $existingReview = $em->getRepository(\App\Entity\UserAndDiag\Review::class)->findOneBy([
+            'diagnostic' => $diagnostic,
+            'review_type' => 'DIAGNOSIS',
+            'status' => 'PENDING'
+        ]);
+
+        if ($existingReview) {
+            return $this->json(['error' => 'Vous avez déjà une demande d\'avis en attente pour ce diagnostic.'], 400);
+        }
+
+        try {
+            $review = new \App\Entity\UserAndDiag\Review();
+            $review->setDiagnostic($diagnostic);
+            $review->setReviewType('DIAGNOSIS');
+            $review->setStatus('PENDING');
+            $review->setPhotoUrl($diagnostic->getImageScannee());
+            $review->setAiAnalysis($diagnostic->getResultatIa());
+            $review->setCreatedAt(new \DateTime());
+
+            $em->persist($review);
+            $em->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Votre demande de 2ème avis a été envoyée ! Un agronome l\'examinera sous peu.'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur technique: ' . $e->getMessage()], 500);
         }
     }
 }

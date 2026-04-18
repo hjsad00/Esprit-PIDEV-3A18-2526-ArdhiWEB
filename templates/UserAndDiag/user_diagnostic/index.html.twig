@@ -101,6 +101,11 @@
                     <a href="#" id="btnChatIa" class="btn-glass btn-blue w-100"><i class="bi bi-chat-dots"></i> Discuter avec l'IA</a>
                     <a href="#" class="btn-glass btn-purple w-100"><i class="bi bi-people"></i> Demander à la Communauté</a>
                     
+                    <button id="btnSecondOpinion" class="btn-glass w-100" style="background: rgba(41, 128, 185, 0.85); border: 1px solid rgba(41, 128, 185, 0.4);" onclick="demanderSecondAvis()">
+                        <i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)
+                    </button>
+                    <div id="secondOpinionNotification" class="inline-notification"></div>
+
                     <button id="btnCreatePlan" class="btn-glass btn-orange w-100" onclick="genererPlanTraitement()">
                         <i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement
                     </button>
@@ -329,6 +334,51 @@
             notif.className = 'inline-notification notif-error';
             notif.innerHTML = '<i class="bi bi-x-circle-fill"></i> Une erreur réseau est survenue.';
             btn.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+            btn.disabled = false;
+        });
+    }
+
+    // --- "Demander un 2ème avis" function ---
+    function demanderSecondAvis() {
+        if (!currentDiagnosticId) return;
+
+        const btn = document.getElementById('btnSecondOpinion');
+        const notif = document.getElementById('secondOpinionNotification');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+        notif.style.display = 'none';
+
+        const url = "{{ path('app_user_and_diag_ask_second_opinion', {id: 'ID_PLACEHOLDER'}) }}".replace('ID_PLACEHOLDER', currentDiagnosticId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            notif.style.display = 'block';
+
+            if (data.success) {
+                notif.className = 'inline-notification notif-success';
+                notif.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Demande envoyée';
+                // Leave disabled to prevent spam
+            } else {
+                notif.className = 'inline-notification notif-error';
+                notif.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${data.error}`;
+                btn.innerHTML = '<i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            notif.style.display = 'block';
+            notif.className = 'inline-notification notif-error';
+            notif.innerHTML = '<i class="bi bi-x-circle-fill"></i> Erreur réseau.';
+            btn.innerHTML = '<i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)';
             btn.disabled = false;
         });
     }
