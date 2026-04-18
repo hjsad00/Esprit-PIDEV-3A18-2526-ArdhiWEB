@@ -5,6 +5,7 @@ namespace App\Service\EmployeTache;
 use App\Entity\EmployeTache\Notification;
 use App\Repository\EmployeTache\NotificationRepository;
 use App\Repository\EmployeTache\TacheRepository;
+use App\Repository\EmployeTache\EmployeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -24,6 +25,7 @@ class NotificationService
         private TacheRepository         $tacheRepo,
         private MeteoService            $meteoService,
         private TranslatorInterface     $translator,
+        private EmployeRepository       $employeRepo,
     ) {}
 
     // ── Analyse principale ───────────────────────────────────────────────
@@ -236,6 +238,11 @@ class NotificationService
         ?int    $idTache   = null,
         ?int    $idEmploye = null
     ): void {
+        // Précautions : si l'employé a été supprimé mais reste attaché à la tâche
+        if ($idEmploye !== null && !$this->employeRepo->find($idEmploye)) {
+            $idEmploye = null;
+        }
+
         $notif = new Notification();
         $notif->setType($type)
               ->setPriorite($priorite)

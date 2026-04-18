@@ -415,12 +415,12 @@
 
     {# Header #}
     <div id="rh-cb-header">
-      <div class="cb-bot-avatar">
-        🤖
+      <div class="cb-bot-avatar" style="background:#e8f0fe; color:#1a73e8; font-size: 20px;">
+        ✨
         <span class="cb-online-dot"></span>
       </div>
       <div class="cb-header-info">
-        <div class="cb-header-name">SmartFarm RH</div>
+        <div class="cb-header-name">SmartFarm AI</div>
         <div class="cb-header-status" id="rh-cb-status">● {{ 'status.online'|trans|default('En ligne') }}</div>
       </div>
       <div class="cb-header-actions">
@@ -440,10 +440,10 @@
 
     {# Chips de suggestion #}
     <div id="rh-cb-chips">
-      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.reco'|trans|default('Recommander un employé') }}">🎯 {{ 'chatbot.suggestion.reco'|trans|default('Recommander') }}</div>
-      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.perf'|trans|default('Analyser les performances') }}">📊 {{ 'chatbot.suggestion.perf'|trans|default('Performances') }}</div>
-      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.dispo'|trans|default('Voir les disponibilités') }}">📅 {{ 'chatbot.suggestion.dispo'|trans|default('Disponibilités') }}</div>
-      <div class="cb-chip" data-msg="{{ 'chatbot.suggestion.help'|trans|default('aide') }}">❓ Aide</div>
+      <div class="cb-chip" data-action="recommander" data-msg="{{ 'chatbot.suggestion.reco'|trans|default('Recommander un employé') }}">🎯 {{ 'chatbot.suggestion.reco'|trans|default('Recommander') }}</div>
+      <div class="cb-chip" data-action="performances" data-msg="{{ 'chatbot.suggestion.perf'|trans|default('Analyser les performances') }}">📊 {{ 'chatbot.suggestion.perf'|trans|default('Performances') }}</div>
+      <div class="cb-chip" data-action="disponibilite" data-msg="{{ 'chatbot.suggestion.dispo'|trans|default('Voir les disponibilités') }}">📅 {{ 'chatbot.suggestion.dispo'|trans|default('Disponibilités') }}</div>
+      <div class="cb-chip" data-action="aide" data-msg="{{ 'chatbot.suggestion.help'|trans|default('aide') }}">❓ Aide</div>
     </div>
 
     {# Input #}
@@ -458,8 +458,8 @@
   </div>
 
   {# Bouton launcher #}
-  <button id="rh-cb-launch" title="Assistant RH">
-    <i class="bi bi-robot"></i>
+  <button id="rh-cb-launch" title="{{ 'chatbot.title'|trans|default('SmartFarm AI Assistant') }}">
+    <i class="bi bi-stars"></i>
     <span class="cb-notif-dot" id="rh-cb-notif"></span>
   </button>
 
@@ -514,13 +514,15 @@ clearBtn.addEventListener('click', () => {
 
 /* ── Message de bienvenue ────────────────────────────────────── */
 function initConversation() {
-  const welcome = '{{ "chatbot.welcome"|trans|default("Bonjour ! Je suis votre assistant RH SmartFarm. Comment puis-je vous aider ?")|e("js") }}';
+  const welcome = '{{ "chatbot.welcome"|trans|default("Bonjour ! Je suis votre assistant RH propulsé par Gemini AI. Comment puis-je vous aider ?")|e("js") }}';
   addBotBubble(welcome, false);
 }
 
 /* ── Chips ───────────────────────────────────────────────────── */
 chips.forEach(c => c.addEventListener('click', () => {
-  send(c.dataset.msg);
+  const chipAction = c.dataset.action || '';
+  const chipMsg    = c.dataset.msg    || '';
+  send(chipMsg, chipAction);
 }));
 
 /* ── Saisie ──────────────────────────────────────────────────── */
@@ -538,9 +540,9 @@ input.addEventListener('input', () => {
 sendBtn.addEventListener('click', () => send());
 
 /* ── Envoi ───────────────────────────────────────────────────── */
-async function send(text) {
+async function send(text, action = '') {
   const msg = (text || input.value).trim();
-  if (!msg) return;
+  if (!msg && !action) return;
 
   input.value = '';
   input.style.height = 'auto';
@@ -556,7 +558,7 @@ async function send(text) {
     const res  = await fetch(SEND_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ message: msg })
+      body:    JSON.stringify({ message: msg, action: action, lastIntent: lastIntent })
     });
     const data = await res.json();
 
@@ -566,7 +568,13 @@ async function send(text) {
     if (data.error) {
       addBotBubble('❌ ' + data.error);
     } else {
-      if (data.reponse) addBotBubble(formatText(data.reponse));
+      if (data.reponse) {
+        // Badge Gemini si réponse générée par l'IA
+        const geminiPrefix = data.intention === 'GEMINI_FALLBACK'
+          ? '<span style="font-size:10px;background:#e8f0fe;color:#1a73e8;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">✨ Gemini AI</span><br>'
+          : '';
+        addBotBubble(geminiPrefix + formatText(data.reponse));
+      }
       lastIntent = data.intention;
 
       if (data.recommandations?.length > 0) {
@@ -642,8 +650,8 @@ function getOrCreateGroup(sender) {
   const time = nowTime();
   g.innerHTML = `
     <div class="cb-group-header">
-      <div class="cb-msg-avatar">🤖</div>
-      <div class="cb-sender-label">SmartFarm RH</div>
+      <div class="cb-msg-avatar" style="background:#e8f0fe; color:#1a73e8; display:flex; align-items:center; justify-content:center; font-size:12px;">✨</div>
+      <div class="cb-sender-label">SmartFarm AI</div>
       <span class="cb-timestamp">${time}</span>
     </div>`;
   msgs.appendChild(g);
@@ -805,16 +813,21 @@ function updateChips(intent) {
   const chipsEl = document.getElementById('rh-cb-chips');
   const suggestions = {
     'RECOMMANDER_EMPLOYE': [
-      { icon:'📊', msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
-      { icon:'📅', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}', label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
     ],
     'ANALYSER_PERFORMANCE': [
-      { icon:'🎯', msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}', label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
-      { icon:'📅', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}', label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
     ],
     'DISPONIBILITE': [
-      { icon:'🎯', msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}', label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
-      { icon:'📊', msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+    ],
+    'GEMINI_FALLBACK': [
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
     ],
   };
 
@@ -825,20 +838,23 @@ function updateChips(intent) {
   newChips.forEach(c => {
     const chip = document.createElement('div');
     chip.className = 'cb-chip';
-    chip.dataset.msg = c.msg;
+    chip.dataset.msg    = c.msg;
+    chip.dataset.action = c.action || '';
     chip.textContent = c.icon + ' ' + c.label;
-    chip.addEventListener('click', () => send(c.msg));
+    chip.addEventListener('click', () => send(c.msg, c.action || ''));
     chipsEl.appendChild(chip);
   });
 
   /* Rebouton Aide */
   const aide = document.createElement('div');
   aide.className = 'cb-chip';
-  aide.dataset.msg = 'aide';
+  aide.dataset.action = 'aide';
+  aide.dataset.msg    = 'aide';
   aide.textContent = '❓ Aide';
-  aide.addEventListener('click', () => send('aide'));
+  aide.addEventListener('click', () => send('aide', 'aide'));
   chipsEl.appendChild(aide);
 }
+
 
 /* ── Utilitaires ─────────────────────────────────────────────── */
 function scrollBottom() {

@@ -360,6 +360,9 @@ notification:
     mark_read: 'تحديد كمقروء'
 status:
     online: متصل
+    available:  متاح
+    moderate:   معتدل
+    overloaded: مثقل
 meteo:
     widget_title: 'الطقس الزراعي'
     temp: الحرارة
@@ -379,7 +382,7 @@ meteo:
         too_cold: 'خطر الصقيع'
 chatbot:
     greet_help: 'كيف يمكنني مساعدتك اليوم؟'
-    welcome: 'مرحباً! أنا مساعدك الذكي للموارد البشرية. <br>كيف يمكنني مساعدتك اليوم؟'
+    welcome: 'مرحباً! أنا مساعدك للموارد البشرية المدعوم بـ Gemini AI. <br>كيف يمكنني مساعدتك اليوم؟'
     input_placeholder: 'اكتب رسالتك...'
     suggestion:
         reco: توصية

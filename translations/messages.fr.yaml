@@ -359,6 +359,9 @@ notification:
     mark_read: 'Marquer comme lu'
 status:
     online: 'En ligne'
+    available:  'Disponible'
+    moderate:   'Modéré'
+    overloaded: 'Surchargé'
 meteo:
     widget_title: 'Météo Agricole'
     temp: Température
@@ -378,7 +381,7 @@ meteo:
         too_cold: 'Gel risqué'
 chatbot:
     greet_help: "Comment puis-je vous aider aujourd'hui ?"
-    welcome: "Bonjour ! Je suis votre assistant RH intelligent. <br>Que puis-je faire pour vous aujourd'hui?"
+    welcome: "Bonjour ! Je suis votre assistant RH propulsé par Gemini AI. <br>Que puis-je faire pour vous aujourd'hui?"
     input_placeholder: 'Écrivez votre message...'
     suggestion:
         reco: Recommander

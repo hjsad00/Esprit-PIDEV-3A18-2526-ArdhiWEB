@@ -7,6 +7,7 @@ common:
     search: '🔍 Search'
     export_pdf: '📄 PDF'
     statistics: '📊 Statistics'
+    tasks: "task(s)"
     sort:
         asc: ⬆
         desc: ⬇
@@ -359,6 +360,9 @@ notification:
     mark_read: 'Mark as read'
 status:
     online: Online
+    available:  "Available"
+    moderate:   "Moderate"
+    overloaded: "Overloaded"
 meteo:
     widget_title: 'Agro Weather'
     temp: Temperature
@@ -378,7 +382,7 @@ meteo:
         too_cold: 'Frost risk'
 chatbot:
     greet_help: 'How can I help you today?'
-    welcome: 'Hello! I am your smart HR assistant. <br>How can I help you today?'
+    welcome: 'Hello! I am your HR assistant powered by Gemini AI. <br>How can I help you today?'
     input_placeholder: 'Type your message...'
     suggestion:
         reco: Recommend
@@ -438,6 +442,14 @@ chatbot:
     error:
         server_returned_error: 'Sorry, I encountered an error: '
         network: 'Oops! I cannot reach the server.'
+    btn:
+        recommend:    "Recommend"
+        performance:  "Performance"
+        availability: "Availability"
+        compare:      "Compare"
+        skills:       "Skills"
+        help:         "Help"
+    thinking: "Analysing..."
 ai:
     matching:
         perfect: 'Ideal Match'
@@ -455,8 +467,3 @@ ai:
         bien: Good
         moyen: Average
         faible: Poor
-time:
-    days: d
-    hours: h
-    mins: min
-    just_now: 'Just now'

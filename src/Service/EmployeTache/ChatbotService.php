@@ -20,123 +20,137 @@ class ChatbotResponse
     public array $disponibilites = [];
 }
 
+/**
+ * 🤖 ChatbotService v2 — Améliorations majeures
+ *
+ * CORRECTIONS :
+ *  1. Détection de langue robuste (Unicode ranges + trigrams)
+ *  2. Extraction d'ID de tâche fiable (ID explicite prioritaire, puis correspondance floue)
+ *  3. Gestion du cas UNKNOWN + suggestions contextuelles
+ *  4. Séparation claire intention → handler
+ *  5. Injection du classifier ML via constructeur (pas de couplage statique)
+ */
 class ChatbotService
 {
-    private MatchingService $matchingService;
-    private EmployeRepository $employeRepository;
-    private TacheRepository $tacheRepository;
-    private PerformanceService $performanceService;
-    private TranslatorInterface $translator;
-    private RequestStack $requestStack;
-
     public function __construct(
-        MatchingService $matchingService,
-        EmployeRepository $employeRepository,
-        TacheRepository $tacheRepository,
-        PerformanceService $performanceService,
-        TranslatorInterface $translator,
-        RequestStack $requestStack
-    ) {
-        $this->matchingService = $matchingService;
-        $this->employeRepository = $employeRepository;
-        $this->tacheRepository = $tacheRepository;
-        $this->performanceService = $performanceService;
-        $this->translator = $translator;
-        $this->requestStack = $requestStack;
+        private MatchingService          $matchingService,
+        private EmployeRepository        $employeRepository,
+        private TacheRepository          $tacheRepository,
+        private PerformanceService       $performanceService,
+        private TranslatorInterface      $translator,
+        private RequestStack             $requestStack,
+        private LocalMLIntentClassifier  $mlClassifier,
+        private GeminiChatbotService     $geminiService,
+    ) {}
+
+    // ══════════════════════════════════════════════════════════════════
+    //  POINT D'ENTRÉE
+    // ══════════════════════════════════════════════════════════════════
+
+    public function traiterMessage(string $messageUtilisateur, int $idAgriculteur, ?string $lastIntent = null): ChatbotResponse
+    {
+        $normalized = $this->mlClassifier->normalize($messageUtilisateur);
+        $lang       = $this->detecterLangue($messageUtilisateur, $normalized);
+        $intention  = $this->mlClassifier->predict($normalized);
+
+        return $this->dispatchIntention($intention, $normalized, $messageUtilisateur, $idAgriculteur, $lang, $lastIntent);
     }
 
-    public function traiterMessage(string $messageUtilisateur, int $idAgriculteur): ChatbotResponse
-    {
-        $msg = $this->normaliser($messageUtilisateur);
-        $lang = $this->detecterLangue($msg);
-        $intention = $this->detecterIntention($msg);
+    /**
+     * Bypass ML complet : intention fournie directement par le controller (boutons rapides).
+     */
+    public function traiterMessageAvecIntention(
+        string  $messageUtilisateur,
+        string  $intention,
+        int     $idAgriculteur,
+        ?string $lastIntent = null
+    ): ChatbotResponse {
+        $normalized = $this->mlClassifier->normalize($messageUtilisateur);
+        $lang       = $this->detecterLangue($messageUtilisateur, $normalized);
 
-        switch ($intention) {
-            case "RECOMMANDER_EMPLOYE":
-                $response = $this->traiterRecommandation($msg, $idAgriculteur, $lang);
-                break;
-            case "COMPARER_TOP3":
-                $response = $this->traiterComparaisonTop3($msg, $idAgriculteur, $lang);
-                break;
-            case "RECHERCHER_COMPETENCE":
-                $response = $this->traiterRechercheCompetence($msg, $idAgriculteur, $lang);
-                break;
-            case "ANALYSER_PERFORMANCE":
-                $response = $this->traiterAnalysePerformance($idAgriculteur, $lang);
-                break;
-            case "DISPONIBILITE":
-                $response = $this->traiterDisponibilite($idAgriculteur, $lang);
-                break;
-            case "AIDE":
-                $response = $this->genererAide($lang);
-                break;
-            default:
-                $response = new ChatbotResponse();
-                $response->reponse = $this->genererReponseDefaut($lang);
-        }
+        return $this->dispatchIntention($intention, $normalized, $messageUtilisateur, $idAgriculteur, $lang, $lastIntent);
+    }
 
-        $response->intention = $intention;
-        $response->messageUtilisateur = $messageUtilisateur;
+    /**
+     * Dispatch vers le bon handler selon l'intention.
+     */
+    private function dispatchIntention(
+        string  $intention,
+        string  $normalized,
+        string  $messageOriginal,
+        int     $idAgriculteur,
+        string  $lang,
+        ?string $lastIntent = null
+    ): ChatbotResponse {
+        $response = match ($intention) {
+            'RECOMMANDER_EMPLOYE'   => $this->traiterRecommandation($normalized, $idAgriculteur, $lang),
+            'COMPARER_TOP3'         => $this->traiterComparaisonTop3($normalized, $idAgriculteur, $lang),
+            'RECHERCHER_COMPETENCE' => $this->traiterRechercheCompetence($normalized, $idAgriculteur, $lang),
+            'ANALYSER_PERFORMANCE'  => $this->traiterAnalysePerformance($idAgriculteur, $lang),
+            'DISPONIBILITE'         => $this->traiterDisponibilite($idAgriculteur, $lang),
+            'AIDE'                  => $this->genererAide($lang),
+            default                 => $this->traiterUnknown($normalized, $messageOriginal, $idAgriculteur, $lang, $lastIntent),
+        };
+
+        $response->intention          = $intention;
+        $response->messageUtilisateur = $messageOriginal;
         return $response;
     }
 
-    private function detecterLangue(string $message): string
+    // ══════════════════════════════════════════════════════════════════
+    //  DÉTECTION DE LANGUE (v2 — robuste)
+    // ══════════════════════════════════════════════════════════════════
+
+    /**
+     * Détecte la langue avec priorité :
+     *  1. Présence de caractères arabes Unicode → 'ar'
+     *  2. Mots-clés anglais fréquents → 'en'
+     *  3. Mots-clés français → 'fr'
+     *  4. Fallback sur locale de session
+     */
+    private function detecterLangue(string $original, string $normalized): string
     {
-        // 1. Priorité à la détection explicite dans le message
-        if (preg_match('/[\x{0600}-\x{06FF}]/u', $message)) return 'ar';
-        if (preg_match('/\b(recommend|show|who|can|best|task|employee|performance|available|help|find|give|compare|top)\b/i', $message)) return 'en';
-        
-        // 2. Repli sur la locale de la session si le message est neutre ou ambigu
+        // 1. Arabe (plage Unicode U+0600–U+06FF)
+        if (preg_match('/[\x{0600}-\x{06FF}]/u', $original)) {
+            return 'ar';
+        }
+
+        // 2. Anglais — liste de mots discriminants
+        $englishMarkers = ['who', 'which', 'what', 'show', 'find', 'best', 'can', 'available',
+                           'recommend', 'suggest', 'compare', 'performance', 'task', 'help', 'employee'];
+        foreach ($englishMarkers as $word) {
+            if (preg_match('/\b' . $word . '\b/i', $normalized)) {
+                return 'en';
+            }
+        }
+
+        // 3. Français — mots caractéristiques
+        $frenchMarkers = ['qui', 'quel', 'quels', 'donne', 'montre', 'employe', 'tache',
+                          'recommande', 'compare', 'libre', 'disponible', 'meilleur', 'aide'];
+        foreach ($frenchMarkers as $word) {
+            if (preg_match('/\b' . $word . '\b/i', $normalized)) {
+                return 'fr';
+            }
+        }
+
+        // 4. Locale session
         return $this->requestStack->getCurrentRequest()?->getLocale() ?? 'fr';
     }
 
-    private function detecterIntention(string $message): string
-    {
-        if (preg_match('/compar|compare|top\s*3|top\s*trois|meilleur.*3|3.*meilleur|classement.*employe|podium|مقارنة/iu', $message)) {
-            return "COMPARER_TOP3";
-        }
-        if (preg_match('/recommand|suggest|recommend|propose|meilleur.*(?:employ|pour)|assign|qui peut|trouve.*employ|donne.*employ|best.*employ|who can|find.*employ|يوصي|اوصي|ينصح|توصية|من يستطيع|الأفضل/iu', $message)) {
-            return "RECOMMANDER_EMPLOYE";
-        }
-        if (preg_match('/qui sait|comp[eé]tence|connai[ts]|ma[iî]trise|expert|capable|proficient|who knows|skilled|يعرف|خبير|مهارة/iu', $message)) {
-            return "RECHERCHER_COMPETENCE";
-        }
-        if (preg_match('/performance|évaluation|evaluation|classement|statistique|meilleur|top|ranking|أداء|الأداء|تقييم|ترتيب/iu', $message)) {
-            return "ANALYSER_PERFORMANCE";
-        }
-        if (preg_match('/disponib|libre|occup|charge|peut.*prendre|available|free|workload|متاح|حر|متفرغ|التوفر/iu', $message)) {
-            return "DISPONIBILITE";
-        }
-        if (preg_match('/^aide$|^help$|comment.*utilis|que.*peux.*faire|what can you|مساعدة/iu', $message)) {
-            return "AIDE";
-        }
-        return "UNKNOWN";
-    }
-
-    private function normaliser(string $msg): string
-    {
-        return strtolower(trim($msg));
-    }
-
-    private function buildMsg(string $lang, string $fr, string $en, string $ar): string
-    {
-        if ($lang === 'ar') return $ar;
-        if ($lang === 'en') return $en;
-        return $fr;
-    }
-
-    // ===================================
-    // LOGIQUE METIER
-    // ===================================
+    // ══════════════════════════════════════════════════════════════════
+    //  HANDLERS D'INTENTION
+    // ══════════════════════════════════════════════════════════════════
 
     private function traiterRecommandation(string $message, int $idAgriculteur, string $lang): ChatbotResponse
     {
         $response = new ChatbotResponse();
-        $idTache = $this->extraireIdTache($message, $idAgriculteur);
 
-        if (!$idTache) {
+        [$idTache, $confidence] = $this->extraireIdTache($message, $idAgriculteur);
+
+        if ($idTache === null) {
+            // Lister uniquement les tâches non-terminées avec leurs IDs
             $response->reponse = $this->translator->trans('chatbot.reco.need_task', [
-                '%list%' => "\n" . $this->listerTaches($idAgriculteur)
+                '%list%' => "\n" . $this->listerTachesActives($idAgriculteur),
             ], null, $lang);
             return $response;
         }
@@ -147,29 +161,32 @@ class ChatbotService
             return $response;
         }
 
-        $assignes = $this->getEmployesActifsAssignesATache($idTache, $idAgriculteur);
-        if (!empty($assignes)) {
-            $best = $assignes[0];
-            $perf = $this->performanceService->calculatePerformance($best->getId());
-            
-            $r = new RecommandationResult();
-            $r->employe = $best;
-            $r->scoreTotal = $perf['score'];
-            $r->scorePerformance = $perf['score'];
-            $r->scoreCompetences = 100.0;
-            $r->scoreDisponibilite = 50.0;
-            $r->scoreExperience = $perf['tauxReussite'];
-            $r->indiceConfiance = 90.0;
-            $r->raisonRecommandation = $this->translator->trans('chatbot.reco.already_assigned_reason', [], null, $lang);
-            
-            $response->reponse = $this->translator->trans('chatbot.reco.already_assigned', ['%task%' => $tache->getTitre()], null, $lang);
+        // Si déjà assignée à un employé actif → afficher cet employé en premier
+        $employeActif = $this->getEmployeActifDeTache($tache, $idAgriculteur);
+        if ($employeActif !== null) {
+            $perf = $this->performanceService->calculatePerformance($employeActif->getId());
+            $r = $this->buildRecommandationDepuisEmploye($employeActif, $perf, $lang, true);
+            $response->reponse = $this->translator->trans(
+                'chatbot.reco.already_assigned',
+                ['%task%' => $tache->getTitre()],
+                null,
+                $lang
+            );
             $response->recommandations[] = $r;
             return $response;
         }
 
         $recommandations = $this->matchingService->recommanderEmployes($idTache, 3);
         if (!empty($recommandations)) {
-            $response->reponse = $this->translator->trans('chatbot.reco.analysis_done', ['%title%' => $tache->getTitre()], null, $lang);
+            $note = $confidence < 1.0
+                ? "\n_(Tâche détectée par correspondance approximative)_"
+                : '';
+            $response->reponse = $this->translator->trans(
+                'chatbot.reco.analysis_done',
+                ['%title%' => $tache->getTitre()],
+                null,
+                $lang
+            ) . $note;
             $response->recommandations = $recommandations;
         } else {
             $response->reponse = $this->translator->trans('chatbot.reco.no_match', [], null, $lang);
@@ -181,14 +198,15 @@ class ChatbotService
     private function traiterComparaisonTop3(string $message, int $idAgriculteur, string $lang): ChatbotResponse
     {
         $response = new ChatbotResponse();
-        $idTache = $this->extraireIdTache($message, $idAgriculteur);
+        [$idTache] = $this->extraireIdTache($message, $idAgriculteur);
 
-        if (!$idTache) {
-            $response->reponse = $this->translator->trans('chatbot.compare.need_task', [], null, $lang);
+        if ($idTache === null) {
+            $response->reponse = $this->translator->trans('chatbot.compare.need_task', [], null, $lang)
+                . "\n" . $this->listerTachesActives($idAgriculteur);
             return $response;
         }
 
-        $tache = $this->tacheRepository->find($idTache);
+        $tache   = $this->tacheRepository->find($idTache);
         $results = $this->matchingService->recommanderEmployes($idTache, 3);
 
         if (count($results) < 2) {
@@ -196,7 +214,12 @@ class ChatbotService
             return $response;
         }
 
-        $response->reponse = $this->translator->trans('chatbot.compare.title', ['%task%' => $tache->getTitre()], null, $lang);
+        $response->reponse = $this->translator->trans(
+            'chatbot.compare.title',
+            ['%task%' => $tache?->getTitre() ?? '#' . $idTache],
+            null,
+            $lang
+        );
         $response->recommandations = $results;
         return $response;
     }
@@ -206,21 +229,34 @@ class ChatbotService
         $response = new ChatbotResponse();
         $competence = $this->extraireCompetence($message);
 
-        if ($competence) {
-            $employes = $this->rechercherEmployesActifsParCompetence($competence, $idAgriculteur);
+        if ($competence !== null) {
+            $employes = $this->rechercherEmployesParCompetence($competence, $idAgriculteur);
             if (!empty($employes)) {
-                $sb = $this->translator->trans('chatbot.skills.found_title', ['%count%' => count($employes), '%comp%' => $competence], null, $lang) . "\n";
+                $lines = $this->translator->trans(
+                    'chatbot.skills.found_title',
+                    ['%count%' => count($employes), '%comp%' => $competence],
+                    null,
+                    $lang
+                ) . "\n";
                 foreach (array_slice($employes, 0, 5) as $emp) {
-                    $sb .= "\n👤 **" . $emp->getPrenom() . " " . $emp->getNom() . "**";
-                    if ($emp->getPoste()) $sb .= " — " . $emp->getPoste();
+                    $lines .= "\n👤 **{$emp->getPrenom()} {$emp->getNom()}**";
+                    if ($emp->getPoste()) {
+                        $lines .= " — {$emp->getPoste()}";
+                    }
                 }
-                $response->reponse = $sb;
+                $response->reponse = $lines;
             } else {
-                $response->reponse = $this->translator->trans('chatbot.skills.not_found', ['%comp%' => $competence], null, $lang);
+                $response->reponse = $this->translator->trans(
+                    'chatbot.skills.not_found',
+                    ['%comp%' => $competence],
+                    null,
+                    $lang
+                );
             }
         } else {
             $response->reponse = $this->translator->trans('chatbot.skills.prompt', [], null, $lang);
         }
+
         return $response;
     }
 
@@ -228,40 +264,47 @@ class ChatbotService
     {
         $response = new ChatbotResponse();
         $classement = $this->performanceService->getClassement($idAgriculteur);
-
-        $avecTaches = array_filter($classement, fn($p) => $p['totalTaches'] > 0);
-        $avecTaches = array_slice($avecTaches, 0, 5);
+        $avecTaches = array_slice(
+            array_filter($classement, fn($p) => $p['totalTaches'] > 0),
+            0, 5
+        );
 
         if (!empty($avecTaches)) {
-            $sb = $this->translator->trans('chatbot.performance.title', [], null, $lang) . "\n\n";
-            $medals = ["🥇", "🥈", "🥉", "🏅", "⭐"];
-            foreach ($avecTaches as $i => $p) {
-                $medal = $medals[$i] ?? "⭐️";
-                $scoreLine = $this->translator->trans('chatbot.performance.score_line', [
-                    '%score%' => sprintf('%.1f', $p['score']),
-                    '%appreciation%' => $this->performanceService->getAppreciation($p['score'])
+            $medals = ['🥇', '🥈', '🥉', '🏅', '⭐'];
+            $sb     = $this->translator->trans('chatbot.performance.title', [], null, $lang) . "\n\n";
+            foreach (array_values($avecTaches) as $i => $p) {
+                $medal  = $medals[$i] ?? '⭐️';
+                $line   = $this->translator->trans('chatbot.performance.score_line', [
+                    '%score%'        => sprintf('%.1f', $p['score']),
+                    '%appreciation%' => $this->performanceService->getAppreciation($p['score']),
                 ], null, $lang);
-                
-                $sb .= sprintf("%s **#%d - %s**\n   %s\n", $medal, $i+1, $p['nomEmploye'], $scoreLine);
+                $sb .= sprintf("%s **#%d — %s**\n   %s\n", $medal, $i + 1, $p['nomEmploye'], $line);
             }
             $response->reponse = $sb;
         } else {
             $response->reponse = $this->translator->trans('chatbot.performance.no_data', [], null, $lang);
         }
+
         return $response;
     }
 
     private function traiterDisponibilite(int $idAgriculteur, string $lang): ChatbotResponse
     {
         $response = new ChatbotResponse();
-        $dispos = $this->getDisponibilitesActifs($idAgriculteur, $lang);
+        $dispos   = $this->construireDisponibilites($idAgriculteur, $lang);
 
         if (!empty($dispos)) {
-            $response->reponse = $this->translator->trans('chatbot.availability.title_with_modes', ['%count%' => count($dispos)], null, $lang);
+            $response->reponse       = $this->translator->trans(
+                'chatbot.availability.title_with_modes',
+                ['%count%' => count($dispos)],
+                null,
+                $lang
+            );
             $response->disponibilites = $dispos;
         } else {
             $response->reponse = $this->translator->trans('chatbot.availability.no_info', [], null, $lang);
         }
+
         return $response;
     }
 
@@ -272,133 +315,206 @@ class ChatbotService
         return $response;
     }
 
-    private function genererReponseDefaut(string $lang): string
-    {
-        return $this->translator->trans('chatbot.understanding.no_key', [], null, $lang);
+    /**
+     * Gestionnaire UNKNOWN :
+     *  1. Tente de détecter un ID de tâche → relance recommandation
+     *  2. Sinon → délègue à Gemini AI pour une réponse intelligente
+     */
+    private function traiterUnknown(
+        string  $message,
+        string  $messageOriginal,
+        int     $idAgriculteur,
+        string  $lang,
+        ?string $lastIntent = null
+    ): ChatbotResponse {
+        // 1. Tenter de détecter un ID de tâche dans le message → suggérer recommandation
+        [$idTache] = $this->extraireIdTache($message, $idAgriculteur);
+        if ($idTache !== null) {
+            return $this->traiterRecommandation($message, $idAgriculteur, $lang);
+        }
+
+        // 2. Déléguer à Gemini AI — réponse intelligente et contextualisée
+        return $this->geminiService->generateResponse(
+            $messageOriginal,
+            $idAgriculteur,
+            $lang,
+            $lastIntent
+        );
     }
 
-    // ===================================
-    // METHODES UTILITAIRES DE RECHERCHE
-    // ===================================
+    // ══════════════════════════════════════════════════════════════════
+    //  EXTRACTION DE TÂCHE (v2 — plus fiable)
+    // ══════════════════════════════════════════════════════════════════
 
-    private function listerTaches(int $idAgriculteur): string
+    /**
+     * Extrait l'ID d'une tâche depuis le message.
+     * Retourne [?int $id, float $confidence] :
+     *   - confidence = 1.0 → ID explicite trouvé (ex: "tâche #12")
+     *   - confidence < 1.0 → correspondance par titre (peut être ambigu)
+     *
+     * @return array{0: int|null, 1: float}
+     */
+    private function extraireIdTache(string $message, int $idAgriculteur): array
+    {
+        // 1. ID explicite (priorité absolue) : "tâche 12", "task #5", "n°3", "مهمة 7"
+        if (preg_match('/(?:t[aâ]che|task|مهمة|مهمه|raqm)\s*[#n°]*\s*(\d+)/ui', $message, $m)) {
+            return [(int)$m[1], 1.0];
+        }
+
+        // 2. Numéro isolé dans le message (ex: "pour le 12", "numéro 5")
+        if (preg_match('/(?:num[eé]ro|numéro|le|pour le|pour la)\s+(\d+)\b/ui', $message, $m)) {
+            $id    = (int)$m[1];
+            $tache = $this->tacheRepository->find($id);
+            if ($tache && $tache->getIdAgriculteur() === $idAgriculteur) {
+                return [$id, 1.0];
+            }
+        }
+
+        // 3. Correspondance floue par titre (Levenshtein) — uniquement si score assez élevé
+        $taches = $this->tacheRepository->findBy(['idAgriculteur' => $idAgriculteur]);
+        $bestId    = null;
+        $bestScore = 0.0;
+
+        foreach ($taches as $tache) {
+            $titre        = $this->mlClassifier->normalize($tache->getTitre());
+            $similarity   = 0;
+            similar_text($message, $titre, $similarity);
+
+            // Exiger au moins 40% de similarité pour éviter les faux positifs
+            if ($similarity > $bestScore && $similarity >= 40.0) {
+                $bestScore = $similarity;
+                $bestId    = $tache->getId();
+            }
+        }
+
+        return [$bestId, $bestScore / 100];
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  UTILITAIRES MÉTIER
+    // ══════════════════════════════════════════════════════════════════
+
+    private function listerTachesActives(int $idAgriculteur): string
     {
         $taches = $this->tacheRepository->findBy(['idAgriculteur' => $idAgriculteur]);
-        $actives = array_filter($taches, function($t) {
-            $s = strtolower($t->getStatut() ?? '');
-            return !in_array($s, ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee']);
-        });
+        $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
 
-        if (empty($actives)) return "  (aucune tâche active)\n";
-        
+        $actives = array_filter($taches, fn($t) =>
+            !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
+        );
+
+        if (empty($actives)) {
+            return "  _(Aucune tâche active)_\n";
+        }
+
         $sb = "";
         foreach ($actives as $t) {
-            $sb .= "  • " . $t->getTitre() . "\n";
+            $sb .= "  • **#{$t->getId()}** — {$t->getTitre()}\n";
         }
         return $sb;
     }
 
-    private function extraireIdTache(string $message, int $idAgriculteur): ?int
+    private function getEmployeActifDeTache(Tache $tache, int $idAgriculteur): ?Employe
     {
-        if (preg_match('/(?:t[aâ]che|task|مهمة)\s*[#n°]*\s*(\d+)/i', $message, $matches)) {
-            return (int)$matches[1];
+        if ($tache->getIdEmploye() === null) {
+            return null;
         }
-
-        // Extraction par titre (très basique pour PHP)
-        $taches = $this->tacheRepository->findBy(['idAgriculteur' => $idAgriculteur]);
-        foreach ($taches as $t) {
-            $titre = strtolower($t->getTitre());
-            if (str_contains($message, $titre)) {
-                return $t->getId();
-            }
-        }
-        return null; // non trouvé
-    }
-
-    private function extraireCompetence(string $message): ?string
-    {
-        $courantes = ['irrigation', 'tracteur', 'fertilisation', 'récolte', 'plantation', 'taille', 'entretien', 'conduite', 'serre'];
-        foreach ($courantes as $c) {
-            if (str_contains($message, $c)) return $c;
-        }
-        if (preg_match('/(?:en|de|in)\s+([a-zA-Z\x{00C0}-\x{00FF}\-]{3,})/i', $message, $m)) {
-            return $m[1];
+        $emp = $this->employeRepository->find($tache->getIdEmploye());
+        if ($emp && $emp->isActif() && $emp->getIdAgriculteur() === $idAgriculteur) {
+            return $emp;
         }
         return null;
     }
 
-    /**
-     * @return Employe[]
-     */
-    private function getEmployesActifsAssignesATache(int $idTache, int $idAgriculteur): array
-    {
-        $tache = $this->tacheRepository->find($idTache);
-        if ($tache && $tache->getIdEmploye()) {
-            $emp = $this->employeRepository->find($tache->getIdEmploye());
-            if ($emp && $emp->isActif() && $emp->getIdAgriculteur() === $idAgriculteur) {
-                return [$emp];
-            }
-        }
-        return [];
+    private function buildRecommandationDepuisEmploye(
+        Employe $employe,
+        array   $perf,
+        string  $lang,
+        bool    $alreadyAssigned = false
+    ): RecommandationResult {
+        $r = new RecommandationResult();
+        $r->employe               = $employe;
+        $r->scoreTotal            = $perf['score'];
+        $r->scorePerformance      = $perf['score'];
+        $r->scoreCompetences      = 100.0;
+        $r->scoreDisponibilite    = 50.0;
+        $r->scoreExperience       = $perf['tauxReussite'];
+        $r->indiceConfiance       = $alreadyAssigned ? 95.0 : min(100.0, $perf['score'] + 10);
+        $r->raisonRecommandation  = $alreadyAssigned
+            ? $this->translator->trans('chatbot.reco.already_assigned_reason', [], null, $lang)
+            : '';
+        return $r;
     }
 
-    /**
-     * @return Employe[]
-     */
-    private function rechercherEmployesActifsParCompetence(string $competence, int $idAgriculteur): array
+    private function extraireCompetence(string $message): ?string
     {
-        // Simple search in poste
-        $qb = $this->employeRepository->createQueryBuilder('e')
+        // Liste étendue de compétences agricoles communes
+        $competences = [
+            'irrigation', 'tracteur', 'fertilisation', 'recolte', 'plantation',
+            'taille', 'entretien', 'conduite', 'serre', 'arrosage', 'semis',
+            'epandage', 'binage', 'greffe', 'desherbage', 'machinerie',
+        ];
+
+        foreach ($competences as $c) {
+            if (str_contains($message, $c)) {
+                return $c;
+            }
+        }
+
+        // Extraction générique : mot après "en", "de", "pour", "in"
+        if (preg_match('/(?:en|de|pour|in|with)\s+([\p{L}\-]{4,})/iu', $message, $m)) {
+            return $m[1];
+        }
+
+        return null;
+    }
+
+    private function rechercherEmployesParCompetence(string $competence, int $idAgriculteur): array
+    {
+        return $this->employeRepository->createQueryBuilder('e')
             ->where('e.idAgriculteur = :agri')
             ->andWhere('e.actif = true')
             ->andWhere('e.poste LIKE :comp OR e.nom LIKE :comp OR e.prenom LIKE :comp')
             ->setParameter('agri', $idAgriculteur)
             ->setParameter('comp', '%' . $competence . '%')
-            ->setMaxResults(10);
-        return $qb->getQuery()->getResult();
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
     }
 
-    /**
-     * @return array
-     */
-    private function getDisponibilitesActifs(int $idAgriculteur, string $lang = 'fr'): array
+    private function construireDisponibilites(int $idAgriculteur, string $lang): array
     {
         $employes = $this->employeRepository->findActifsByAgriculteur($idAgriculteur);
-        $dispos = [];
+        $dispos   = [];
+
         foreach ($employes as $emp) {
-            $tachesEnCours = $this->tacheRepository->countTachesActivesParEmploye($emp->getId(), $idAgriculteur);
-            
-            $statut = $this->translator->trans('status.available', [], null, $lang);
-            $color = "#27ae60";
-            if ($tachesEnCours > 0 && $tachesEnCours <= 2) {
-                $statut = $this->translator->trans('status.moderate', [], null, $lang);
-                $color = "#f39c12";
-            } elseif ($tachesEnCours > 2) {
-                $statut = $this->translator->trans('status.overloaded', [], null, $lang);
-                $color = "#e74c3c";
-            }
+            $nb = $this->tacheRepository->countTachesActivesParEmploye($emp->getId(), $idAgriculteur);
+
+            [$statut, $color, $dot] = match (true) {
+                $nb === 0   => [$this->translator->trans('status.available', [], null, $lang), '#27ae60', '🟢'],
+                $nb <= 2    => [$this->translator->trans('status.moderate',  [], null, $lang), '#f39c12', '🟡'],
+                default     => [$this->translator->trans('status.overloaded', [], null, $lang), '#e74c3c', '🔴'],
+            };
 
             $dispos[] = [
-                'employe' => [
-                    'id' => $emp->getId(),
-                    'prenom' => $emp->getPrenom(),
-                    'nom' => $emp->getNom(),
-                    'poste' => $emp->getPoste(),
+                'employe'       => [
+                    'id'        => $emp->getId(),
+                    'prenom'    => $emp->getPrenom(),
+                    'nom'       => $emp->getNom(),
+                    'poste'     => $emp->getPoste(),
                     'telephone' => $emp->getTelephone(),
-                    'email' => $emp->getEmail(),
-                    'photoPath' => $emp->getPhotoPath()
+                    'email'     => $emp->getEmail(),
+                    'photoPath' => $emp->getPhotoPath(),
                 ],
-                'tachesEnCours' => $tachesEnCours,
-                'statutLabel' => $statut,
-                'couleurStatut' => $color,
-                'dotEmoji' => $tachesEnCours == 0 ? "🟢" : ($tachesEnCours <= 2 ? "🟡" : "🔴")
+                'tachesEnCours'  => $nb,
+                'statutLabel'    => $statut,
+                'couleurStatut'  => $color,
+                'dotEmoji'       => $dot,
             ];
         }
 
-        // Trier par moins de charge de travail d'abord
-        usort($dispos, function ($a, $b) {
-            return $a['tachesEnCours'] <=> $b['tachesEnCours'];
-        });
+        // Trier : moins chargé en premier
+        usort($dispos, fn($a, $b) => $a['tachesEnCours'] <=> $b['tachesEnCours']);
 
         return $dispos;
     }
