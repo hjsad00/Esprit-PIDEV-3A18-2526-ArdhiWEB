@@ -8,6 +8,7 @@ use App\Entity\UserAndDiag\CommunityPost;
 use App\Repository\UserAndDiag\CommunityCommentRepository;
 use App\Repository\UserAndDiag\CommunityLikeRepository;
 use App\Repository\UserAndDiag\CommunityPostRepository;
+use App\Service\UserAndDiag\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -89,7 +90,7 @@ class CommunityController extends AbstractController
     // ────────────────────── CREATE POST ───────────────────────
 
     #[Route('/new', name: 'app_user_and_diag_community_new', methods: ['GET', 'POST'])]
-    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): Response
+    public function createPost(Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Service\UserAndDiag\ImgBBService $imgBBService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo, NotificationService $notificationService, \App\Repository\UserAndDiag\UserRepository $userRepo): Response
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -126,6 +127,17 @@ class CommunityController extends AbstractController
 
             $em->persist($post);
             $em->flush();
+
+            // Detect mentions: @Prenom
+            preg_match_all('/@([a-zA-ZÀ-ÿ-]+)/', $description, $matches);
+            if (!empty($matches[1])) {
+                foreach (array_unique($matches[1]) as $prenomMention) {
+                    $mentionedUser = $userRepo->findOneBy(['prenom' => $prenomMention]);
+                    if ($mentionedUser && $mentionedUser->getId() !== $user->getId()) {
+                        $notificationService->notifyMention($mentionedUser, $user->getPrenom(), $post->getId());
+                    }
+                }
+            }
 
             // Award points for asking a question
             $gamificationService->addPoints($user, 20);
@@ -282,7 +294,7 @@ class CommunityController extends AbstractController
     // ────────────────────────── AJAX APIs ──────────────────────────
 
     #[Route('/{id}/vote', name: 'app_user_and_diag_community_vote_post', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function votePost(CommunityPost $post, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
+    public function votePost(CommunityPost $post, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo, NotificationService $notificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -318,6 +330,11 @@ class CommunityController extends AbstractController
                 $existing->setVoteType($voteType);
                 $this->updatePostCounts($post, $voteType, 1);
                 $em->flush();
+
+                if ($voteType === 'LIKE' && $post->getUser()->getId() !== $user->getId()) {
+                    $notificationService->notifyPostLike($post->getUser(), $user->getPrenom(), $post->getId());
+                }
+
                 return $this->json(['likes' => $post->getLikes(), 'dislikes' => $post->getDislikes(), 'userVote' => $voteType]);
             }
         } else {
@@ -328,12 +345,17 @@ class CommunityController extends AbstractController
             $this->updatePostCounts($post, $voteType, 1);
             $em->persist($like);
             $em->flush();
+
+            if ($voteType === 'LIKE' && $post->getUser()->getId() !== $user->getId()) {
+                $notificationService->notifyPostLike($post->getUser(), $user->getPrenom(), $post->getId());
+            }
+
             return $this->json(['likes' => $post->getLikes(), 'dislikes' => $post->getDislikes(), 'userVote' => $voteType]);
         }
     }
 
     #[Route('/comment/{id}/vote', name: 'app_user_and_diag_community_vote_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function voteComment(CommunityComment $comment, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
+    public function voteComment(CommunityComment $comment, Request $request, EntityManagerInterface $em, CommunityLikeRepository $likeRepo, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo, NotificationService $notificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -367,6 +389,11 @@ class CommunityController extends AbstractController
                 $existing->setVoteType($voteType);
                 $this->updateCommentCounts($comment, $voteType, 1);
                 $em->flush();
+
+                if ($voteType === 'LIKE' && $comment->getUser()->getId() !== $user->getId()) {
+                    $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getPost()->getId());
+                }
+
                 return $this->json(['likes' => $comment->getLikes(), 'dislikes' => $comment->getDislikes(), 'userVote' => $voteType]);
             }
         } else {
@@ -377,12 +404,17 @@ class CommunityController extends AbstractController
             $this->updateCommentCounts($comment, $voteType, 1);
             $em->persist($like);
             $em->flush();
+
+            if ($voteType === 'LIKE' && $comment->getUser()->getId() !== $user->getId()) {
+                $notificationService->notifyCommentLike($comment->getUser(), $user->getPrenom(), $comment->getPost()->getId());
+            }
+
             return $this->json(['likes' => $comment->getLikes(), 'dislikes' => $comment->getDislikes(), 'userVote' => $voteType]);
         }
     }
 
     #[Route('/{id}/comment', name: 'app_user_and_diag_community_add_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo): JsonResponse
+    public function addComment(CommunityPost $post, Request $request, EntityManagerInterface $em, \App\Service\UserAndDiag\GamificationService $gamificationService, \App\Repository\UserAndDiag\ModerationAuditRepository $auditRepo, NotificationService $notificationService, \App\Repository\UserAndDiag\UserRepository $userRepo): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -425,6 +457,17 @@ class CommunityController extends AbstractController
 
         $em->persist($comment);
         $em->flush();
+
+        // ── Detect Mentions ──
+        preg_match_all('/@([a-zA-ZÀ-ÿ-]+)/', $content, $matches);
+        if (!empty($matches[1])) {
+            foreach (array_unique($matches[1]) as $prenomMention) {
+                $mentionedUser = $userRepo->findOneBy(['prenom' => $prenomMention]);
+                if ($mentionedUser && $mentionedUser->getId() !== $user->getId()) {
+                    $notificationService->notifyMention($mentionedUser, $user->getPrenom(), $post->getId());
+                }
+            }
+        }
 
         // Award points for participating (commenting)
         $gamificationService->addPoints($user, 10);

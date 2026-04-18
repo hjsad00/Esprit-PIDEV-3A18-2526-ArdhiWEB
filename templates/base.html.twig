@@ -121,6 +121,22 @@
           </li>
           
           {% if app.user %}
+          <!-- NOTIFICATIONS BELL -->
+          <li class="dropdown" id="notificationDropdownContainer">
+            <a href="#" class="d-flex align-items-center px-2" onclick="markNotificationsAsRead(event)">
+              <div style="position: relative;">
+                <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: white;"></i>
+                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.55rem; padding: 0.25em 0.4em;">
+                  0
+                </span>
+              </div>
+            </a>
+            <ul id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; left: auto; padding: 0;">
+              <li><div style="padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 0.9rem; color: #333;">Notifications</div></li>
+              <li id="emptyNotificationMsg" class="text-center text-muted" style="font-size: 0.85rem; padding: 20px;">Aucune nouvelle notification.</li>
+            </ul>
+          </li>
+
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
             <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
               {% if app.user.avatar %}
@@ -223,6 +239,83 @@
             window.location.reload();
         }
     });
+
+    {% if app.user %}
+    // --- Notification System ---
+    function fetchNotifications() {
+        fetch('{{ path("app_user_and_diag_notifications_unread") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('notificationBadge');
+            const list = document.getElementById('notificationList');
+            const emptyMsg = document.getElementById('emptyNotificationMsg');
+
+            if (!badge || !list) return;
+
+            const notifs = data.notifications || [];
+            if (notifs.length > 0) {
+                badge.style.display = 'block';
+                badge.textContent = notifs.length > 99 ? '99+' : notifs.length;
+                emptyMsg.style.display = 'none';
+
+                // Clear existing old items but keep header
+                const items = list.querySelectorAll('.notif-item');
+                items.forEach(i => i.remove());
+
+                notifs.forEach(n => {
+                    const li = document.createElement('li');
+                    li.className = 'notif-item';
+                    
+                    let link = '#';
+                    if (n.relatedType === 'POST') link = '/user-and-diag/community/' + n.relatedId;
+                    if (n.relatedType === 'REVIEW') link = '/user-and-diag'; // Dashboard/history route
+
+                    let icon = 'bi-info-circle text-primary';
+                    if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
+                    if (n.type === 'MENTION') icon = 'bi-at text-success';
+                    if (n.type === 'REVIEW') icon = 'bi-clipboard-check text-warning';
+
+                    li.innerHTML = `
+                        <a href="${link}" style="display: flex; gap: 12px; padding: 12px 15px; border-bottom: 1px solid #f8f9fa; text-decoration: none; align-items: start;">
+                            <i class="bi ${icon}" style="font-size: 1.1rem; margin-top: 2px;"></i>
+                            <div>
+                                <span style="font-size: 0.85rem; color: #444; display: block; line-height: 1.4;">${n.message}</span>
+                                <span style="font-size: 0.7rem; color: #aaa;">${n.date}</span>
+                            </div>
+                        </a>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                badge.style.display = 'none';
+                emptyMsg.style.display = 'block';
+            }
+        })
+        .catch(err => console.error("Could not fetch notifications", err));
+    }
+
+    function markNotificationsAsRead(e) {
+        const badge = document.getElementById('notificationBadge');
+        if (badge && badge.style.display !== 'none') {
+            fetch('{{ path("app_user_and_diag_notifications_mark_read") }}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(() => {
+                badge.style.display = 'none';
+            })
+            .catch(err => console.error("Error marking read", err));
+        }
+    }
+
+    // Call on load and check periodically
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchNotifications();
+        setInterval(fetchNotifications, 60000); // Check every minute
+    });
+    {% endif %}
   </script>
 
 </body>

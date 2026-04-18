@@ -8,6 +8,7 @@ use App\Entity\UserAndDiag\TreatmentTask;
 use App\Entity\UserAndDiag\PreventionPlan;
 use App\Entity\UserAndDiag\PreventionTask;
 use App\Repository\UserAndDiag\ReviewRepository;
+use App\Service\UserAndDiag\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -104,7 +105,7 @@ class ExpertDashboardController extends AbstractController
     }
 
     #[Route('/review/{id}/diagnosis', name: 'app_expert_submit_diagnosis', methods: ['POST'])]
-    public function submitDiagnosisReview(Review $review, Request $request, EntityManagerInterface $em): JsonResponse
+    public function submitDiagnosisReview(Review $review, Request $request, EntityManagerInterface $em, NotificationService $notificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -128,11 +129,15 @@ class ExpertDashboardController extends AbstractController
 
         $em->flush();
 
+        if ($review->getDiagnostic() && $review->getDiagnostic()->getUser()) {
+            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review->getId(), 'DIAGNOSIS');
+        }
+
         return $this->json(['success' => true, 'message' => 'Avis diagnostic soumis avec succès !']);
     }
 
     #[Route('/review/{id}/progress', name: 'app_expert_submit_progress', methods: ['POST'])]
-    public function submitProgressReview(Review $review, Request $request, EntityManagerInterface $em): JsonResponse
+    public function submitProgressReview(Review $review, Request $request, EntityManagerInterface $em, NotificationService $notificationService): JsonResponse
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -166,6 +171,10 @@ class ExpertDashboardController extends AbstractController
         }
 
         $em->flush();
+
+        if ($review->getDiagnostic() && $review->getDiagnostic()->getUser()) {
+            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review->getId(), 'PROGRESS');
+        }
 
         $msg = $verdict === 'HEALED' ? 'Plan marqué comme résolu et terminé !' : 'Avis de suivi soumis !';
         return $this->json(['success' => true, 'message' => $msg]);
