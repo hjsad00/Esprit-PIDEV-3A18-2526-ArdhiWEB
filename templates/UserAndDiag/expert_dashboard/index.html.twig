@@ -315,7 +315,8 @@
         const isPending = task.status === 'PENDING';
 
         row.innerHTML = `
-            <span class="task-day-badge">J${task.day_offset}</span>
+            <span class="task-day-badge">J</span>
+            <input type="number" class="task-edit-day" id="task-day-${task.id}" value="${task.day_offset}" style="width: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; text-align: center;" ${!isPending ? 'readonly' : ''}>
             <span class="task-status-icon">${statusIcon}</span>
             <input type="text" class="task-edit-input" value="${task.description}" id="task-desc-${task.id}" ${!isPending ? 'readonly' : ''}>
             <button class="btn-task-save" onclick="saveTask(${task.id})" ${!isPending ? 'disabled' : ''}>💾</button>
@@ -327,12 +328,16 @@
 
     function saveTask(taskId) {
         const desc = document.getElementById(`task-desc-${taskId}`).value.trim();
+        const dayInput = document.getElementById(`task-day-${taskId}`);
         if (!desc) return;
+
+        const bodyData = { description: desc };
+        if (dayInput && dayInput.value) bodyData.day_offset = parseInt(dayInput.value);
 
         fetch(`{{ path('app_expert_update_task', {id: 'TASK_ID'}) }}`.replace('TASK_ID', taskId), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ description: desc })
+            body: JSON.stringify(bodyData)
         })
         .then(res => res.json())
         .then(data => {

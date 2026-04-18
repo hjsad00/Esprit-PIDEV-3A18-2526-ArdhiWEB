@@ -234,6 +234,7 @@ class ExpertDashboardController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $newDesc = trim($data['description'] ?? '');
+        $newDay = isset($data['day_offset']) ? (int) $data['day_offset'] : null;
 
         if (empty($newDesc)) {
             return $this->json(['error' => 'La description ne peut pas être vide.'], 400);
@@ -243,6 +244,8 @@ class ExpertDashboardController extends AbstractController
         $task = $em->getRepository(TreatmentTask::class)->find($id);
         if ($task) {
             $task->setTaskDescription(substr($newDesc, 0, 255));
+            if ($newDay !== null && $newDay > 0)
+                $task->setDayOffset($newDay);
             $em->flush();
             return $this->json(['success' => true, 'message' => 'Tâche mise à jour !']);
         }
@@ -250,6 +253,8 @@ class ExpertDashboardController extends AbstractController
         $task = $em->getRepository(PreventionTask::class)->find($id);
         if ($task) {
             $task->setTaskDescription(substr($newDesc, 0, 255));
+            if ($newDay !== null && $newDay > 0)
+                $task->setDayOffset($newDay);
             $em->flush();
             return $this->json(['success' => true, 'message' => 'Tâche mise à jour !']);
         }
