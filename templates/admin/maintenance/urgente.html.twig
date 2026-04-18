@@ -1,0 +1,106 @@
+{% extends 'admin/materiel/admin_materiel_base.html.twig' %}
+
+{% block title %}Maintenances en Urgence - Ardhi Admin{% endblock %}
+{% block page_title %}Urgences Signalées (S.O.S Agriculteurs){% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4">
+    {% if urgencies|length > 0 %}
+        <div class="row g-4">
+            {% for m in urgencies %}
+            {% set owner = userMap[m.materiel.userId] ?? null %}
+            <div class="col-12">
+                <div class="card shadow-sm border-0 border-start border-5 border-danger overflow-hidden mb-3">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- Infos Matériel & Propriétaire -->
+                            <div class="col-md-3 bg-light p-4 border-end">
+                                <span class="badge bg-danger rounded-pill mb-2 px-3">Urgente</span>
+                                <h4 class="fw-bold text-dark mb-1">{{ m.materiel.nom }}</h4>
+                                <p class="text-muted small mb-3">{{ m.materiel.type }}</p>
+                                
+                                <div class="mb-3">
+                                    <label class="text-uppercase small fw-bold text-muted d-block">Agriculteur</label>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
+                                        <div>
+                                            <div class="fw-bold">{{ owner.prenom ?? 'Inconnu' }} {{ owner.nom ?? '' }}</div>
+                                            <div class="small text-muted">{{ owner.email ?? '' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="small text-muted">
+                                    <i class="bi bi-calendar-event me-1"></i> Signalé le {{ m.dateMaintenance|date('d/m/Y à H:i') }}
+                                </div>
+                            </div>
+
+                            <!-- Description de la Panne -->
+                            <div class="col-md-6 p-4 bg-white d-flex flex-column">
+                                <h5 class="fw-bold text-danger border-bottom pb-2">
+                                    <i class="bi bi-chat-left-dots-fill me-2"></i>DESCRIPTION DU PROBLÈME
+                                </h5>
+                                <div class="mt-2 text-dark fs-5" style="font-style: italic; background: #fff8f8; padding: 1.5rem; border-radius: 12px; border: 1px dashed #f5c2c7; flex: 1;">
+                                    "{{ m.description }}"
+                                </div>
+                            </div>
+
+                              <!-- Actions Admin -->
+                            <div class="col-md-3 p-4 bg-light d-flex flex-column justify-content-center gap-3 border-start">
+                                {% if m.decisionAdmin %}
+                                    <div class="alert {{ m.decisionAdmin == 'urgent_accepte' ? 'alert-danger' : 'alert-primary' }} shadow-sm fw-bold mb-0">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        {% if m.decisionAdmin == 'urgent_accepte' %}
+                                            Vous avez accepté la maintenance en urgence de l'agriculteur
+                                        {% else %}
+                                            Une demande de plannification est envoyer a l'agriculteur
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <h6 class="text-center fw-bold text-muted small text-uppercase mb-3">Prendre une décision</h6>
+                                    
+                                    <div class="d-flex flex-column gap-3">
+                                        <!-- Option 1 : Urgent Apportez -->
+                                        <form method="post" action="{{ path('admin_maintenance_decide', {id: m.idMaintenance}) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('decide_' ~ m.idMaintenance) }}">
+                                            <input type="hidden" name="reponse_type" value="urgent_apportez">
+                                            <button type="submit" class="btn btn-danger w-100 py-3 shadow-sm fw-bold">
+                                                <i class="bi bi-truck me-2"></i> URGENT : Apportez le matériel
+                                            </button>
+                                        </form>
+
+                                        <!-- Option 2 : Non-urgent Planifiez -->
+                                        <form method="post" action="{{ path('admin_maintenance_decide', {id: m.idMaintenance}) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('decide_' ~ m.idMaintenance) }}">
+                                            <input type="hidden" name="reponse_type" value="non_urgent_planifier">
+                                            <button type="submit" class="btn btn-outline-primary w-100 py-3 shadow-sm fw-bold">
+                                                <i class="bi bi-calendar-plus me-2"></i> NON-URGENT : Demander de planifier
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div class="display-1 text-muted opacity-25 mb-3">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h3 class="text-muted">Aucune urgence signalée pour le moment.</h3>
+            <p class="text-muted">Toutes les pannes ont été traitées ou planifiées.</p>
+            <a href="{{ path('admin_maintenance_timeline') }}" class="btn btn-primary rounded-pill mt-3">
+                <i class="bi bi-calendar-check me-2"></i> Voir le planning global
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .card { transition: transform 0.2s; }
+    .card:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard IA - Prédictions & Risques{% endblock %}
+
+{% block body_class %}materiel-theme{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
+<style>
+    .ia-dashboard-hero {
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+    }
+    .ia-stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+    .ia-mat-card {
+        background: white;
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #eee;
+        transition: transform 0.2s ease;
+    }
+    .ia-mat-card:hover { transform: translateY(-3px); }
+    .risk-badge { padding: 0.4rem 0.8rem; border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+    .risk-Faible { background: #e8f5e9; color: #2e7d32; }
+    .risk-Modéré { background: #fff3e0; color: #e65100; }
+    .risk-Élevé { background: #ffebee; color: #c62828; }
+    .risk-none { background: #f5f5f5; color: #999; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="ia-dashboard-hero d-flex justify-content-between align-items-center flex-wrap gap-4">
+        <div>
+            <h1 class="display-6 fw-bold mb-1"><i class="bi bi-robot me-3"></i>Intelligence Prédictive</h1>
+            <p class="mb-0 opacity-75">Analyse en temps réel des risques et conseils de maintenance pour votre flotte.</p>
+        </div>
+        <div>
+            <a href="{{ path('app_materiel_index') }}" class="btn btn-outline-light rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i> Retour au matériel
+            </a>
+        </div>
+    </div>
+
+    <!-- Récapitulatif IA -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+            <div class="ia-stat-card text-center bg-white p-4 rounded shadow-sm h-100">
+                <h5 class="text-muted small text-uppercase fw-bold mb-4">Répartition des Risques</h5>
+                <canvas id="riskChart" style="max-height: 200px;"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="row g-3 h-100">
+                <div class="col-md-6 col-lg-4">
+                    <div class="ia-stat-card">
+                        <div class="display-5 fw-bold text-danger" id="countElevé">0</div>
+                        <div class="text-muted small fw-bold mt-2">RISQUE ÉLEVÉ</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="ia-stat-card">
+                        <div class="display-5 fw-bold text-warning" id="countModéré">0</div>
+                        <div class="text-muted small fw-bold mt-2">RISQUE MODÉRÉ</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="ia-stat-card">
+                        <div class="display-5 fw-bold text-success" id="countFaible">0</div>
+                        <div class="text-muted small fw-bold mt-2">RISQUE FAIBLE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des matériels -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold"><i class="bi bi-list-stars me-2 text-indigo-500"></i>Votre Flotte en Détail</h3>
+                <button id="btnAnalyseAll" class="btn btn-indigo-600 text-white rounded-pill px-4" style="background: #4f46e5;">
+                    <i class="bi bi-cpu me-2"></i> Analyser toute la flotte
+                </button>
+            </div>
+
+            <div class="row g-4" id="fleetGrid">
+                {% for m in materiels %}
+                <div class="col-md-6 col-xl-4 ia-mat-wrapper" data-id="{{ m.id }}">
+                    <div class="ia-mat-card shadow-sm h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-0">{{ m.nom }}</h5>
+                                <span class="badge bg-light text-dark small">{{ m.type }}</span>
+                            </div>
+                            <div class="risk-badge risk-none ia-risk-label">Non analysé</div>
+                        </div>
+
+                        <div class="ia-content flex-grow-1">
+                            <p class="text-muted small italic mb-0 ia-analysis-placeholder">
+                                <i class="bi bi-info-circle me-1"></i> Cliquez sur analyser pour obtenir un diagnostic.
+                            </p>
+                            <div class="ia-result d-none">
+                                <p class="small mb-2 ia-text" style="line-height: 1.4;"></p>
+                                <div class="bg-indigo-50 p-2 rounded small" style="background: #f5f3ff; color: #4338ca;">
+                                    <i class="bi bi-lightning-fill me-1"></i> <span class="ia-next-step"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted"><i class="bi bi-speedometer2 me-1"></i> {{ m.heuresUtilisation|default(0) }} h</span>
+                            <button class="btn btn-outline-indigo btn-sm rounded-pill btn-analyse-single" style="color: #4f46e5; border-color: #4f46e5;">
+                                <i class="bi bi-stars me-1"></i> Analyser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let riskData = { Faible: 0, Modéré: 0, Élevé: 0 };
+let chart;
+
+function updateChart() {
+    const ctx = document.getElementById('riskChart').getContext('2d');
+    if (chart) chart.destroy();
+    
+    chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Faible', 'Modéré', 'Élevé'],
+            datasets: [{
+                data: [riskData.Faible, riskData.Modéré, riskData.Élevé],
+                backgroundColor: ['#2e7d32', '#e65100', '#c62828'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            cutout: '70%'
+        }
+    });
+
+    document.getElementById('countFaible').textContent = riskData.Faible;
+    document.getElementById('countModéré').textContent = riskData.Modéré;
+    document.getElementById('countElevé').textContent = riskData.Élevé;
+}
+
+function runAnalysis(wrapper) {
+    const id = wrapper.dataset.id;
+    const btn = wrapper.querySelector('.btn-analyse-single');
+    const label = wrapper.querySelector('.ia-risk-label');
+    const placeholder = wrapper.querySelector('.ia-analysis-placeholder');
+    const result = wrapper.querySelector('.ia-result');
+    const iaText = wrapper.querySelector('.ia-text');
+    const nextStep = wrapper.querySelector('.ia-next-step');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    
+    return fetch(`/materiel-et-maintenance/materiel/${id}/ia-analyse`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Actualiser';
+
+        if (!data || data.error) {
+            alert(data ? data.message : "Erreur de format de réponse IA.");
+            return;
+        }
+
+        // Update counts
+        const oldRisk = label.textContent.trim();
+        if (riskData[oldRisk] !== undefined) riskData[oldRisk]--;
+        riskData[data.risque]++;
+        updateChart();
+
+        // Update UI
+        label.textContent = data.risque;
+        label.className = `risk-badge risk-${data.risque} ia-risk-label`;
+        
+        placeholder.classList.add('d-none');
+        result.classList.remove('d-none');
+        iaText.textContent = data.analyse;
+        nextStep.textContent = data.prochaine_etape;
+    })
+    .catch(error => {
+        container.classList.remove('loading');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Analyser';
+        console.error('Error:', error);
+        alert('Erreur technique (vérifiez la console).');
+    });
+}
+
+document.querySelectorAll('.btn-analyse-single').forEach(btn => {
+    btn.addEventListener('click', function() {
+        runAnalysis(this.closest('.ia-mat-wrapper'));
+    });
+});
+
+document.getElementById('btnAnalyseAll').addEventListener('click', async function() {
+    this.disabled = true;
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Analyse globale en cours...';
+
+    const wrappers = document.querySelectorAll('.ia-mat-wrapper');
+    for (const wrapper of wrappers) {
+        await runAnalysis(wrapper);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+});
+
+document.addEventListener('DOMContentLoaded', updateChart);
+</script>
+{% endblock %}

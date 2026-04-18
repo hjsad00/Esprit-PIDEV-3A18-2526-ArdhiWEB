@@ -183,25 +183,36 @@
     <div class="section-divider">Maintenance</div>
 
     <div class="row g-3 mb-3">
-      <div class="col-12">
+      <div class="col-sm-6">
         {{ form_label(form.dateAchat) }}
         {{ form_widget(form.dateAchat, {'attr': {'class': 'form-control ' ~ (form.dateAchat.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
-        {{ form_errors(form.dateAchat) }}
-        {% if form.dateAchat.vars.errors|length > 0 %}
-            <div class="invalid-feedback d-block fw-bold" style="font-size: 0.9rem;">
-                {% for error in form.dateAchat.vars.errors %}{{ error.message }}{% endfor %}
-            </div>
-        {% endif %}
         <div class="form-hint">La prochaine maintenance sera automatiquement fixée à 6 mois après cette date.</div>
+      </div>
+      <div class="col-sm-6">
+        {{ form_label(form.heuresUtilisation) }}
+        {{ form_widget(form.heuresUtilisation, {'attr': {'class': 'form-control ' ~ (form.heuresUtilisation.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
       </div>
     </div>
 
-    <div class="d-flex gap-3 mt-4">
-      <button type="submit" class="btn-submit">
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+          {{ form_label(form.seuilMaintenanceHeures) }}
+          <span id="threshold-indicator" class="badge bg-primary rounded-pill px-2 py-1 shadow-sm" style="font-size: 0.75rem; display: none;">
+             Recommandé : <span id="threshold-val">500</span>h
+          </span>
+      </div>
+      {{ form_widget(form.seuilMaintenanceHeures, {'attr': {'class': 'form-control ' ~ (form.seuilMaintenanceHeures.vars.errors|length > 0 ? 'is-invalid' : '')}}) }}
+      <div class="form-hint text-primary fw-medium">
+          <i class="bi bi-info-circle-fill me-1"></i> {{ form.seuilMaintenanceHeures.vars.help }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-3 pt-3 border-top mt-5">
+      <button type="submit" class="btn-submit px-4">
         <i class="bi bi-check-lg"></i>
         {% if materiel.id %}Enregistrer les modifications{% else %}Ajouter le matériel{% endif %}
       </button>
-      <a href="{{ path('app_materiel_index') }}" class="btn-cancel">
+      <a href="{{ path('app_materiel_index') }}" class="btn-cancel px-4">
         <i class="bi bi-x"></i> Annuler
       </a>
     </div>
@@ -211,4 +222,44 @@
 </div>
 </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.querySelector('select[name*="[type]"]');
+        const thresholdInput = document.querySelector('input[name*="[seuilMaintenanceHeures]"]');
+        const indicator = document.getElementById('threshold-indicator');
+        const valSpan = document.getElementById('threshold-val');
+
+        const thresholds = {
+            'Tracteur': 500,
+            'Moissonneuse': 300,
+            'Semoir': 200,
+            'Pulvérisateur': 400,
+            'Charrue': 200,
+            'Herse': 200,
+            'Autre': 500
+        };
+
+        function updateThreshold() {
+            const selectedType = typeSelect.value;
+            if (selectedType && thresholds[selectedType]) {
+                const recommended = thresholds[selectedType];
+                valSpan.textContent = recommended;
+                indicator.style.display = 'inline-block';
+                
+                // Si le champ est vide ou par défaut, on met la recommandation
+                if (!thresholdInput.value || thresholdInput.value == 500) {
+                    thresholdInput.value = recommended;
+                }
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        typeSelect.addEventListener('change', updateThreshold);
+        updateThreshold(); // Init au chargement
+    });
+</script>
 {% endblock %}

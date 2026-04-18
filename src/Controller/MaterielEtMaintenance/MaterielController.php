@@ -2,6 +2,7 @@
 
 namespace App\Controller\MaterielEtMaintenance;
 
+use App\Entity\MaterielEtMaintenance\Maintenance;
 use App\Entity\MaterielEtMaintenance\Materiel;
 use App\Form\MaterielEtMaintenance\MaterielType;
 use App\Repository\MaterielEtMaintenance\MaterielRepository;
@@ -13,6 +14,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Workflow\WorkflowInterface;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\MaterielEtMaintenance\QrCodeService;
 
 #[Route('/materiel-et-maintenance/materiel', name: 'app_materiel_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -41,7 +46,7 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/ajouter', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, QrCodeService $qrCodeService): Response
     {
         $materiel = new Materiel();
         $form = $this->createForm(MaterielType::class, $materiel);
@@ -66,12 +71,23 @@ class MaterielController extends AbstractController
             }
 
             $materiel->setUserId($this->getUser()->getId());
+            
+            // Initialisation du seuil par défaut si non précisé
+            if (!$materiel->getSeuilMaintenanceHeures()) {
+                $materiel->initialiserSeuilParDefaut();
+            }
+            
             $materiel->calculerProchaineMaintenance();
 
             $em->persist($materiel);
+            $em->flush(); // Nécessaire pour avoir le token généré par PrePersist
+
+            // Génération du QR Code
+            $qrPath = $qrCodeService->generateForMateriel($materiel);
+            $materiel->setQrCodePath($qrPath);
             $em->flush();
 
-            $this->addFlash('success', 'Matériel "' . $materiel->getNom() . '" ajouté avec succès !');
+            $this->addFlash('success', 'Matériel "' . $materiel->getNom() . '" ajouté avec succès ! QR Code généré.');
             return $this->redirectToRoute('app_materiel_index');
         }
 
@@ -81,13 +97,46 @@ class MaterielController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(int $id, MaterielRepository $repo): Response
+    #[Route('/ia-dashboard', name: 'ia_dashboard', methods: ['GET'])]
+    public function iaDashboard(MaterielRepository $repo, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
+    {
+        $user = $this->getUser();
+        $userId = $user->getId();
+        $materiels = $repo->findBy(['userId' => $userId]);
+        
+        // Compter les alertes non lues pour l'agriculteur
+        $countUnread = $alerteRepo->countUnreadForAgriculteur($userId);
+
+        return $this->render('MaterielEtMaintenance/materiel/ia_dashboard.html.twig', [
+            'materiels' => $materiels,
+            'countUnread' => $countUnread
+        ]);
+    }
+
+    #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function show(int $id, MaterielRepository $repo, QrCodeService $qrCodeService, EntityManagerInterface $em, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
+        // Si le QR code n'existe pas encore ou si le fichier physique a été supprimé, on le génère à la volée
+        $projectDir = $this->getParameter('kernel.project_dir');
+        $fullPath = $materiel->getQrCodePath() ? $projectDir . '/public/' . $materiel->getQrCodePath() : null;
+
+        if (!$materiel->getQrCodePath() || ($fullPath && !file_exists($fullPath))) {
+            // S'assurer qu'un token existe déjà (pour les anciens matériels créés avant la mise à jour)
+            if (!$materiel->getQrCodeToken()) {
+                $materiel->setQrCodeToken(bin2hex(random_bytes(16)));
+            }
+            $qrPath = $qrCodeService->generateForMateriel($materiel);
+            $materiel->setQrCodePath($qrPath);
+            $em->flush();
+        }
+
+        $countUnread = $alerteRepo->count(['materiel' => $materiel, 'statut' => 'non_lu']);
+
         return $this->render('MaterielEtMaintenance/materiel/show.html.twig', [
             'materiel' => $materiel,
+            'countUnread' => $countUnread,
         ]);
     }
 
@@ -153,6 +202,94 @@ class MaterielController extends AbstractController
 
         return $this->redirectToRoute('app_materiel_index');
     }
+
+    #[Route('/{id}/transition/{transition}', name: 'transition', methods: ['POST'])]
+    public function applyTransition(
+        int $id, 
+        string $transition, 
+        Request $request, 
+        MaterielRepository $repo, 
+        WorkflowInterface $materielLifecycleStateMachine, 
+        EntityManagerInterface $em,
+        ValidatorInterface $validator
+    ): Response
+    {
+        $materiel = $this->getMaterielOwnedByUser($id, $repo);
+
+        if (!$this->isCsrfTokenValid('workflow_' . $id, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token invalide.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        // --- Validation PHP Spécifique pour l'Urgence ---
+        if ($transition === 'mettre_en_maintenance') {
+            $description = trim($request->request->get('description', ''));
+            $errors = $validator->validate($description, [
+                new NotBlank(['message' => 'La description doit être remplie pour signaler une urgence.'])
+            ]);
+
+            if (count($errors) > 0) {
+                $this->addFlash('danger', $errors[0]->getMessage());
+                return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+            }
+        }
+
+        if ($materielLifecycleStateMachine->can($materiel, $transition)) {
+            $materielLifecycleStateMachine->apply($materiel, $transition);
+            
+            if ($transition === 'mettre_en_maintenance') {
+                $materiel->setEtat('En panne');
+                $maintenance = new Maintenance();
+                $maintenance->setMateriel($materiel);
+                $maintenance->setStatutMaintenance('en_attente');
+                $maintenance->setTypeMaintenance('urgente');
+                $maintenance->setDateMaintenance(new \DateTime());
+                $maintenance->setDescription($request->request->get('description'));
+                
+                $em->persist($maintenance);
+            }
+
+            $em->flush();
+            $this->addFlash('success', 'Action effectuée avec succès.');
+        } else {
+            $this->addFlash('danger', 'Impossible d\'appliquer cette transition.');
+        }
+
+        return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/heures', name: 'update_hours', methods: ['POST'])]
+    public function updateHours(int $id, Request $request, MaterielRepository $repo, EntityManagerInterface $em): Response
+    {
+        $materiel = $this->getMaterielOwnedByUser($id, $repo);
+        $nouvellesHeures = (int) $request->request->get('heures');
+
+        if ($nouvellesHeures < $materiel->getHeuresUtilisation()) {
+            $this->addFlash('danger', 'Le nouveau compteur ne peut pas être inférieur à l\'ancien.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        $materiel->setHeuresUtilisation($nouvellesHeures);
+        $em->flush();
+
+        $this->addFlash('success', 'Compteur d\'heures mis à jour.');
+        
+        // Note: La commande de vérification sera lancée via CRON, mais on pourrait aussi vérifier ici
+        // si un seuil est atteint pour prévenir l'utilisateur immédiatement.
+
+        return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/ia-analyse', name: 'ia_analyse', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function iaAnalyse(int $id, MaterielRepository $repo, \App\Service\MaterielEtMaintenance\GroqPredictionService $groqService): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        $materiel = $this->getMaterielOwnedByUser($id, $repo);
+        $prediction = $groqService->generatePrediction($materiel);
+
+        return new \Symfony\Component\HttpFoundation\JsonResponse($prediction);
+    }
+
+
 
     private function getMaterielOwnedByUser(int $id, MaterielRepository $repo): Materiel
     {

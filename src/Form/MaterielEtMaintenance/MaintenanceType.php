@@ -7,7 +7,7 @@ use App\Entity\MaterielEtMaintenance\Materiel;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -59,8 +59,8 @@ class MaintenanceType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('date_maintenance', DateType::class, [
-                'label' => 'Date de l\'intervention',
+            ->add('date_maintenance', DateTimeType::class, [
+                'label' => 'Date et Heure de l\'intervention',
                 'widget' => 'single_text',
                 'required' => false,
                 'attr' => ['class' => 'form-control'],

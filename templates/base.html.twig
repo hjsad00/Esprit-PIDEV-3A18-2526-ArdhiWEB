@@ -25,7 +25,8 @@
   <!-- Main CSS File -->
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
   
-  {% block stylesheets %}{% endblock %}
+  
+
 
   <style>
     /* Correction Ultime Header - Priorité Maximale */
@@ -38,8 +39,14 @@
       backdrop-filter: none !important;
     }
 
-    /* Texte et titres en Blanc pur */
-    body.premium-header-active #header.header .sitename,
+    /* Texte et titres en Blanc pour Ardhi */
+    body.premium-header-active #header.header .sitename {
+      color: #ffffff !important;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+      opacity: 1 !important;
+      font-weight: 700 !important;
+    }
+    
     body.premium-header-active #header.header .navmenu ul li a {
       color: #ffffff !important;
       text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
@@ -115,6 +122,7 @@
       margin-right: 6px;
     }
   </style>
+  {% block stylesheets %}{% endblock %}
 </head>
 
 <body class="{% block body_class %}index-page{% endblock %} premium-header-active">
@@ -158,11 +166,18 @@
             <a href="{{ path('change_locale', {'locale': 'ar'}) }}" class="lang-btn {{ app.request.locale == 'ar' ? 'active-lang' : '' }}">Ar</a>
           </li>
 
+          {% set current_route = app.request.get('_route')|default('') %}
+          {% if current_route in ['app_materiel_et_maintenance'] or current_route starts with 'app_materiel_' or current_route starts with 'app_maintenance_' or current_route starts with 'app_notification_maintenance_' or current_route starts with 'app_reclamation_' or current_route starts with 'admin_materiel' or current_route starts with 'admin_maintenance' or current_route starts with 'admin_reclamation' %}
+            {{ render(controller('App\\Controller\\MaterielEtMaintenance\\NotificationMaintenanceController::renderBell')) }}
+          {% endif %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
             <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
               <i class="bi bi-person-fill" style="font-size: 1.1rem; color: white;"></i>
             </div></a>
             <ul>
+              <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
+              <li><a href="{{ path('app_reclamation_index') }}">Mes Réclamations</a></li>
+              <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
               <li><a href="{{ path('app_profile') }}">{{ 'employe.col.id'|trans|default('Mon Profil') }} {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
               <li><a href="{{ path('app_logout') }}">{{ 'common.close'|trans|default('Déconnexion') }}</a></li>
             </ul>
@@ -178,6 +193,7 @@
   </header>
 
   <main class="main" style="min-height: 70vh;">
+    {% block flashes %}
     {% if app.flashes|length > 0 %}
       <div class="container mt-3">
         {% for label, messages in app.flashes %}
@@ -192,6 +208,7 @@
         {% endfor %}
       </div>
     {% endif %}
+    {% endblock %}
 
     {% block body %}{% endblock %}
   </main>

@@ -18,13 +18,14 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use App\Service\MaterielEtMaintenance\GoogleCalendarService;
 
 #[Route('/materiel-et-maintenance/maintenance', name: 'app_maintenance_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class MaintenanceController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, MaintenanceRepository $repo, MaterielRepository $materielRepo): Response
+    public function index(Request $request, MaintenanceRepository $repo, MaterielRepository $materielRepo, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
     {
         $userId = $this->getUser()->getId();
         $type   = $request->query->get('type', '');
@@ -32,22 +33,25 @@ class MaintenanceController extends AbstractController
         $search = $request->query->get('search', '');
 
         $maintenances = $repo->searchByUser($userId, $type ?: null, $statut ?: null, $search ?: null);
+        $totalUnreadCount = $alerteRepo->countUnreadForAgriculteur($userId);
+        
         $stats        = $repo->getStatsByUser($userId);
         $materielStats = $materielRepo->getStatsByUser($userId);
 
         return $this->render('MaterielEtMaintenance/maintenance/index.html.twig', [
-            'maintenances'  => $maintenances,
-            'stats'         => $stats,
-            'materielStats' => $materielStats,
-            'type'          => $type,
-            'statut'        => $statut,
-            'search'        => $search,
-            'enRetard'      => $materielRepo->findEnRetardByUser($userId),
+            'maintenances'      => $maintenances,
+            'stats'             => $stats,
+            'materielStats'     => $materielStats,
+            'type'              => $type,
+            'statut'            => $statut,
+            'search'            => $search,
+            'totalUnreadCount'  => $totalUnreadCount,
+            'enRetard'          => $materielRepo->findEnRetardByUser($userId),
         ]);
     }
 
     #[Route('/planifier', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, \App\Service\GoogleCalendarService $googleCalendar, MailerInterface $mailer, Environment $twig): Response
+    public function new(Request $request, EntityManagerInterface $em, GoogleCalendarService $googleCalendar, MailerInterface $mailer, Environment $twig): Response
     {
         $maintenance = new Maintenance();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
@@ -165,7 +169,7 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em): Response
+    public function edit(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, GoogleCalendarService $googleCalendar): Response
     {
         $maintenance = $this->getMaintenanceOwnedByUser($id, $repo);
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
@@ -182,7 +186,48 @@ class MaintenanceController extends AbstractController
             }
 
             $em->flush();
-            $this->addFlash('success', 'Maintenance mise à jour avec succès !');
+
+            // Synchro Google Calendar
+            $isGoogleSync = false;
+            if ($maintenance->getDateMaintenance() && $this->getUser()->getGoogleAccessToken()) {
+                try {
+                    $eventId = $maintenance->getGoogleCalendarEventId();
+                    if ($eventId) {
+                        $eventData = $googleCalendar->updateMaintenanceEvent(
+                            $this->getUser(),
+                            $eventId,
+                            $maintenance->getMateriel()->getNom(),
+                            $maintenance->getDescription() ?? 'Intervention planifiée.',
+                            $maintenance->getDateMaintenance()
+                        );
+                    } else {
+                        $eventData = $googleCalendar->createMaintenanceEvent(
+                            $this->getUser(),
+                            $maintenance->getMateriel()->getNom(),
+                            $maintenance->getDescription() ?? 'Intervention planifiée.',
+                            $maintenance->getDateMaintenance()
+                        );
+                    }
+                    
+                    if ($eventData && isset($eventData['id'])) {
+                        if ($eventId !== $eventData['id']) {
+                            $maintenance->setGoogleCalendarEventId($eventData['id']);
+                            $em->flush();
+                        }
+                        $this->addFlash('success', sprintf(
+                            'Maintenance mise à jour et synchronisée avec Google Calendar ! <a href="%s" target="_blank" class="btn btn-sm btn-light rounded-pill ms-3 shadow-sm" style="color: #2e7d32; font-weight: 600; border: 1px solid #c3e6cb; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-calendar-check"></i> Voir l\'événement</a>',
+                            $eventData['link']
+                        ));
+                        $isGoogleSync = true;
+                    }
+                } catch (\Exception $e) {
+                }
+            }
+
+            if (!$isGoogleSync) {
+                $this->addFlash('success', 'Maintenance mise à jour avec succès !');
+            }
+
             return $this->redirectToRoute('app_maintenance_index');
         }
 
@@ -193,14 +238,35 @@ class MaintenanceController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em): Response
+    public function delete(int $id, Request $request, MaintenanceRepository $repo, EntityManagerInterface $em, GoogleCalendarService $googleCalendar): Response
     {
         $maintenance = $this->getMaintenanceOwnedByUser($id, $repo);
 
         if ($this->isCsrfTokenValid('delete_maintenance_' . $id, $request->request->get('_token'))) {
+            // Suppression sur Google Calendar
+            $eventId = $maintenance->getGoogleCalendarEventId();
+            if ($eventId && $this->getUser()->getGoogleAccessToken()) {
+                $googleCalendar->deleteMaintenanceEvent($this->getUser(), $eventId);
+            }
+
+            $materiel = $maintenance->getMateriel();
+
             $em->remove($maintenance);
             $em->flush();
-            $this->addFlash('success', 'Maintenance supprimée.');
+
+            // Recalculer la prochaine maintenance depuis la dernière stockée
+            $dernier = $repo->findOneBy(['materiel' => $materiel, 'statut_maintenance' => 'terminee'], ['date_maintenance' => 'DESC']);
+            if ($dernier) {
+                $dateCible = method_exists($dernier, 'getDateRealisee') && $dernier->getDateRealisee() ? $dernier->getDateRealisee() : $dernier->getDateMaintenance();
+                $materiel->setDerniereMaintenance($dateCible);
+            } else {
+                $materiel->setDerniereMaintenance(null);
+            }
+            $materiel->calculerProchaineMaintenance();
+            
+            $em->flush();
+            
+            $this->addFlash('success', 'Maintenance supprimée (et retirée de Google Calendar).');
         } else {
             $this->addFlash('danger', 'Action non autorisée.');
         }

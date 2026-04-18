@@ -123,7 +123,7 @@
                             <li>
                                 <i class="bi bi-calendar-event" style="color: var(--mat-primary);"></i>
                                 Date: 
-                                <strong class="fs-5">{{ m.dateMaintenance ? m.dateMaintenance|date('d/m/Y') : 'Non fixée' }}</strong>
+                                <strong class="fs-5">{{ m.dateMaintenance ? m.dateMaintenance|date('d/m/Y à H:i') : 'Non fixée' }}</strong>
                             </li>
                         </ul>
                         
@@ -148,14 +148,23 @@
                             {{ m.description ?: 'Aucun détail fourni.' }}
                         </p>
                         
-                        <div class="mat-card-footer mt-auto" style="display:flex; gap: 8px; align-items: center;">
+                        <div class="mat-card-footer mt-auto" style="display:flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             {% if m.googleCalendarEventId or m.dateMaintenance %}
                                 <a href="https://calendar.google.com/calendar/r/day/{{ m.dateMaintenance|date('Y/m/d') }}" target="_blank" class="btn-mat-outline d-flex align-items-center justify-content-center" style="border-color: #4285F4; color: #4285F4; width: 45px; padding: 8px 0;" title="Ouvrir Google Agenda"><i class="bi bi-google fs-6"></i></a>
                             {% endif %}
                             
                             <a href="{{ path('app_maintenance_show', {'id': m.idMaintenance}) }}" class="btn-mat-action" style="flex: 1; text-align: center; padding: 8px 0; font-size: 0.9rem;">Timeline</a>
                             
+                            <a href="{{ path('app_reclamation_new', {materielId: m.materiel.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #c0392b; color: #c0392b;" title="Signaler un retard de maintenance"><i class="bi bi-megaphone fs-6"></i></a>
+                            
                             <a href="{{ path('app_maintenance_edit', {'id': m.idMaintenance}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #e67e22; color: #e67e22;" title="Modifier"><i class="bi bi-pencil fs-6"></i></a>
+
+                            <a href="{{ path('app_admin_alertes_materiel', {'id': m.materiel.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center position-relative" style="width: 45px; padding: 8px 0; border-color: #f1c40f; color: #f1c40f;" title="Alertes du technicien">
+                                <i class="bi bi-bell-fill fs-6"></i>
+                                <span class="js-tech-alert-badge position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light shadow-sm {{ (totalUnreadCount ?? 0) > 0 ? '' : 'd-none' }}" style="font-size: 0.65rem;">
+                                    {{ totalUnreadCount ?? 0 }}
+                                </span>
+                            </a>
                             
                             <form method="post" action="{{ path('app_maintenance_delete', {'id': m.idMaintenance}) }}" onsubmit="return confirm('Supprimer cette intervention ?');" style="margin:0;">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_maintenance_' ~ m.idMaintenance) }}">

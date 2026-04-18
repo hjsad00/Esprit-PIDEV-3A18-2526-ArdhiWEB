@@ -136,6 +136,7 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                     <li><a class="dropdown-item py-2" href="{{ path('admin_materiel_edit', {id: m.id}) }}"><i class="bi bi-pencil me-2 text-primary"></i> Modifier</a></li>
+                                    <li><a class="dropdown-item py-2" href="{{ path('admin_maintenance_timeline', {'materiel_id': m.id}) }}"><i class="bi bi-clock-history me-2 text-info"></i> Historique</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form method="post" action="{{ path('admin_materiel_delete', {id: m.id}) }}" onsubmit="return confirm('Confirmer la suppression ?');">

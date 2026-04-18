@@ -68,4 +68,12 @@ class MaintenanceRepository extends ServiceEntityRepository
             'en_cours' => $enCours,
         ];
     }
+
+    public function findAllOrderedByDate(): array
+    {
+        return $this->createQueryBuilder('m')
+            ->orderBy('m.date_maintenance', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

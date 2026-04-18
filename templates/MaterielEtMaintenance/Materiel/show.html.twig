@@ -3,6 +3,8 @@
 
 {% block body_class %}materiel-theme{% endblock %}
 
+{% block flashes %}{# On désactive les flashes globaux pour les afficher localement dans le bloc d'urgence #}{% endblock %}
+
 {% block stylesheets %}
 <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
 <style>
@@ -49,6 +51,43 @@
   .badge-statut-en_cours { background: #fff8e1; color: #e65100; }
   .badge-statut-terminee { background: #e8f5e9; color: #2e7d32; }
   .badge-statut-annulee { background: #f5f5f5; color: #888; }
+  .badge-statut-attente_planification { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; }
+  .badge-statut-en_service { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+  .badge-statut-en_maintenance { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+  .badge-statut-reforme { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
+
+  .hours-card {
+    background: linear-gradient(135deg, #1a2d1b 0%, #2d4a1e 100%);
+    color: #fff;
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hours-card::after {
+    content: '\F639';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 5rem;
+    opacity: 0.1;
+  }
+  .ai-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-top: 5px solid #6366f1;
+    transition: all 0.3s ease;
+  }
+  .ai-card.loading { opacity: 0.7; pointer-events: none; }
+  .risk-badge { padding: 0.5rem 1rem; border-radius: 50px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; }
+  .risk-Faible { background: #e8f5e9; color: #2e7d32; }
+  .risk-Modéré { background: #fff3e0; color: #e65100; }
+  .risk-Élevé { background: #ffebee; color: #c62828; }
 </style>
 {% endblock %}
 
@@ -61,20 +100,64 @@
         <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:0.2rem;">
           <i class="bi bi-tractor me-2"></i>{{ materiel.nom }}
         </h1>
-        <p style="color:rgba(255,255,255,0.75);margin:0;">{{ materiel.type }} — {{ materiel.etat }}</p>
+        <p style="color:rgba(255,255,255,0.75);margin:0;">
+          {{ materiel.type }} — {{ materiel.etat }}
+          <span class="ms-2 badge badge-statut-{{ materiel.statut }}">{{ materiel.statut|replace({'_': ' '})|upper }}</span>
+        </p>
       </div>
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
         <a href="{{ path('app_materiel_index') }}" class="btn btn-outline-light btn-sm rounded-pill">
           <i class="bi bi-arrow-left me-1"></i> Retour
         </a>
+        <a href="{{ path('app_reclamation_new', {materielId: materiel.id}) }}" class="btn btn-sm rounded-pill btn-danger shadow-sm">
+          <i class="bi bi-megaphone-fill me-1"></i> Faire une réclamation
+        </a>
+        <a href="{{ path('app_admin_alertes_materiel', {id: materiel.id}) }}" class="btn btn-sm rounded-pill btn-warning shadow-sm position-relative">
+          <i class="bi bi-bell-fill me-1"></i> Alertes Technicien
+          {% if countUnread > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light shadow-sm">
+              {{ countUnread }}
+            </span>
+          {% endif %}
+        </a>
+      </div>
     </div>
 </div>
 
 <div class="py-4">
   <div class="row g-4">
     <div class="col-lg-5">
+      {# --- SECTION QR CODE --- #}
+      <div class="detail-card text-center" style="border-top: 5px solid #2d4a1e;">
+        <h3 class="text-start"><i class="bi bi-qr-code-scan me-2"></i>Identification QR</h3>
+        {% if materiel.qrCodePath %}
+            <div class="qr-container p-3 bg-white rounded-3 shadow-sm mb-3 d-inline-block border">
+                <img src="{{ asset(materiel.qrCodePath) }}" alt="QR Code" class="img-fluid" style="max-width: 150px;">
+            </div>
+            <div class="d-grid gap-2">
+                <a href="{{ asset(materiel.qrCodePath) }}" download="QR_Machine_{{ materiel.id }}.svg" class="btn btn-outline-dark btn-sm rounded-pill">
+                    <i class="bi bi-download me-1"></i>Télécharger le SVG
+                </a>
+                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <i class="bi bi-printer me-1"></i>Imprimer
+                </button>
+            </div>
+            <div class="mt-3 text-start">
+                <p class="small text-muted mb-0" style="line-height: 1.2;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Usage terrain :</strong> Scannable par n'importe quel smartphone pour signaler une panne instantanément.
+                </p>
+            </div>
+        {% else %}
+            <div class="py-4">
+                <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+                <p class="small text-muted mt-2">Génération du code...</p>
+            </div>
+        {% endif %}
+      </div>
+
       <div class="detail-card">
-        <h3>Informations</h3>
+        <h3>Informations Générales</h3>
         <div class="info-row"><span class="info-key">Nom</span><span class="info-val">{{ materiel.nom }}</span></div>
         <div class="info-row"><span class="info-key">Type</span><span class="info-val">{{ materiel.type }}</span></div>
         <div class="info-row">
@@ -85,11 +168,12 @@
           </span>
         </div>
         <div class="info-row"><span class="info-key">Date d'achat</span><span class="info-val">{{ materiel.dateAchat ? materiel.dateAchat|date('d/m/Y') : '—' }}</span></div>
-        <div class="info-row"><span class="info-key">Fréquence maintenance</span><span class="info-val">Tous les 6 mois (automatique)</span></div>
+        <div class="info-row"><span class="info-key">Seuil de maintenance</span><span class="info-val">{{ materiel.seuilMaintenanceHeures }} heures</span></div>
+        <div class="info-row"><span class="info-key">Fréquence temps</span><span class="info-val">Tous les 6 mois (automatique)</span></div>
       </div>
 
-      <div class="detail-card">
-        <h3>Maintenance</h3>
+       <div class="detail-card">
+        <h3>Calendrier & Dates</h3>
         <div class="info-row"><span class="info-key">Dernière maintenance</span><span class="info-val">{{ materiel.derniereMaintenance ? materiel.derniereMaintenance|date('d/m/Y') : '—' }}</span></div>
         <div class="info-row">
           <span class="info-key">Prochaine maintenance</span>
@@ -111,8 +195,158 @@
     </div>
 
     <div class="col-lg-7">
+      {# --- Compteur d'heures --- #}
+      <div class="hours-card shadow-sm mb-4">
+        <h3 class="text-white border-white mb-3" style="font-size: 0.9rem; opacity: 0.9;">Compteur d'heures d'utilisation</h3>
+        <div class="d-flex align-items-baseline gap-2 mb-3">
+          <span class="display-3 fw-bold">{{ materiel.heuresUtilisation }}</span>
+          <span class="fs-4 opacity-75">heures cumulées</span>
+        </div>
+        
+        {% if materiel.statut != 'reforme' %}
+        <form action="{{ path('app_materiel_update_hours', {id: materiel.id}) }}" method="POST" class="d-flex gap-2">
+          <input type="number" name="heures" value="{{ materiel.heuresUtilisation }}" min="{{ materiel.heuresUtilisation }}" class="form-control bg-white border-0" style="max-width: 150px;" placeholder="Nouvelles heures...">
+          <button type="submit" class="btn btn-success rounded-pill fw-bold px-4">Enregistrer les heures</button>
+        </form>
+        <p class="small mt-2 opacity-75">Saisissez la valeur lue sur le compteur de la machine.</p>
+        {% endif %}
+
+        {% set heuresDepuisRevision = materiel.heuresUtilisation - materiel.derniereMaintenanceHeures %}
+        {% set progress = (heuresDepuisRevision / materiel.seuilMaintenanceHeures * 100)|round %}
+        <div class="mt-3">
+            <div class="d-flex justify-content-between small opacity-75 mb-1">
+                <span>Progression : <strong>{{ heuresDepuisRevision }}h / {{ materiel.seuilMaintenanceHeures }}h</strong></span>
+                <span class="fw-bold">{{ progress }}%</span>
+            </div>
+            <div class="progress" style="height: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-{{ progress >= 90 ? 'danger' : (progress >= 75 ? 'warning' : 'success') }}" role="progressbar" style="width: {{ progress > 100 ? 100 : progress }}%"></div>
+            </div>
+        </div>
+        </div>
+
+      {# --- Cycle de Vie Workflow --- #}
+      <div class="detail-card border-start border-4 border-danger mb-4" style="background: #fffafa;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0 text-danger"><i class="bi bi-shield-exclamation me-2"></i>Cycle de Vie & Urgences</h3>
+            <span class="badge badge-statut-{{ materiel.statut }} fs-6">
+                <i class="bi bi-info-circle-fill me-1"></i> {{ materiel.statut|replace({'_': ' '})|upper }}
+            </span>
+        </div>
+
+        <div class="mb-4 text-muted small p-2 bg-light rounded border">
+            <i class="bi bi-cpu me-2 text-primary"></i> 
+            <strong>Gestion intelligente :</strong> Ce statut se met à jour automatiquement dès que l'Admin valide votre intervention ou le jour du rendez-vous.
+        </div>
+
+        <div class="row g-2">
+            {% if materiel.statut in ['en_maintenance', 'panne_signalee', 'attente_planification'] %}
+                <div class="col-12">
+                    <div class="btn-group w-100 shadow-sm">
+                        <button class="btn btn-{{ materiel.statut == 'panne_signalee' ? 'warning' : (materiel.statut == 'en_maintenance' ? 'success' : 'info') }} w-100 fw-bold" disabled>
+                            <i class="bi bi-info-circle-fill me-2"></i> 
+                            {% if materiel.statut == 'panne_signalee' %}
+                                Panne Signalée (En attente Admin)
+                            {% elseif materiel.statut == 'attente_planification' %}
+                                En Attente de Planification
+                            {% else %}
+                                Matériel en Maintenance
+                            {% endif %}
+                        </button>
+                    </div>
+                    <p class="small text-muted mt-2 text-center text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                        {% if materiel.statut == 'panne_signalee' %}
+                            <i class="bi bi-clock-history"></i> L'administrateur va traiter votre demande d'urgence.
+                        {% elseif materiel.statut == 'attente_planification' %}
+                            <i class="bi bi-calendar-event"></i> L'urgence a été refusée. Veuillez planifier une maintenance standard.
+                        {% else %}
+                            <i class="bi bi-tools"></i> Une intervention est en cours sur ce matériel.
+                        {% endif %}
+                    </p>
+                </div>
+            {% elseif workflow_can(materiel, 'mettre_en_maintenance') %}
+                <div class="col-12">
+                    {# Affichage local des erreurs de validation pour ce formulaire #}
+                    {% for message in app.flashes('danger') %}
+                        <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mb-3 py-2">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm">
+                        <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
+                        <label class="form-label fw-bold text-danger"><i class="bi bi-megaphone me-1"></i> Signaler une panne / Urgence</label>
+                        <textarea name="description" class="form-control mb-3" placeholder="Décrivez le problème ici pour l'administrateur..." rows="2"></textarea>
+                        <button type="submit" class="btn btn-danger w-100 shadow-sm fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> METTRE EN MAINTENANCE (URGENT)
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+            
+
+            {% if workflow_can(materiel, 'reformer') %}
+                <div class="col-md-6">
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'reformer'}) }}" method="POST" onsubmit="return confirm('Attention ! Cette action est irréversible. Réformer cette machine ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
+                        <button type="submit" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-trash me-2"></i> Réformer
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+      </div>
+        
+        {% if materiel.statut == 'reforme' %}
+            <div class="alert alert-secondary border-0 mt-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> Ce matériel a été retiré du parc actif.
+            </div>
+        {% endif %}
+
+      {# --- Diagnostic IA --- #}
+      <div class="ai-card shadow-sm" id="aiContainer">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="mb-0 text-indigo-600" style="color: #6366f1; border: none; padding: 0;">
+            <i class="bi bi-robot me-2"></i>Analyse Prédictive IA
+          </h3>
+          <button id="btnGenerateAI" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-stars me-1"></i> Générer l'analyse
+          </button>
+        </div>
+
+        <div id="aiPlaceholder" class="text-center py-4 text-muted">
+          <p class="mb-0 small italic">Cliquez sur le bouton pour obtenir une analyse de risque et des conseils de maintenance personnalisés par Gemini AI.</p>
+        </div>
+
+        <div id="aiResult" class="d-none">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div id="aiRiskBadge" class="risk-badge">FAIBLE</div>
+            <div class="flex-grow-1">
+              <div class="progress" style="height: 8px; background: #eee;">
+                <div id="aiRiskScore" class="progress-bar" role="progressbar" style="width: 25%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-light p-3 rounded border mb-3 small" id="aiAnalysisText" style="line-height: 1.5;"></div>
+          
+          <div class="mb-3">
+            <label class="fw-bold small text-uppercase text-muted mb-2 d-block">Conseils Experts :</label>
+            <ul class="list-unstyled mb-0" id="aiTips"></ul>
+          </div>
+
+          <div class="alert alert-info border-0 mb-0 py-2 small">
+             <i class="bi bi-lightning-fill me-1"></i> <strong>Prochaine étape :</strong> <span id="aiNextStep"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-2">
+    <div class="col-12">
       <div class="detail-card">
-        <h3>Historique des maintenances</h3>
+        <h3>Historique Complet des Interventions</h3>
         {% if materiel.maintenances|length > 0 %}
         <table class="table hist-table">
           <thead>
@@ -162,4 +396,69 @@
 </div>
 </div>
 </div>
+{% include 'MaterielEtMaintenance/materiel/_chatbot.html.twig' %}
+
+<script>
+document.getElementById('btnGenerateAI').addEventListener('click', function() {
+    const container = document.getElementById('aiContainer');
+    const btn = this;
+    const placeholder = document.getElementById('aiPlaceholder');
+    const result = document.getElementById('aiResult');
+
+    container.classList.add('loading');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyse en cours...';
+
+    fetch('{{ path('app_materiel_ia_analyse', {id: materiel.id}) }}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        container.classList.remove('loading');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Actualiser l\'analyse';
+
+        if (data.error) {
+            alert(data.message);
+            return;
+        }
+
+        placeholder.classList.add('d-none');
+        result.classList.remove('d-none');
+
+        // Update UI
+        const badge = document.getElementById('aiRiskBadge');
+        badge.textContent = data.risque;
+        badge.className = 'risk-badge risk-' + data.risque;
+
+        const progressBar = document.getElementById('aiRiskScore');
+        progressBar.style.width = data.score_risque + '%';
+        const barColor = data.score_risque > 70 ? 'bg-danger' : (data.score_risque > 40 ? 'bg-warning' : 'bg-success');
+        progressBar.className = 'progress-bar ' + barColor;
+
+        document.getElementById('aiAnalysisText').textContent = data.analyse;
+        
+        const tipsList = document.getElementById('aiTips');
+        tipsList.innerHTML = '';
+        data.conseils.forEach(tip => {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            li.innerHTML = '<i class="bi bi-check2-circle text-success me-2"></i>' + tip;
+            tipsList.appendChild(li);
+        });
+
+        document.getElementById('aiNextStep').textContent = data.prochaine_etape;
+    })
+    .catch(error => {
+        container.classList.remove('loading');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Générer l\'analyse';
+        console.error('Error:', error);
+        alert('Une erreur technique est survenue.');
+    });
+});
+</script>
 {% endblock %}
