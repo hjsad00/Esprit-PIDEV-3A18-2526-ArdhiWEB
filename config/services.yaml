@@ -19,9 +19,9 @@ services:
         bind:
             string $mailFrom: '%app.mail_from%'
             string $projectDir: '%kernel.project_dir%'
-            string $twilioSid: '%env(TWILIO_SID)%'
-            string $twilioToken: '%env(TWILIO_AUTH_TOKEN)%'
-            string $twilioFrom: '%env(TWILIO_FROM)%'
+            string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
+            string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
+            string $twilioFrom: '%env(MATERIEL_TWILIO_FROM)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
