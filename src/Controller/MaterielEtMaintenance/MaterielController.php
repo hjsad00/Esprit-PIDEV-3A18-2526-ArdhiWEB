@@ -114,7 +114,7 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function show(int $id, MaterielRepository $repo, QrCodeService $qrCodeService, EntityManagerInterface $em): Response
+    public function show(int $id, MaterielRepository $repo, QrCodeService $qrCodeService, EntityManagerInterface $em, \App\Repository\MaterielEtMaintenance\AlerteTechnicienRepository $alerteRepo): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
@@ -132,8 +132,11 @@ class MaterielController extends AbstractController
             $em->flush();
         }
 
+        $countUnread = $alerteRepo->count(['materiel' => $materiel, 'statut' => 'non_lu']);
+
         return $this->render('MaterielEtMaintenance/materiel/show.html.twig', [
             'materiel' => $materiel,
+            'countUnread' => $countUnread,
         ]);
     }
 

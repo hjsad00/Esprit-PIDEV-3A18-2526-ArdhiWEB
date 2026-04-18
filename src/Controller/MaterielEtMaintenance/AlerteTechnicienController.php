@@ -47,7 +47,7 @@ class AlerteTechnicienController extends AbstractController
      */
     #[Route('/consulter/materiel/{id}', name: 'app_admin_alertes_materiel', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
-    public function listForMateriel(Materiel $materiel, AlerteTechnicienRepository $repo): Response
+    public function listForMateriel(Materiel $materiel, AlerteTechnicienRepository $repo, EntityManagerInterface $em): Response
     {
         // Sécurité : Si l'utilisateur n'est pas ADMIN, il doit être le propriétaire du matériel
         if (!$this->isGranted('ROLE_ADMIN')) {
@@ -56,11 +56,35 @@ class AlerteTechnicienController extends AbstractController
              }
         }
 
+        // Marquage automatique comme lu si c'est le propriétaire ou l'admin qui consulte
+        $em->createQueryBuilder()
+            ->update(AlerteTechnicien::class, 'a')
+            ->set('a.statut', ':lu')
+            ->where('a.materiel = :materiel')
+            ->andWhere('a.statut = :non_lu')
+            ->setParameter('lu', 'lu')
+            ->setParameter('materiel', $materiel)
+            ->setParameter('non_lu', 'non_lu')
+            ->getQuery()
+            ->execute();
+
         $alertes = $repo->findBy(['materiel' => $materiel], ['dateSignalement' => 'DESC']);
 
         return $this->render('MaterielEtMaintenance/alerte_technicien/list_admin.html.twig', [
             'alertes' => $alertes,
             'materiel' => $materiel,
         ]);
+    }
+
+    /**
+     * API pour le rafraîchissement automatique (Polling).
+     * Renvoie le nombre total d'alertes non lues pour l'agriculteur connecté.
+     */
+    #[Route('/api/unread-count', name: 'app_alerte_technicien_count', methods: ['GET'])]
+    #[IsGranted('ROLE_AGRICULTEUR')]
+    public function getUnreadCount(AlerteTechnicienRepository $repo): Response
+    {
+        $count = $repo->countUnreadForAgriculteur($this->getUser()->getId());
+        return $this->json(['count' => $count]);
     }
 }

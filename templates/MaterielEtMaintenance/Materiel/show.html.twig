@@ -112,8 +112,13 @@
         <a href="{{ path('app_reclamation_new', {materielId: materiel.id}) }}" class="btn btn-sm rounded-pill btn-danger shadow-sm">
           <i class="bi bi-megaphone-fill me-1"></i> Faire une réclamation
         </a>
-        <a href="{{ path('app_admin_alertes_materiel', {id: materiel.id}) }}" class="btn btn-sm rounded-pill btn-warning shadow-sm">
+        <a href="{{ path('app_admin_alertes_materiel', {id: materiel.id}) }}" class="btn btn-sm rounded-pill btn-warning shadow-sm position-relative">
           <i class="bi bi-bell-fill me-1"></i> Alertes Technicien
+          {% if countUnread > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light shadow-sm">
+              {{ countUnread }}
+            </span>
+          {% endif %}
         </a>
       </div>
     </div>
