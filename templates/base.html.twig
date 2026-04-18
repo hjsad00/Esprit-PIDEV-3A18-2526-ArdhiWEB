@@ -122,8 +122,8 @@
           
           {% if app.user %}
           <!-- NOTIFICATIONS BELL -->
-          <li class="dropdown" id="notificationDropdownContainer">
-            <a href="#" class="d-flex align-items-center px-2" onclick="markNotificationsAsRead(event)">
+          <li class="dropdown" id="notificationDropdownContainer" onmouseenter="onBellHover()">
+            <a href="#" class="d-flex align-items-center px-2">
               <div style="position: relative;">
                 <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: white;"></i>
                 <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.55rem; padding: 0.25em 0.4em;">
@@ -256,12 +256,15 @@
 
             const notifs = data.notifications || [];
             if (notifs.length > 0) {
-                // Count unread
-                const unreadCount = notifs.filter(n => !n.isRead).length;
+                // Populate global IDs for hover logic
+                window.loadedNotifIds = notifs.map(n => n.id);
 
-                if (unreadCount > 0) {
+                const maxSeen = parseInt(localStorage.getItem('maxSeenNotifId_{{ app.user.id }}') || '0');
+                const badgeCount = notifs.filter(n => !n.isRead && n.id > maxSeen).length;
+
+                if (badgeCount > 0) {
                     badge.style.display = 'block';
-                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    badge.textContent = badgeCount > 99 ? '99+' : badgeCount;
                 } else {
                     badge.style.display = 'none';
                 }
@@ -275,12 +278,8 @@
                 notifs.forEach(n => {
                     const li = document.createElement('li');
                     li.className = 'notif-item';
-                    
-                    let link = '#';
-                    if (n.relatedType === 'POST') link = '/user-and-diag/community/' + n.relatedId;
-                    if (n.relatedType === 'TREATMENT') link = '/user-and-diag/treatment-plan/' + n.relatedId + '/details';
-                    if (n.relatedType === 'PREVENTION') link = '/user-and-diag/prevention-plan/' + n.relatedId + '/details';
-                    if (n.relatedType === 'DIAGNOSIS') link = '/user-and-diag/history';
+
+                    let link = '/user-and-diag/notifications/read-and-redirect/' + n.id;
 
                     let icon = 'bi-info-circle text-primary';
                     if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
@@ -311,32 +310,14 @@
         .catch(err => console.error("Could not fetch notifications", err));
     }
 
-    function markNotificationsAsRead(e) {
+    function onBellHover() {
         const badge = document.getElementById('notificationBadge');
         if (badge && badge.style.display !== 'none') {
-            fetch('{{ path("app_user_and_diag_notifications_mark_read") }}', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(() => {
-                badge.style.display = 'none';
-                // Find all unread items and grey them out visually
-                const list = document.getElementById('notificationList');
-                if (list) {
-                    const links = list.querySelectorAll('.notif-item a');
-                    links.forEach(a => {
-                        a.style.backgroundColor = 'transparent';
-                        a.style.opacity = '0.7';
-                        a.style.borderLeft = 'none';
-                        const textSpan = a.querySelector('div > span:first-child');
-                        if (textSpan) {
-                            textSpan.style.color = '#777';
-                            textSpan.style.fontWeight = 'normal';
-                        }
-                    });
-                }
-            })
-            .catch(err => console.error("Error marking read", err));
+            badge.style.display = 'none';
+            if (window.loadedNotifIds && window.loadedNotifIds.length > 0) {
+                const maxId = Math.max(...window.loadedNotifIds);
+                localStorage.setItem('maxSeenNotifId_{{ app.user.id }}', maxId);
+            }
         }
     }
 
