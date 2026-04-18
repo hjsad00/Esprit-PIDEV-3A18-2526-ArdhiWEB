@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la question - Communauté Ardhi{% endblock %}
+
+{% block body_class %}community-create-page{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/community-create.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<section class="create-hero">
+    <div class="create-card">
+        <nav aria-label="breadcrumb" class="mb-4 text-start">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_community') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Communauté</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Post</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Modifier</li>
+            </ol>
+        </nav>
+        <h2>Modifier votre question</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Titre</label>
+                <input type="text" name="title" value="{{ post.title }}" required>
+            </div>
+            <div class="form-group">
+                <label>Description détaillée</label>
+                <textarea name="description" required style="min-height: 150px;">{{ post.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Image jointe (optionnel, laisse ou remplace l'existante)</label>
+                {% if post.imageUrl %}
+                    <div style="margin-bottom: 15px;">
+                        <img src="{{ post.imageUrl }}" alt="Image actuelle" style="max-height: 150px; border-radius: 8px;">
+                    </div>
+                {% endif %}
+                <div class="file-zone" id="fileZone">
+                    <input type="file" name="image" accept="image/*" id="fileInput">
+                    <p>📷 Cliquez ou glissez une nouvelle image ici (remplacera l'ancienne)</p>
+                    <img id="imgPreview" class="preview" style="display:none" alt="Preview">
+                </div>
+            </div>
+            <button type="submit" class="btn-publish">Enregistrer les modifications</button>
+            <a href="{{ path('app_user_and_diag_community_detail', {'id': post.id}) }}" class="btn btn-secondary mt-3" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; border: none; padding: 12px; border-radius: 8px; text-decoration: none;">Annuler</a>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('imgPreview');
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

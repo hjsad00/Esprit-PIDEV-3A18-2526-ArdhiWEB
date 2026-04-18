@@ -57,6 +57,15 @@
                 <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy">
             {% endif %}
 
+            {% if app.user and post.user.id == app.user.id %}
+                <div class="post-owner-actions mt-3 mb-3">
+                    <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                    <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
+                        <button type="submit" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
+                    </form>
+                </div>
+            {% endif %}
+
             <div class="action-bar">
                 <button class="vote-btn {{ postVote == 'LIKE' ? 'active-like' : '' }}" id="btnLikePost" onclick="votePost('LIKE')">
                     👍 <span id="postLikes">{{ post.likes }}</span>
@@ -109,7 +118,11 @@
                             <button style="color:#fbc02d;font-size:11px;" onclick="reportComment({{ comment.id }})">🚩 Signaler</button>
                         {% endif %}
                         {% if is_granted('ROLE_MODERATOR') %}
-                            <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Supprimer</button>
+                            <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Mod Supprimer</button>
+                        {% endif %}
+                        {% if app.user and comment.user.id == app.user.id %}
+                            <button style="color:#64b5f6;font-size:11px;" onclick="editComment({{ comment.id }})">✏️ Éditer</button>
+                            <button style="color:#e53935;font-size:11px;" onclick="deleteComment({{ comment.id }})">🗑️ Supprimer</button>
                         {% endif %}
                     </div>
                 </div>
@@ -258,9 +271,46 @@
             return data;
         })
         .then(() => {
+            // Emulate the rendered comment insertion to avoid reload
+            const initialId = data.userName.charAt(0).toUpperCase();
+            
+            // Build the card HTML
+            const margin = replyingToId ? 35 : 0; // Simple approximation for UI
+            
+            const html = `
+                <div class="comment-card" style="margin-left: ${margin}px" data-id="${data.id}">
+                    <div class="comment-header">
+                        <div class="avatar-sm" style="background:#E0F2F1;color:#00695C">${initialId}</div>
+                        <span class="comment-author">
+                            <a href="#" class="text-decoration-none" style="color: inherit;">
+                                ${data.userName}
+                            </a>
+                        </span>
+                    </div>
+                    <div class="comment-body">${data.content}</div>
+                    <div class="comment-actions">
+                        <button onclick="voteComment(${data.id}, 'LIKE', this)">👍 <span>0</span></button>
+                        <button onclick="voteComment(${data.id}, 'DISLIKE', this)">👎 <span>0</span></button>
+                        <button onclick="replyTo(${data.id}, '${data.userName}')">Répondre</button>
+                        <button style="color:#64b5f6;font-size:11px;" onclick="editComment(${data.id})">✏️ Éditer</button>
+                        <button style="color:#e53935;font-size:11px;" onclick="deleteComment(${data.id})">🗑️ Supprimer</button>
+                    </div>
+                </div>
+            `;
+            
+            if (replyingToId) {
+                const parentCard = document.querySelector(`.comment-card[data-id="${replyingToId}"]`);
+                if (parentCard) {
+                    parentCard.insertAdjacentHTML('afterend', html);
+                } else {
+                    document.getElementById('commentsContainer').insertAdjacentHTML('beforeend', html);
+                }
+            } else {
+                document.getElementById('commentsContainer').insertAdjacentHTML('beforeend', html);
+            }
+
             txt.value = '';
             cancelReply();
-            location.reload(); // Reload to show threaded comment correctly
         })
         .catch(err => alert(err.message));
     }
@@ -306,6 +356,50 @@
         .then(d => {
             if (d.success) location.reload();
             else alert(d.error || 'Erreur');
+        });
+    }
+
+    // ── Edit Comment ──
+    function editComment(commentId) {
+        const card = document.querySelector(`.comment-card[data-id="${commentId}"]`);
+        const bodyEl = card.querySelector('.comment-body');
+        // A simple prompt for editing, strips out emojis which might be rendered as img tags if emojify filter does that, 
+        // but here we just grab innerText which should mostly be safe for simple edits.
+        const currentContent = bodyEl.innerText;
+        const newContent = prompt('Modifiez votre commentaire :', currentContent);
+
+        if (newContent !== null && newContent.trim() !== '' && newContent !== currentContent) {
+            fetch(`/user-and-diag/community/comment/${commentId}/edit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `content=${encodeURIComponent(newContent)}`
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    bodyEl.innerText = d.content;
+                } else {
+                    alert(d.error || 'Erreur');
+                }
+            });
+        }
+    }
+
+    // ── Delete Comment ──
+    function deleteComment(commentId) {
+        if (!confirm('Voulez-vous vraiment supprimer ce commentaire ?')) return;
+
+        fetch(`/user-and-diag/community/comment/${commentId}/delete`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                const card = document.querySelector(`.comment-card[data-id="${commentId}"]`);
+                if (card) card.remove();
+            } else {
+                alert(d.error || 'Erreur');
+            }
         });
     }
 

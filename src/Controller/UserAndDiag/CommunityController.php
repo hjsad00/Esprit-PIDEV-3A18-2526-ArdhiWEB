@@ -115,6 +115,83 @@ class CommunityController extends AbstractController
         return $this->render('UserAndDiag/community/create.html.twig');
     }
 
+    // ────────────────────── EDIT / DELETE POST ──────────────────────
+
+    #[Route('/{id}/edit', name: 'app_user_and_diag_community_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    public function editPost(
+        CommunityPost $post,
+        Request $request,
+        EntityManagerInterface $em,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService
+    ): Response {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($post->getUser()->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cette publication.');
+        }
+
+        if ($user->isBanned()) {
+            $this->addFlash('danger', '⛔ Action bloquée (compte banni).');
+            return $this->redirectToRoute('app_user_and_diag_community_detail', ['id' => $post->getId()]);
+        }
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $this->addFlash('danger', '🔇 Action bloquée (compte muet).');
+            return $this->redirectToRoute('app_user_and_diag_community_detail', ['id' => $post->getId()]);
+        }
+
+        if ($request->isMethod('POST')) {
+            $post->setTitle(trim($request->request->get('title', $post->getTitle())));
+            $post->setDescription(trim($request->request->get('description', $post->getDescription())));
+
+            $imageFile = $request->files->get('image');
+            if ($imageFile) {
+                $imgUrl = $imgBBService->uploadImage($imageFile);
+                if ($imgUrl) {
+                    $post->setImageUrl($imgUrl);
+                }
+            }
+
+            $em->flush();
+            $this->addFlash('success', 'Publication modifiée avec succès.');
+            return $this->redirectToRoute('app_user_and_diag_community_detail', ['id' => $post->getId()]);
+        }
+
+        return $this->render('UserAndDiag/community/edit.html.twig', [
+            'post' => $post,
+        ]);
+    }
+
+    #[Route('/{id}/delete', name: 'app_user_and_diag_community_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function deletePost(
+        CommunityPost $post,
+        EntityManagerInterface $em
+    ): Response {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($post->getUser()->getId() !== $user->getId() && !$this->isGranted('ROLE_MODERATOR')) {
+            throw $this->createAccessDeniedException('Non autorisé.');
+        }
+
+        if ($user->isBanned()) {
+            $this->addFlash('danger', '⛔ Action bloquée (compte banni).');
+            return $this->redirectToRoute('app_user_and_diag_community');
+        }
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            $this->addFlash('danger', '🔇 Action bloquée (compte muet).');
+            return $this->redirectToRoute('app_user_and_diag_community');
+        }
+
+        $em->remove($post);
+        $em->flush();
+
+        $this->addFlash('success', 'Publication supprimée.');
+        return $this->redirectToRoute('app_user_and_diag_community');
+    }
+
     // ────────────────────── POST DETAIL ───────────────────────
 
     #[Route('/{id}', name: 'app_user_and_diag_community_detail', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -166,6 +243,10 @@ class CommunityController extends AbstractController
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
 
+        if ($user->isBanned()) {
+            return $this->json(['error' => '⛔ Action bloquée (compte banni).'], 403);
+        }
+
         if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
             $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
             $reason = $latestMute ? ' Raison : ' . $latestMute : '';
@@ -212,6 +293,10 @@ class CommunityController extends AbstractController
     {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        if ($user->isBanned()) {
+            return $this->json(['error' => '⛔ Action bloquée (compte banni).'], 403);
+        }
 
         if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
             $latestMute = $auditRepo->findLatestMuteReasonForUser($user);
@@ -308,6 +393,59 @@ class CommunityController extends AbstractController
             'content' => $comment->getContent(),
             'date' => $comment->getCreatedAt()->format('d/m/Y H:i'),
         ]);
+    }
+
+    #[Route('/comment/{id}/edit', name: 'app_user_and_diag_community_edit_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function editComment(CommunityComment $comment, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($comment->getUser()->getId() !== $user->getId()) {
+            return $this->json(['error' => 'Non autorisé'], 403);
+        }
+
+        if ($user->isBanned()) {
+            return $this->json(['error' => 'Action bloquée (compte banni).'], 403);
+        }
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            return $this->json(['error' => 'Action bloquée (compte muet).'], 403);
+        }
+
+        $content = trim($request->request->get('content', ''));
+        if (!$content) {
+            return $this->json(['error' => 'Le contenu ne peut pas être vide.'], 400);
+        }
+
+        $comment->setContent($content);
+        $em->flush();
+
+        return $this->json(['success' => true, 'content' => $comment->getContent()]);
+    }
+
+    #[Route('/comment/{id}/delete', name: 'app_user_and_diag_community_delete_comment', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function deleteComment(CommunityComment $comment, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($comment->getUser()->getId() !== $user->getId() && !$this->isGranted('ROLE_MODERATOR')) {
+            return $this->json(['error' => 'Non autorisé'], 403);
+        }
+
+        if ($user->isBanned()) {
+            return $this->json(['error' => 'Action bloquée (compte banni).'], 403);
+        }
+
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+            return $this->json(['error' => 'Action bloquée (compte muet).'], 403);
+        }
+
+        $em->remove($comment);
+        $em->flush();
+
+        return $this->json(['success' => true]);
     }
 
     #[Route('/{id}/solve/{commentId}', name: 'app_user_and_diag_community_mark_solution', methods: ['POST'], requirements: ['id' => '\d+', 'commentId' => '\d+'])]
