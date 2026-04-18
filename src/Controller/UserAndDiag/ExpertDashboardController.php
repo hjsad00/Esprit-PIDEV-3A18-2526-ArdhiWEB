@@ -203,16 +203,16 @@ class ExpertDashboardController extends AbstractController
 
         if ($review->getTreatmentPlan()) {
             $task = new TreatmentTask();
-            $task->setTreatmentPlan($review->getTreatmentPlan());
             $task->setDayOffset($day);
             $task->setTaskDescription(substr($description, 0, 255));
             $task->setStatus('PENDING');
+            $review->getTreatmentPlan()->addTask($task);
             $em->persist($task);
         } elseif ($review->getPreventionPlan()) {
             $task = new PreventionTask();
-            $task->setPreventionPlan($review->getPreventionPlan());
             $task->setDayOffset($day);
             $task->setTaskDescription(substr($description, 0, 255));
+            $review->getPreventionPlan()->addTask($task);
             $em->persist($task);
         } else {
             return $this->json(['error' => 'Aucun plan associé à cette revue.'], 400);
