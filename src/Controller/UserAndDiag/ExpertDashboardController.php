@@ -127,6 +127,10 @@ class ExpertDashboardController extends AbstractController
         $review->setStatus('COMPLETED');
         $review->setUpdatedAt(new \DateTime());
 
+        if ($review->getDiagnostic()) {
+            $review->getDiagnostic()->setResultatIa($diseaseName);
+        }
+
         $em->flush();
 
         if ($review->getDiagnostic() && $review->getDiagnostic()->getUser()) {

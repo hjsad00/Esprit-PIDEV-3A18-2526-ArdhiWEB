@@ -99,7 +99,7 @@
 
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="/">Diagnostic IA</a></li>
+          <li><a href="{{ path('app_user_and_diag_hub') }}">Diagnostic IA</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
           <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
           <li>

@@ -10,6 +10,21 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ClientDashboardController extends AbstractController
 {
+    #[Route('/user-and-diag/hub', name: 'app_user_and_diag_hub', methods: ['GET'])]
+    public function hub(): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        if ($user->getRole() === 'AGRONOME') {
+            return $this->redirectToRoute('app_expert_dashboard');
+        }
+
+        return $this->redirectToRoute('app_client_dashboard');
+    }
+
     #[Route('/user-and-diag/dashboard', name: 'app_client_dashboard', methods: ['GET'])]
     public function index(
         Request $request,
