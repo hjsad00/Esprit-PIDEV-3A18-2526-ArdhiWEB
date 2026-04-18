@@ -42,6 +42,28 @@ class CommunityExtension extends AbstractExtension
             $text
         );
 
+        // Direct .gif URLs
+        $text = preg_replace(
+            '/(https?:\/\/[^\s"\'<>]+\.gif)(?:\?\S*)?/i',
+            '<img src="$1" style="max-width:100%; border-radius:12px; margin:12px 0; display:block;" loading="lazy" alt="GIF embed">',
+            $text
+        );
+
+        // Tenor GIFs
+        $text = preg_replace(
+            '/(?:https?:\/\/)?(?:www\.)?tenor\.com\/view\/[\w\-]+-(\d+)/i',
+            '<div class="tenor-gif-embed" data-postid="$1" data-share-method="host" data-aspect-ratio="1" data-width="100%" style="margin:12px 0;"><a href="https://tenor.com/view/$1">GIF</a></div>
+            <script type="text/javascript" async src="https://tenor.com/embed.js"></script>',
+            $text
+        );
+
+        // Giphy GIFs
+        $text = preg_replace(
+            '/(?:https?:\/\/)?(?:www\.)?giphy\.com\/gifs\/(?:.*-)?([a-zA-Z0-9]+)(?:\s|$|<)/i',
+            '<div style="width:100%;max-width:480px;margin:12px 0;"><div style="height:0;padding-bottom:100%;position:relative;"><iframe src="https://giphy.com/embed/$1" width="100%" height="100%" style="position:absolute;border:none;border-radius:12px;" class="giphy-embed" allowFullScreen></iframe></div></div>',
+            $text
+        );
+
         return $text;
     }
 
