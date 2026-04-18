@@ -60,11 +60,11 @@
             {% if app.user and post.user.id == app.user.id %}
                 <div class="post-owner-actions mt-3 mb-3">
                     {% if app.user.banned %}
-                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white; opacity:0.5;">✏️ Modifier</a>
-                        <button onclick="alert('⛔ Votre compte a été banni de la communauté.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px; opacity:0.5;">🗑️ Supprimer</button>
+                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <button onclick="alert('⛔ Votre compte a été banni de la communauté.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
                     {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
-                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white; opacity:0.5;">✏️ Modifier</a>
-                        <button onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Suppression impossible.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px; opacity:0.5;">🗑️ Supprimer</button>
+                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <button onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Suppression impossible.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
                     {% else %}
                         <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; margin-right: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
                         <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
@@ -81,6 +81,15 @@
                 <button class="vote-btn {{ postVote == 'DISLIKE' ? 'active-dislike' : '' }}" id="btnDislikePost" onclick="votePost('DISLIKE')">
                     👎 <span id="postDislikes">{{ post.dislikes }}</span>
                 </button>
+                {% if app.user and post.user.id != app.user.id %}
+                    {% if app.user.banned %}
+                        <button class="vote-btn" onclick="alert('⛔ Votre compte a été banni de la communauté.')" style="font-size:12px;">🚩 Signaler</button>
+                    {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                        <button class="vote-btn" onclick="alert('🔇 Vous êtes muet. Signalement impossible.')" style="font-size:12px;">🚩 Signaler</button>
+                    {% else %}
+                        <button class="vote-btn" onclick="reportPost({{ post.id }})" style="font-size:12px;">🚩 Signaler</button>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
 
@@ -363,6 +372,23 @@
         const ta = document.getElementById('txtComment');
         ta.value += ' ' + code + ' ';
         ta.focus();
+    }
+
+    // ── Report Post ──
+    function reportPost(postId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/${postId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
     }
 
     // ── Mod: Delete Comment ──
