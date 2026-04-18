@@ -611,15 +611,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     // Provide a nice premium glow to draw their eye immediately
-                    const originalBorder = target.style.borderColor;
-                    target.style.border = '1px solid #64b5f6';
-                    target.style.boxShadow = '0 0 15px rgba(100, 181, 246, 0.4)';
-                    target.style.transition = 'all 2s ease-out';
+                    const originalBorder = target.style.border;
+                    const originalBg = target.style.backgroundColor;
+                    const originalShadow = target.style.boxShadow;
+                    
+                    target.style.border = '2px solid #29b6f6';
+                    target.style.backgroundColor = 'rgba(41, 182, 246, 0.1)';
+                    target.style.boxShadow = '0 0 25px rgba(41, 182, 246, 0.6), inset 0 0 15px rgba(41, 182, 246, 0.1)';
+                    target.style.transition = 'all 0.3s ease-out';
                     
                     setTimeout(() => {
-                        target.style.border = originalBorder;
-                        target.style.boxShadow = 'none';
-                    }, 3000);
+                        target.style.transition = 'all 3s ease-in-out';
+                        target.style.border = originalBorder || '';
+                        target.style.backgroundColor = originalBg || '';
+                        target.style.boxShadow = originalShadow || 'none';
+                    }, 2500);
                 }, 400); // 400ms delay ensures browser layout has completely rendered
             }
         }
