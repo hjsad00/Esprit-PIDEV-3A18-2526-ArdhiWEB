@@ -75,15 +75,25 @@
                 </p>
               {% endif %}
 
-              {# Rating placeholder #}
+              {# Rating display dynamique #}
               <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-star" style="color:#fdcb6e;"></i>
-                <i class="bi bi-star" style="color:#fdcb6e;"></i>
-                <i class="bi bi-star" style="color:#fdcb6e;"></i>
-                <i class="bi bi-star" style="color:#fdcb6e;"></i>
-                <i class="bi bi-star" style="color:#fdcb6e;"></i>
-                <span style="font-family:'Inter',sans-serif;font-size:14px;color:#636e72;font-weight:600;">0,0</span>
-                <span style="font-family:'Inter',sans-serif;font-size:13px;color:#b2bec3;">(0 avis)</span>
+                {% set fullStars = avgRating|round(0, 'floor') %}
+                {% set halfStar = (avgRating - fullStars) >= 0.5 ? 1 : 0 %}
+
+                <div style="display:flex; gap:2px;">
+                    {% for i in 1..5 %}
+                        {% if i <= fullStars %}
+                            <i class="bi bi-star-fill" style="color:#fdcb6e;"></i>
+                        {% elseif i == fullStars + 1 and halfStar %}
+                            <i class="bi bi-star-half" style="color:#fdcb6e;"></i>
+                        {% else %}
+                            <i class="bi bi-star" style="color:#fdcb6e; opacity: 0.4;"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <span style="font-family:'Inter',sans-serif;font-size:14px;color:#636e72;font-weight:600;margin-left:5px;">{{ avgRating|number_format(1, ',', ' ') }}</span>
+                <span style="font-family:'Inter',sans-serif;font-size:13px;color:#b2bec3;">({{ nbAvis }} avis)</span>
               </div>
 
               <hr style="border-color:rgba(0,0,0,0.06);">
@@ -137,12 +147,104 @@
                 <button style="margin-top:22px;display:inline-flex;align-items:center;gap:8px;padding:14px 36px;background:#4a8c3f;color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;border-radius:50px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(74,140,63,0.4);transition:all 0.3s;" onmouseover="this.style.background='#5ea851';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#4a8c3f';this.style.transform='translateY(0)'">
                   <i class="bi bi-cart-plus"></i> Ajouter au panier
                 </button>
+
+                {# Download QR Code Button #}
+                <a href="{{ asset(qrPath) }}" download="QR_{{ produit.nom|replace({' ': '_'}) }}.svg" style="margin-top:22px;display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:transparent;color:#4a8c3f;border:2px solid #4a8c3f;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;border-radius:50px;cursor:pointer;transition:all 0.3s;text-decoration:none;" onmouseover="this.style.background='rgba(74,140,63,0.05)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='transparent';this.style.transform='translateY(0)'">
+                  <i class="bi bi-qr-code-scan"></i> QR Code
+                </a>
               </div>
 
             </div>
           </div>
 
         </div>
+      </div>
+    {# ============================
+       REVIEWS SECTION (Google Play Style)
+       ============================ #}
+    <section style="background:#fff;padding:60px 0 100px;border-top:1px solid #f0f0f0;">
+      <div class="container">
+        
+        <h4 style="font-family:'Inter',sans-serif;font-weight:800;font-size:20px;color:#2d3436;margin-bottom:32px;">Avis sur le produit</h4>
+
+        <div class="row g-5 align-items-center mb-5">
+            {# Summary Stats #}
+            <div class="col-lg-4 text-center">
+                <div style="font-family:'Inter',sans-serif;font-size:72px;font-weight:800;color:#2d3436;line-height:1;">{{ avgRating|number_format(1, ',', ' ') }}</div>
+                <div style="margin:12px 0;">
+                    {% set fs = avgRating|round(0, 'floor') %}
+                    {% set hs = (avgRating - fs) >= 0.5 ? 1 : 0 %}
+                    {% for i in range(1, 5) %}
+                        {% if i <= fs %}
+                            <i class="bi bi-star-fill" style="color:#4a8c3f;font-size:18px;"></i>
+                        {% elseif hs and i == fs + 1 %}
+                            <i class="bi bi-star-half" style="color:#4a8c3f;font-size:18px;"></i>
+                        {% else %}
+                            <i class="bi bi-star" style="color:#e0e0e0;font-size:18px;"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-size:14px;color:#636e72;font-weight:500;">{{ nbAvis }} avis au total</div>
+            </div>
+
+            {# Distribution Bars #}
+            <div class="col-lg-6">
+                {% for i in 5..1 %}
+                    {% set count = starsStats[i] ?? 0 %}
+                    {% set percent = nbAvis > 0 ? (count / nbAvis * 100) : 0 %}
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:#636e72;width:10px;">{{ i }}</span>
+                        <div style="flex:1;height:10px;background:#f0f0f0;border-radius:10px;overflow:hidden;">
+                            <div style="width:{{ percent }}%;height:100%;background:#4a8c3f;border-radius:10px;"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <hr style="border-color:rgba(0,0,0,0.06);margin-bottom:40px;">
+
+        {# Reviews List #}
+        <div class="row">
+            <div class="col-lg-10">
+                {% if avis|length > 0 %}
+                    {% for av in avis %}
+                        <div style="margin-bottom:48px; border-bottom: 1px solid #f9faf9; padding-bottom: 40px;">
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                                <div style="width:44px;height:44px;background:#e8f5e9;color:#4a8c3f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;text-transform:uppercase;flex-shrink:0;">
+                                    {{ av.user.prenom|first|upper }}{{ av.user.nom|first|upper }}
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <h6 style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:#2d3436;margin:0;">
+                                            {{ av.user.prenom }} {{ av.user.nom }}
+                                        </h6>
+                                        <div style="color:#b2bec3;cursor:pointer;"><i class="bi bi-three-dots-vertical"></i></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <div style="display:flex;gap:2px;">
+                                            {% for i in range(1, 5) %}
+                                                <i class="bi bi-star-fill" style="color:{{ i <= av.note ? '#4a8c3f' : '#e0e0e0' }};font-size:11px;"></i>
+                                            {% endfor %}
+                                        </div>
+                                        <span style="color:#b2bec3;font-size:12px;font-weight:500;">{{ av.dateAvis|date('d F Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="font-family:'Inter',sans-serif;font-size:14px;color:#636e72;line-height:1.7;margin-left:57px;">
+                                {{ av.commentaire }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5" style="background:#fcfcfc;border-radius:20px;border:1px dashed #e0e0e0;">
+                        <i class="bi bi-chat-left-text" style="font-size:40px;color:#b2bec3;display:block;margin-bottom:15px;"></i>
+                        <p style="font-family:'Inter',sans-serif;color:#636e72;">Aucun avis pour le moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
       </div>
     </section>
 
