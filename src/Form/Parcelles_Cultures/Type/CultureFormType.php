@@ -16,20 +16,10 @@ class CultureFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('type_culture', ChoiceType::class, [
+            ->add('type_culture', TextType::class, [
                 'label' => 'Type de culture',
-                'choices' => [
-                    'Blé' => 'ble',
-                    'Orge' => 'orge',
-                    'Maïs' => 'mais',
-                    'Tomate' => 'tomate',
-                    'Oignon' => 'oignon',
-                    'Pomme de terre' => 'pomme_de_terre',
-                    'Laitue' => 'laitue',
-                    'Carotte' => 'carotte',
-                    'Autre' => 'autre',
-                ],
-                'required' => true
+                'required' => true,
+                'attr' => ['placeholder' => 'Ex: Blé, Maïs, Tomate']
             ])
             ->add('saison', ChoiceType::class, [
                 'label' => 'Saison',
