@@ -2,6 +2,7 @@
 
 namespace App\Controller\UserAndDiag;
 
+use App\Entity\UserAndDiag\CommunityAnalyticsDaily;
 use App\Repository\UserAndDiag\CommunityPostRepository;
 use App\Repository\UserAndDiag\CommunityCommentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,6 +30,8 @@ class AnalyticsController extends AbstractController
         $postsMetrics = $data['posts'] ?? [];
         $commentsMetrics = $data['comments'] ?? [];
 
+        $today = new \DateTime('today');
+
         // Process POST analytics
         foreach ($postsMetrics as $postId => $metrics) {
             $post = $postRepo->find($postId);
@@ -44,6 +47,32 @@ class AnalyticsController extends AbstractController
                 }
                 if (isset($metrics['views'])) {
                     $post->setViews(($post->getViews() ?: 0) + $metrics['views']);
+                }
+                if (isset($metrics['completedReads'])) {
+                    $post->setCompletedReads(($post->getCompletedReads() ?: 0) + $metrics['completedReads']);
+                }
+                if (isset($metrics['mediaClicks'])) {
+                    $post->setMediaClicks(($post->getMediaClicks() ?: 0) + $metrics['mediaClicks']);
+                }
+
+                if (isset($metrics['views']) || isset($metrics['readTime'])) {
+                    // Update exact daily log
+                    $dailyLog = $em->getRepository(CommunityAnalyticsDaily::class)->findOneBy([
+                        'post' => $post,
+                        'date' => $today
+                    ]);
+                    if (!$dailyLog) {
+                        $dailyLog = new CommunityAnalyticsDaily();
+                        $dailyLog->setPost($post);
+                        $dailyLog->setDate($today);
+                        $em->persist($dailyLog);
+                    }
+                    if (isset($metrics['views'])) {
+                        $dailyLog->setViews($dailyLog->getViews() + $metrics['views']);
+                    }
+                    if (isset($metrics['readTime'])) {
+                        $dailyLog->setReadTime($dailyLog->getReadTime() + $metrics['readTime']);
+                    }
                 }
             }
         }

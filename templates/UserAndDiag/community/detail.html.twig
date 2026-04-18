@@ -54,7 +54,7 @@
             <div class="post-body">{{ post.description|emojify|social_embed }}</div>
 
             {% if post.imageUrl %}
-                <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy">
+                <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy" data-post-id="{{ post.id }}">
             {% endif %}
 
             {% if app.user and post.user.id == app.user.id %}
@@ -75,26 +75,10 @@
             {% endif %}
 
             {% if app.user and post.user.id == app.user.id %}
-                <div class="advanced-stats mt-3 p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                    <h6 style="color: #64b5f6; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">📊 Statistiques Avancées</h6>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap; color: #fff;">
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.views|default(0) }}</div>
-                            <div style="font-size: 11px; opacity: 0.7;">Vues (Page Detail)</div>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.feedImpressions|default(0) }}</div>
-                            <div style="font-size: 11px; opacity: 0.7;">Impressions (Feed)</div>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime < 60 ? post.totalReadTime ~ 's' : (post.totalReadTime / 60)|round(1, 'floor') ~ 'm') : '0s' }}</div>
-                            <div style="font-size: 11px; opacity: 0.7;">Temps de lecture complet</div>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 20px; font-weight: bold;">{{ post.totalFeedDwellTime is defined and post.totalFeedDwellTime > 0 ? (post.totalFeedDwellTime < 60 ? post.totalFeedDwellTime ~ 's' : (post.totalFeedDwellTime / 60)|round(1, 'floor') ~ 'm') : '0s' }}</div>
-                            <div style="font-size: 11px; opacity: 0.7;">Temps d'arrêt (Feed)</div>
-                        </div>
-                    </div>
+                <div class="mt-3">
+                    <button class="btn btn-sm" onclick="document.getElementById('analyticsModal').style.display='flex';" style="background: rgba(100,181,246,0.1); border: 1px solid rgba(100,181,246,0.3); color: #64b5f6; border-radius: 20px; padding: 6px 16px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                        📊 Outils d'Analyse
+                    </button>
                 </div>
             {% endif %}
 
@@ -115,6 +99,8 @@
                     {% endif %}
                 {% endif %}
             </div>
+            
+            <div data-track-type="completed-read" data-track-id="{{ post.id }}" style="height: 1px; visibility: hidden; margin-top: 20px;"></div>
         </div>
 
         {# ─── Comments ─── #}
@@ -239,10 +225,134 @@
         <span class="ep" onclick="insertEmote(':mushroom:')" title=":mushroom:">🍄</span>
     </div>
 </div>
+
+{% if app.user and post.user.id == app.user.id %}
+{# ─── Analytics Modal ─── #}
+<div id="analyticsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; padding: 20px; backdrop-filter: blur(5px);">
+    <div style="background:#1e1e1e; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+        <div style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #fff; font-size: 1.25rem;">📊 Statistiques Avancées</h3>
+            <button onclick="document.getElementById('analyticsModal').style.display='none';" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding: 24px;">
+            {% set impressions = post.feedImpressions|default(0) %}
+            {% set views = post.views|default(0) %}
+            {% set ctr = impressions > 0 ? ((views / impressions) * 100)|round(1) : 0 %}
+            {% set completedReads = post.completedReads|default(0) %}
+            {% set completionRate = views > 0 ? ((completedReads / views) * 100)|round(1) : 0 %}
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 28px; font-weight: bold; color: #fff;">{{ impressions }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Impressions du fil</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 28px; font-weight: bold; color: #fff;">{{ views }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Lectures complètes</div>
+                </div>
+                <div style="background: rgba(100,181,246,0.1); padding: 16px; border-radius: 12px; border: 1px solid #64b5f633;">
+                    <div style="font-size: 28px; font-weight: bold; color: #64b5f6;">{{ ctr }}%</div>
+                    <div style="font-size: 12px; color: #64b5f6cc; text-transform: uppercase;">Taux de clics (CTR)</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime < 60 ? post.totalReadTime ~ 's' : (post.totalReadTime / 60)|round(1, 'floor') ~ 'm ' ~ (post.totalReadTime % 60) ~ 's') : '0s' }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Temps d'attention total</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ completionRate }}%</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Lu jusqu'à la fin</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ post.mediaClicks|default(0) }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Clics sur les images</div>
+                </div>
+            </div>
+
+            <h4 style="color: #fff; font-size: 1rem; margin-bottom: 16px;">Vues au fil du temps</h4>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block javascripts %}
 <script src="{{ asset('assets/js/UserAndDiag/community-analytics.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if app.user and post.user.id == app.user.id %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('analyticsChart');
+    if (ctx && {{ chartLabels|length }} > 0) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ chartLabels|json_encode|raw }},
+                datasets: [{
+                    label: 'Vues',
+                    data: {{ chartViews|json_encode|raw }},
+                    borderColor: '#64b5f6',
+                    backgroundColor: 'rgba(100, 181, 246, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#1e1e1e',
+                    pointBorderColor: '#64b5f6',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { stepSize: 1, color: 'rgba(255,255,255,0.5)' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'rgba(255,255,255,0.5)' }
+                    }
+                }
+            }
+        });
+    } else if (ctx) {
+        // Render a flat zero graph if no data yet to keep UI nice
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Aujourd\'hui'],
+                datasets: [{
+                    label: 'Vues',
+                    data: [0],
+                    borderColor: '#64b5f6',
+                    backgroundColor: 'rgba(100, 181, 246, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1, color: 'rgba(255,255,255,0.5)' } },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 <script>
     let replyingToId = null;
     const postId = {{ post.id }};

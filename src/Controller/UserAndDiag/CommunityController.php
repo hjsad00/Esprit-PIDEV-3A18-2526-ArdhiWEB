@@ -50,6 +50,29 @@ class CommunityController extends AbstractController
             ];
         }
 
+        // Trending algorithm sort
+        usort($feedData, function ($a, $b) {
+            $pA = $a['post'];
+            $pB = $b['post'];
+
+            // Score = (Likes * 10) + (CTR percentage) + (Dwell time in minutes)
+            $ctrA = $pA->getFeedImpressions() > 0 ? ($pA->getViews() / $pA->getFeedImpressions() * 100) : 0;
+            $scoreA = ($pA->getLikes() * 10) + $ctrA + ($pA->getTotalFeedDwellTime() / 60);
+
+            $ctrB = $pB->getFeedImpressions() > 0 ? ($pB->getViews() / $pB->getFeedImpressions() * 100) : 0;
+            $scoreB = ($pB->getLikes() * 10) + $ctrB + ($pB->getTotalFeedDwellTime() / 60);
+
+            // Also heavily weight recency so old posts decay
+            // Decay: -1 point per hour old
+            $hoursA = (time() - $pA->getCreatedAt()->getTimestamp()) / 3600;
+            $hoursB = (time() - $pB->getCreatedAt()->getTimestamp()) / 3600;
+
+            $scoreA -= $hoursA;
+            $scoreB -= $hoursB;
+
+            return $scoreB <=> $scoreA;
+        });
+
         $latestMuteReason = null;
         if ($user && $user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
             $latestMuteReason = $auditRepo->findLatestMuteReasonForUser($user);
@@ -198,7 +221,8 @@ class CommunityController extends AbstractController
     public function detail(
         CommunityPost $post,
         CommunityCommentRepository $commentRepo,
-        CommunityLikeRepository $likeRepo
+        CommunityLikeRepository $likeRepo,
+        EntityManagerInterface $em
     ): Response {
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
@@ -225,6 +249,24 @@ class CommunityController extends AbstractController
             }
         }
 
+        $chartLabels = [];
+        $chartViews = [];
+        if ($user && $post->getUser()->getId() === $user->getId()) {
+            $logs = $em->getRepository(\App\Entity\UserAndDiag\CommunityAnalyticsDaily::class)
+                ->createQueryBuilder('a')
+                ->where('a.post = :post')
+                ->setParameter('post', $post)
+                ->orderBy('a.date', 'ASC')
+                ->setMaxResults(14)
+                ->getQuery()
+                ->getResult();
+
+            foreach ($logs as $log) {
+                $chartLabels[] = $log->getDate()->format('d/m');
+                $chartViews[] = $log->getViews();
+            }
+        }
+
         return $this->render('UserAndDiag/community/detail.html.twig', [
             'post' => $post,
             'postVote' => $postVote ? $postVote->getVoteType() : null,
@@ -232,6 +274,8 @@ class CommunityController extends AbstractController
             'childrenMap' => $childrenMap,
             'commentVotes' => $commentVotes,
             'commentCount' => count($comments),
+            'chartLabels' => $chartLabels,
+            'chartViews' => $chartViews,
         ]);
     }
 

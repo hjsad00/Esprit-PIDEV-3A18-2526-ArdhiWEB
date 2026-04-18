@@ -56,6 +56,12 @@ class CommunityPost
     #[ORM\Column(nullable: true, options: ["default" => 0])]
     private ?int $totalFeedDwellTime = 0;
 
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $completedReads = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $mediaClicks = 0;
+
     public function __construct()
     {
         $this->created_at = new \DateTime();
@@ -206,6 +212,28 @@ class CommunityPost
     public function setTotalFeedDwellTime(?int $totalFeedDwellTime): static
     {
         $this->totalFeedDwellTime = $totalFeedDwellTime;
+        return $this;
+    }
+
+    public function getCompletedReads(): ?int
+    {
+        return $this->completedReads;
+    }
+
+    public function setCompletedReads(?int $completedReads): static
+    {
+        $this->completedReads = $completedReads;
+        return $this;
+    }
+
+    public function getMediaClicks(): ?int
+    {
+        return $this->mediaClicks;
+    }
+
+    public function setMediaClicks(?int $mediaClicks): static
+    {
+        $this->mediaClicks = $mediaClicks;
         return $this;
     }
 }

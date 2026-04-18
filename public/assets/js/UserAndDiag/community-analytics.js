@@ -48,6 +48,11 @@ class AnalyticsTracker {
                             el.removeAttribute('data-track-type');
                             el.dataset.trackType = 'post-detail-read';
                             this.visibleElements.get(el).type = 'post-detail-read';
+                        } else if (el.dataset.trackType === 'completed-read') {
+                            this._incrementStat('posts', el.dataset.trackId, 'completedReads', 1);
+                            el.removeAttribute('data-track-type');
+                            this.observer.unobserve(el);
+                            this.visibleElements.delete(el);
                         }
                     }
                 } else {
@@ -166,4 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-observe elements with data-track-type
     window.communityTracker.observe('[data-track-type]');
+
+    // Track media clicks
+    document.addEventListener('click', (e) => {
+        const img = e.target.closest('.post-image');
+        if (img && img.dataset.postId) {
+            window.communityTracker._incrementStat('posts', img.dataset.postId, 'mediaClicks', 1);
+            window.communityTracker.sendBeacon(); // force sync for immediate click
+        }
+    });
 });
