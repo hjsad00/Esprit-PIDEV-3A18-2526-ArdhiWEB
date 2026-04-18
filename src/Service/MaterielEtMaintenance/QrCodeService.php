@@ -54,7 +54,7 @@ class QrCodeService
         // Nom du fichier basé sur le token (extension .svg)
         $fileName = 'qr-' . $token . '.svg';
         $directory = $this->projectDir . '/public/uploads/qrcodes/';
-        
+
         if (!is_dir($directory)) {
             mkdir($directory, 0777, true);
         }

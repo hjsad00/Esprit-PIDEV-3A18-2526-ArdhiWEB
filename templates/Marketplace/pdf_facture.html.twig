@@ -582,7 +582,8 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width:46%;">Article</th>
+                        <th class="c" style="width:10%;">QR</th>
+                        <th style="width:36%;">Article</th>
                         <th class="c" style="width:12%;">Qté</th>
                         <th class="r" style="width:18%;">Prix unit.</th>
                         <th class="r" style="width:24%;">Sous-total</th>
@@ -593,6 +594,13 @@
                     {% for detail in commande.details %}
                         {% set totalItems = totalItems + detail.sousTotal %}
                         <tr>
+                            <td class="c">
+                                {% if detail.produit and productQrCodes[detail.produit.id] is defined %}
+                                    <img src="{{ absolute_url(asset(productQrCodes[detail.produit.id])) }}" style="width: 40px; height: 40px;">
+                                {% else %}
+                                    —
+                                 {% endif %}
+                            </td>
                             <td>
                                 <div class="prod-name">{{ detail.produit ? detail.produit.nom : 'Produit retiré' }}</div>
                             </td>

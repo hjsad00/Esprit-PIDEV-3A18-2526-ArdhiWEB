@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CommandeRepository::class)]
 #[ORM\Table(name: 'commande')]
+#[ORM\HasLifecycleCallbacks]
 class Commande
 {
     #[ORM\Id]
@@ -51,6 +52,12 @@ class Commande
 
     #[ORM\Column(name: 'montantRemise', type: Types::FLOAT, options: ['default' => 0])]
     private float $montantRemise = 0;
+
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    private ?string $qrCodeToken = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $qrCodePath = null;
 
     // ==================== CONSTRUCTOR ====================
 
@@ -191,6 +198,36 @@ class Commande
     {
         $this->montantRemise = $montantRemise;
         return $this;
+    }
+
+    public function getQrCodeToken(): ?string
+    {
+        return $this->qrCodeToken;
+    }
+
+    public function setQrCodeToken(?string $qrCodeToken): self
+    {
+        $this->qrCodeToken = $qrCodeToken;
+        return $this;
+    }
+
+    public function getQrCodePath(): ?string
+    {
+        return $this->qrCodePath;
+    }
+
+    public function setQrCodePath(?string $qrCodePath): self
+    {
+        $this->qrCodePath = $qrCodePath;
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function generateToken(): void
+    {
+        if (null === $this->qrCodeToken) {
+            $this->qrCodeToken = bin2hex(random_bytes(16));
+        }
     }
 
     // ==================== HELPER METHODS ====================

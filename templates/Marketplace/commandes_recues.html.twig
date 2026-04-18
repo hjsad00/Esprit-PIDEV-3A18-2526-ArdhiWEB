@@ -370,23 +370,23 @@
                   {% endif %}
 
                   {# Actions vendeur #}
-                  <div class="cmd-actions" id="cmd-actions-{{ commande.id }}">
-                    {% if etat == 'en_attente' %}
-                      <button class="cmd-action-btn btn-ship" onclick="updateStatus({{ commande.id }}, 'en_cours')">
-                        <i class="bi bi-truck"></i> Expédier
+                    <div class="cmd-actions" id="cmd-actions-{{ commande.id }}">
+                      {% if etat == 'en_attente' %}
+                        <button class="cmd-action-btn btn-ship" onclick="updateStatus({{ commande.id }}, 'en_cours')">
+                          <i class="bi bi-truck"></i> Expédier
+                        </button>
+                      {% elseif etat == 'en_cours' %}
+                        <button class="cmd-action-btn btn-deliver" onclick="updateStatus({{ commande.id }}, 'livree')">
+                          <i class="bi bi-check-circle"></i> Marquer livrée
+                        </button>
+                      {% endif %}
+                      <button class="cmd-action-btn btn-details" onclick="openDetails({{ commande.id }})">
+                        <i class="bi bi-eye-fill"></i> Détails
                       </button>
-                      <button class="cmd-action-btn btn-cancel" onclick="updateStatus({{ commande.id }}, 'annulee')">
-                        <i class="bi bi-x-lg"></i> Annuler
-                      </button>
-                    {% elseif etat == 'en_cours' %}
-                      <button class="cmd-action-btn btn-deliver" onclick="updateStatus({{ commande.id }}, 'livree')">
-                        <i class="bi bi-check-circle"></i> Marquer livrée
-                      </button>
-                    {% endif %}
-                    <button class="cmd-action-btn btn-details" onclick="openDetails({{ commande.id }})">
-                      <i class="bi bi-eye-fill"></i> Détails
-                    </button>
-                  </div>
+                      <a href="{{ path('app_marketplace_commande_pdf', {id: commande.id}) }}" class="cmd-action-btn btn-details" style="border-color: #2e7d32; color: #2e7d32;">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Facture
+                      </a>
+                    </div>
                 </div>
               {% endfor %}
             </div>
@@ -573,15 +573,13 @@ async function openDetails(id) {
     title.textContent = `Commande #${cmd.id} — ${cmd.date}`;
     total.textContent = `${cmd.total} DT`;
 
-    // Affichage des frais de livraison
-    const deliveryRow = document.getElementById('modal-delivery-row');
-    const deliveryCost = document.getElementById('modal-delivery-cost');
     if (cmd.fraisLivraison && cmd.fraisLivraison !== "0,00") {
       deliveryRow.style.display = 'block';
       deliveryCost.textContent = cmd.fraisLivraison;
     } else {
       deliveryRow.style.display = 'none';
     }
+
 
     // Affichage de la remise (Coupon)
     const discountRow = document.getElementById('modal-discount-row');
