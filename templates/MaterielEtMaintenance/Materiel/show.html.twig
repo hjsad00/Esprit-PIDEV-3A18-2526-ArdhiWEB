@@ -55,6 +55,7 @@
   .badge-statut-en_service { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
   .badge-statut-en_maintenance { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
   .badge-statut-reforme { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
+  .badge-statut-en_vente { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
 
   .hours-card {
     background: linear-gradient(135deg, #1a2d1b 0%, #2d4a1e 100%);
@@ -294,14 +295,30 @@
                     </form>
                 </div>
             {% endif %}
+
+            {% if workflow_can(materiel, 'mettre_en_vente') %}
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-success w-100 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalMettreEnVente">
+                        <i class="bi bi-shop me-2"></i> Mettre en vente
+                    </button>
+                </div>
+            {% endif %}
         </div>
       </div>
         
+        {% if materiel.statut == 'en_vente' %}
+            <div class="alert alert-success border-0 mt-3 shadow-sm">
+                <i class="bi bi-shop-window me-2"></i> <strong>Ce matériel est actuellement en vente sur le Marketplace.</strong>
+                <a href="{{ path('app_marketplace_mes_produits') }}" class="alert-link ms-2">Voir mes produits →</a>
+            </div>
+        {% endif %}
+
         {% if materiel.statut == 'reforme' %}
             <div class="alert alert-secondary border-0 mt-3">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> Ce matériel a été retiré du parc actif.
             </div>
         {% endif %}
+
 
       {# --- Diagnostic IA --- #}
       <div class="ai-card shadow-sm" id="aiContainer">
@@ -461,4 +478,94 @@ document.getElementById('btnGenerateAI').addEventListener('click', function() {
     });
 });
 </script>
+
+{# ===== MODAL : Mettre en Vente ===== #}
+{% if workflow_can(materiel, 'mettre_en_vente') %}
+<div class="modal fade" id="modalMettreEnVente" tabindex="-1" aria-labelledby="modalMettreEnVenteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 18px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2d4a1e 0%, #4a7c3f 100%); color: #fff; border: none;">
+                <h5 class="modal-title fw-bold" id="modalMettreEnVenteLabel">
+                    <i class="bi bi-shop me-2"></i> Mettre ce matériel en vente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form action="{{ path('app_materiel_mettre_en_vente', {id: materiel.id}) }}" method="POST">
+                <input type="hidden" name="_token" value="{{ csrf_token('vente_' ~ materiel.id) }}">
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        {# Colonne gauche #}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-uppercase small text-muted">Nom du produit</label>
+                                <input type="text" class="form-control" value="{{ materiel.nom }}" readonly 
+                                       style="background: #f8f9fa; font-weight: 600; border: 1px solid #dee2e6;">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-uppercase small text-muted">Description *</label>
+                                <textarea name="description" class="form-control" rows="4" required
+                                          placeholder="Décrivez l'état de votre matériel, ses caractéristiques, heures d'utilisation, raison de la vente..."
+                                          style="border: 1px solid #dee2e6;"></textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-uppercase small text-muted">Prix (DT) *</label>
+                                    <input type="number" name="prix" class="form-control" step="0.01" min="0.1" required 
+                                           placeholder="Ex: 15000"
+                                           style="border: 1px solid #dee2e6;">
+                                    <small class="text-muted"><i class="bi bi-info-circle"></i> En Dinar Tunisien (DT)</small>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-uppercase small text-muted">Stock</label>
+                                    <input type="number" class="form-control" value="1" readonly 
+                                           style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Colonne droite #}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-uppercase small text-muted">Catégorie</label>
+                                <input type="text" class="form-control" value="{{ materiel.type }}" readonly 
+                                       style="background: #f8f9fa; font-weight: 600; border: 1px solid #dee2e6;">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-uppercase small text-muted">Remise / Solde</label>
+                                <input type="text" class="form-control" value="Aucune remise" readonly 
+                                       style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                            </div>
+
+                            {% if materiel.image %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-uppercase small text-muted">Image du matériel</label>
+                                <div class="border rounded p-2 text-center" style="background: #f8f9fa;">
+                                    <img src="{{ asset('uploads/materiel/' ~ materiel.image) }}" alt="{{ materiel.nom }}" 
+                                         class="img-fluid rounded" style="max-height: 150px; object-fit: cover;">
+                                    <p class="small text-muted mt-1 mb-0"><i class="bi bi-check-circle text-success"></i> Image récupérée automatiquement</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="alert alert-info border-0 py-2 mb-0" style="font-size: 0.85rem;">
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                Le matériel sera visible sur le <strong>Marketplace Ardhi</strong> dès la validation.
+                                Son statut passera à <strong>"En vente"</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #eee; background: #fafafa;">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-shop me-2"></i> Confirmer la mise en vente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
+

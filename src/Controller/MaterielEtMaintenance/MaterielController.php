@@ -258,7 +258,83 @@ class MaterielController extends AbstractController
         return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
     }
 
+    #[Route('/{id}/mettre-en-vente', name: 'mettre_en_vente', methods: ['POST'])]
+    public function mettreEnVente(
+        int $id,
+        Request $request,
+        MaterielRepository $repo,
+        WorkflowInterface $materielLifecycleStateMachine,
+        EntityManagerInterface $em,
+        ValidatorInterface $validator
+    ): Response
+    {
+        $materiel = $this->getMaterielOwnedByUser($id, $repo);
+
+        if (!$this->isCsrfTokenValid('vente_' . $id, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token invalide.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        if (!$materielLifecycleStateMachine->can($materiel, 'mettre_en_vente')) {
+            $this->addFlash('danger', 'Ce matériel ne peut pas être mis en vente dans son état actuel.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        $description = trim($request->request->get('description', ''));
+        $prix = (float) $request->request->get('prix', 0);
+
+        if (empty($description)) {
+            $this->addFlash('danger', 'La description est obligatoire pour mettre en vente.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        if ($prix <= 0) {
+            $this->addFlash('danger', 'Le prix doit être supérieur à 0.');
+            return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+        }
+
+        $categorieMap = [
+            'Tracteur' => 'Outillage', 'Moissonneuse' => 'Outillage',
+            'Semoir' => 'Outillage', 'Pulvérisateur' => 'Outillage',
+            'Charrue' => 'Outillage', 'Herse' => 'Outillage', 'Autre' => 'Autre',
+        ];
+
+        $produit = new \App\Entity\Marketplace\Produits();
+        $produit->setNom($materiel->getNom());
+        $produit->setDescription($description);
+        $produit->setPrix($prix);
+        $produit->setQuantiteStock(1);
+        $produit->setCategorie($categorieMap[$materiel->getType()] ?? 'Outillage');
+        $produit->setUniteMesure('Piece');
+        $produit->setRemise(0);
+        $produit->setTypeRemise(null);
+        $produit->setVisible(true);
+        $produit->setVisibleAdmin(true);
+        $produit->setUser($this->getUser());
+        $produit->setMateriel($materiel);
+
+        if ($materiel->getImage()) {
+            $srcPath = $this->getParameter('kernel.project_dir') . '/public/uploads/materiel/' . $materiel->getImage();
+            if (file_exists($srcPath)) {
+                $ext = pathinfo($materiel->getImage(), PATHINFO_EXTENSION);
+                $newFilename = 'materiel-' . $materiel->getId() . '-' . uniqid() . '.' . $ext;
+                $destPath = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $newFilename;
+                copy($srcPath, $destPath);
+                $produit->setImage($newFilename);
+            }
+        }
+
+        $materielLifecycleStateMachine->apply($materiel, 'mettre_en_vente');
+
+        $em->persist($produit);
+        $em->flush();
+
+        $this->addFlash('success', '🎉 Votre matériel "' . $materiel->getNom() . '" est maintenant en vente sur le Marketplace !');
+        return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
+    }
+
     #[Route('/{id}/heures', name: 'update_hours', methods: ['POST'])]
+
     public function updateHours(int $id, Request $request, MaterielRepository $repo, EntityManagerInterface $em): Response
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);

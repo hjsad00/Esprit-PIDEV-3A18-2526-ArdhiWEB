@@ -72,6 +72,10 @@ class Produits
     #[ORM\Column(name: 'visible_admin', type: Types::BOOLEAN, options: ["default" => true])]
     private bool $visibleAdmin = true;
 
+    #[ORM\ManyToOne(targetEntity: \App\Entity\MaterielEtMaintenance\Materiel::class)]
+    #[ORM\JoinColumn(name: 'materiel_id', referencedColumnName: 'id_materiel', nullable: true)]
+    private ?\App\Entity\MaterielEtMaintenance\Materiel $materiel = null;
+
     // Virtual fields hydrated at runtime (not persisted)
     private float $averageRating = 0.0;
     private int $reviewsCount = 0;
@@ -237,7 +241,19 @@ class Produits
         return $this;
     }
 
+    public function getMateriel(): ?\App\Entity\MaterielEtMaintenance\Materiel
+    {
+        return $this->materiel;
+    }
+
+    public function setMateriel(?\App\Entity\MaterielEtMaintenance\Materiel $materiel): static
+    {
+        $this->materiel = $materiel;
+        return $this;
+    }
+
     // ==================== VALIDATION CALLBACK (Remise) ====================
+
 
     /**
      * Validation conditionnelle de la remise selon son type.
