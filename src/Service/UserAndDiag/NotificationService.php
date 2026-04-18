@@ -15,12 +15,25 @@ class NotificationService
         $this->em = $em;
     }
 
-    public function notifyExpertReview(User $agriculteur, int $reviewId, string $reviewType): void
+    public function notifyExpertReview(User $agriculteur, \App\Entity\UserAndDiag\Review $review): void
     {
-        $typeLabel = $reviewType === 'DIAGNOSIS' ? 'diagnostic' : 'suivi';
+        $typeLabel = $review->getReviewType() === 'DIAGNOSIS' ? 'diagnostic' : 'suivi';
         $message = sprintf("Un agronome a répondu à votre demande de %s.", $typeLabel);
 
-        $this->createNotification($agriculteur, 'REVIEW', $message, $reviewId, 'REVIEW');
+        $relatedId = null;
+        $relatedType = 'DIAGNOSIS';
+
+        if ($review->getReviewType() === 'PROGRESS' || $review->getReviewType() === 'PREVENTION') {
+            if ($review->getTreatmentPlan()) {
+                $relatedId = $review->getTreatmentPlan()->getId();
+                $relatedType = 'TREATMENT';
+            } elseif ($review->getPreventionPlan()) {
+                $relatedId = $review->getPreventionPlan()->getId();
+                $relatedType = 'PREVENTION';
+            }
+        }
+
+        $this->createNotification($agriculteur, 'REVIEW', $message, $relatedId, $relatedType);
     }
 
     public function notifyPostLike(User $postAuthor, string $likerName, int $postId): void

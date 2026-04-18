@@ -130,7 +130,7 @@ class ExpertDashboardController extends AbstractController
         $em->flush();
 
         if ($review->getDiagnostic() && $review->getDiagnostic()->getUser()) {
-            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review->getId(), 'DIAGNOSIS');
+            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review);
         }
 
         return $this->json(['success' => true, 'message' => 'Avis diagnostic soumis avec succès !']);
@@ -173,7 +173,7 @@ class ExpertDashboardController extends AbstractController
         $em->flush();
 
         if ($review->getDiagnostic() && $review->getDiagnostic()->getUser()) {
-            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review->getId(), 'PROGRESS');
+            $notificationService->notifyExpertReview($review->getDiagnostic()->getUser(), $review);
         }
 
         $msg = $verdict === 'HEALED' ? 'Plan marqué comme résolu et terminé !' : 'Avis de suivi soumis !';

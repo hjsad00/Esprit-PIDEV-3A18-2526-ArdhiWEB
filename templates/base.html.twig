@@ -278,7 +278,9 @@
                     
                     let link = '#';
                     if (n.relatedType === 'POST') link = '/user-and-diag/community/' + n.relatedId;
-                    if (n.relatedType === 'REVIEW') link = '/user-and-diag/client-dashboard';
+                    if (n.relatedType === 'TREATMENT') link = '/user-and-diag/treatment-plan/' + n.relatedId + '/details';
+                    if (n.relatedType === 'PREVENTION') link = '/user-and-diag/prevention-plan/' + n.relatedId + '/details';
+                    if (n.relatedType === 'DIAGNOSIS') link = '/user-and-diag/history';
 
                     let icon = 'bi-info-circle text-primary';
                     if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
