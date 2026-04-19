@@ -461,7 +461,7 @@
             <div class="top3-card {{ i == 0 ? 'gold' : (i == 1 ? 'silver' : 'bronze') }}">
                 <div class="top3-medal">{{ i == 0 ? '🥇' : (i == 1 ? '🥈' : '🥉') }}</div>
                 <div class="top3-name">{{ perf.nomEmploye }}</div>
-                <div class="top3-score">{{ perf.score }} {{ 'employe.perf_page.pts'|trans }} — {{ perf.appreciation }}</div>
+<div class="top3-score">{{ perf.score }} {{ 'employe.perf_page.pts'|trans }} — {{ perf.appreciation }}</div>
             </div>
             {% endfor %}
         </div>
@@ -489,10 +489,10 @@
                     <th class="center">#</th>
                     <th>{{ 'employe.perf_page.employee'|trans }}</th>
                     <th class="center">{{ 'employe.perf_page.total'|trans }}</th>
-                    <th class="center">✅ {{ 'employe.perf_page.completed'|trans }}</th>
-                    <th class="center">⚠️ {{ 'employe.perf_page.delayed'|trans }}</th>
+<th class="center">✅ {{ 'employe.perf_page.completed'|trans }}</th>
+<th class="center">⚠️ {{ 'employe.perf_page.delayed'|trans }}</th>
                     <th>{{ 'employe.perf_page.score'|trans }}</th>
-                    <th class="center">{{ 'employe.perf_page.appreciation'|trans }}</th>
+<th class="center">{{ 'employe.perf_page.appreciation'|trans }}</th>
                     <th class="center">{{ 'employe.perf_page.tasks'|trans }}</th>
                     <th class="center">{{ 'employe.perf_page.action'|trans }}</th>
                 </tr>
@@ -533,10 +533,10 @@
                     <div class="score-bar-wrap">
                         <div class="score-bar">
                             <div class="score-bar-fill"
-                                 style="width:{{ perf.score }}%;background:{{ perf.couleur }}">
+style="width:{{ perf.score }}%;background:{{ perf.couleur }}">
                             </div>
                         </div>
-                        <span class="score-value" style="color:{{ perf.couleur }}">
+<span class="score-value" style="color:{{ perf.couleur }}">
                             {{ perf.score }}
                         </span>
                     </div>
@@ -544,14 +544,14 @@
 
                 {# Badge appréciation (colAppreciation Java) #}
                 <td class="center">
-                    <span class="badge-apprec" style="background:{{ perf.couleur }}">
-                        {{ perf.emoji }} {{ perf.appreciation }}
+<span class="badge-apprec" style="background:{{ perf.couleur }}">
+{{ perf.emoji }} {{ perf.appreciation }}
                     </span>
                 </td>
 
                 {# Statut T:x | R:x (colStatut Java) #}
                 <td class="center">
-                    <span class="statut-taches" style="color:{{ perf.couleur }}">
+<span class="statut-taches" style="color:{{ perf.couleur }}">
                         T:{{ perf.tachesTerminees }} | R:{{ perf.tachesEnRetard }}
                     </span>
                 </td>
@@ -559,7 +559,7 @@
                 {# Bouton détails (handleVoirDetails Java) #}
                 <td class="center">
                     <button class="btn-details" onclick="event.stopPropagation();voirDetails({{ perf.idEmploye }})">
-                        👁 {{ 'employe.perf_page.details'|trans }}
+👁 {{ 'employe.perf_page.details'|trans }}
                     </button>
                 </td>
             </tr>
@@ -608,7 +608,7 @@ function voirDetails(idEmploye) {
         .then(perf => {
             content.innerHTML = buildModalHTML(perf);
         })
-        .catch(() => {
+.catch(() => {
             content.innerHTML = '<div style="padding:40px;text-align:center;color:#e74c3c">❌ Erreur de chargement</div>';
         });
 }
@@ -632,7 +632,7 @@ function buildModalHTML(p) {
             <div class="modal-score-circle">${Math.round(p.score)}</div>
             <div>
                 <div class="modal-emp-name">${p.nomEmploye}</div>
-                <div class="modal-apprec">${p.emoji} ${p.appreciation}</div>
+<div class="modal-apprec">${p.emoji} ${p.appreciation}</div>
                 <div class="modal-taux">{{ 'employe.perf_page.success_rate'|trans|e('js') }} ${p.tauxReussite}%</div>
             </div>
         </div>
@@ -652,7 +652,7 @@ function buildModalHTML(p) {
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">✅</span>
                 <div>
-                    <div class="modal-stat-label">{{ 'employe.perf_page.completed'|trans|e('js') }}</div>
+<div class="modal-stat-label">{{ 'employe.perf_page.completed'|trans|e('js') }}</div>
                     <div class="modal-stat-value" style="color:#27ae60">${p.tachesTerminees} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
@@ -666,14 +666,14 @@ function buildModalHTML(p) {
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">⏰</span>
                 <div>
-                    <div class="modal-stat-label">{{ 'employe.perf_page.delayed'|trans|e('js') }}</div>
+<div class="modal-stat-label">{{ 'employe.perf_page.delayed'|trans|e('js') }}</div>
                     <div class="modal-stat-value" style="color:#e74c3c">${p.tachesEnRetard} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
             <div class="modal-stat-item">
                 <span class="modal-stat-icon">❌</span>
                 <div>
-                    <div class="modal-stat-label">{{ 'employe.perf_page.canceled'|trans|e('js') }}</div>
+<div class="modal-stat-label">{{ 'employe.perf_page.canceled'|trans|e('js') }}</div>
                     <div class="modal-stat-value" style="color:#95a5a6">${p.tachesAnnulees} {{ 'employe.perf_page.tasks_count'|trans|e('js') }}</div>
                 </div>
             </div>
@@ -690,17 +690,17 @@ function buildModalHTML(p) {
         <div class="modal-score-bar-wrap">
             <div class="modal-score-bar">
                 <div class="modal-score-bar-fill"
-                     style="width:${p.score}%;background:${p.couleur}">
+style="width:${p.score}%;background:${p.couleur}">
                 </div>
             </div>
             <div class="modal-score-labels">
                 <span>0</span>
-                <span style="color:${p.couleur};font-weight:700">${p.score}/100</span>
+<span style="color:${p.couleur};font-weight:700">${p.score}/100</span>
                 <span>100</span>
             </div>
         </div>
 
-        <div class="modal-section-title">⏱ {{ 'employe.perf_page.completion_time'|trans|e('js') }}</div>
+<div class="modal-section-title">⏱ {{ 'employe.perf_page.completion_time'|trans|e('js') }}</div>
         <div class="modal-stat-item" style="max-width:260px">
             <span class="modal-stat-icon">📅</span>
             <div>
