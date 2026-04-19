@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app.request.locale }}" {{ app.request.locale == 'ar' ? 'dir="rtl"' : '' }}>
+<html lang="fr">
 
 <head>
   <meta charset="utf-8">
@@ -25,8 +25,7 @@
   <!-- Main CSS File -->
   <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
   
-  
-
+  {% block stylesheets %}{% endblock %}
 
   <style>
     /* Correction Ultime Header - Priorité Maximale */
@@ -39,14 +38,8 @@
       backdrop-filter: none !important;
     }
 
-    /* Texte et titres en Blanc pour Ardhi */
-    body.premium-header-active #header.header .sitename {
-      color: #ffffff !important;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
-      opacity: 1 !important;
-      font-weight: 700 !important;
-    }
-    
+    /* Texte et titres en Blanc pur */
+    body.premium-header-active #header.header .sitename,
     body.premium-header-active #header.header .navmenu ul li a {
       color: #ffffff !important;
       text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
@@ -91,48 +84,7 @@
     [class*='diagnostic-container'] h1, [class*='diagnostic-container'] h2, [class*='diagnostic-container'] h3, [class*='diagnostic-container'] h4, [class*='diagnostic-container'] h5, [class*='diagnostic-container'] h6 {
       color: #ffffff !important;
     }
-
-    /* RTL Support */
-    html[dir="rtl"] body {
-      text-align: right;
-    }
-    html[dir="rtl"] .me-2, html[dir="rtl"] .ms-auto, html[dir="rtl"] .ps-3, html[dir="rtl"] .pe-3 {
-      /* Flip basic bootstrap padding/margins if needed */
-    }
-
-    /* Language Switcher */
-    .lang-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff !important;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      margin-left: 6px;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    .lang-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-    .lang-btn.active-lang {
-      background: #2ecc71;
-      border: 1px solid #27ae60;
-      color: #fff !important;
-      box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-    }
-    
-    html[dir="rtl"] .lang-btn {
-      margin-left: 0;
-      margin-right: 6px;
-    }
   </style>
-  {% block stylesheets %}{% endblock %}
 </head>
 
 <body class="{% block body_class %}index-page{% endblock %} premium-header-active">
@@ -150,24 +102,21 @@
           <li><a href="{{ path('app_user_and_diag_hub') }}">Diagnostic IA</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
           <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
-          <li><a href="/">{{ 'dashboard.nav.diagnostic'|trans|default('Diagnostic IA') }}</a></li>
-          <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">{{ 'dashboard.nav.marketplace'|trans|default('Marketplace') }}</a></li>
-          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">{{ 'dashboard.nav.maintenance'|trans|default('Matériel & Maintenance') }}</a></li>
           <li>
             {% if is_granted('ROLE_AGRICULTEUR') %}
-              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">{{ 'dashboard.nav.cultures'|trans|default('Cultures') }}</a>
+              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
             {% elseif is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">{{ 'dashboard.nav.cultures'|trans|default('Cultures') }}</a>
+              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
             {% else %}
-              <a href="#">{{ 'dashboard.nav.cultures'|trans|default('Cultures') }}</a>
+              <a href="#">Cultures</a>
             {% endif %}
           </li>
-          <li><a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">{{ 'dashboard.nav.events'|trans|default('Évènements') }}</a></li>
+          <li><a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a></li>
           <li>
             {% if is_granted('ROLE_AGRICULTEUR') %}
-              <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">{{ 'dashboard.nav.employees'|trans|default('Employés') }}</a>
+              <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">Employés</a>
             {% else %}
-              <a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">{{ 'dashboard.nav.employees'|trans|default('Employés') }}</a>
+              <a href="{{ path('employe_index') }}" class="{{ app.request.get('_route') starts with 'employe' ? 'active' : '' }}">Employés</a>
             {% endif %}
           </li>
           
@@ -188,17 +137,6 @@
             </ul>
           </li>
 
-          <!-- Language Switcher -->
-          <li class="d-flex align-items-center px-3" style="gap: 5px;">
-            <a href="{{ path('change_locale', {'locale': 'fr'}) }}" class="lang-btn {{ app.request.locale == 'fr' ? 'active-lang' : '' }}">Fr</a>
-            <a href="{{ path('change_locale', {'locale': 'en'}) }}" class="lang-btn {{ app.request.locale == 'en' ? 'active-lang' : '' }}">En</a>
-            <a href="{{ path('change_locale', {'locale': 'ar'}) }}" class="lang-btn {{ app.request.locale == 'ar' ? 'active-lang' : '' }}">Ar</a>
-          </li>
-
-          {% set current_route = app.request.get('_route')|default('') %}
-          {% if current_route in ['app_materiel_et_maintenance'] or current_route starts with 'app_materiel_' or current_route starts with 'app_maintenance_' or current_route starts with 'app_notification_maintenance_' or current_route starts with 'app_reclamation_' or current_route starts with 'admin_materiel' or current_route starts with 'admin_maintenance' or current_route starts with 'admin_reclamation' %}
-            {{ render(controller('App\\Controller\\MaterielEtMaintenance\\NotificationMaintenanceController::renderBell')) }}
-          {% endif %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
             <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
               {% if app.user.avatar %}
@@ -209,14 +147,11 @@
             </div></a>
             <ul>
               <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              <li><a href="{{ path('app_reclamation_index') }}">Mes Réclamations</a></li>
               <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
-              <li><a href="{{ path('app_profile') }}">{{ 'employe.col.id'|trans|default('Mon Profil') }} {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              <li><a href="{{ path('app_logout') }}">{{ 'common.close'|trans|default('Déconnexion') }}</a></li>
             </ul>
           </li>
           {% else %}
-          <li><a href="{{ path('app_login') }}" class="nav-cta-btn">{{ 'common.save'|trans|default('Se connecter') }}</a></li>
+          <li><a href="{{ path('app_login') }}" class="nav-cta-btn">Se connecter</a></li>
           {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -226,7 +161,6 @@
   </header>
 
   <main class="main" style="min-height: 70vh;">
-    {% block flashes %}
     {% if app.flashes|length > 0 %}
       <div class="container mt-3">
         {% for label, messages in app.flashes %}
@@ -241,7 +175,6 @@
         {% endfor %}
       </div>
     {% endif %}
-    {% endblock %}
 
     {% block body %}{% endblock %}
   </main>
