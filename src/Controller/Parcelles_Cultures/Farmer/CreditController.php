@@ -106,11 +106,14 @@ class CreditController extends AbstractController
     }
 
     #[Route('/{id}/export-pdf', name: 'export_pdf', methods: ['GET'])]
-    public function exportPdf(CreditDossier $dossier): Response
+    public function exportPdf(CreditDossier $dossier, Request $request): Response
     {
         $this->denyAccessUnlessGranted('view', $dossier);
 
-        $pdf = $this->pdfService->exporterDossierCreditPdf($dossier);
+        // Récupérer la locale du paramètre de requête, sinon utiliser la locale actuelle
+        $locale = $request->query->get('locale', 'fr');
+        
+        $pdf = $this->pdfService->exporterDossierCreditPdf($dossier, locale: $locale);
 
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
