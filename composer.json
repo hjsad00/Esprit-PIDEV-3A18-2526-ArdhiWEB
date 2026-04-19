@@ -13,7 +13,6 @@
     "dompdf/dompdf": "^3.1",
     "endroid/qr-code": "^6.0",
     "google/apiclient": "^2.19",
-    "karser/karser-recaptcha3-bundle": "*",
     "knplabs/knp-paginator-bundle": "*",
     "knplabs/knp-time-bundle": "*",
     "phpdocumentor/reflection-docblock": "^5.2",

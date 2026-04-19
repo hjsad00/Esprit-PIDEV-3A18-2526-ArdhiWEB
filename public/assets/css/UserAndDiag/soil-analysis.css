@@ -1,0 +1,619 @@
+/* ================================================================
+   SOIL ANALYSIS PAGE — Virtual Soil 3D Profile
+   ================================================================ */
+
+.soil-wrapper {
+    position: relative;
+    min-height: 100vh;
+    padding-top: 80px;
+    background: linear-gradient(135deg, #04040e, #080818, #04100d);
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────── */
+.soil-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(0, 0, 0, 0.62);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    position: relative;
+    z-index: 20;
+    flex-wrap: wrap;
+}
+
+.soil-topbar .btn-back {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 5px 11px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.soil-topbar .btn-back:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.soil-topbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.soil-topbar .brand-icon {
+    font-size: 18px;
+}
+
+.soil-topbar .brand-sub {
+    color: rgba(255, 255, 255, 0.36);
+    font-size: 8.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.soil-topbar .brand-title {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 0 0 7px rgba(39, 220, 100, 0.22);
+}
+
+.soil-topbar .spacer {
+    flex-grow: 1;
+}
+
+.soil-topbar .status-badge {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    background: rgba(39, 174, 96, 0.13);
+    border: 1px solid rgba(39, 174, 96, 0.38);
+    border-radius: 18px;
+    padding: 3px 10px;
+    font-size: 10.5px;
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+.soil-topbar .status-badge .dot {
+    font-size: 7px;
+    color: #27ae60;
+}
+
+.soil-topbar .view-toggle {
+    display: none;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.soil-topbar .view-toggle button {
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 4px 11px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    transition: all 0.2s;
+}
+
+.soil-topbar .view-toggle button.active {
+    background: rgba(39, 174, 96, 0.55);
+    color: #fff;
+}
+
+.soil-topbar .btn-export {
+    display: none;
+    background: rgba(52, 152, 219, 0.18);
+    color: #5dade2;
+    border: 1px solid rgba(52, 152, 219, 0.32);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 6px 11px;
+    font-size: 11px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.soil-topbar .btn-export:hover {
+    background: rgba(52, 152, 219, 0.32);
+}
+
+.soil-topbar .btn-analyze {
+    background: linear-gradient(to bottom right, #27ae60, #1e8449);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px;
+    cursor: pointer;
+    padding: 7px 15px;
+    font-weight: bold;
+    font-size: 12px;
+    box-shadow: 0 2px 10px rgba(39, 174, 96, 0.48);
+    transition: all 0.2s;
+    animation: pulse-glow 2.2s ease-in-out infinite alternate;
+}
+
+.soil-topbar .btn-analyze:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(39, 174, 96, 0.6);
+}
+
+.soil-topbar .btn-analyze:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    animation: none;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 2px 10px rgba(39, 174, 96, 0.3);
+    }
+
+    100% {
+        box-shadow: 0 2px 22px rgba(39, 174, 96, 0.65);
+    }
+}
+
+/* ── Body layout ─────────────────────────────────────────────────── */
+.soil-body {
+    display: flex;
+    height: calc(100vh - 80px - 52px);
+    overflow: hidden;
+}
+
+/* Left panel: map / 3D / chart */
+.soil-left {
+    flex: 1;
+    position: relative;
+    background: #05050f;
+    overflow: hidden;
+    min-height: 0;
+}
+
+#soil-map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
+
+#soil-3d-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    display: none;
+}
+
+.soil-chart-pane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    display: none;
+    background: #05050f;
+    padding: 16px 20px;
+    overflow-y: auto;
+}
+
+.soil-chart-pane .chart-title {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 9.5px;
+    font-weight: bold;
+    padding-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.soil-chart-pane .chart-section-label {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 10px 0 4px 0;
+}
+
+.soil-chart-pane .chart-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.soil-chart-pane .chart-row .depth-label {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 11px;
+    min-width: 60px;
+}
+
+.soil-chart-pane .chart-row .chart-bar-wrap {
+    flex: 1;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.soil-chart-pane .chart-row .chart-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    width: 0;
+    transition: width 0.6s ease;
+}
+
+.soil-chart-pane .chart-row .chart-val {
+    font-weight: bold;
+    font-size: 11px;
+    min-width: 44px;
+    text-align: right;
+}
+
+/* Floating labels on left panel */
+.soil-left .lbl-bottom-left {
+    position: absolute;
+    bottom: 8px;
+    left: 12px;
+    color: rgba(255, 255, 255, 0.09);
+    font-size: 9.5px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.soil-left .lbl-bottom-right {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    color: rgba(255, 255, 255, 0.18);
+    font-size: 9.5px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.soil-left .lbl-top-left {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    color: rgba(255, 255, 255, 0.16);
+    font-size: 9.5px;
+    font-style: italic;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Loading overlay */
+.soil-loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 15, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.soil-loading.active {
+    display: flex;
+}
+
+.soil-loading .spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(39, 174, 96, 0.2);
+    border-top-color: #27ae60;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.soil-loading .spinner-text {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Right panel: stats ──────────────────────────────────────────── */
+.soil-right {
+    width: 370px;
+    max-width: 370px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.65);
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.soil-right .stats-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 15px 10px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.soil-right .stats-header .header-info {
+    flex: 1;
+}
+
+.soil-right .stats-header .header-sub {
+    color: rgba(255, 255, 255, 0.36);
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.soil-right .stats-header .header-depth {
+    color: #fff;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.soil-right .score-ring {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.soil-right .score-ring .score-val {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.soil-right .score-ring .score-max {
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 8px;
+}
+
+/* Compare row */
+.soil-right .compare-row {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.soil-right .compare-row .compare-label {
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 10px;
+}
+
+.soil-right .layer-mini-btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.soil-right .layer-mini-btns button {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.65);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.soil-right .layer-mini-btns button:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.soil-right .layer-mini-btns button.active {
+    background: rgba(39, 174, 96, 0.35);
+    color: #2ecc71;
+    border-color: rgba(39, 174, 96, 0.5);
+}
+
+/* Cards scroll */
+.soil-right .cards-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 11px 13px 16px 13px;
+}
+
+/* Data card */
+.soil-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 11px;
+    padding: 10px 13px;
+    margin-bottom: 9px;
+    opacity: 0;
+    transform: translateX(18px);
+    transition: opacity 0.32s ease-out, transform 0.32s ease-out;
+}
+
+.soil-card.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.soil-card.card-ph {}
+
+.soil-card.card-nitrogen {
+    background: rgba(39, 174, 96, 0.07);
+    border-color: rgba(39, 174, 96, 0.22);
+}
+
+.soil-card.card-texture {
+    background: rgba(230, 168, 69, 0.07);
+    border-color: rgba(230, 168, 69, 0.22);
+}
+
+.soil-card.card-cec {
+    background: rgba(52, 152, 219, 0.07);
+    border-color: rgba(52, 152, 219, 0.22);
+}
+
+.soil-card.card-reco {
+    background: rgba(155, 89, 182, 0.07);
+    border-color: rgba(155, 89, 182, 0.22);
+    display: none;
+}
+
+.soil-card .card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.soil-card .card-header-row .card-icon {
+    font-size: 13px;
+}
+
+.soil-card .card-header-row .card-label {
+    font-size: 9.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.soil-card .card-header-row .card-badge {
+    margin-left: auto;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 9.5px;
+    font-weight: bold;
+}
+
+.soil-card .big-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1;
+}
+
+.soil-card .big-unit {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+    margin-left: 4px;
+}
+
+.soil-card .bar-wrap {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+    margin: 6px 0;
+    overflow: hidden;
+}
+
+.soil-card .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0;
+    transition: width 0.75s ease;
+}
+
+.soil-card .bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.soil-card .card-status {
+    font-size: 10.5px;
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+/* Texture dual bars */
+.soil-card .texture-grid {
+    display: flex;
+    gap: 12px;
+}
+
+.soil-card .texture-col {
+    flex: 1;
+}
+
+.soil-card .texture-col .tex-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.soil-card .texture-col .tex-label {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10px;
+}
+
+.soil-card .texture-col .tex-val {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.soil-card .texture-col .bar-wrap {
+    height: 4px;
+}
+
+/* Reco card */
+.soil-card.card-reco .reco-item {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 10.5px;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+/* Footer */
+.soil-right .stats-footer {
+    padding: 7px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.18);
+    text-align: center;
+}
+
+.soil-right .stats-footer span {
+    color: rgba(255, 255, 255, 0.16);
+    font-size: 9.5px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .soil-body {
+        flex-direction: column;
+    }
+
+    .soil-right {
+        width: 100%;
+        max-width: 100%;
+        height: 50vh;
+    }
+
+    .soil-left {
+        height: 50vh;
+    }
+}
