@@ -87,7 +87,7 @@ class DiagNotification
         return $this->isRead;
     }
 
-    public function setRead(bool $isRead): static
+    public function setIsRead(bool $isRead): static
     {
         $this->isRead = $isRead;
 
