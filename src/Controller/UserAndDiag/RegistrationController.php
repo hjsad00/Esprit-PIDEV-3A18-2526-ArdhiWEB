@@ -56,7 +56,7 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
-            $secret = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+            $secret = '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
@@ -68,13 +68,12 @@ class RegistrationController extends AbstractController
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $verifyResponse = curl_exec($ch);
-            $error = curl_error($ch);
             curl_close($ch);
 
             $data = json_decode((string) $verifyResponse, true);
 
-            if (empty($data['success']) || (isset($data['score']) && $data['score'] < 0.5)) {
-                $this->addFlash('danger', 'Votre score reCAPTCHA est trop faible. Details: ' . substr((string) $verifyResponse, 0, 100) . ' cURL Error: ' . $error);
+            if (empty($data['success'])) {
+                $this->addFlash('danger', 'Veuillez cocher la case reCAPTCHA.');
                 return $this->redirectToRoute('app_register');
             }
 

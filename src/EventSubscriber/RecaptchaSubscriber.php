@@ -36,7 +36,7 @@ class RecaptchaSubscriber implements EventSubscriberInterface
             throw new CustomUserMessageAuthenticationException('Veuillez activer la sécurité reCAPTCHA.');
         }
 
-        $secret = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+        $secret = '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
@@ -48,13 +48,12 @@ class RecaptchaSubscriber implements EventSubscriberInterface
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $verifyResponse = curl_exec($ch);
-        $error = curl_error($ch);
         curl_close($ch);
 
         $data = json_decode((string) $verifyResponse, true);
 
-        if (empty($data['success']) || (isset($data['score']) && $data['score'] < 0.5)) {
-            throw new CustomUserMessageAuthenticationException('Échec reCAPTCHA. Raw: ' . substr((string) $verifyResponse, 0, 100) . ' cURL Error: ' . $error);
+        if (empty($data['success'])) {
+            throw new CustomUserMessageAuthenticationException('Veuillez cocher la case reCAPTCHA.');
         }
     }
 }
