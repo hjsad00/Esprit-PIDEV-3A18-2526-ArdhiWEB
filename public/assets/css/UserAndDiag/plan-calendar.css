@@ -136,6 +136,24 @@
     font-weight: 500;
 }
 
+/* List View Fixes */
+.fc-theme-standard .fc-list {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.fc-theme-standard .fc-list-day-cushion {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.fc-list-event:hover td {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.fc-list-event-title a {
+    color: #fff !important;
+}
+
 /* Modal styling */
 .fc-modal-overlay {
     position: fixed;
