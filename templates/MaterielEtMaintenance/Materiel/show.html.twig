@@ -179,6 +179,28 @@
     </div>
 </div>
 
+{# Affichage local des notifications serveur (succès/erreur/info) #}
+{% for message in app.flashes('success') %}
+  <div class="alert alert-success shadow-sm border-0 border-start border-4 border-success mt-3 mb-0 py-2">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('danger') %}
+  <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mt-3 mb-0 py-2">
+    <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('warning') %}
+  <div class="alert alert-warning shadow-sm border-0 border-start border-4 border-warning mt-3 mb-0 py-2">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('info') %}
+  <div class="alert alert-info shadow-sm border-0 border-start border-4 border-info mt-3 mb-0 py-2">
+    <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+
 <div class="py-4">
   <div class="row g-4">
     <div class="col-lg-5">
@@ -318,13 +340,6 @@
                 </div>
             {% elseif workflow_can(materiel, 'mettre_en_maintenance') %}
                 <div class="col-12">
-                    {# Affichage local des erreurs de validation pour ce formulaire #}
-                    {% for message in app.flashes('danger') %}
-                        <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mb-3 py-2">
-                            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
-                        </div>
-                    {% endfor %}
-
                     <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm" novalidate>
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <label class="form-label fw-bold text-danger"><i class="bi bi-megaphone me-1"></i> Signaler une panne / Urgence</label>
@@ -332,6 +347,9 @@
                         <button type="submit" class="btn btn-danger w-100 shadow-sm fw-bold">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i> METTRE EN MAINTENANCE (URGENT)
                         </button>
+                        <p class="small text-danger fw-semibold mt-2 mb-0">
+                          Minimum 10 caracteres requis pour la description.
+                        </p>
                     </form>
                 </div>
             {% endif %}
