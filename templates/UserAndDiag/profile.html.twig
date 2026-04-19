@@ -12,7 +12,7 @@
           <p class="text-muted">Gérez vos informations personnelles</p>
         </div>
 
-        <form method="post" enctype="multipart/form-data" novalidate>
+        <form method="post" id="profileForm" enctype="multipart/form-data" novalidate>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputNom" class="form-label">Nom <span class="text-danger">*</span></label>
@@ -48,11 +48,29 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="inputPhone" class="form-label">Téléphone</label>
-                <input type="tel" name="phone" id="inputPhone" class="form-control" value="{{ user.phone }}" placeholder="+216 XX XXX XXX">
+                <div class="input-group">
+                  <input type="tel" name="phone" id="inputPhone" class="form-control" value="{{ user.phone }}" placeholder="+216 XX XXX XXX">
+                  <button type="button" class="btn btn-outline-info btn-sm" id="btnSendSms" onclick="sendSmsCode()" style="border-radius: 0 6px 6px 0;">
+                    <i class="bi bi-phone"></i> Vérifier
+                  </button>
+                </div>
+                <small id="phoneFeedback" class="form-text d-block mt-1"></small>
               </div>
-              <div class="col-md-6 mb-3">
+              <div class="col-md-6 mb-3" style="position: relative;">
                 <label for="inputLocation" class="form-label">Localisation</label>
-                <input type="text" name="location" id="inputLocation" class="form-control" value="{{ user.location }}" placeholder="Ville, Gouvernorat">
+                <input type="text" name="location" id="inputLocation" class="form-control" value="{{ user.location }}" placeholder="Tapez une ville..." autocomplete="off">
+                <div id="cityDropdown" style="display:none; position:absolute; z-index:999; width:calc(100% - 24px); max-height:200px; overflow-y:auto; background:#fff; border:1px solid #dee2e6; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+              </div>
+            </div>
+
+            {# ─── SMS OTP Modal ─── #}
+            <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+              <div style="background:#fff; border-radius:12px; padding:30px; max-width:400px; width:90%; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+                <h5 style="margin-bottom:15px;"><i class="bi bi-shield-lock"></i> Vérification SMS</h5>
+                <p class="text-muted" style="font-size:0.9em;">Un code a été envoyé à votre numéro.</p>
+                <input type="text" id="otpInput" class="form-control text-center mb-3" maxlength="6" placeholder="______" style="font-size:1.5em; letter-spacing:8px; font-weight:bold;">
+                <button type="button" class="btn btn-primary w-100 mb-2" onclick="verifySmsCode()">Confirmer le code</button>
+                <button type="button" class="btn btn-link text-muted" onclick="document.getElementById('otpModal').style.display='none';">Annuler</button>
               </div>
             </div>
 
@@ -151,4 +169,120 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ─── City Autocomplete (OpenStreetMap Nominatim ─ No API Key Needed) ───
+        const locInput = document.getElementById('inputLocation');
+        const cityDropdown = document.getElementById('cityDropdown');
+        let debounceTimer;
+
+        if (locInput) {
+            locInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const q = locInput.value.trim();
+                if (q.length < 2) { cityDropdown.style.display = 'none'; return; }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6&addressdetails=1&accept-language=fr`, {
+                        headers: { 'User-Agent': 'ArdhiWebApp/1.0' }
+                    })
+                        .then(r => r.json())
+                        .then(results => {
+                            if (!results || results.length === 0) {
+                                cityDropdown.style.display = 'none';
+                                return;
+                            }
+                            cityDropdown.innerHTML = '';
+                            results.forEach(place => {
+                                const item = document.createElement('div');
+                                item.textContent = place.display_name;
+                                item.style.cssText = 'padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px solid #f0f0f0; transition: background 0.2s;';
+                                item.onmouseover = () => item.style.background = '#f0f4ff';
+                                item.onmouseout = () => item.style.background = '#fff';
+                                item.onclick = () => {
+                                    locInput.value = place.display_name;
+                                    cityDropdown.style.display = 'none';
+                                };
+                                cityDropdown.appendChild(item);
+                            });
+                            cityDropdown.style.display = 'block';
+                        })
+                        .catch(() => { cityDropdown.style.display = 'none'; });
+                }, 400);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!locInput.contains(e.target) && !cityDropdown.contains(e.target)) {
+                    cityDropdown.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    // ─── SMS Verification (Twilio via backend) ───
+    function sendSmsCode() {
+        const phone = document.getElementById('inputPhone').value.trim();
+        const fb = document.getElementById('phoneFeedback');
+        const btn = document.getElementById('btnSendSms');
+        if (!phone) { fb.innerHTML = '<span style="color:#dc3545;">Veuillez entrer un numéro.</span>'; return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        fb.innerHTML = '<span style="color:#6c757d;">⏳ Envoi du code...</span>';
+
+        fetch('/register/send-sms', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-phone"></i> Vérifier';
+            if (data.success) {
+                if (data.debug) {
+                    fb.innerHTML = '<span style="color:#198754;">✅ Code généré : <strong>' + data.debug.split(': ').pop() + '</strong> (mode test)</span>';
+                } else {
+                    fb.innerHTML = '<span style="color:#198754;">✅ Code envoyé !</span>';
+                }
+                document.getElementById('otpModal').style.display = 'flex';
+            } else {
+                fb.innerHTML = '<span style="color:#dc3545;">❌ ' + (data.error || 'Erreur') + '</span>';
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-phone"></i> Vérifier';
+            fb.innerHTML = '<span style="color:#dc3545;">Erreur réseau.</span>';
+        });
+    }
+
+    function verifySmsCode() {
+        const code = document.getElementById('otpInput').value.trim();
+        const phone = document.getElementById('inputPhone').value.trim();
+
+        fetch('/register/verify-sms', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('otpModal').style.display = 'none';
+                document.getElementById('phoneFeedback').innerHTML = '<span style="color:#198754; font-weight:600;">✅ Téléphone vérifié avec succès !</span>';
+                document.getElementById('btnSendSms').innerHTML = '<i class="bi bi-check-circle-fill"></i> Vérifié';
+                document.getElementById('btnSendSms').classList.replace('btn-outline-info', 'btn-success');
+                document.getElementById('btnSendSms').disabled = true;
+            } else {
+                document.getElementById('otpInput').classList.add('is-invalid');
+                alert('❌ Code incorrect. Réessayez.');
+            }
+        })
+        .catch(() => alert('Erreur réseau.'));
+    }
+</script>
 {% endblock %}
