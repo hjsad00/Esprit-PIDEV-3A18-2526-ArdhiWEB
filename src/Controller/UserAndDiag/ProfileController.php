@@ -3,9 +3,11 @@
 namespace App\Controller\UserAndDiag;
 
 use App\Entity\UserAndDiag\User;
+use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\UserAndDiag\CommunityPostRepository;
 use App\Service\UserAndDiag\ImgBBService;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,12 +23,42 @@ class ProfileController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
-        ImgBBService $imgBBService
+        ImgBBService $imgBBService,
+        ProduitsRepository $produitsRepository,
+        PaginatorInterface $paginator
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+
+        $produitsQueryBuilder = $produitsRepository->createQueryBuilder('p')
+            ->andWhere('p.user = :user')
+            ->andWhere('p.visible = :visible')
+            ->andWhere('p.visibleAdmin = :visibleAdmin')
+            ->setParameter('user', $user)
+            ->setParameter('visible', true)
+            ->setParameter('visibleAdmin', true)
+            ->orderBy('p.id', 'DESC');
+
+        $currentProduitsPage = $request->query->getInt('produits_page', $request->query->getInt('page', 1));
+
+        $produitsEnVente = $paginator->paginate(
+            $produitsQueryBuilder,
+            $currentProduitsPage,
+            6,
+            ['pageParameterName' => 'page']
+        );
+
+        if (
+            $request->isMethod('GET')
+            && ($request->isXmlHttpRequest() || $request->query->getBoolean('ajax'))
+            && ($request->query->has('produits_page') || $request->query->has('page'))
+        ) {
+            return new Response($this->renderView('UserAndDiag/profile/_produits_en_vente.html.twig', [
+                'produitsEnVente' => $produitsEnVente,
+            ]));
+        }
 
         if ($request->isMethod('POST')) {
             $csrfToken = $request->request->get('_csrf_token', '');
@@ -89,6 +121,7 @@ class ProfileController extends AbstractController
                 return $this->render('UserAndDiag/profile.html.twig', [
                     'user' => $user,
                     'errors' => $errors,
+                    'produitsEnVente' => $produitsEnVente,
                 ]);
             }
 
@@ -105,6 +138,7 @@ class ProfileController extends AbstractController
         return $this->render('UserAndDiag/profile.html.twig', [
             'user' => $user,
             'errors' => [],
+            'produitsEnVente' => $produitsEnVente,
         ]);
     }
 
@@ -137,13 +171,36 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/profile/user/{id}', name: 'app_profile_show', methods: ['GET'])]
-    public function show(User $user, CommunityPostRepository $postRepo): Response
+    public function show(
+        User $user,
+        Request $request,
+        CommunityPostRepository $postRepo,
+        ProduitsRepository $produitsRepository,
+        PaginatorInterface $paginator
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $produitsQueryBuilder = $produitsRepository->createQueryBuilder('p')
+            ->andWhere('p.user = :user')
+            ->andWhere('p.visible = :visible')
+            ->andWhere('p.visibleAdmin = :visibleAdmin')
+            ->setParameter('user', $user)
+            ->setParameter('visible', true)
+            ->setParameter('visibleAdmin', true)
+            ->orderBy('p.id', 'DESC');
+
+        $produitsEnVente = $paginator->paginate(
+            $produitsQueryBuilder,
+            $request->query->getInt('produits_page', 1),
+            6,
+            ['pageParameterName' => 'produits_page']
+        );
 
         return $this->render('UserAndDiag/profile/show.html.twig', [
             'user' => $user,
             'posts' => $postRepo->findBy(['user' => $user], ['created_at' => 'DESC']),
+            'produitsEnVente' => $produitsEnVente,
         ]);
     }
 

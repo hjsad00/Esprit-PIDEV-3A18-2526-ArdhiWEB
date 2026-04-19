@@ -151,6 +151,12 @@
         </form>
 
         <hr class="my-4">
+
+        <div id="produits-en-vente-wrapper">
+          {% include 'UserAndDiag/profile/_produits_en_vente.html.twig' with { produitsEnVente: produitsEnVente } %}
+        </div>
+
+        <hr class="my-4">
         
         <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
             <div>
@@ -284,5 +290,47 @@
         })
         .catch(() => alert('Erreur réseau.'));
     }
+
+      const fetchProfileProductsContent = async (url) => {
+        const wrapper = document.getElementById('produits-en-vente-wrapper');
+        if (!wrapper) return;
+
+        wrapper.style.opacity = '0.6';
+
+        try {
+          const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          const html = await response.text();
+
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const newWrapper = doc.querySelector('#produits-en-vente-wrapper');
+
+          if (!newWrapper) {
+            window.location.href = url.toString();
+            return;
+          }
+
+          wrapper.innerHTML = newWrapper.innerHTML;
+          window.history.replaceState({}, '', url.toString());
+        } catch (e) {
+          window.location.href = url.toString();
+        } finally {
+          wrapper.style.opacity = '1';
+        }
+      };
+
+      document.addEventListener('click', (event) => {
+        const pageLink = event.target.closest('#produits-en-vente-wrapper .pagination a');
+        if (!pageLink) return;
+
+        event.preventDefault();
+        const href = pageLink.getAttribute('href');
+        if (!href || href === '#') return;
+
+        const pageUrl = new URL(href, window.location.origin);
+        fetchProfileProductsContent(pageUrl);
+      });
 </script>
 {% endblock %}
