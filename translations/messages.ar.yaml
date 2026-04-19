@@ -449,6 +449,14 @@ chatbot:
     error:
         server_returned_error: 'عذراً، حدث خطأ: '
         network: 'عذراً! لا يمكنني الاتصال بالخادم.'
+    btn:
+        recommend:    "توصية"
+        performance:  "الأداء"
+        availability: "التوفر"
+        compare:      "مقارنة"
+        skills:       "مهارات"
+        help:         "مساعدة"
+    thinking: "جاري التحليل..."
 ai:
     matching:
         perfect: 'مطابقة مثالية'

@@ -448,6 +448,14 @@ chatbot:
     error:
         server_returned_error: "Désolé, j'ai rencontré une erreur : "
         network: "Oups ! Je n'arrive pas à joindre le serveur."
+    btn:
+        recommend:    "Recommander"
+        performance:  "Performances"
+        availability: "Disponibilités"
+        compare:      "Comparer"
+        skills:       "Compétences"
+        help:         "Aide"
+    thinking: "Analyse en cours..."
 ai:
     matching:
         perfect: 'Correspondance idéale'
