@@ -19,7 +19,6 @@ services:
         bind:
             string $mailFrom: '%app.mail_from%'
             string $projectDir: '%kernel.project_dir%'
-            string $projectDir: '%kernel.project_dir%'
             string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
             string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
             string $twilioFrom: '%env(MATERIEL_TWILIO_FROM)%'
