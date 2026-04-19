@@ -14,7 +14,7 @@ class FarmHealthReport
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: FarmHealthScan::class)]
-    #[ORM\JoinColumn(name: 'scan_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'scan_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?FarmHealthScan $scan = null;
 
     #[ORM\Column(nullable: true)]

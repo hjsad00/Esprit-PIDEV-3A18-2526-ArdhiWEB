@@ -16,11 +16,11 @@ class CommunityComment
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: CommunityPost::class)]
-    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?CommunityPost $post = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -39,7 +39,7 @@ class CommunityComment
     private ?bool $is_solution = false;
 
     #[ORM\ManyToOne(targetEntity: CommunityComment::class)]
-    #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?CommunityComment $parentComment = null;
 
     #[ORM\Column(nullable: true, options: ["default" => 0])]

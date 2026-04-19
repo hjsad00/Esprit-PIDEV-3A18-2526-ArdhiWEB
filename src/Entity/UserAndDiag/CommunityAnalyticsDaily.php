@@ -15,7 +15,7 @@ class CommunityAnalyticsDaily
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: CommunityPost::class)]
-    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?CommunityPost $post = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
