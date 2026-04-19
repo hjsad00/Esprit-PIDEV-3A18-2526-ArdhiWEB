@@ -187,7 +187,10 @@ class CommunityController extends AbstractController
             return $this->redirectToRoute('app_user_and_diag_community');
         }
 
-        return $this->render('UserAndDiag/community/create.html.twig');
+        return $this->render('UserAndDiag/community/create.html.twig', [
+            'prefill_title' => $request->query->get('title', ''),
+            'prefill_description' => $request->query->get('description', ''),
+        ]);
     }
 
     // ────────────────────── EDIT / DELETE POST ──────────────────────

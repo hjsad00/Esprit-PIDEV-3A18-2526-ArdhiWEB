@@ -99,7 +99,7 @@
                 
                 <div class="action-stack">
                     <a href="#" id="btnChatIa" class="btn-glass btn-blue w-100"><i class="bi bi-chat-dots"></i> Discuter avec l'IA</a>
-                    <a href="#" class="btn-glass btn-purple w-100"><i class="bi bi-people"></i> Demander à la Communauté</a>
+                    <a href="#" id="btnCommunity" class="btn-glass btn-purple w-100" onclick="return false;" style="opacity:0.5; pointer-events:none;"><i class="bi bi-people"></i> Demander à la Communauté</a>
                     
                     <button id="btnSecondOpinion" class="btn-glass w-100" style="background: rgba(41, 128, 185, 0.85); border: 1px solid rgba(41, 128, 185, 0.4);" onclick="demanderSecondAvis()">
                         <i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)
@@ -247,6 +247,26 @@
             // Update Chat Button Link
             const chatLink = "{{ path('app_user_and_diag_chatbot', {id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', data.diagnostic_id);
             document.getElementById('btnChatIa').setAttribute('href', chatLink);
+
+            // Update Community Button — pre-fill with diagnostic results
+            const communityBtn = document.getElementById('btnCommunity');
+            if (communityBtn) {
+                const title = encodeURIComponent(`[Diagnostic] ${data.plante} — ${data.maladie} (${data.confiance}% fiabilité)`);
+                const desc = encodeURIComponent(
+                    `🌱 Plante : ${data.plante}\n` +
+                    `🔬 Maladie détectée : ${data.maladie}\n` +
+                    `📊 Fiabilité : ${data.confiance}%\n` +
+                    `💊 Traitement suggéré : ${data.traitement.nom} (${data.traitement.type})\n` +
+                    `📝 Description : ${data.traitement.description}\n\n` +
+                    `---\n` +
+                    `Bonjour la communauté, j'ai effectué un diagnostic IA et j'aimerais avoir vos avis ou retours d'expérience sur ce résultat. Merci !`
+                );
+                const communityUrl = `{{ path('app_user_and_diag_community_new') }}?title=${title}&description=${desc}`;
+                communityBtn.setAttribute('href', communityUrl);
+                communityBtn.style.opacity = '1';
+                communityBtn.style.pointerEvents = 'auto';
+                communityBtn.setAttribute('onclick', '');
+            }
 
             // Update real-time limits
             if(data.usage) {
