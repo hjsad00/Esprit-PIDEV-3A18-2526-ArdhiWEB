@@ -20,73 +20,125 @@ class WeatherService
     }
 
     /**
-     * Get current weather for a specific location.
+     * Get current weather for a specific location using MET Norway API.
      */
     public function getCurrentWeather(float $lat = self::DEFAULT_LAT, float $lon = self::DEFAULT_LON): ?array
     {
         try {
+            // MET Norway requires a specific User-Agent and recommends "compact" for mobile/web
             $url = sprintf(
-                "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,apparent_temperature&timezone=auto",
+                "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%.4f&lon=%.4f",
                 $lat,
                 $lon
             );
 
-            $response = $this->client->request('GET', $url);
+            $response = $this->client->request('GET', $url, [
+                'headers' => [
+                    'User-Agent' => 'ArdhiApp/1.0 (contact@ardhi.com)'
+                ]
+            ]);
+
             if ($response->getStatusCode() !== 200) {
+                $this->logger->warning("MET Norway API returned status " . $response->getStatusCode());
                 return null;
             }
 
-            $json = $response->toArray();
-            $current = $json['current'] ?? null;
-            if (!$current)
+            try {
+                $json = $response->toArray();
+            } catch (\Exception $e) {
+                $this->logger->error("MET Norway JSON decode error: " . $e->getMessage());
+                return null;
+            }
+
+            $timeseries = $json['properties']['timeseries'] ?? null;
+            if (!$timeseries || count($timeseries) === 0)
                 return null;
 
+            $currentData = $timeseries[0]['data'];
+            $instant = $currentData['instant']['details'];
+            $next1h = $currentData['next_1_hours'] ?? $currentData['next_6_hours'] ?? null;
+
             $data = [
-                'temperature' => $current['temperature_2m'],
-                'humidity' => $current['relative_humidity_2m'],
-                'precipitation' => $current['precipitation'],
-                'weatherCode' => $current['weather_code'],
-                'windSpeed' => $current['wind_speed_10m'],
-                'windDirection' => $current['wind_direction_10m'],
-                'apparentTemperature' => $current['apparent_temperature'],
+                'temperature' => round($instant['air_temperature'], 1),
+                'humidity' => $instant['relative_humidity'],
+                'precipitation' => $next1h['details']['precipitation_amount'] ?? 0,
+                'symbolCode' => $next1h['summary']['symbol_code'] ?? 'clearsky_day',
+                'windSpeed' => round($instant['wind_speed'] * 3.6, 1), // m/s to km/h
+                'windDirection' => $instant['wind_from_direction'],
+                'apparentTemperature' => $this->calculateApparentTemperature($instant['air_temperature'], $instant['wind_speed']),
                 'latitude' => $lat,
                 'longitude' => $lon
             ];
 
-            $data['icon'] = $this->getWeatherIcon($data['weatherCode']);
-            $data['condition'] = $this->getWeatherDescription($data['weatherCode']);
+            $data['icon'] = $this->getMetIcon($data['symbolCode']);
+            $data['condition'] = $this->getMetDescription($data['symbolCode']);
             $data['advice'] = $this->generateAgriculturalAdvice($data);
             $data['windDirectionString'] = $this->getWindDirectionString($data['windDirection']);
 
             return $data;
         } catch (\Exception $e) {
-            $this->logger->error("WeatherService error: " . $e->getMessage());
+            $this->logger->error("WeatherService MET Norway error: " . $e->getMessage());
             return null;
         }
     }
 
     /**
-     * Get 72-hour forecast (hourly).
+     * Get 72-hour forecast (hourly) using MET Norway API.
      */
     public function getForecast(float $lat = self::DEFAULT_LAT, float $lon = self::DEFAULT_LON): ?array
     {
         try {
             $url = sprintf(
-                "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code&forecast_days=3&timezone=auto",
+                "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%.4f&lon=%.4f",
                 $lat,
                 $lon
             );
 
-            $response = $this->client->request('GET', $url);
+            $response = $this->client->request('GET', $url, [
+                'headers' => [
+                    'User-Agent' => 'ArdhiApp/1.0 (contact@ardhi.com)'
+                ]
+            ]);
+
             if ($response->getStatusCode() !== 200) {
                 return null;
             }
 
-            return $response->toArray();
+            $json = $response->toArray();
+            $timeseries = $json['properties']['timeseries'] ?? [];
+
+            // Format to match expected structure
+            $formatted = [
+                'hourly' => [
+                    'time' => [],
+                    'temperature_2m' => [],
+                    'relative_humidity_2m' => [],
+                    'precipitation' => [],
+                    'weather_code' => []
+                ]
+            ];
+
+            // Take first 72 entries (approx 72 hours)
+            foreach (array_slice($timeseries, 0, 72) as $entry) {
+                $formatted['hourly']['time'][] = $entry['time'];
+                $formatted['hourly']['temperature_2m'][] = $entry['data']['instant']['details']['air_temperature'];
+                $formatted['hourly']['relative_humidity_2m'][] = $entry['data']['instant']['details']['relative_humidity'];
+                $next1h = $entry['data']['next_1_hours'] ?? $entry['data']['next_6_hours'] ?? null;
+                $formatted['hourly']['precipitation'][] = $next1h['details']['precipitation_amount'] ?? 0;
+                $formatted['hourly']['weather_code'][] = 0; // MET symbol codes handled separately if needed
+            }
+
+            return $formatted;
         } catch (\Exception $e) {
-            $this->logger->error("Forecast error: " . $e->getMessage());
+            $this->logger->error("Forecast MET Norway error: " . $e->getMessage());
             return null;
         }
+    }
+
+    private function calculateApparentTemperature(float $temp, float $windSpeedMs): float
+    {
+        // Simple approximation
+        return round($temp - ($windSpeedMs * 0.7), 1);
     }
 
     private function getWindDirectionString(float $direction): string
@@ -95,63 +147,58 @@ class WeatherService
         return $dirs[(int) round((($direction % 360) / 22.5)) % 16];
     }
 
-    private function getWeatherIcon(int $code): string
+    private function getMetIcon(string $symbol): string
     {
-        if ($code == 0)
-            return "☀️";
-        if ($code >= 1 && $code <= 3)
-            return "⛅";
-        if ($code >= 45 && $code <= 48)
-            return "🌫️";
-        if ($code >= 51 && $code <= 55)
-            return "🌦️";
-        if ($code >= 61 && $code <= 65)
-            return "🌧️";
-        if ($code >= 71 && $code <= 77)
-            return "❄️";
-        if ($code >= 80 && $code <= 82)
-            return "🌦️";
-        if ($code >= 95 && $code <= 99)
-            return "⛈️";
-        return "🌡️";
+        $symbol = explode('_', $symbol)[0];
+        return match ($symbol) {
+            'clearsky' => "☀️",
+            'fair', 'partlycloudy' => "⛅",
+            'cloudy' => "☁️",
+            'rain', 'heavyrain', 'lightrain' => "🌧️",
+            'snow', 'heavysnow', 'lightsnow' => "❄️",
+            'sleet' => "🌨️",
+            'thunderstorm' => "⛈️",
+            'fog' => "🌫️",
+            default => "🌡️",
+        };
     }
 
-    private function getWeatherDescription(int $code): string
+    private function getMetDescription(string $symbol): string
     {
-        if ($code == 0)
-            return "Ciel dégagé";
-        if ($code >= 1 && $code <= 3)
-            return "Partiellement nuageux";
-        if ($code >= 45 && $code <= 48)
-            return "Brouillard";
-        if ($code >= 51 && $code <= 55)
-            return "Bruine";
-        if ($code >= 61 && $code <= 65)
-            return "Pluie";
-        if ($code >= 71 && $code <= 77)
-            return "Neige";
-        if ($code >= 80 && $code <= 82)
-            return "Averses";
-        if ($code >= 95 && $code <= 99)
-            return "Orage";
-        return "Conditions variables";
+        // Remove day/night suffix
+        $symbol = explode('_', $symbol)[0];
+        return match ($symbol) {
+            'clearsky' => "Ciel dégagé",
+            'fair' => "Beau temps",
+            'partlycloudy' => "Partiellement nuageux",
+            'cloudy' => "Nuageux",
+            'rain' => "Pluie",
+            'heavyrain' => "Pluie forte",
+            'lightrain' => "Pluie légère",
+            'snow' => "Neige",
+            'sleet' => "Neige fondante",
+            'thunderstorm' => "Orage",
+            'fog' => "Brouillard",
+            default => "Conditions variables",
+        };
     }
 
     private function generateAgriculturalAdvice(array $data): string
     {
-        if ($data['humidity'] > 80 && $data['temperature'] > 20) {
+        // Adjusted for MET Norway data structure
+        if ($data['humidity'] > 85 && $data['temperature'] > 18) {
             return "⚠️ Alerte Humidité: Risque élevé de maladies fongiques (Mildiou, Oïdium). Évitez l'irrigation par aspersion.";
         }
-        if ($data['precipitation'] > 5) {
+        if ($data['precipitation'] > 2) {
             return "🌧️ Pluie prévue: Suspendez les traitements phytosanitaires et l'irrigation.";
         }
         if ($data['temperature'] > 35) {
             return "🔥 Canicule: Assurez une irrigation suffisante en début ou fin de journée pour éviter le stress hydrique.";
         }
-        if ($data['temperature'] < 5) {
+        if ($data['temperature'] < 4) {
             return "❄️ Risque de gel: Protégez les cultures sensibles et les semis.";
         }
-        if ($data['weatherCode'] >= 95) {
+        if (str_contains($data['symbolCode'] ?? '', 'thunder')) {
             return "⛈️ Orages: Évitez les travaux aux champs et mettez le matériel à l'abri.";
         }
         return "✅ Conditions favorables: Bon moment pour les inspections de routine et l'entretien.";
@@ -201,7 +248,6 @@ class WeatherService
 
     private function formatTime(string $isoTime): string
     {
-        // "2026-02-15T14:00" → "15/02 à 14h00"
         try {
             $dt = new \DateTime($isoTime);
             return $dt->format('d/m à H\hi');

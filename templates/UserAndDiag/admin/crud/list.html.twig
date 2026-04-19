@@ -14,15 +14,41 @@
     {% endif %}
   </div>
 
+  <div class="admin-filters mb-4">
+    <div class="d-flex gap-2 align-items-center">
+      <div class="input-group" style="max-width: 400px;">
+        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="adminSearchInput" class="form-control border-start-0 ps-0" placeholder="Rechercher..." oninput="filterAdminTable()">
+      </div>
+      <span id="adminResultCount" class="text-muted small">{{ items|length }} résultat(s)</span>
+      <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('adminSearchInput').value=''; filterAdminTable();">
+        <i class="bi bi-x-lg me-1"></i>Réinitialiser
+      </button>
+    </div>
+  </div>
+
   {% if items|length > 0 %}
   <div class="table-responsive">
     <table class="table">
       <thead>
         <tr>
           {% for col in columns %}
-            <th>{{ col.label }}</th>
+            <th>
+              {% set current_sort = app.request.get('sort') %}
+              {% set current_dir = app.request.get('direction', 'asc') %}
+              {% set next_dir = (current_sort == col.field and current_dir == 'asc') ? 'desc' : 'asc' %}
+              
+              <a href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({'sort': col.field, 'direction': next_dir})) }}" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                {{ col.label }}
+                {% if current_sort == col.field %}
+                  <i class="bi bi-sort-alpha-{{ current_dir == 'asc' ? 'down' : 'up' }} text-primary"></i>
+                {% else %}
+                  <i class="bi bi-arrow-down-up text-muted small" style="opacity: 0.3"></i>
+                {% endif %}
+              </a>
+            </th>
           {% endfor %}
-          <th>Actions</th>
+          <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -43,8 +69,28 @@
                 {{ value ? value.id ~ (col.display is defined and col.display ? ' - ' ~ attribute(value, col.display) : '') : '-' }}
               {% elseif col.type|default('text') == 'badge' %}
                 <span class="badge badge-admin" style="background: {{ col.color|default('#6c757d') }}22; color: {{ col.color|default('#6c757d') }};">{{ value ?? '-' }}</span>
-              {% elseif col.type|default('text') == 'truncate' %}
-                {{ value|length > 50 ? value|slice(0, 50) ~ '...' : value ?? '-' }}
+              {% elseif col.type|default('text') == 'image' %}
+                {% if value %}
+                  {% if value|slice(0, 4) == 'http' or '.' in value or '/' in value %}
+                    <div class="admin-img-wrapper" style="width:60px !important; height:45px !important; overflow:hidden !important; border-radius:4px !important; cursor:pointer;" onclick="window.open('{{ value }}')">
+                      {% if value|slice(0, 4) == 'http' %}
+                          <img src="{{ value }}" alt="Image" class="admin-crud-thumb" style="width:100% !important; height:100% !important; object-fit:cover !important;">
+                      {% else %}
+                          <img src="{{ asset(value) }}" alt="Image" class="admin-crud-thumb" style="width:100% !important; height:100% !important; object-fit:cover !important;">
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <div class="admin-icon-preview" style="font-size: 1.5rem;">
+                      {% if value|slice(0, 3) == 'bi-' or value|slice(0, 3) == 'fa-' %}
+                        <i class="{{ value }}"></i>
+                      {% else %}
+                        {{ value }}
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted small">Aucune</span>
+                {% endif %}
               {% else %}
                 {{ value ?? '-' }}
               {% endif %}
@@ -79,4 +125,26 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    function filterAdminTable() {
+        const filterText = document.getElementById('adminSearchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('table tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filterText)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('adminResultCount').innerText = visibleCount + ' résultat(s)';
+    }
+</script>
 {% endblock %}

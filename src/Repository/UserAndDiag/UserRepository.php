@@ -16,7 +16,7 @@ use App\Security\CustomResetPasswordRequest;
 /**
  * @extends ServiceEntityRepository<User>
  */
-class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, ResetPasswordRequestRepositoryInterface
+class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -38,7 +38,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         if ($search) {
             $qb->andWhere('u.email LIKE :search OR u.nom LIKE :search OR u.prenom LIKE :search')
-               ->setParameter('search', '%' . $search . '%');
+                ->setParameter('search', '%' . $search . '%');
         }
 
         return $qb->getQuery()->getResult();
@@ -68,81 +68,28 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user->getUserIdentifier();
     }
 
-    public function persistResetPasswordRequest(ResetPasswordRequestInterface $resetPasswordRequest): void
-    {
-        /** @var CustomResetPasswordRequest $resetPasswordRequest */
-        /** @var User $user */
-        $user = $resetPasswordRequest->getUser();
-        $payload = json_encode([
-            'selector' => $resetPasswordRequest->getSelector(),
-            'hashedToken' => $resetPasswordRequest->getHashedToken(),
-            'expiresAt' => $resetPasswordRequest->getExpiresAt()->getTimestamp(),
-            'requestedAt' => $resetPasswordRequest->getRequestedAt()->getTimestamp(),
-        ]);
 
-        $user->setResetPasswordCode($payload);
-        $user->setResetPasswordExpiresAt($resetPasswordRequest->getExpiresAt());
+    public function generateAndSaveNativeToken(object $user): string
+    {
+        // Generate random 4 digit code to match the user's requested workflow
+        $code = str_pad((string) mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+
+        /** @var User $user */
+        $user->setResetPasswordCode($code);
+
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+
+        return $code;
     }
 
-    public function findResetPasswordRequest(string $selector): ?ResetPasswordRequestInterface
+    public function findUserByResetCode(string $code): ?User
     {
-        // Safe LIKE query for selector string in JSON payload
-        $users = $this->createQueryBuilder('u')
-            ->where('u.reset_password_code LIKE :selector')
-            ->setParameter('selector', '%"selector":"' . $selector . '"%')
+        return $this->createQueryBuilder('u')
+            ->where('u.reset_password_code = :code')
+            ->setParameter('code', $code)
             ->getQuery()
-            ->getResult();
-
-        foreach ($users as $user) {
-            $data = json_decode($user->getResetPasswordCode() ?? '', true);
-            if (is_array($data) && isset($data['selector']) && $data['selector'] === $selector) {
-                $expiresAt = (new \DateTimeImmutable())->setTimestamp($data['expiresAt']);
-                $requestedAt = (new \DateTimeImmutable())->setTimestamp($data['requestedAt']);
-
-                return new CustomResetPasswordRequest(
-                    $user,
-                    $expiresAt,
-                    $data['selector'],
-                    $data['hashedToken'],
-                    $requestedAt
-                );
-            }
-        }
-
-        return null;
-    }
-
-    public function getMostRecentNonExpiredRequestDate(object $user): ?\DateTimeInterface
-    {
-        /** @var User $user */
-        $code = $user->getResetPasswordCode();
-        if (!$code) {
-            return null;
-        }
-
-        $data = json_decode($code, true);
-        if (!$data || !isset($data['expiresAt'], $data['requestedAt'])) {
-            return null;
-        }
-
-        if ($data['expiresAt'] <= time()) {
-            return null;
-        }
-
-        return (new \DateTimeImmutable())->setTimestamp($data['requestedAt']);
-    }
-
-    public function removeResetPasswordRequest(ResetPasswordRequestInterface $resetPasswordRequest): void
-    {
-        /** @var User $user */
-        $user = $resetPasswordRequest->getUser();
-        $user->setResetPasswordCode(null);
-        $user->setResetPasswordExpiresAt(null);
-
-        $this->getEntityManager()->persist($user);
-        $this->getEntityManager()->flush();
+            ->getOneOrNullResult();
     }
 
     public function removeExpiredResetPasswordRequests(): int

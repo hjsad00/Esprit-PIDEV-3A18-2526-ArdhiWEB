@@ -1,140 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ardhi - Historique des Diagnostics{% endblock %}
+{% block title %}Ardhi - Historique ds Diagnostics{% endblock %}
 
 {% block stylesheets %}
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed;
-        background-size: cover;
-    }
-    
-    .dashboard-background {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0, 0.45);
-        z-index: -1;
-    }
-
-    .container-history {
-        padding: 100px 40px 40px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .glass-panel {
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-    }
-
-    /* Header & Search */
-    .header-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-
-    .search-box {
-        display: flex;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 30px;
-        padding: 5px 20px;
-        flex-grow: 1;
-        max-width: 600px;
-    }
-
-    .search-input {
-        background: transparent;
-        border: none;
-        color: white;
-        padding: 10px;
-        width: 100%;
-        outline: none;
-        font-size: 16px;
-    }
-    .search-input::placeholder { color: rgba(255,255,255,0.6); }
-
-    .btn-mic {
-        background: #e67e22;
-        color: white;
-        border: none;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .btn-mic:hover { transform: scale(1.1); }
-    .btn-mic.active { background: #e74c3c; animation: pulse 1.5s infinite; }
-
-    /* History Table */
-    .history-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .history-card {
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 15px 25px;
-        transition: all 0.3s;
-        cursor: pointer;
-        border: 1px solid transparent;
-    }
-    .history-card:hover {
-        transform: translateY(-3px) scale(1.01);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-color: #6B7F3F;
-    }
-
-    .diag-thumb {
-        width: 60px;
-        height: 60px;
-        border-radius: 10px;
-        object-fit: cover;
-        margin-right: 20px;
-        border: 2px solid #6B7F3F;
-    }
-
-    .diag-info { flex-grow: 1; }
-    .diag-title { font-weight: 700; color: #333; margin-bottom: 4px; font-size: 16px; }
-    .diag-meta { color: #666; font-size: 13px; display: flex; gap: 15px; }
-
-    .confidence-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 12px;
-    }
-
-    /* Modal Styling */
-    .modal-content {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    .modal-header { border-bottom: 1px solid rgba(0,0,0,0.1); }
-    .modal-body { color: #333; line-height: 1.6; }
-</style>
+<link href="{{ asset('assets/css/UserAndDiag/history.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
@@ -144,20 +13,39 @@
     <div class="glass-panel">
         <div class="header-actions">
             <div>
-                <a href="{{ path('app_client_dashboard') }}" class="btn btn-outline-light rounded-pill px-4 mb-2">← Retour</a>
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                        <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Historique des Diagnostics</li>
+                    </ol>
+                </nav>
                 <h1 class="text-white m-0">Historique des Diagnostics</h1>
                 <p class="text-white-50 m-0">Retrouvez vos analyses passées et traitements recommandés.</p>
             </div>
             
-            <form action="{{ path('app_user_and_diag_history') }}" method="GET" class="search-box">
-                <i class="bi bi-search text-white-50"></i>
-                <input type="text" name="q" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." value="{{ keyword }}">
-            </form>
+            <div class="d-flex align-items-center gap-3">
+                <span id="resultCount" class="text-white-50 small">{{ diagnostics|length }} diagnostic(s)</span>
+                
+                <select id="sortSelect" class="form-select bg-transparent text-white border-light" style="width: auto;" onchange="sortCards()">
+                    <option value="date-desc" class="text-dark">Plus récent</option>
+                    <option value="date-asc" class="text-dark">Plus ancien</option>
+                    <option value="score-desc" class="text-dark">Fiabilité (Haute > Basse)</option>
+                </select>
+
+                <div class="search-box" style="display:flex;align-items:center;">
+                    <i class="bi bi-search text-white-50"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Rechercher une plante ou maladie..." oninput="filterCards()">
+                </div>
+            </div>
         </div>
 
         <div class="history-list">
             {% for diagnostic in diagnostics %}
-                <div class="history-card" onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
+                <div class="history-card" 
+                     data-search="{{ diagnostic.resultatIa|lower }} {{ diagnostic.locationLabel|lower }}"
+                     data-date="{{ diagnostic.dateScan ? diagnostic.dateScan|date('U') : 0 }}"
+                     data-score="{{ diagnostic.confiance|default(0) }}"
+                     onclick="showTreatment({{ diagnostic.id }}, '{{ diagnostic.resultatIa }}')">
                     <img src="{{ diagnostic.imageScannee }}" alt="Thumb" class="diag-thumb">
                     <div class="diag-info">
                         <div class="diag-title">{{ diagnostic.resultatIa }}</div>
@@ -171,7 +59,7 @@
                     </div>
                 </div>
             {% else %}
-                <div class="text-center py-5 text-white">
+                <div class="text-center py-5 text-white empty-state-msg">
                     <i class="bi bi-clipboard-x display-1 opacity-25"></i>
                     <p class="mt-3">Aucun diagnostic trouvé.</p>
                 </div>
@@ -230,30 +118,44 @@
             });
     }
 
-    // Voice Search
-    const btnMic = document.getElementById('btnMic');
-    const searchInput = document.getElementById('searchInput');
+    // Instant Search Filtering
+    function filterCards() {
+        const filterText = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.history-card');
+        let visibleCount = 0;
 
-    if ('webkitSpeechRecognition' in window) {
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = 'fr-FR';
-        
-        btnMic.addEventListener('click', (e) => {
-            e.preventDefault();
-            recognition.start();
-            btnMic.classList.add('active');
+        cards.forEach(card => {
+            const searchableData = card.getAttribute('data-search') || '';
+            if (searchableData.includes(filterText)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
         });
 
-        recognition.onresult = (event) => {
-            searchInput.value = event.results[0][0].transcript;
-            btnMic.classList.remove('active');
-            searchInput.form.submit();
-        };
-
-        recognition.onerror = () => btnMic.classList.remove('active');
-        recognition.onend = () => btnMic.classList.remove('active');
-    } else {
-        btnMic.style.display = 'none';
+        document.getElementById('resultCount').innerText = visibleCount + ' diagnostic(s)';
     }
+
+    // Instant Sorting
+    function sortCards() {
+        const sortValue = document.getElementById('sortSelect').value;
+        const container = document.querySelector('.history-list');
+        const cards = Array.from(container.querySelectorAll('.history-card'));
+        
+        cards.sort((a, b) => {
+            if (sortValue === 'date-desc') {
+                return b.dataset.date - a.dataset.date;
+            } else if (sortValue === 'date-asc') {
+                return a.dataset.date - b.dataset.date;
+            } else if (sortValue === 'score-desc') {
+                return b.dataset.score - a.dataset.score;
+            }
+        });
+
+        // Re-append to container in sorted order
+        cards.forEach(card => container.appendChild(card));
+    }
+
 </script>
 {% endblock %}

@@ -82,6 +82,16 @@
       background: #f8f9fa !important;
     }
 
+    /* Override global de lisibilité UserAndDiag (force le blanc sur les interfaces sombres) */
+    .dashboard-background { background-color: rgba(0, 0, 0, 0.45) !important; }
+    
+    .dashboard-background ~ * h1, .dashboard-background ~ * h2, .dashboard-background ~ * h3, 
+    .dashboard-background ~ * h4, .dashboard-background ~ * h5, .dashboard-background ~ * h6,
+    .glass-panel h1, .glass-panel h2, .glass-panel h3, .glass-panel h4, .glass-panel h5, .glass-panel h6,
+    [class*='diagnostic-container'] h1, [class*='diagnostic-container'] h2, [class*='diagnostic-container'] h3, [class*='diagnostic-container'] h4, [class*='diagnostic-container'] h5, [class*='diagnostic-container'] h6 {
+      color: #ffffff !important;
+    }
+
     /* RTL Support */
     html[dir="rtl"] body {
       text-align: right;
@@ -137,6 +147,9 @@
 
       <nav id="navmenu" class="navmenu">
         <ul>
+          <li><a href="{{ path('app_user_and_diag_hub') }}">Diagnostic IA</a></li>
+          <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a></li>
+          <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a></li>
           <li><a href="/">{{ 'dashboard.nav.diagnostic'|trans|default('Diagnostic IA') }}</a></li>
           <li><a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">{{ 'dashboard.nav.marketplace'|trans|default('Marketplace') }}</a></li>
           <li><a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">{{ 'dashboard.nav.maintenance'|trans|default('Matériel & Maintenance') }}</a></li>
@@ -159,6 +172,22 @@
           </li>
           
           {% if app.user %}
+          <!-- NOTIFICATIONS BELL -->
+          <li class="dropdown" id="notificationDropdownContainer" onmouseenter="onBellHover()">
+            <a href="#" class="d-flex align-items-center px-2">
+              <div style="position: relative;">
+                <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: white;"></i>
+                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.55rem; padding: 0.25em 0.4em;">
+                  0
+                </span>
+              </div>
+            </a>
+            <ul id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; left: auto; padding: 0;">
+              <li><div style="padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 0.9rem; color: #333;">Notifications</div></li>
+              <li id="emptyNotificationMsg" class="text-center text-muted" style="font-size: 0.85rem; padding: 20px;">Aucune nouvelle notification.</li>
+            </ul>
+          </li>
+
           <!-- Language Switcher -->
           <li class="d-flex align-items-center px-3" style="gap: 5px;">
             <a href="{{ path('change_locale', {'locale': 'fr'}) }}" class="lang-btn {{ app.request.locale == 'fr' ? 'active-lang' : '' }}">Fr</a>
@@ -171,8 +200,12 @@
             {{ render(controller('App\\Controller\\MaterielEtMaintenance\\NotificationMaintenanceController::renderBell')) }}
           {% endif %}
           <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
-            <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              <i class="bi bi-person-fill" style="font-size: 1.1rem; color: white;"></i>
+            <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              {% if app.user.avatar %}
+                  <img src="{{ app.user.avatar }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+              {% else %}
+                  <i class="bi bi-person-fill" style="font-size: 1.1rem; color: white;"></i>
+              {% endif %}
             </div></a>
             <ul>
               <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
@@ -264,6 +297,106 @@
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
   {% block javascripts %}{% endblock %}
+
+  <script>
+    // Force reload when navigating via back button (bfcache)
+    // Applies globally to ensure fresh data across the application
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+
+    {% if app.user %}
+    // --- Notification System ---
+    function fetchNotifications() {
+        fetch('{{ path("app_user_and_diag_notifications_unread") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('notificationBadge');
+            const list = document.getElementById('notificationList');
+            const emptyMsg = document.getElementById('emptyNotificationMsg');
+
+            if (!badge || !list) return;
+
+            const notifs = data.notifications || [];
+            if (notifs.length > 0) {
+                // Populate global IDs for hover logic
+                window.loadedNotifIds = notifs.map(n => n.id);
+
+                const maxSeen = parseInt(localStorage.getItem('maxSeenNotifId_{{ app.user.id }}') || '0');
+                const badgeCount = notifs.filter(n => !n.isRead && n.id > maxSeen).length;
+
+                if (badgeCount > 0) {
+                    badge.style.display = 'block';
+                    badge.textContent = badgeCount > 99 ? '99+' : badgeCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                emptyMsg.style.display = 'none';
+
+                // Clear existing old items but keep header
+                const items = list.querySelectorAll('.notif-item');
+                items.forEach(i => i.remove());
+
+                notifs.forEach(n => {
+                    const li = document.createElement('li');
+                    li.className = 'notif-item';
+
+                    let link = '/user-and-diag/notifications/read-and-redirect/' + n.id;
+
+                    let icon = 'bi-info-circle text-primary';
+                    if (n.type === 'LIKED' || n.type === 'LIKE') icon = 'bi-heart-fill text-danger';
+                    if (n.type === 'DISLIKE') icon = 'bi-hand-thumbs-down-fill text-secondary';
+                    if (n.type === 'COMMENT' || n.type === 'COMMENT_REPLY') icon = 'bi-chat-left-text-fill text-info';
+                    if (n.type === 'MENTION') icon = 'bi-at text-success';
+                    if (n.type === 'REVIEW') icon = 'bi-clipboard-check text-warning';
+
+                    // Style depending on read status
+                    const bgStyle = n.isRead ? 'background-color: transparent; opacity: 0.7;' : 'background-color: rgba(93, 184, 122, 0.05); border-left: 3px solid #5db87a;';
+                    const textColor = n.isRead ? '#777' : '#333';
+                    const boldWeight = n.isRead ? 'normal' : '600';
+
+                    li.innerHTML = `
+                        <a href="${link}" style="display: flex; gap: 12px; padding: 12px 15px; border-bottom: 1px solid #eee; text-decoration: none; align-items: start; transition: 0.3s; ${bgStyle}">
+                            <i class="bi ${icon}" style="font-size: 1.1rem; margin-top: 2px;"></i>
+                            <div>
+                                <span style="font-size: 0.85rem; color: ${textColor}; display: block; line-height: 1.4; font-weight: ${boldWeight};">${n.message}</span>
+                                <span style="font-size: 0.7rem; color: #aaa;">${n.date}</span>
+                            </div>
+                        </a>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                badge.style.display = 'none';
+                emptyMsg.style.display = 'block';
+            }
+        })
+        .catch(err => console.error("Could not fetch notifications", err));
+    }
+
+    function onBellHover() {
+        const badge = document.getElementById('notificationBadge');
+        if (badge && badge.style.display !== 'none') {
+            badge.style.display = 'none';
+            if (window.loadedNotifIds && window.loadedNotifIds.length > 0) {
+                const maxId = Math.max(...window.loadedNotifIds);
+                localStorage.setItem('maxSeenNotifId_{{ app.user.id }}', maxId);
+            }
+        }
+    }
+
+    // Call on load and check periodically
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchNotifications();
+        setInterval(fetchNotifications, 60000); // Check every minute
+    });
+    {% endif %}
+  </script>
 
 </body>
 </html>

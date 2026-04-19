@@ -5,104 +5,74 @@
 {% block body_class %}community-page{% endblock %}
 
 {% block stylesheets %}
-<style>
-    .community-hero {
-        padding: 120px 0 40px;
-        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;
-        min-height: 100vh;
-        position: relative;
-    }
-    .community-hero::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.45);
-        z-index: 0;
-    }
-    .community-hero > * { position: relative; z-index: 1; }
-    .community-header {
-        display: flex; align-items: center; justify-content: space-between;
-        max-width: 820px; margin: 0 auto 30px; padding: 0 20px; flex-wrap: wrap; gap: 15px;
-    }
-    .community-header h1 { color: #fff; font-weight: 800; font-size: 28px; }
-    .search-box {
-        display: flex; gap: 10px; flex: 1; max-width: 400px;
-    }
-    .search-box input {
-        flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 30px; padding: 10px 20px; color: #fff; font-size: 14px; outline: none;
-        backdrop-filter: blur(10px); transition: 0.3s;
-    }
-    .search-box input::placeholder { color: rgba(255,255,255,0.5); }
-    .search-box input:focus { border-color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.4); }
-    .btn-new-post {
-        background: linear-gradient(135deg, #6B7F3F, #4A5A2B); color: #fff; border: none;
-        padding: 10px 24px; border-radius: 30px; font-weight: 700; font-size: 14px;
-        text-decoration: none; transition: 0.3s; white-space: nowrap;
-    }
-    .btn-new-post:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; }
-
-    .feed-container { max-width: 820px; margin: 0 auto; padding: 0 20px; }
-
-    .post-card {
-        background: rgba(0,0,0,0.45); backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
-        padding: 28px; margin-bottom: 24px; cursor: pointer; transition: 0.3s;
-        text-decoration: none; display: block; color: inherit;
-    }
-    .post-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.35); background: rgba(0,0,0,0.55); }
-
-    .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .avatar {
-        width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0;
-    }
-    .post-meta .author { font-weight: 700; color: #fff; font-size: 14px; }
-    .post-meta .date { color: rgba(255,255,255,0.5); font-size: 12px; }
-
-    .badge-resolved {
-        background: #166534; color: #BBF7D0; font-size: 10px; font-weight: 800;
-        padding: 4px 10px; border-radius: 20px; margin-left: auto;
-    }
-
-    .post-title { color: #fff; font-size: 20px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
-    .post-desc { color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
-    .post-image { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
-
-    .post-footer {
-        display: flex; gap: 24px; padding-top: 14px;
-        border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 600;
-    }
-    .post-footer span.active-like { color: #60a5fa; }
-    .post-footer span.active-dislike { color: #f87171; }
-    .empty-state { text-align: center; color: rgba(255,255,255,0.5); padding: 60px 20px; font-size: 16px; }
-</style>
+<link href="{{ asset('assets/css/UserAndDiag/community-feed.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
 <section class="community-hero">
+    <div style="max-width: 820px; margin: 0 auto; padding: 0 20px;">
+        <nav aria-label="breadcrumb" class="mb-4 text-start">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Communauté</li>
+            </ol>
+        </nav>
+    </div>
     <div class="community-header">
-        <h1>👥 Communauté</h1>
-        <form class="search-box" method="GET" action="{{ path('app_user_and_diag_community') }}">
-            <input type="text" name="q" placeholder="Rechercher un sujet..." value="{{ keyword }}">
-        </form>
-        <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+        <h1 class="mb-3">👥 Communauté</h1>
+        <div style="display:flex;align-items:center;gap:12px; flex-wrap: wrap;">
+            <span id="resultCount" style="color:rgba(255,255,255,0.5);font-size:0.85rem;">{{ pagination.getTotalItemCount }} post(s)</span>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Rechercher un sujet..." oninput="filterPosts()">
+            </div>
+
+            <div class="sort-toggle" style="background: rgba(255,255,255,0.08); border-radius: 20px; padding: 4px; display: flex; font-size: 0.85rem;">
+                <a href="{{ path('app_user_and_diag_community', {'sort': 'trending', 'q': keyword}) }}" style="padding: 6px 14px; border-radius: 16px; color: white; text-decoration: none; transition: 0.2s; {% if currentSort == 'trending' %}background: rgba(255,255,255,0.15); font-weight: bold;{% else %}opacity: 0.6;{% endif %}">🔥 Tendances</a>
+                <a href="{{ path('app_user_and_diag_community', {'sort': 'recent', 'q': keyword}) }}" style="padding: 6px 14px; border-radius: 16px; color: white; text-decoration: none; transition: 0.2s; {% if currentSort == 'recent' %}background: rgba(255,255,255,0.15); font-weight: bold;{% else %}opacity: 0.6;{% endif %}">⏰ Récents</a>
+            </div>
+        </div>
+        {% if app.user and app.user.banned %}
+            <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn-new-post">+ Poser une question</a>
+        {% elseif app.user and app.user.mutedUntil and app.user.mutedUntil > date() %}
+            <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.{% if latestMuteReason %} Raison : {{ latestMuteReason|escape('js') }}{% endif %}'); return false;" class="btn-new-post">+ Poser une question</a>
+        {% else %}
+            <a href="{{ path('app_user_and_diag_community_new') }}" class="btn-new-post">+ Poser une question</a>
+        {% endif %}
+        {% if isModerator|default(false) %}
+            <a href="{{ path('app_user_and_diag_moderation_dashboard') }}" class="btn-new-post" style="background:linear-gradient(135deg,#e53935,#ff7043);margin-left:8px;">🛡️ Modération</a>
+        {% endif %}
     </div>
 
     <div class="feed-container">
-        {% for item in feedData %}
+        {% for item in pagination %}
             {% set post = item.post %}
-            <a href="{{ path('app_user_and_diag_community_detail', {id: post.id}) }}" class="post-card">
+            <div onclick="window.location.href='{{ path('app_user_and_diag_community_detail', {id: post.id}) }}'" class="post-card" style="cursor: pointer;"
+               data-track-type="post-feed" data-track-id="{{ post.id }}"
+               data-search="{{ post.title|lower }} {{ post.description|lower }} {{ post.user.prenom|lower }} {{ post.user.nom|lower }}">
                 <div class="post-header">
                     {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                     {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                     {% set idx = loop.index0 % 5 %}
-                    <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                        {{ post.user.prenom|default('U')|first|upper }}
-                    </div>
+                    {% if post.user.avatar %}
+                        <img src="{{ post.user.avatar }}" class="avatar" style="object-fit: cover;" alt="Avatar">
+                    {% else %}
+                        <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                            {{ post.user.prenom|default('U')|first|upper }}
+                        </div>
+                    {% endif %}
                     <div class="post-meta">
-                        <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
-                        <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                        <div class="author">
+                            <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;" onclick="event.stopPropagation();">
+                                {{ post.user.prenom }} {{ post.user.nom }}
+                            </a>
+                            {% if post.user.role == 'AGRONOME' %}
+                                <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
+                            {% endif %}
+                            {% if post.user.role == 'ADMIN' or post.user.moderator %}
+                                <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
+                            {% endif %}
+                        </div>
+                        <div class="date" title="{{ post.createdAt|date('d/m/Y à H:i') }}" style="text-transform: capitalize;">{{ post.createdAt|ago(locale='fr') }}</div>
                     </div>
                     {% if post.resolved %}
                         <span class="badge-resolved">✓ RÉSOLU</span>
@@ -120,8 +90,20 @@
                     <span>💬 {{ item.commentCount }}</span>
                     <span class="{{ item.userVote == 'LIKE' ? 'active-like' : '' }}">👍 {{ post.likes }}</span>
                     <span class="{{ item.userVote == 'DISLIKE' ? 'active-dislike' : '' }}">👎 {{ post.dislikes }}</span>
+                    {% if app.user and post.user.id != app.user.id %}
+                        {% if app.user.banned %}
+                            <span class="report-btn" onclick="event.stopPropagation(); alert('⛔ Votre compte a été banni de la communauté.')" title="Signaler la publication">🚩</span>
+                        {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                            <span class="report-btn" onclick="event.stopPropagation(); alert('🔇 Vous êtes muet. Signalement impossible.')" title="Signaler la publication">🚩</span>
+                        {% else %}
+                            <span class="report-btn" onclick="event.stopPropagation(); reportPost({{ post.id }})" title="Signaler la publication">🚩</span>
+                        {% endif %}
+                    {% endif %}
+                    {% if app.user and post.user.id == app.user.id %}
+                        <span style="color:#64b5f6;" title="Vues page">👁️ {{ post.views|default(0) }}</span>
+                    {% endif %}
                 </div>
-            </a>
+            </div>
         {% else %}
             <div class="empty-state">
                 <p style="font-size: 40px; margin-bottom: 12px;">🌱</p>
@@ -129,5 +111,48 @@
             </div>
         {% endfor %}
     </div>
+
+    <div class="navigation mt-4 mb-4" style="display: flex; justify-content: center;">
+        {{ knp_pagination_render(pagination) }}
+    </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+<script src="{{ asset('assets/js/UserAndDiag/community-analytics.js') }}"></script>
+<script>
+    function filterPosts() {
+        const filterText = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.post-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const searchableData = card.getAttribute('data-search') || '';
+            if (searchableData.includes(filterText)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        document.getElementById('resultCount').innerText = visibleCount + ' post(s)';
+    }
+
+    function reportPost(postId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/${postId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
+    }
+</script>
 {% endblock %}

@@ -5,144 +5,45 @@
 {% block body_class %}community-detail-page premium-header-active{% endblock %}
 
 {% block stylesheets %}
-<style>
-    .detail-hero {
-        padding: 120px 0 40px;
-        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed; background-size: cover;
-        min-height: 100vh;
-        position: relative;
-    }
-    .detail-hero::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        z-index: 0;
-    }
-    .detail-hero > * { position: relative; z-index: 1; }
-
-    .detail-container { max-width: 820px; margin: 0 auto; padding: 0 20px; }
-
-    .btn-back {
-        display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7);
-        text-decoration: none; font-size: 14px; font-weight: 600; margin-bottom: 20px; transition: 0.3s;
-        background: rgba(0,0,0,0.3); padding: 8px 16px; border-radius: 10px;
-        backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn-back:hover { color: #fff; background: rgba(0,0,0,0.5); transform: translateX(-3px); }
-
-    .glass-card {
-        background: rgba(0,0,0,0.45); backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 30px; margin-bottom: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    /* Post */
-    .post-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-    .avatar {
-        width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0;
-    }
-    .post-meta .author { font-weight: 700; color: #fff; font-size: 15px; }
-    .post-meta .date { color: rgba(255,255,255,0.5); font-size: 12px; }
-    .badge-resolved { background: #166534; color: #BBF7D0; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-left: auto; }
-
-    .post-title { color: #fff; font-size: 26px; font-weight: 800; margin-bottom: 14px; line-height: 1.3; }
-    .post-body { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.8; margin-bottom: 18px; white-space: pre-wrap; }
-    .post-image { width: 100%; max-height: 500px; object-fit: cover; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); }
-
-    .action-bar { display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .vote-btn {
-        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px; padding: 8px 18px; color: rgba(255,255,255,0.7);
-        font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
-    }
-    .vote-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .vote-btn.active-like { color: #60a5fa; border-color: #60a5fa; background: rgba(96,165,250,0.1); }
-    .vote-btn.active-dislike { color: #f87171; border-color: #f87171; background: rgba(248,113,113,0.1); }
-
-    /* Comments */
-    .comments-header { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
-
-    .comment-card {
-        background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px; padding: 18px; margin-bottom: 12px; transition: 0.2s;
-        backdrop-filter: blur(10px);
-    }
-    .comment-card.solution { background: rgba(22,101,52,0.15); border-color: rgba(187,247,208,0.3); }
-
-    .comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .avatar-sm { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-    .comment-author { color: #fff; font-weight: 700; font-size: 13px; }
-    .badge-op { background: rgba(96,165,250,0.2); color: #93c5fd; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
-    .badge-solution { background: rgba(22,101,52,0.3); color: #BBF7D0; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
-
-    .comment-body { color: rgba(255,255,255,0.75); font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
-
-    .comment-actions { display: flex; gap: 10px; align-items: center; }
-    .comment-actions button {
-        background: transparent; border: none; color: rgba(255,255,255,0.5);
-        font-size: 12px; cursor: pointer; font-weight: 600; padding: 4px 8px; border-radius: 6px; transition: 0.2s;
-    }
-    .comment-actions button:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .comment-actions button.active-like { color: #60a5fa; }
-    .comment-actions button.active-dislike { color: #f87171; }
-
-    .btn-solve {
-        color: #4ade80 !important; font-weight: 700 !important;
-    }
-
-    /* Comment Input Area */
-    .comment-input-area {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 1001;
-        background: rgba(10, 15, 12, 0.9); backdrop-filter: blur(25px);
-        border-top: 1px solid rgba(255,255,255,0.15); padding: 16px 20px;
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
-    }
-    .comment-input-inner { max-width: 820px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
-    .comment-input-inner textarea {
-        flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 14px; padding: 12px 16px; color: #fff; font-size: 14px; resize: none; height: 44px;
-        font-family: 'Inter', sans-serif; outline: none; transition: 0.3s;
-    }
-    .comment-input-inner textarea:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
-    .comment-input-inner textarea::placeholder { color: rgba(255,255,255,0.4); }
-    .btn-send {
-        background: linear-gradient(135deg, #6B7F3F, #4A5A2B); color: #fff; border: none;
-        padding: 12px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap;
-    }
-    .btn-send:hover { transform: scale(1.03); opacity: 0.95; }
-
-    .reply-indicator {
-        display: none; background: rgba(107,127,63,0.15); border: 1px solid rgba(107,127,63,0.3);
-        border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; color: rgba(255,255,255,0.7);
-        font-size: 13px; max-width: 820px; margin-left: auto; margin-right: auto;
-    }
-    .reply-indicator .cancel-reply {
-        background: none; border: none; color: #f87171; cursor: pointer; font-weight: 700; margin-left: 10px;
-    }
-
-    .detail-hero { padding-bottom: 120px; }
-</style>
+<link href="{{ asset('assets/css/UserAndDiag/community-detail.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
 <section class="detail-hero">
     <div class="detail-container">
-        <a href="{{ path('app_user_and_diag_community') }}" class="btn-back">← Communauté</a>
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_community') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Communauté</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Post Detail</li>
+            </ol>
+        </nav>
 
         {# ─── Post Card ─── #}
-        <div class="glass-card">
+        <div class="glass-card" data-track-type="post-detail" data-track-id="{{ post.id }}">
             <div class="post-header">
                 {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                 {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                 {% set idx = post.user.id % 5 %}
-                <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                    {{ post.user.prenom|default('U')|first|upper }}
-                </div>
+                {% if post.user.avatar %}
+                    <img src="{{ post.user.avatar }}" class="avatar" style="object-fit: cover;" alt="Avatar">
+                {% else %}
+                    <div class="avatar" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                        {{ post.user.prenom|default('U')|first|upper }}
+                    </div>
+                {% endif %}
                 <div class="post-meta">
-                    <div class="author">{{ post.user.prenom }} {{ post.user.nom }}</div>
-                    <div class="date">{{ post.createdAt|date('d/m/Y à H:i') }}</div>
+                    <div class="author">
+                        <a href="{{ path('app_profile_show', {'id': post.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                            {{ post.user.prenom }} {{ post.user.nom }}
+                        </a>
+                        {% if post.user.role == 'AGRONOME' %}
+                            <span title="Agronome Vérifié" style="color:#4caf50;font-size:14px;margin-left:4px;">✅</span>
+                        {% endif %}
+                        {% if post.user.role == 'ADMIN' or post.user.moderator %}
+                            <span title="Modérateur" style="color:#ff9800;font-size:11px;margin-left:4px;background:rgba(255,152,0,0.15);padding:1px 6px;border-radius:8px;">🛡️ MOD</span>
+                        {% endif %}
+                    </div>
+                    <div class="date" title="{{ post.createdAt|date('d/m/Y à H:i') }}" style="text-transform: capitalize;">{{ post.createdAt|ago(locale='fr') }}</div>
                 </div>
                 {% if post.resolved %}
                     <span class="badge-resolved">✓ RÉSOLU</span>
@@ -150,10 +51,31 @@
             </div>
 
             <div class="post-title">{{ post.title }}</div>
-            <div class="post-body">{{ post.description }}</div>
+            <div class="post-body">{{ post.description|emojify|social_embed }}</div>
 
             {% if post.imageUrl %}
-                <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy">
+                <img src="{{ post.imageUrl }}" class="post-image" alt="Image du post" loading="lazy" data-post-id="{{ post.id }}">
+            {% endif %}
+
+            {% if app.user and post.user.id == app.user.id %}
+                <div class="post-owner-actions mt-3 mb-3" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    {% if app.user.banned %}
+                        <a href="#" onclick="alert('⛔ Votre compte a été banni de la communauté.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <button onclick="alert('⛔ Votre compte a été banni de la communauté.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
+                    {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                        <a href="#" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Modification impossible.'); return false;" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <button onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}. Suppression impossible.');" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
+                    {% else %}
+                        <a href="{{ path('app_user_and_diag_community_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 4px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2); color: white;">✏️ Modifier</a>
+                        <form action="{{ path('app_user_and_diag_community_delete', {id: post.id}) }}" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette question ?');">
+                            <button type="submit" class="btn btn-sm" style="border-radius: 20px; padding: 4px 12px; border: 1px solid rgba(255,0,0,0.4); color: #ff5252; background: transparent; display: inline-flex; align-items: center; gap: 4px;">🗑️ Supprimer</button>
+                        </form>
+                    {% endif %}
+                    
+                    <button class="btn btn-sm" onclick="document.getElementById('analyticsModal').style.display='flex';" style="background: rgba(100,181,246,0.1); border: 1px solid rgba(100,181,246,0.3); color: #64b5f6; border-radius: 20px; padding: 4px 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                        📊 Outils d'Analyse
+                    </button>
+                </div>
             {% endif %}
 
             <div class="action-bar">
@@ -163,7 +85,18 @@
                 <button class="vote-btn {{ postVote == 'DISLIKE' ? 'active-dislike' : '' }}" id="btnDislikePost" onclick="votePost('DISLIKE')">
                     👎 <span id="postDislikes">{{ post.dislikes }}</span>
                 </button>
+                {% if app.user and post.user.id != app.user.id %}
+                    {% if app.user.banned %}
+                        <button class="vote-btn" onclick="alert('⛔ Votre compte a été banni de la communauté.')" style="font-size:12px;">🚩 Signaler</button>
+                    {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                        <button class="vote-btn" onclick="alert('🔇 Vous êtes muet. Signalement impossible.')" style="font-size:12px;">🚩 Signaler</button>
+                    {% else %}
+                        <button class="vote-btn" onclick="reportPost({{ post.id }})" style="font-size:12px;">🚩 Signaler</button>
+                    {% endif %}
+                {% endif %}
             </div>
+            
+            <div data-track-type="completed-read" data-track-id="{{ post.id }}" style="height: 1px; visibility: hidden; margin-top: 20px;"></div>
         </div>
 
         {# ─── Comments ─── #}
@@ -176,25 +109,58 @@
                 {% set ml = depth * 35 %}
                 {% if ml > 200 %}{% set ml = 200 %}{% endif %}
 
-                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}">
+                <div class="comment-card {{ comment.solution ? 'solution' : '' }}" id="comment-{{ comment.id }}" style="margin-left: {{ ml }}px" data-id="{{ comment.id }}" data-track-type="comment" data-track-id="{{ comment.id }}">
                     <div class="comment-header">
                         {% set colors = ['#E0F2F1','#FCE4EC','#E8EAF6','#F3E5F5','#FFF3E0'] %}
                         {% set textColors = ['#00695C','#AD1457','#283593','#6A1B9A','#E65100'] %}
                         {% set idx = comment.user.id % 5 %}
-                        <div class="avatar-sm" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
-                            {{ comment.user.prenom|default('U')|first|upper }}
-                        </div>
-                        <span class="comment-author">{{ comment.user.prenom }} {{ comment.user.nom }}</span>
+                        {% if comment.user.avatar %}
+                            <img src="{{ comment.user.avatar }}" class="avatar-sm" style="object-fit: cover; border-radius: 50%;" alt="Avatar">
+                        {% else %}
+                            <div class="avatar-sm" style="background:{{ colors[idx] }};color:{{ textColors[idx] }}">
+                                {{ comment.user.prenom|default('U')|first|upper }}
+                            </div>
+                        {% endif %}
+                        <span class="comment-author">
+                            <a href="{{ path('app_profile_show', {'id': comment.user.id}) }}" class="text-decoration-none" style="color: inherit;">
+                                {{ comment.user.prenom }} {{ comment.user.nom }}
+                            </a>
+                        </span>
                         {% if isOp %}<span class="badge-op">OP</span>{% endif %}
                         {% if comment.solution %}<span class="badge-solution">✓ SOLUTION</span>{% endif %}
+                        <span class="comment-date" style="margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: capitalize;" title="{{ comment.createdAt|date('d/m/Y à H:i') }}">{{ comment.createdAt|ago(locale='fr') }}</span>
                     </div>
-                    <div class="comment-body">{{ comment.content }}</div>
+                    <div class="comment-body">{{ comment.content|emojify }}</div>
                     <div class="comment-actions">
                         <button class="{{ vote == 'LIKE' ? 'active-like' : '' }}" onclick="voteComment({{ comment.id }}, 'LIKE', this)">👍 <span>{{ comment.likes }}</span></button>
                         <button class="{{ vote == 'DISLIKE' ? 'active-dislike' : '' }}" onclick="voteComment({{ comment.id }}, 'DISLIKE', this)">👎 <span>{{ comment.dislikes }}</span></button>
                         <button onclick="replyTo({{ comment.id }}, '{{ comment.user.prenom }}')">Répondre</button>
                         {% if post.user.id == currentUserId and not post.resolved and not comment.solution %}
                             <button class="btn-solve" onclick="markSolution({{ post.id }}, {{ comment.id }})">✓ Marquer comme solution</button>
+                        {% endif %}
+                        {% if app.user and comment.user.id != app.user.id %}
+                            {% if app.user.banned %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">🚩 Signaler</button>
+                            {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="alert('🔇 Vous êtes muet. Signalement impossible.')">🚩 Signaler</button>
+                            {% else %}
+                                <button style="color:#fbc02d;font-size:11px;" onclick="reportComment({{ comment.id }})">🚩 Signaler</button>
+                            {% endif %}
+                        {% endif %}
+                        {% if is_granted('ROLE_MODERATOR') %}
+                            <button style="color:#e53935;font-size:11px;" onclick="modDeleteComment({{ comment.id }})">🗑️ Mod Supprimer</button>
+                        {% endif %}
+                        {% if app.user and comment.user.id == app.user.id %}
+                            {% if app.user.banned %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="alert('⛔ Votre compte a été banni de la communauté.')">🗑️ Supprimer</button>
+                            {% elseif app.user.mutedUntil and app.user.mutedUntil > date() %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.')">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="alert('🔇 Vous êtes muet jusqu\'au {{ app.user.mutedUntil|date('d/m/Y H:i') }}.')">🗑️ Supprimer</button>
+                            {% else %}
+                                <button style="color:#64b5f6;font-size:11px;" onclick="editComment({{ comment.id }})">✏️ Éditer</button>
+                                <button style="color:#e53935;font-size:11px;" onclick="deleteComment({{ comment.id }})">🗑️ Supprimer</button>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -220,13 +186,170 @@
         <button class="cancel-reply" onclick="cancelReply()">✕</button>
     </div>
     <div class="comment-input-inner">
-        <textarea id="txtComment" placeholder="Écrire un commentaire..." rows="1"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;width:100%;">
+            <button type="button" class="emoji-toggle" onclick="toggleEmojiPicker()" title="Emojis" style="background:none;border:none;font-size:20px;cursor:pointer;">😊</button>
+            <textarea id="txtComment" placeholder="Écrire un commentaire... (utilisez :plant: :tomato: :fire: etc.)" rows="1" style="flex:1;"></textarea>
+        </div>
         <button class="btn-send" onclick="sendComment()">Envoyer</button>
     </div>
+    <div id="emojiPicker" style="display:none;background:rgba(30,30,30,0.95);border-radius:12px;padding:10px;margin-top:8px;flex-wrap:wrap;gap:6px;max-width:400px;">
+        <span class="ep" onclick="insertEmote(':plant:')" title=":plant:">🌱</span>
+        <span class="ep" onclick="insertEmote(':sun:')" title=":sun:">☀️</span>
+        <span class="ep" onclick="insertEmote(':rain:')" title=":rain:">🌧️</span>
+        <span class="ep" onclick="insertEmote(':bug:')" title=":bug:">🐛</span>
+        <span class="ep" onclick="insertEmote(':leaf:')" title=":leaf:">🍃</span>
+        <span class="ep" onclick="insertEmote(':tomato:')" title=":tomato:">🍅</span>
+        <span class="ep" onclick="insertEmote(':corn:')" title=":corn:">🌽</span>
+        <span class="ep" onclick="insertEmote(':tractor:')" title=":tractor:">🚜</span>
+        <span class="ep" onclick="insertEmote(':check:')" title=":check:">✅</span>
+        <span class="ep" onclick="insertEmote(':warning:')" title=":warning:">⚠️</span>
+        <span class="ep" onclick="insertEmote(':fire:')" title=":fire:">🔥</span>
+        <span class="ep" onclick="insertEmote(':heart:')" title=":heart:">❤️</span>
+        <span class="ep" onclick="insertEmote(':thumbsup:')" title=":thumbsup:">👍</span>
+        <span class="ep" onclick="insertEmote(':star:')" title=":star:">⭐</span>
+        <span class="ep" onclick="insertEmote(':idea:')" title=":idea:">💡</span>
+        <span class="ep" onclick="insertEmote(':trophy:')" title=":trophy:">🏆</span>
+        <span class="ep" onclick="insertEmote(':wave:')" title=":wave:">👋</span>
+        <span class="ep" onclick="insertEmote(':clap:')" title=":clap:">👏</span>
+        <span class="ep" onclick="insertEmote(':eyes:')" title=":eyes:">👀</span>
+        <span class="ep" onclick="insertEmote(':pray:')" title=":pray:">🙏</span>
+        <span class="ep" onclick="insertEmote(':muscle:')" title=":muscle:">💪</span>
+        <span class="ep" onclick="insertEmote(':wheat:')" title=":wheat:">🌾</span>
+        <span class="ep" onclick="insertEmote(':olive:')" title=":olive:">🫒</span>
+        <span class="ep" onclick="insertEmote(':droplet:')" title=":droplet:">💧</span>
+        <span class="ep" onclick="insertEmote(':bee:')" title=":bee:">🐝</span>
+        <span class="ep" onclick="insertEmote(':ant:')" title=":ant:">🐜</span>
+        <span class="ep" onclick="insertEmote(':mushroom:')" title=":mushroom:">🍄</span>
+    </div>
 </div>
+
+{% if app.user and post.user.id == app.user.id %}
+{# ─── Analytics Modal ─── #}
+<div id="analyticsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; padding: 20px; backdrop-filter: blur(5px);">
+    <div style="background:#1e1e1e; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+        <div style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #fff; font-size: 1.25rem;">📊 Statistiques Avancées</h3>
+            <button onclick="document.getElementById('analyticsModal').style.display='none';" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding: 24px;">
+            {% set impressions = post.feedImpressions|default(0) %}
+            {% set views = post.views|default(0) %}
+            {% set ctr = impressions > 0 ? ((views / impressions) * 100)|round(1) : 0 %}
+            {% set completedReads = post.completedReads|default(0) %}
+            {% set completionRate = views > 0 ? ((completedReads / views) * 100)|round(1) : 0 %}
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 28px; font-weight: bold; color: #fff;">{{ impressions }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Impressions du fil</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 28px; font-weight: bold; color: #fff;">{{ views }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Lectures complètes</div>
+                </div>
+                <div style="background: rgba(100,181,246,0.1); padding: 16px; border-radius: 12px; border: 1px solid #64b5f633;">
+                    <div style="font-size: 28px; font-weight: bold; color: #64b5f6;">{{ ctr }}%</div>
+                    <div style="font-size: 12px; color: #64b5f6cc; text-transform: uppercase;">Taux de clics (CTR)</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ post.totalReadTime is defined and post.totalReadTime > 0 ? (post.totalReadTime < 60 ? post.totalReadTime ~ 's' : (post.totalReadTime / 60)|round(1, 'floor') ~ 'm ' ~ (post.totalReadTime % 60) ~ 's') : '0s' }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Temps d'attention total</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ completionRate }}%</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Lu jusqu'à la fin</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #fff;">{{ post.mediaClicks|default(0) }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Clics sur les images</div>
+                </div>
+            </div>
+
+            <h4 style="color: #fff; font-size: 1rem; margin-bottom: 16px;">Vues au fil du temps</h4>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block javascripts %}
+<script src="{{ asset('assets/js/UserAndDiag/community-analytics.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if app.user and post.user.id == app.user.id %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('analyticsChart');
+    if (ctx && {{ chartLabels|length }} > 0) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ chartLabels|json_encode|raw }},
+                datasets: [{
+                    label: 'Vues',
+                    data: {{ chartViews|json_encode|raw }},
+                    borderColor: '#64b5f6',
+                    backgroundColor: 'rgba(100, 181, 246, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#1e1e1e',
+                    pointBorderColor: '#64b5f6',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { stepSize: 1, color: 'rgba(255,255,255,0.5)' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'rgba(255,255,255,0.5)' }
+                    }
+                }
+            }
+        });
+    } else if (ctx) {
+        // Render a flat zero graph if no data yet to keep UI nice
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Aujourd\'hui'],
+                datasets: [{
+                    label: 'Vues',
+                    data: [0],
+                    borderColor: '#64b5f6',
+                    backgroundColor: 'rgba(100, 181, 246, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1, color: 'rgba(255,255,255,0.5)' } },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 <script>
     let replyingToId = null;
     const postId = {{ post.id }};
@@ -238,7 +361,11 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `vote=${type}`
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
         .then(d => {
             document.getElementById('postLikes').textContent = d.likes;
             document.getElementById('postDislikes').textContent = d.dislikes;
@@ -246,7 +373,8 @@
             const btnD = document.getElementById('btnDislikePost');
             btnL.className = 'vote-btn' + (d.userVote === 'LIKE' ? ' active-like' : '');
             btnD.className = 'vote-btn' + (d.userVote === 'DISLIKE' ? ' active-dislike' : '');
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Comment Voting ──
@@ -256,7 +384,11 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `vote=${type}`
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
         .then(d => {
             const card = btn.closest('.comment-card');
             const btns = card.querySelectorAll('.comment-actions button');
@@ -264,7 +396,8 @@
             btns[0].querySelector('span').textContent = d.likes;
             btns[1].className = d.userVote === 'DISLIKE' ? 'active-dislike' : '';
             btns[1].querySelector('span').textContent = d.dislikes;
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Reply ──
@@ -295,12 +428,54 @@
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body
         })
-        .then(r => r.json())
-        .then(() => {
+        .then(async r => {
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return data;
+        })
+        .then((data) => {
+            // Emulate the rendered comment insertion to avoid reload
+            const initialId = data.userName.charAt(0).toUpperCase();
+            
+            // Build the card HTML
+            const margin = replyingToId ? 35 : 0; // Simple approximation for UI
+            
+            const html = `
+                <div class="comment-card" id="comment-${data.id}" style="margin-left: ${margin}px" data-id="${data.id}">
+                    <div class="comment-header">
+                        <div class="avatar-sm" style="background:#E0F2F1;color:#00695C">${initialId}</div>
+                        <span class="comment-author">
+                            <a href="#" class="text-decoration-none" style="color: inherit;">
+                                ${data.userName}
+                            </a>
+                        </span>
+                    </div>
+                    <div class="comment-body">${data.content}</div>
+                    <div class="comment-actions">
+                        <button onclick="voteComment(${data.id}, 'LIKE', this)">👍 <span>0</span></button>
+                        <button onclick="voteComment(${data.id}, 'DISLIKE', this)">👎 <span>0</span></button>
+                        <button onclick="replyTo(${data.id}, '${data.userName}')">Répondre</button>
+                        <button style="color:#64b5f6;font-size:11px;" onclick="editComment(${data.id})">✏️ Éditer</button>
+                        <button style="color:#e53935;font-size:11px;" onclick="deleteComment(${data.id})">🗑️ Supprimer</button>
+                    </div>
+                </div>
+            `;
+            
+            if (replyingToId) {
+                const parentCard = document.querySelector(`.comment-card[data-id="${replyingToId}"]`);
+                if (parentCard) {
+                    parentCard.insertAdjacentHTML('afterend', html);
+                } else {
+                    document.getElementById('commentsContainer').insertAdjacentHTML('beforeend', html);
+                }
+            } else {
+                document.getElementById('commentsContainer').insertAdjacentHTML('beforeend', html);
+            }
+
             txt.value = '';
             cancelReply();
-            location.reload(); // Reload to show threaded comment correctly
-        });
+        })
+        .catch(err => alert(err.message));
     }
 
     // ── Mark Solution ──
@@ -318,6 +493,143 @@
     document.getElementById('txtComment').addEventListener('input', function() {
         this.style.height = '44px';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // ── Emoji Picker ──
+    function toggleEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+    }
+    function insertEmote(code) {
+        const ta = document.getElementById('txtComment');
+        ta.value += ' ' + code + ' ';
+        ta.focus();
+    }
+
+    // ── Report Post ──
+    function reportPost(postId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/${postId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
+    }
+
+    // ── Mod: Delete Comment ──
+    function modDeleteComment(commentId) {
+        const reason = prompt('Raison de la suppression :');
+        if (!reason) return;
+        fetch(`/user-and-diag/moderation/comment/${commentId}/delete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) location.reload();
+            else alert(d.error || 'Erreur');
+        });
+    }
+
+    // ── Edit Comment ──
+    function editComment(commentId) {
+        const card = document.querySelector(`.comment-card[data-id="${commentId}"]`);
+        const bodyEl = card.querySelector('.comment-body');
+        // A simple prompt for editing, strips out emojis which might be rendered as img tags if emojify filter does that, 
+        // but here we just grab innerText which should mostly be safe for simple edits.
+        const currentContent = bodyEl.innerText;
+        const newContent = prompt('Modifiez votre commentaire :', currentContent);
+
+        if (newContent !== null && newContent.trim() !== '' && newContent !== currentContent) {
+            fetch(`/user-and-diag/community/comment/${commentId}/edit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `content=${encodeURIComponent(newContent)}`
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    bodyEl.innerText = d.content;
+                } else {
+                    alert(d.error || 'Erreur');
+                }
+            });
+        }
+    }
+
+    // ── Delete Comment ──
+    function deleteComment(commentId) {
+        if (!confirm('Voulez-vous vraiment supprimer ce commentaire ?')) return;
+
+        fetch(`/user-and-diag/community/comment/${commentId}/delete`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                const card = document.querySelector(`.comment-card[data-id="${commentId}"]`);
+                if (card) card.remove();
+            } else {
+                alert(d.error || 'Erreur');
+            }
+        });
+    }
+
+    // ── Report Comment ──
+    function reportComment(commentId) {
+        const reason = prompt('Raison du signalement :');
+        if (!reason) return;
+        fetch(`/user-and-diag/community/comment/${commentId}/report`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) alert('✅ ' + d.message);
+            else alert('⚠️ ' + (d.error || 'Erreur'));
+        })
+        .catch(() => alert('Erreur réseau.'));
+    }
+</script>
+<script src="{{ asset('assets/js/UserAndDiag/community-mentions.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupMentions('txtComment');
+
+        // Smoothly hash scroll and elegantly highlight specific linked comments
+        if (window.location.hash && window.location.hash.startsWith('#comment-')) {
+            const target = document.querySelector(window.location.hash);
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Provide a nice premium glow to draw their eye immediately
+                    const originalBorder = target.style.border;
+                    const originalBg = target.style.backgroundColor;
+                    const originalShadow = target.style.boxShadow;
+                    
+                    target.style.border = '2px solid #29b6f6';
+                    target.style.backgroundColor = 'rgba(41, 182, 246, 0.1)';
+                    target.style.boxShadow = '0 0 25px rgba(41, 182, 246, 0.6), inset 0 0 15px rgba(41, 182, 246, 0.1)';
+                    target.style.transition = 'all 0.3s ease-out';
+                    
+                    setTimeout(() => {
+                        target.style.transition = 'all 3s ease-in-out';
+                        target.style.border = originalBorder || '';
+                        target.style.backgroundColor = originalBg || '';
+                        target.style.boxShadow = originalShadow || 'none';
+                    }, 2500);
+                }, 400); // 400ms delay ensures browser layout has completely rendered
+            }
+        }
     });
 </script>
 {% endblock %}

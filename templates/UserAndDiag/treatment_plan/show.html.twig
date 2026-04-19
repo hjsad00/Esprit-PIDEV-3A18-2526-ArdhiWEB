@@ -1,0 +1,428 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Protocole: {{ diagnostic.resultatIa|split('-')[0] }}{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/treatment-show.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
+    <div class="glass-panel">
+        
+        <div class="mb-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_treatment_plan_list') }}" class="text-white-50 text-decoration-none">Plans de Traitement</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Détails du Plan</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <div class="header-bar pb-3">
+            <div class="mt-2">
+                <div class="d-inline-block align-middle">
+                    <h3 class="m-0 fw-bold text-white">Protocole: {{ diagnostic.resultatIa|split('-')[0] }}</h3>
+                    <small class="text-white-50">Diagnostic: {{ diagnostic.resultatIa|split('-')[1]|default('') }} | Débuté le: {{ plan.startDate|date('d/m/Y') }}</small>
+                </div>
+            </div>
+            <div>
+                {% if plan.status == 'ACTIVE' %}
+                    <span class="badge bg-success fs-6 px-3 py-2">Plan Actif</span>
+                {% elseif plan.status == 'COMPLETED' %}
+                    <span class="badge bg-success fs-6 px-3 py-2" style="background-color: #2ecc71 !important;">Protocole Terminé</span>
+                {% else %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">Abandonné</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <h5 class="mb-3 fw-bold text-white">Ma Plante (Visualisation)</h5>
+                
+                <div class="image-wrapper mb-4" id="plantImageWrapper">
+                    <img id="mainPlantImage" src="{{ diagnostic.imageScannee }}" alt="Ma Plante">
+                    <div id="arMarker" class="ar-marker"></div>
+                    <div id="arLabel" class="ar-label">Zone</div>
+                </div>
+
+                {% if plan.status == 'ACTIVE' %}
+                    <div class="d-flex flex-column gap-2">
+                        
+                        <button type="button" class="action-btn btn-ai" onclick="document.getElementById('aiReevalInput').click()">
+                            <i class="bi bi-robot"></i> Réévaluer via IA
+                        </button>
+
+                        <input type="file" id="aiReevalInput" style="display:none" accept="image/*" onchange="handleAiReevaluation(this)">
+                        
+                        <form action="{{ path('app_user_and_diag_treatment_plan_abandon', {id: plan.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir abandonner ce protocole ? Cette action est irréversible.');">
+                            <button type="submit" class="action-btn" style="background: rgba(231, 76, 60, 0.85); width: 100%;">
+                                <i class="bi bi-x-circle"></i> Abandonner le protocole
+                            </button>
+                        </form>
+                        <button class="action-btn" style="background: #25D366; width: 100%;" onclick="triggerWhatsApp({{ plan.id }}, this)">
+                            <i class="bi bi-whatsapp"></i> Envoyer un Rappel WhatsApp
+                        </button>    
+                        <button type="button" class="action-btn btn-expert" style="background: rgba(41, 128, 185, 0.85);" onclick="document.getElementById('expertInput').click()">
+                            <i class="bi bi-person-badge"></i> Réévaluer auprès Agronome    
+                        </button>
+                        <input type="file" id="expertInput" style="display:none" accept="image/*" onchange="askExpertAjax(this)">
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-7">
+                <h5 class="mb-4 fw-bold text-white">Calendrier des Interventions</h5>
+                
+                {% for item in tasksWithMarkers %}
+                    {% set task = item.entity %}
+                    {% set marker = item.marker %}
+                    {% set isCompleted = task.status == 'COMPLETED' %}
+                    
+                    <div class="task-row {{ isCompleted ? 'completed' : '' }}" id="task-row-{{ task.id }}">
+                        
+                        <div class="task-day">J-{{ task.dayOffset }}</div>
+                        
+                        <div class="task-desc">{{ task.taskDescription }}</div>
+                        
+                        <div class="d-flex align-items-center gap-3 ms-auto">
+                            {% if marker %}
+                                <button class="btn-pin" 
+                                        onclick="triggerMarker({{ marker.x }}, {{ marker.y }}, '{{ marker.label }}')" 
+                                        title="Localiser sur la plante">
+                                    📍
+                                </button>
+                            {% endif %}
+
+                            <span class="badge-status {{ isCompleted ? 'status-completed' : 'status-pending' }}" id="badge-{{ task.id }}">
+                                {{ isCompleted ? 'ACCOMPLI' : 'EN ATTENTE' }}
+                            </span>
+                            
+                            {% if plan.status == 'ACTIVE' %}
+                                <div class="form-check m-0">
+                                    <input type="checkbox" class="form-check-input" style="width: 22px; height: 22px; cursor: pointer;" 
+                                           id="check-{{ task.id }}" 
+                                           {{ isCompleted ? 'checked disabled' : '' }}
+                                           onchange="completeTaskAjax({{ task.id }}, this)">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary bg-transparent border-light text-white text-center">
+                        Aucune tâche générée pour ce protocole.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        </div>
+</div>
+
+<div class="modal fade" id="statusRemarkModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-light">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title"><i class="bi bi-activity"></i> Résultat de l'Analyse</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <h3 id="statusRemarkBadge" class="mb-3"></h3>
+                <p id="statusRemarkText" class="fs-5 text-white-75"></p>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center" id="statusRemarkFooter">
+                </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aiProposalModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-robot"></i> Nouveau Protocole Suggéré</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white-75">Voici le nouveau plan de traitement généré pour faire face à la situation :</p>
+                <pre id="aiProposalContent" class="bg-secondary p-3 rounded text-light" style="white-space: pre-wrap; font-size: 14px;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">❌ Refuser</button>
+                <button type="button" class="btn btn-success" onclick="acceptAiPlan()">✅ Accepter le nouveau plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block javascripts %}
+<script>
+    // AR Visual Marker Logic (Translates your Java Canvas Logic to Web)
+    function triggerMarker(xPercent, yPercent, labelText) {
+        const marker = document.getElementById('arMarker');
+        const label = document.getElementById('arLabel');
+        
+        // Temporarily hide to restart CSS animation smoothly
+        marker.style.display = 'none';
+        label.style.display = 'none';
+        
+        setTimeout(() => {
+            marker.style.left = xPercent + '%';
+            marker.style.top = yPercent + '%';
+            label.style.left = xPercent + '%';
+            label.style.top = yPercent + '%';
+            label.innerText = labelText;
+            
+            marker.style.display = 'block';
+            label.style.display = 'block';
+        }, 50);
+
+        // Hide marker automatically after 4 seconds
+        setTimeout(() => {
+            marker.style.display = 'none';
+            label.style.display = 'none';
+        }, 4000);
+    }
+
+    // Task Completion AJAX Logic
+    function completeTaskAjax(taskId, checkboxElement) {
+        if (!checkboxElement.checked) return; // Prevent unchecking
+
+        checkboxElement.disabled = true; // Lock UI during fetch
+
+        fetch(`{{ path('app_user_and_diag_treatment_task_complete', {'id': 'TASK_ID'}) }}`.replace('TASK_ID', taskId), {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI visually for this specific row
+                const row = document.getElementById(`task-row-${taskId}`);
+                const badge = document.getElementById(`badge-${taskId}`);
+                
+                row.classList.add('completed');
+                badge.className = 'badge-status status-completed';
+                badge.innerText = 'ACCOMPLI';
+
+                // NEW LOGIC: Check if the whole plan is done
+                if (data.plan_completed) {
+                    setTimeout(() => {
+                        alert("🎉 Félicitations ! Vous avez accompli toutes les tâches de ce protocole. Votre traitement est terminé !");
+                        // Reload the page to update badges and hide the action buttons
+                        window.location.reload();
+                    }, 300); // Slight delay so the user sees the checkbox turn green first
+                }
+                
+            } else {
+                // Handle Sequential Error
+                checkboxElement.checked = false;
+                checkboxElement.disabled = false;
+                alert(data.error || "Une erreur est survenue.");
+            }
+        })
+        .catch(err => {
+            checkboxElement.checked = false;
+            checkboxElement.disabled = false;
+            alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+
+    // WhatsApp Reminder Trigger
+    function triggerWhatsApp(planId, buttonElement) {
+        buttonElement.disabled = true;
+        const originalHtml = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_whatsapp', {'id': 'PLAN_ID'}) }}`.replace('PLAN_ID', planId), {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            if (data.success) {
+                alert("✅ " + data.message);
+            } else {
+                alert("❌ Erreur : " + data.error);
+            }
+        })
+        .catch(err => {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            alert("Erreur réseau de communication avec le serveur.");
+        });
+    }
+    let currentProposedTasks = ""; // Stores the AI's raw text if a new plan is generated
+
+    // STEP 1: Upload and get the Remark
+    function handleAiReevaluation(inputElement) {
+        if (!inputElement.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', inputElement.files[0]);
+
+        const btn = document.querySelector('.btn-ai');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyse en cours...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_reevaluate', {id: plan.id}) }}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            inputElement.value = ""; 
+
+            if (data.error) {
+                alert("Erreur: " + data.error);
+                return;
+            }
+
+            // Setup the Status Modal based on the AI's remark
+            const badge = document.getElementById('statusRemarkBadge');
+            const text = document.getElementById('statusRemarkText');
+            const footer = document.getElementById('statusRemarkFooter');
+            
+            text.innerText = data.message;
+
+            if (data.status === 'MISMATCH') {
+                badge.innerHTML = '<span class="badge bg-secondary">Différente Plante</span>';
+                footer.innerHTML = '<button class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>';
+            } 
+            else if (data.status === 'HEALED') {
+                badge.innerHTML = '<span class="badge bg-success">Totalement Guérie !</span>';
+                footer.innerHTML = '<button class="btn btn-success" onclick="window.location.reload()">Terminer le protocole</button>';
+            } 
+            else {
+                // WORSENING, RECOVERING, or UNCHANGED
+                if (data.status === 'WORSENING') badge.innerHTML = '<span class="badge bg-danger">Aggravation</span>';
+                if (data.status === 'RECOVERING') badge.innerHTML = '<span class="badge bg-info text-dark">En Amélioration</span>';
+                if (data.status === 'UNCHANGED') badge.innerHTML = '<span class="badge bg-warning text-dark">Stationnaire</span>';
+
+                // Give them the option to keep or generate!
+                footer.innerHTML = `
+                    <button class="btn btn-outline-light" data-bs-dismiss="modal">Garder le plan actuel</button>
+                    <button class="btn btn-primary" onclick="generateNewPlan()">Générer un nouveau plan</button>
+                `;
+            }
+
+            new bootstrap.Modal(document.getElementById('statusRemarkModal')).show();
+        })
+        .catch(err => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert("Erreur réseau de communication.");
+        });
+    }
+
+    // STEP 2: User chose to generate a new plan
+    function generateNewPlan() {
+        // Switch modals to show loading
+        const statusModal = bootstrap.Modal.getInstance(document.getElementById('statusRemarkModal'));
+        statusModal.hide();
+        
+        const btn = document.querySelector('.btn-ai');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Génération...';
+        
+        fetch(`{{ path('app_user_and_diag_treatment_plan_generate_proposal', {id: plan.id}) }}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = '<i class="bi bi-robot"></i> Réévaluer via IA';
+            
+            if (data.error) {
+                alert("Erreur: " + data.error);
+                return;
+            }
+
+            // Save the raw tasks in memory and show the Proposal Modal
+            currentProposedTasks = data.raw_ai_response;
+            document.getElementById('aiProposalContent').innerText = currentProposedTasks;
+            new bootstrap.Modal(document.getElementById('aiProposalModal')).show();
+        });
+    }
+
+    // STEP 3: User accepts the proposed plan
+    function acceptAiPlan() {
+        const btn = document.querySelector('#aiProposalModal .btn-success');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Application...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_accept_proposal', {id: plan.id}) }}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest' 
+            },
+            body: JSON.stringify({ tasks: currentProposedTasks })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload(); // Refresh to see new tasks!
+            } else {
+                alert("Erreur: " + data.error);
+                btn.innerHTML = '✅ Appliquer le nouveau plan';
+                btn.disabled = false;
+            }
+        });
+    }
+    // Expert Request AJAX Logic
+    function askExpertAjax(inputElement) {
+        if (!inputElement.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', inputElement.files[0]);
+
+        // UI Loading State
+        const btn = document.querySelector('.btn-expert');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi en cours...';
+        btn.disabled = true;
+
+        fetch(`{{ path('app_user_and_diag_treatment_plan_ask_expert', {id: plan.id}) }}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            inputElement.value = ""; // Reset the file input so they can upload again later if needed
+
+            if (data.error) {
+                alert("❌ " + data.error);
+            } else {
+                alert("✅ " + data.message);
+                // Optional: Reload the page to refresh data, or just let them stay on the page
+                window.location.reload(); 
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert("Erreur réseau lors de la communication avec le serveur.");
+        });
+    }
+</script>
+{% endblock %}

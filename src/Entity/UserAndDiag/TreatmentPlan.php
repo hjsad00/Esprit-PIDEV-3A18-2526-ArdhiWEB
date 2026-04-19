@@ -5,6 +5,8 @@ namespace App\Entity\UserAndDiag;
 use App\Repository\UserAndDiag\TreatmentPlanRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: TreatmentPlanRepository::class)]
 #[ORM\Table(name: 'treatment_plan')]
@@ -25,9 +27,13 @@ class TreatmentPlan
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('ACTIVE','COMPLETED','ABANDONED') DEFAULT 'ACTIVE'", nullable: true)]
     private ?string $status = 'ACTIVE';
 
+    #[ORM\OneToMany(mappedBy: 'treatmentPlan', targetEntity: TreatmentTask::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $tasks;
+
     public function __construct()
     {
         $this->start_date = new \DateTime();
+        $this->tasks = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -65,6 +71,36 @@ class TreatmentPlan
     public function setStatus(?string $status): static
     {
         $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, TreatmentTask>
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function addTask(TreatmentTask $task): static
+    {
+        if (!$this->tasks->contains($task)) {
+            $this->tasks->add($task);
+            $task->setTreatmentPlan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTask(TreatmentTask $task): static
+    {
+        if ($this->tasks->removeElement($task)) {
+            // set the owning side to null (unless already changed)
+            if ($task->getTreatmentPlan() === $this) {
+                $task->setTreatmentPlan(null);
+            }
+        }
+
         return $this;
     }
 }

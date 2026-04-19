@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Plans de Prévention{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/prevention-list.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container-list">
+    <div class="mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Plans de Prévention</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <div class="header-section mb-4">
+        <div>
+            <h1 class="text-white m-0">Plans de Prévention</h1>
+            <p class="text-white-50 m-0">Suivez l'évolution de vos plans de prévention actifs.</p>
+        </div>
+        <div class="text-end">
+            <a href="{{ path('app_user_and_diag_calendar') }}" class="btn btn-glass px-4 rounded-pill text-decoration-none text-white" style="background: rgba(107, 127, 63, 0.8);">
+                <i class="bi bi-calendar-event"></i> Calendrier
+            </a>
+        </div>
+    </div>
+
+    <div class="plan-grid">
+        {% for item in plans %}
+            <a href="{{ path('app_user_and_diag_prevention_plan_show', {id: item.plan.id}) }}" class="plan-card text-decoration-none" style="position: relative;">
+                {% if item.plan.status == 'COMPLETED' %}
+                    <span class="status-tag">TERMINÉ</span>
+                {% endif %}
+                {% if item.plan.impactLevel %}
+                    <span class="impact-tag impact-{{ item.plan.impactLevel }}">{{ item.plan.impactLevel }}</span>
+                {% endif %}
+                
+                <img src="{{ item.plan.report.scan.photoCrops ?? item.plan.report.scan.photoOverview ?? '/assets/img/placeholder-plant.png' }}" alt="Exploitation" class="diag-image">
+                
+                <div class="card-content">
+                    <div class="diag-name">{{ item.plan.title }}</div>
+                    <div class="date-info">Démarré le {{ item.plan.startDate ? item.plan.startDate|date('d M Y') : item.plan.createdAt|date('d M Y') }}</div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-labels">
+                            <span style="color: #2ecc71;">{{ item.progress }}% complété</span>
+                            <span class="text-white-50">{{ item.completed }}/{{ item.total }} tâches</span>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-bar" style="width: 0%;" data-width="{{ item.progress }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% else %}
+            <div class="col-12 text-center py-5 text-white bg-white bg-opacity-10 rounded-4">
+                <i class="bi bi-shield-check display-1 opacity-25"></i>
+                <p class="mt-3">Aucun plan de prévention actif.</p>
+                <a href="{{ path('app_health_scan_new') }}" class="btn btn-success rounded-pill px-5">Lancer un Bilan de Santé</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Animate progress bars on load
+    window.addEventListener('load', () => {
+        const bars = document.querySelectorAll('.progress-bar');
+        bars.forEach(bar => {
+            setTimeout(() => {
+                bar.style.width = bar.getAttribute('data-width');
+            }, 300);
+        });
+    });
+</script>
+{% endblock %}

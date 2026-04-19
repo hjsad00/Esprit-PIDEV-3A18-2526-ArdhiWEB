@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des Scans{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/health-scan-history.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_user_and_diag_user_diagnostic') }}" class="text-white-50 text-decoration-none">Diagnostic IA</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Historique des Scans</li>
+                </ol>
+            </nav>
+            <h2 class="text-white fw-bold mb-0">Historique des Scans</h2>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <span id="resultCount" class="text-white-50 small">{{ scans|length }} scan(s) trouvé(s)</span>
+            
+            <select id="sortSelect" class="form-select bg-transparent text-white border-light" style="width: auto;" onchange="sortScans()">
+                <option value="date-desc" class="text-dark">Plus récent</option>
+                <option value="date-asc" class="text-dark">Plus ancien</option>
+                <option value="score-desc" class="text-dark">Score (Haut > Bas)</option>
+            </select>
+
+            <div class="input-group" style="width: 300px;">
+                <span class="input-group-text bg-transparent border-light text-white"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control bg-transparent border-light text-white" placeholder="Rechercher (culture, analyse)...">
+            </div>
+            <button onclick="document.getElementById('searchInput').value = ''; filterTable();" class="btn btn-outline-light text-nowrap">
+                🔄 Réinitialiser
+            </button>
+        </div>
+    </div>
+
+    <div class="glass-panel p-4">
+        {% if scans is empty %}
+            <div class="text-center py-5">
+                <span class="display-1 opacity-50">🌿</span>
+                <h4 class="text-white-50 mt-3">Aucun scan pour le moment</h4>
+                <p class="text-white-50 small">Effectuez un scan de vos plantes pour commencer</p>
+                <a href="{{ path('app_health_scan_new') }}" class="btn btn-success mt-3">Lancer mon premier scan</a>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover table-dark table-borderless align-middle" style="background: transparent;">
+                    <thead style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                        <tr>
+                            <th scope="col" class="pb-3 text-white-50">Date du Scan</th>
+                            <th scope="col" class="pb-3 text-white-50">Culture</th>
+                            <th scope="col" class="pb-3 text-white-50 w-50">Résultat de l'analyse</th>
+                            <th scope="col" class="pb-3 text-white-50 text-center">Score Santé</th>
+                            <th scope="col" class="pb-3 text-white-50 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        {% for scan in scans %}
+                            {% set report = reportsByScan[scan.id] ?? null %} 
+                            <tr class="scan-row" style="cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
+                                data-search="{{ scan.cropType|lower }} {{ report ? report.llavaAnalysis|lower : '' }}"
+                                data-date="{{ scan.scanDate ? scan.scanDate|date('U') : 0 }}"
+                                data-score="{{ report ? report.healthScore : 0 }}"
+                                onclick="window.location.href='{{ report ? path('app_health_scan_report', {id: report.id}) : '#' }}'">
+                                
+                                <td class="py-3">{{ scan.scanDate|date('d/m/Y H:i') }}</td>
+                                <td class="py-3 fw-bold">{{ scan.cropType }}</td>
+                                
+                                <td class="py-3 text-white-75 small">
+                                    {% if report %}
+                                        {{ report.llavaAnalysis|length > 80 ? report.llavaAnalysis|slice(0, 77) ~ '...' : report.llavaAnalysis }}
+                                    {% else %}
+                                        <span class="text-warning">En attente d'analyse...</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="py-3 text-center">
+                                    {% if report %}
+                                        {% set scoreColor = report.healthScore >= 80 ? '#27ae60' : (report.healthScore >= 50 ? '#f39c12' : '#e74c3c') %}
+                                        <span class="badge" style="background-color: {{ scoreColor }}40; color: {{ scoreColor }}; border: 1px solid {{ scoreColor }};">
+                                            {{ report.healthScore }}/100
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary text-white-50">N/A</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="py-3 text-end">
+                                    {% if report %}
+                                        <button class="btn btn-sm btn-outline-info rounded-pill">Voir le rapport</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-end text-white-50 small mt-2 m-0"><i class="bi bi-info-circle"></i> Cliquez sur une ligne pour voir le rapport détaillé.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Real-time Search Filtering Logic (Translates Java FilteredList)
+    const searchInput = document.getElementById('searchInput');
+    
+    if (searchInput) {
+        searchInput.addEventListener('keyup', filterTable);
+    }
+
+    function filterTable() {
+        const filterText = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('.scan-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const searchableData = row.getAttribute('data-search');
+            
+            if (searchableData.includes(filterText)) {
+                row.style.display = ''; // Show row
+                visibleCount++;
+            } else {
+                row.style.display = 'none'; // Hide row
+            }
+        });
+
+        // Update the counter text
+        document.getElementById('resultCount').innerText = visibleCount + ' scan(s) trouvé(s)';
+    }
+
+    // Instant Sorting
+    function sortScans() {
+        const sortValue = document.getElementById('sortSelect').value;
+        const tbody = document.getElementById('historyTableBody');
+        const rows = Array.from(tbody.querySelectorAll('.scan-row'));
+        
+        rows.sort((a, b) => {
+            if (sortValue === 'date-desc') {
+                return b.dataset.date - a.dataset.date;
+            } else if (sortValue === 'date-asc') {
+                return a.dataset.date - b.dataset.date;
+            } else if (sortValue === 'score-desc') {
+                return b.dataset.score - a.dataset.score;
+            }
+        });
+
+        // Re-append to container in sorted order
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+{% endblock %}

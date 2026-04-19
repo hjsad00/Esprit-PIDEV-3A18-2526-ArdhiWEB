@@ -4,6 +4,8 @@ namespace App\Entity\UserAndDiag;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\PreventionPlanRepository::class)]
 class PreventionPlan
@@ -51,9 +53,13 @@ class PreventionPlan
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $created_at = null;
 
+    #[ORM\OneToMany(mappedBy: 'preventionPlan', targetEntity: PreventionTask::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $tasks;
+
     public function __construct()
     {
         $this->created_at = new \DateTime();
+        $this->tasks = new ArrayCollection();
     }
 
     // Getters and Setters
@@ -192,6 +198,35 @@ class PreventionPlan
     public function setCreatedAt(?\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PreventionTask>
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function addTask(PreventionTask $task): static
+    {
+        if (!$this->tasks->contains($task)) {
+            $this->tasks->add($task);
+            $task->setPreventionPlan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTask(PreventionTask $task): static
+    {
+        if ($this->tasks->removeElement($task)) {
+            if ($task->getPreventionPlan() === $this) {
+                $task->setPreventionPlan(null);
+            }
+        }
+
         return $this;
     }
 }

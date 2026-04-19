@@ -8,7 +8,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
+use App\Entity\UserAndDiag\TreatmentPlan;
+use App\Entity\UserAndDiag\TreatmentTask;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\EntityManagerInterface;
 #[Route('/user-and-diag/treatment-plan')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class TreatmentPlanController extends AbstractController
@@ -47,5 +51,358 @@ class TreatmentPlanController extends AbstractController
         return $this->render('UserAndDiag/treatment_plan/list.html.twig', [
             'plans' => $plansWithProgress
         ]);
+    }
+    #[Route('/{id}/details', name: 'app_user_and_diag_treatment_plan_show', methods: ['GET'])]
+    public function show(TreatmentPlan $plan, EntityManagerInterface $em): Response
+    {
+        // 1. Security check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Ce protocole ne vous appartient pas.');
+        }
+
+        // 2. Fetch tasks ordered chronologically
+        $tasks = $em->getRepository(TreatmentTask::class)->findBy(
+            ['treatmentPlan' => $plan],
+            ['day_offset' => 'ASC']
+        );
+
+        // 3. Pre-calculate "AR" markers based on your exact Java keyword logic
+        $tasksWithMarkers = [];
+        foreach ($tasks as $task) {
+            $desc = strtolower($task->getTaskDescription());
+            $locX = null;
+            $locY = null;
+            $locLabel = null;
+
+            if (str_contains($desc, 'feuille')) {
+                $locX = 30;
+                $locY = 40;
+                $locLabel = 'Feuilles';
+            } elseif (str_contains($desc, 'tige')) {
+                $locX = 50;
+                $locY = 60;
+                $locLabel = 'Tige Principale';
+            } elseif (str_contains($desc, 'racine')) {
+                $locX = 50;
+                $locY = 90;
+                $locLabel = 'Racines';
+            } elseif (str_contains($desc, 'sol') || str_contains($desc, 'arroser')) {
+                $locX = 50;
+                $locY = 95;
+                $locLabel = 'Sol';
+            } elseif (str_contains($desc, 'fruit')) {
+                $locX = 60;
+                $locY = 30;
+                $locLabel = 'Fruits';
+            } elseif (str_contains($desc, 'fleur')) {
+                $locX = 40;
+                $locY = 20;
+                $locLabel = 'Fleurs';
+            }
+
+            $tasksWithMarkers[] = [
+                'entity' => $task,
+                'marker' => $locX ? ['x' => $locX, 'y' => $locY, 'label' => $locLabel] : null
+            ];
+        }
+
+        return $this->render('UserAndDiag/treatment_plan/show.html.twig', [
+            'plan' => $plan,
+            'diagnostic' => $plan->getDiagnostic(),
+            'tasksWithMarkers' => $tasksWithMarkers
+        ]);
+    }
+    #[Route('/task/{id}/complete', name: 'app_user_and_diag_treatment_task_complete', methods: ['POST'])]
+    public function completeTask(TreatmentTask $task, EntityManagerInterface $em): JsonResponse
+    {
+        $plan = $task->getTreatmentPlan();
+
+        // Security check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        // Sequential Enforcement Check
+        $previousTasks = $em->getRepository(TreatmentTask::class)->createQueryBuilder('t')
+            ->where('t.treatmentPlan = :plan')
+            ->andWhere('t.day_offset < :currentOffset')
+            ->andWhere('t.status != :completedStatus')
+            ->setParameter('plan', $plan)
+            ->setParameter('currentOffset', $task->getDayOffset())
+            ->setParameter('completedStatus', 'COMPLETED')
+            ->getQuery()
+            ->getResult();
+
+        if (count($previousTasks) > 0) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Ordre séquentiel: Vous devez terminer les tâches précédentes avant de valider celle-ci.'
+            ], 400);
+        }
+
+        // 1. Complete the task
+        $task->setStatus('COMPLETED');
+        $em->flush(); // Save task status first
+
+        // 2. Check if all tasks are now completed
+        $pendingTasksCount = $em->getRepository(TreatmentTask::class)->count([
+            'treatmentPlan' => $plan,
+            'status' => 'PENDING'
+        ]);
+
+        $planCompleted = false;
+
+        // If there are no more pending tasks, finish the plan
+        if ($pendingTasksCount === 0) {
+            $plan->setStatus('COMPLETED');
+            $em->flush(); // Save plan status
+            $planCompleted = true;
+        }
+
+        // 3. Tell the frontend if the whole plan is done
+        return $this->json([
+            'success' => true,
+            'plan_completed' => $planCompleted
+        ]);
+    }
+
+    #[Route('/{id}/abandon', name: 'app_user_and_diag_treatment_plan_abandon', methods: ['POST'])]
+    public function abandon(TreatmentPlan $plan, EntityManagerInterface $em): Response
+    {
+        // Security check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Ce protocole ne vous appartient pas.');
+        }
+
+        $plan->setStatus('ABANDONED');
+        $em->flush();
+
+        $this->addFlash('success', 'Le protocole a été abandonné.');
+
+        return $this->redirectToRoute('app_user_and_diag_treatment_plan_list');
+    }
+
+    #[Route('/{id}/whatsapp', name: 'app_user_and_diag_treatment_plan_whatsapp', methods: ['POST'])]
+    public function whatsappReminder(
+        TreatmentPlan $plan,
+        EntityManagerInterface $em,
+        \App\Service\UserAndDiag\WhatsAppService $whatsAppService
+    ): JsonResponse {
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user = $this->getUser();
+
+        // 1. Security & Phone Check
+        if ($plan->getDiagnostic()->getUser() !== $user) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        $phone = $user->getPhone();
+        if (!$phone) {
+            return $this->json(['error' => 'Veuillez ajouter un numéro de téléphone à votre profil pour utiliser WhatsApp.'], 400);
+        }
+
+        // 2. Fetch pending tasks to build the message
+        $tasks = $em->getRepository(TreatmentTask::class)->findBy(
+            ['treatmentPlan' => $plan, 'status' => 'PENDING'],
+            ['day_offset' => 'ASC']
+        );
+
+        if (empty($tasks)) {
+            return $this->json(['error' => 'Aucune tâche en attente à rappeler.'], 400);
+        }
+
+        // 3. Construct the WhatsApp Message Body
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'votre plante';
+
+        $message = "🌱 *Rappel Ardhi : Protocole de Traitement*\n";
+        $message .= "Voici vos prochaines interventions pour : _" . $diseaseName . "_\n\n";
+
+        foreach ($tasks as $task) {
+            $message .= "🗓️ *Jour " . $task->getDayOffset() . "* : " . $task->getTaskDescription() . "\n";
+        }
+
+        $message .= "\nConnectez-vous sur l'application pour valider vos tâches !";
+
+        // 4. Send the message
+        $success = $whatsAppService->sendWhatsAppMessage($phone, $message);
+
+        if ($success) {
+            return $this->json(['success' => true, 'message' => 'Rappel WhatsApp envoyé avec succès !']);
+        }
+
+        return $this->json([
+            'error' => "L'envoi a échoué. Assurez-vous d'avoir rejoint la Sandbox Twilio (envoyez le code au numéro Sandbox)."
+        ], 500);
+    }
+    #[Route('/{id}/reevaluate', name: 'app_user_and_diag_treatment_plan_reevaluate', methods: ['POST'])]
+    public function reevaluate(
+        TreatmentPlan $plan,
+        Request $request,
+        \App\Service\UserAndDiag\GroqService $groqService,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        $file = $request->files->get('image');
+        if (!$file)
+            return $this->json(['error' => 'Aucune image fournie.'], 400);
+
+        try {
+            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'Maladie';
+            $baselineUrl = $plan->getDiagnostic()->getImageScannee();
+
+            // 1. Consistency Check (Different Plant)
+            $consistency = $groqService->checkConsistency($file, $diseaseName);
+            if (str_starts_with($consistency, 'MISMATCH')) {
+                $reason = explode('|', $consistency)[1] ?? 'Plante différente détectée.';
+                return $this->json(['status' => 'MISMATCH', 'message' => $reason]);
+            }
+
+            // 2. Recovery Analysis (Healed, Worsening, Recovering, Unchanged)
+            $recoveryStatus = $groqService->analyzeRecovery($baselineUrl, $file, $diseaseName);
+            $parts = explode('|', $recoveryStatus);
+            $status = trim($parts[0]);
+            $details = trim($parts[1] ?? '');
+
+            // Upload for history
+            $imgUrl = $imgBBService->uploadImage($file);
+
+            if ($status === 'HEALED') {
+                $plan->setStatus('COMPLETED');
+                $em->flush();
+            }
+
+            // Return JUST the status and remark. No plan generation here!
+            return $this->json([
+                'status' => $status,
+                'message' => $details,
+                'img_url' => $imgUrl
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur technique: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/generate-proposal', name: 'app_user_and_diag_treatment_plan_generate_proposal', methods: ['POST'])]
+    public function generateProposal(
+        TreatmentPlan $plan,
+        \App\Service\UserAndDiag\GroqService $groqService
+    ): JsonResponse {
+
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'la maladie';
+
+        // Ask Groq for a new plan based on the disease
+        $aiResponse = $groqService->generateTreatmentPlan($diseaseName);
+
+        if (str_starts_with($aiResponse, 'ERREUR')) {
+            return $this->json(['error' => "L'IA n'a pas pu générer le plan."], 500);
+        }
+
+        return $this->json(['success' => true, 'raw_ai_response' => $aiResponse]);
+    }
+
+    #[Route('/{id}/accept-proposal', name: 'app_user_and_diag_treatment_plan_accept_proposal', methods: ['POST'])]
+    public function acceptProposal(
+        TreatmentPlan $plan,
+        Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+
+        $data = json_decode($request->getContent(), true);
+        $rawTasks = $data['tasks'] ?? '';
+
+        if (empty($rawTasks))
+            return $this->json(['error' => 'Aucune tâche fournie.'], 400);
+
+        // 1. Find the last completed day so we can schedule new tasks accurately into the future
+        $lastCompletedDay = 0;
+        $existingTasks = $em->getRepository(TreatmentTask::class)->findBy(['treatmentPlan' => $plan]);
+
+        foreach ($existingTasks as $t) {
+            if ($t->getStatus() === 'COMPLETED' && $t->getDayOffset() > $lastCompletedDay) {
+                $lastCompletedDay = $t->getDayOffset();
+            }
+        }
+
+        // 2. Delete all current PENDING tasks
+        foreach ($existingTasks as $t) {
+            if ($t->getStatus() === 'PENDING') {
+                $em->remove($t);
+            }
+        }
+        $em->flush(); // Commit deletions
+
+        // 3. Parse and save new tasks
+        $lines = explode("\n", str_replace('```', '', $rawTasks));
+        foreach ($lines as $line) {
+            $parts = explode('|', trim($line));
+            if (count($parts) >= 2 && is_numeric(trim($parts[0]))) {
+                $task = new TreatmentTask();
+                $task->setTreatmentPlan($plan);
+                $task->setDayOffset($lastCompletedDay + (int) trim($parts[0])); // Append to history
+                $task->setTaskDescription(substr(trim($parts[1]), 0, 255));
+                $task->setStatus('PENDING');
+
+                $em->persist($task);
+            }
+        }
+        $em->flush();
+
+        return $this->json(['success' => true]);
+    }
+    #[Route('/{id}/ask-expert', name: 'app_user_and_diag_treatment_plan_ask_expert', methods: ['POST'])]
+    public function askExpert(
+        TreatmentPlan $plan,
+        Request $request,
+        EntityManagerInterface $em,
+        \App\Service\UserAndDiag\ImgBBService $imgBBService
+    ): JsonResponse {
+        // 1. Security Check
+        if ($plan->getDiagnostic()->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        // 2. Anti-Spam Check: Does the user already have a pending review for this plan?
+        $existingReview = $em->getRepository(\App\Entity\UserAndDiag\Review::class)->findOneBy([
+            'treatment_plan' => $plan,
+            'status' => 'PENDING'
+        ]);
+
+        if ($existingReview) {
+            return $this->json(['error' => 'Vous avez déjà une demande en attente d\'analyse par nos experts.'], 400);
+        }
+
+        // 3. Process the Image
+        $file = $request->files->get('image');
+        if (!$file)
+            return $this->json(['error' => 'Une image est requise pour demander l\'avis d\'un expert.'], 400);
+
+        try {
+            $imgUrl = $imgBBService->uploadImage($file);
+
+            // 4. Create the Review Ticket
+            $review = new \App\Entity\UserAndDiag\Review();
+            $review->setDiagnostic($plan->getDiagnostic());
+            $review->setTreatmentPlan($plan);
+            $review->setReviewType('PROGRESS'); // Indicates it's a mid-treatment checkup
+            $review->setStatus('PENDING');
+            $review->setPhotoUrl($imgUrl);
+            $review->setCreatedAt(new \DateTime()); // Or whatever your date setter is named
+
+            $em->persist($review);
+            $em->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Votre photo a été envoyée avec succès ! Nos agronomes l\'analyseront sous peu.'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur technique lors de l\'envoi: ' . $e->getMessage()], 500);
+        }
     }
 }

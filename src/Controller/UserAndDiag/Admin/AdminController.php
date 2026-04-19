@@ -35,7 +35,10 @@ class AdminController extends AbstractController
         CommunityCommentRepository $commentRepo,
         CommunityLikeRepository $likeRepo,
         OffreRepository $offreRepo,
-        UserBadgeRepository $userBadgeRepo
+        UserBadgeRepository $userBadgeRepo,
+        \App\Repository\UserAndDiag\CommunityReportRepository $communityReportRepo,
+        \App\Repository\UserAndDiag\UserBlockRepository $userBlockRepo,
+        \App\Repository\UserAndDiag\ModerationAuditRepository $moderationAuditRepo
     ): Response {
         $stats = [
             ['label' => 'Utilisateurs', 'count' => $userRepo->count([]), 'icon' => 'bi-people-fill', 'color' => '#116530', 'route' => 'admin_user_index'],
@@ -46,6 +49,9 @@ class AdminController extends AbstractController
             ['label' => 'Likes', 'count' => $likeRepo->count([]), 'icon' => 'bi-heart-fill', 'color' => '#dc3545', 'route' => 'admin_community_like_index'],
             ['label' => 'Offres', 'count' => $offreRepo->count([]), 'icon' => 'bi-tag-fill', 'color' => '#198754', 'route' => 'admin_offre_index'],
             ['label' => 'User Badges', 'count' => $userBadgeRepo->count([]), 'icon' => 'bi-patch-check-fill', 'color' => '#34495e', 'route' => 'admin_user_badge_index'],
+            ['label' => 'Signalements', 'count' => $communityReportRepo->count([]), 'icon' => 'bi-flag-fill', 'color' => '#e67e22', 'route' => 'admin_community_report_index'],
+            ['label' => 'Blocages', 'count' => $userBlockRepo->count([]), 'icon' => 'bi-slash-circle-fill', 'color' => '#c0392b', 'route' => 'admin_user_block_index'],
+            ['label' => 'Audit Modé.', 'count' => $moderationAuditRepo->count([]), 'icon' => 'bi-shield-shaded', 'color' => '#8e44ad', 'route' => 'admin_moderation_audit_index'],
         ];
 
         return $this->render('UserAndDiag/admin/dashboard.html.twig', [
@@ -65,7 +71,9 @@ class AdminController extends AbstractController
         PreventionTaskRepository $preventionTaskRepo,
         TreatmentPlanRepository $treatmentPlanRepo,
         TreatmentTaskRepository $treatmentTaskRepo,
-        VulnerabilityRepository $vulnerabilityRepo
+        VulnerabilityRepository $vulnerabilityRepo,
+        \App\Repository\UserAndDiag\ReviewRepository $reviewRepo,
+        \App\Repository\UserAndDiag\DiagNotificationRepository $diagNotificationRepo
     ): Response {
         $stats = [
             ['label' => 'Diagnostics', 'count' => $diagnosticRepo->count([]), 'icon' => 'bi-search', 'color' => '#0d6efd', 'route' => 'admin_diagnostic_index'],
@@ -77,6 +85,8 @@ class AdminController extends AbstractController
             ['label' => 'Plans Traitement', 'count' => $treatmentPlanRepo->count([]), 'icon' => 'bi-journal-medical', 'color' => '#9b59b6', 'route' => 'admin_treatment_plan_index'],
             ['label' => 'Tâches Traitement', 'count' => $treatmentTaskRepo->count([]), 'icon' => 'bi-check2-square', 'color' => '#e67e22', 'route' => 'admin_treatment_task_index'],
             ['label' => 'Vulnérabilités', 'count' => $vulnerabilityRepo->count([]), 'icon' => 'bi-bug-fill', 'color' => '#c0392b', 'route' => 'admin_vulnerability_index'],
+            ['label' => 'Avis & Reviews', 'count' => $reviewRepo->count([]), 'icon' => 'bi-star-fill', 'color' => '#f1c40f', 'route' => 'admin_review_index'],
+            ['label' => 'Notifications', 'count' => $diagNotificationRepo->count([]), 'icon' => 'bi-bell-fill', 'color' => '#34495e', 'route' => 'admin_diag_notification_index'],
         ];
 
         return $this->render('UserAndDiag/admin/dashboard.html.twig', [

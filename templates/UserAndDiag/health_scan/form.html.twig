@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Scan de Santé{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/health-scan-form.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert" style="background: rgba(40,0,0,0.8); color: white;">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="glass-panel">
+        
+        <div class="mb-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_health_scan_history') }}" class="text-white-50 text-decoration-none">Historique des Scans</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Nouveau Scan</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <div class="header-bar mb-4">
+            <h3 class="m-0 fw-bold align-middle">🌿 Scan Santé du Champ</h3>
+        </div>
+
+        <form action="{{ path('app_health_scan_new') }}" method="POST" enctype="multipart/form-data">
+            <div class="row g-4">
+                
+                <div class="col-lg-4">
+                    <div class="p-4 rounded-4" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2);">
+                        <h5 class="text-white fw-bold mb-4">🌾 Informations</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Type de culture</label>
+                            <select name="cropType" class="form-select bg-light" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="Tomates">Tomates</option>
+                                <option value="Blé">Blé</option>
+                                <option value="Olives">Olives</option>
+                                <option value="Agrumes">Agrumes</option>
+                                <option value="Pommes de terre">Pommes de terre</option>
+                                <option value="Piments">Piments</option>
+                                <option value="Oignons">Oignons</option>
+                                <option value="Fraises">Fraises</option>
+                                <option value="Vigne">Vigne</option>
+                                <option value="Pastèque">Pastèque</option>
+                                <option value="Melon">Melon</option>
+                                <option value="Courgette">Courgette</option>
+                                <option value="Haricots">Haricots</option>
+                                <option value="Pois chiches">Pois chiches</option>
+                                <option value="Orge">Orge</option>
+                                <option value="Laitue">Laitue</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Date de plantation</label>
+                            <input type="date" name="plantingDate" class="form-control bg-light" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Stade de croissance</label>
+                            <select name="growthStage" class="form-select bg-light" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="Semis">Semis</option>
+                                <option value="Germination">Germination</option>
+                                <option value="Croissance végétative">Croissance végétative</option>
+                                <option value="Floraison">Floraison</option>
+                                <option value="Fructification">Fructification</option>
+                                <option value="Maturation">Maturation</option>
+                                <option value="Récolte">Récolte</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label text-white-50 m-0">Préoccupations (optionnel)</label>
+
+                            </div>
+                            <textarea name="concerns" id="txtConcerns" class="form-control bg-light" rows="3" placeholder="Décrivez vos préoccupations..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-3 fw-bold mt-2" style="background: rgba(39, 174, 96, 0.85); border: none;">
+                            🔍 LANCER LE SCAN
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="p-4 rounded-4 h-100" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2);">
+                        <h5 class="text-white fw-bold mb-2">📷 Photos du Champ (6 angles)</h5>
+                        <p class="text-white-50 small mb-4">Cliquez sur chaque zone pour importer une photo</p>
+
+                        <div class="row g-3">
+                            {% macro photo_box(id, label, icon) %}
+                                <div class="col-md-4">
+                                    <div class="photo-upload-box text-center p-4 rounded-3" style="border: 2px dashed rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s;" onclick="document.getElementById('input_{{ id }}').click()">
+                                        <img id="preview_{{ id }}" src="" style="max-height: 80px; display: none; margin: 0 auto 10px auto;" class="img-fluid rounded">
+                                        <div id="placeholder_{{ id }}">
+                                            <span class="fs-1">{{ icon }}</span>
+                                        </div>
+                                        <span class="text-white small d-block mt-2">{{ label }}</span>
+                                    </div>
+                                    <input type="file" name="photo_{{ id }}" id="input_{{ id }}" style="display:none" accept="image/*" onchange="previewImage(this, '{{ id }}')">
+                                </div>
+                            {% endmacro %}
+
+                            {{ _self.photo_box('crops', 'Cultures', '🌿') }}
+                            {{ _self.photo_box('soil', 'Sol', '🪨') }}
+                            {{ _self.photo_box('edges', 'Bordures', '🌳') }}
+                            {{ _self.photo_box('insects', 'Insectes', '🐛') }}
+                            {{ _self.photo_box('spacing', 'Espacement', '📐') }}
+                        </div>
+                        
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // 1. Image Preview Logic
+    function previewImage(input, id) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview_' + id);
+                const placeholder = document.getElementById('placeholder_' + id);
+                
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                // Change border to green like in Java
+                input.parentElement.style.borderColor = 'rgba(39,174,96,0.8)';
+                input.parentElement.style.backgroundColor = 'rgba(39,174,96,0.15)';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+</script>
+{% endblock %}

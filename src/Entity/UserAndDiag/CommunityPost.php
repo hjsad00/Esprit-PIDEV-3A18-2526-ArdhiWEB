@@ -44,6 +44,24 @@ class CommunityPost
     #[ORM\JoinColumn(name: 'solution_comment_id', referencedColumnName: 'id', nullable: true)]
     private ?CommunityComment $solutionComment = null;
 
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $views = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $feedImpressions = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $totalReadTime = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $totalFeedDwellTime = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $completedReads = 0;
+
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $mediaClicks = 0;
+
     public function __construct()
     {
         $this->created_at = new \DateTime();
@@ -150,6 +168,72 @@ class CommunityPost
     public function setSolutionComment(?CommunityComment $solutionComment): static
     {
         $this->solutionComment = $solutionComment;
+        return $this;
+    }
+
+    public function getViews(): ?int
+    {
+        return $this->views;
+    }
+
+    public function setViews(?int $views): static
+    {
+        $this->views = $views;
+        return $this;
+    }
+
+    public function getFeedImpressions(): ?int
+    {
+        return $this->feedImpressions;
+    }
+
+    public function setFeedImpressions(?int $feedImpressions): static
+    {
+        $this->feedImpressions = $feedImpressions;
+        return $this;
+    }
+
+    public function getTotalReadTime(): ?int
+    {
+        return $this->totalReadTime;
+    }
+
+    public function setTotalReadTime(?int $totalReadTime): static
+    {
+        $this->totalReadTime = $totalReadTime;
+        return $this;
+    }
+
+    public function getTotalFeedDwellTime(): ?int
+    {
+        return $this->totalFeedDwellTime;
+    }
+
+    public function setTotalFeedDwellTime(?int $totalFeedDwellTime): static
+    {
+        $this->totalFeedDwellTime = $totalFeedDwellTime;
+        return $this;
+    }
+
+    public function getCompletedReads(): ?int
+    {
+        return $this->completedReads;
+    }
+
+    public function setCompletedReads(?int $completedReads): static
+    {
+        $this->completedReads = $completedReads;
+        return $this;
+    }
+
+    public function getMediaClicks(): ?int
+    {
+        return $this->mediaClicks;
+    }
+
+    public function setMediaClicks(?int $mediaClicks): static
+    {
+        $this->mediaClicks = $mediaClicks;
         return $this;
     }
 }

@@ -9,11 +9,14 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 
 class AdminCommunityPostType extends AbstractType
 {
@@ -22,7 +25,18 @@ class AdminCommunityPostType extends AbstractType
         $builder
             ->add('title', TextType::class, ['label' => 'Titre'])
             ->add('description', TextareaType::class, ['label' => 'Description', 'required' => false])
-            ->add('image_url', TextType::class, ['label' => 'URL Image', 'required' => false])
+            ->add('imageFile', FileType::class, [
+                'label' => 'Remplacer l\'image (Upload)',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '5M',
+                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp'],
+                        'mimeTypesMessage' => 'Veuillez uploader une image valide (JPG, PNG, WebP).',
+                    ])
+                ],
+            ])
             ->add('created_at', DateTimeType::class, ['label' => 'Date création', 'widget' => 'single_text', 'required' => false])
             ->add('likes', IntegerType::class, ['label' => 'Likes', 'required' => false])
             ->add('dislikes', IntegerType::class, ['label' => 'Dislikes', 'required' => false])

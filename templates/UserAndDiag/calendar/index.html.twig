@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Calendrier des Tâches{% endblock %}
+
+{% block body_class %}dashboard-page{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <!-- FullCalendar CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <link href="{{ asset('assets/css/UserAndDiag/plan-calendar.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="calendar-wrapper">
+    <input type="hidden" id="calendar-api-url" value="{{ path('app_user_and_diag_calendar_api') }}">
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div>
+                <h2>📅 Calendrier des Tâches</h2>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">Retrouvez ici toutes vos tâches de prévention et de traitement.</div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div> Traitement</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div> Prévention</div>
+                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div> Terminée</div>
+                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div> Manquée</div>
+            </div>
+        </div>
+
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- Event Modal -->
+<div class="fc-modal-overlay" id="event-modal-overlay">
+    <div class="fc-modal">
+        <div class="fc-modal-header">
+            <h3 id="modal-title">Détails de la tâche</h3>
+            <button class="fc-modal-close" id="event-modal-close">&times;</button>
+        </div>
+        <div class="fc-modal-body">
+            <div><strong style="color: #fff">Date prévue :</strong> <span id="modal-date"></span></div>
+            
+            <div class="task-meta">
+                <div><span style="color: rgba(255,255,255,0.5)">Plan :</span> <span id="modal-plan" style="color: #fff; font-weight: 500;"></span></div>
+                <div><span style="color: rgba(255,255,255,0.5)">Type :</span> <span id="modal-type" style="color: #fff; font-weight: 500;"></span></div>
+                <div><span style="color: rgba(255,255,255,0.5)">Statut :</span> <span id="modal-status" style="color: #fff; font-weight: 500;"></span></div>
+            </div>
+        </div>
+        <div class="fc-modal-footer">
+            <a href="#" id="modal-link" class="btn-link">Voir le Plan</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <!-- FullCalendar JS via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/fr.js"></script>
+    <script src="{{ asset('assets/js/UserAndDiag/plan-calendar.js') }}"></script>
+{% endblock %}

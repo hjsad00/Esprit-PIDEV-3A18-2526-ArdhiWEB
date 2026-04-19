@@ -5,241 +5,22 @@
 {% block body_class %}diagnostic-page{% endblock %}
 
 {% block stylesheets %}
-<style>
-    /* Premium Glassmorphic Core Setup */
-    body {
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        background: url('{{ asset('assets/img/DiagComm_bg.png') }}') no-repeat center center fixed;
-        background-size: cover;
-    }
-    
-    /* Global Overlay */
-    .dashboard-background {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0, 0.45);
-        z-index: -1;
-    }
-
-    .diagnostic-container {
-        padding: 100px 30px 40px;
-        min-height: 100vh;
-    }
-
-    .panel-glass {
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        padding: 30px;
-        color: white;
-    }
-
-    .header-bar {
-        display: flex;
-        align-items: center;
-        background: rgba(0,0,0,0.55);
-        padding: 15px 25px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .btn-back {
-        background: transparent;
-        color: white;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        padding: 0 15px 0 0;
-        transition: transform 0.2s ease;
-    }
-    .btn-back:hover {
-        transform: translateX(-5px);
-    }
-    
-    .header-title {
-        font-size: 22px;
-        font-weight: 700;
-        margin: 0;
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-    }
-    
-    .badge-premium {
-        background: rgba(107, 127, 63, 0.85); /* Ardhi Green */
-        color: white;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: bold;
-        margin-left: auto;
-    }
-
-    /* Uploader Area */
-    .image-preview-zone {
-        background: rgba(255, 255, 255, 0.85);
-        border: 2px dashed rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        height: 260px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        overflow: hidden;
-        position: relative;
-    }
-    .image-preview-zone img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        display: none;
-    }
-    .image-preview-placeholder {
-        color: #555;
-        font-size: 15px;
-        text-align: center;
-    }
-    
-    /* Custom Buttons */
-    .btn-glass {
-        border-radius: 10px;
-        font-weight: bold;
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        transition: all 0.3s ease;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-    
-    .btn-blue { background: rgba(91, 153, 163, 0.65); border: 1px solid rgba(255,255,255,0.2); }
-    .btn-blue:hover { background: rgba(91, 153, 163, 0.85); transform: translateY(-2px); color: white;}
-    
-    .btn-orange { background: rgba(230, 126, 34, 0.85); border: 1px solid rgba(255,255,255,0.2); }
-    .btn-orange:hover { background: rgba(230, 126, 34, 1); transform: translateY(-2px); color: white;}
-    
-    .btn-purple { background: rgba(142, 68, 173, 0.75); border: 1px solid rgba(255,255,255,0.2); }
-    .btn-purple:hover { background: rgba(142, 68, 173, 0.95); transform: translateY(-2px); color:white;}
-    
-    .btn-scan {
-        background: rgba(107, 127, 63, 0.9);
-        border: 1px solid rgba(255,255,255,0.4);
-        width: 100%;
-        padding: 16px;
-        font-size: 16px;
-        margin-top: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    .btn-scan:hover:not(:disabled) {
-        background: rgba(107, 127, 63, 1);
-        transform: translateY(-2px);
-        color:white;
-    }
-    .btn-scan:disabled {
-        background: rgba(107, 127, 63, 0.5);
-        cursor: not-allowed;
-    }
-    
-    /* Result Area */
-    #result-panel {
-        display: none; /* hidden until scan completes */
-    }
-
-    .result-title {
-        font-size: 26px;
-        font-weight: 800;
-        margin-top: 15px;
-        margin-bottom: 20px;
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-    }
-
-    .confidence-wrapper {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 12px 15px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        color: #333;
-    }
-    .progress-bar-custom {
-        flex-grow: 1;
-        height: 10px;
-        background: rgba(0,0,0,0.1);
-        border-radius: 5px;
-        overflow: hidden;
-    }
-    .progress-bar-fill {
-        height: 100%;
-        background: #6B7F3F;
-        width: 0%;
-        transition: width 1s ease-in-out;
-    }
-    .confidence-text {
-        font-weight: bold;
-        color: #d35400; /* dark orange */
-        font-size: 16px;
-    }
-    
-    .treatment-box {
-        margin-top: 20px;
-        line-height: 1.6;
-        font-size: 15px;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    }
-
-    /* Loading Overlay */
-    .loading-overlay {
-        position: absolute;
-        top:0; left:0; width:100%; height:100%;
-        background: rgba(0,0,0,0.7);
-        border-radius: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-        display: none;
-    }
-    
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid rgba(255,255,255,0.3);
-        border-top-color: #6B7F3F;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 15px;
-    }
-    
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    .action-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 25px;
-    }
-</style>
+<link href="{{ asset('assets/css/UserAndDiag/diagnostic.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
 <div class="dashboard-background"></div>
 
 <div class="container diagnostic-container">
-    <div class="header-bar">
-        <div class="badge-premium" id="badgePremium">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Diagnostic IA</li>
+            </ol>
+        </nav>
+        
+        <div class="badge-premium m-0" id="badgePremium">
             {% if limit == -1 %}
                 ✅ Illimité ({{ planName }})
             {% elseif used >= limit %}
@@ -318,7 +99,18 @@
                 
                 <div class="action-stack">
                     <a href="#" id="btnChatIa" class="btn-glass btn-blue w-100"><i class="bi bi-chat-dots"></i> Discuter avec l'IA</a>
-                    <a href="#" class="btn-glass btn-purple w-100"><i class="bi bi-people"></i> Demander à la Communauté</a>
+                    <a href="#" id="btnCommunity" class="btn-glass btn-purple w-100" onclick="return false;" style="opacity:0.5; pointer-events:none;"><i class="bi bi-people"></i> Demander à la Communauté</a>
+                    
+                    <button id="btnSecondOpinion" class="btn-glass w-100" style="background: rgba(41, 128, 185, 0.85); border: 1px solid rgba(41, 128, 185, 0.4);" onclick="demanderSecondAvis()">
+                        <i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)
+                    </button>
+                    <div id="secondOpinionNotification" class="inline-notification"></div>
+
+                    <button id="btnCreatePlan" class="btn-glass btn-orange w-100" onclick="genererPlanTraitement()">
+                        <i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement
+                    </button>
+                    
+                    <div id="planNotification" class="inline-notification"></div>
                 </div>
             </div>
         </div>
@@ -333,6 +125,8 @@
     let currentUsed = {{ used }};
     const maxLimit = {{ limit }};
     const planName = '{{ planName|escape('js') }}';
+    // NEW: Variable to store the ID of the newly created diagnostic
+    let currentDiagnosticId = null; 
 
     // 1. Image Preview Logic
     function previewImage(event) {
@@ -363,10 +157,12 @@
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(107, 127, 63, 1)';
     });
+    
     dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(0,0,0,0.2)';
     });
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = 'rgba(0,0,0,0.2)';
@@ -379,7 +175,7 @@
     // 2. AJAX Scan Logic
     function lancerScan() {
         if(!selectedFile) return;
-
+        
         // Show loading state
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.style.display = 'flex';
@@ -409,6 +205,21 @@
                 return;
             }
 
+            // --- NEW CODE: Save ID and Reset UI for Treatment Plan ---
+            currentDiagnosticId = data.diagnostic_id;
+            
+            const btnPlan = document.getElementById('btnCreatePlan');
+            const notifPlan = document.getElementById('planNotification');
+            
+            if (btnPlan && notifPlan) {
+                notifPlan.style.display = 'none';
+                btnPlan.disabled = false;
+                btnPlan.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+                // Remove custom click if it was added previously
+                btnPlan.onclick = genererPlanTraitement;
+            }
+            // ---------------------------------------------------------
+
             // Populate Results
             document.getElementById('result-panel').style.display = 'block';
             document.getElementById('lblMaladieTitre').innerText = data.plante + ' : ' + data.maladie;
@@ -425,17 +236,32 @@
             if(data.confiance > 80 && data.severity !== 'CRITICAL') color = '#27ae60'; // Green
 
             document.getElementById('lblConfiance').style.color = color;
-
+            
             document.getElementById('lblTraitement').innerHTML = `
                 <strong>Traitement recommandé : </strong> ${data.traitement.nom}<br>
                 <div class="mt-2 text-warning d-inline-block px-2 py-1 bg-dark bg-opacity-25 rounded"><small>Catégorie : ${data.traitement.type}</small></div>
                 <hr style="opacity:0.2;">
                 <p class="mb-0">${data.traitement.description}</p>
             `;
-
+            
             // Update Chat Button Link
             const chatLink = "{{ path('app_user_and_diag_chatbot', {id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', data.diagnostic_id);
             document.getElementById('btnChatIa').setAttribute('href', chatLink);
+
+            // Update Community Button — pre-fill with diagnostic results
+            const communityBtn = document.getElementById('btnCommunity');
+            if (communityBtn) {
+                const title = encodeURIComponent(`Aide pour ${data.plante.toUpperCase()}`);
+                const desc = encodeURIComponent(
+                    `L'IA a détecté : ${data.maladie} (Confiance: ${data.confiance}%).\n` +
+                    `Je ne suis pas sûr de ce résultat. Qu'en pensez-vous ?`
+                );
+                const communityUrl = `{{ path('app_user_and_diag_community_new') }}?title=${title}&description=${desc}&imageUrl=${encodeURIComponent(data.image_url)}`;
+                communityBtn.setAttribute('href', communityUrl);
+                communityBtn.style.opacity = '1';
+                communityBtn.style.pointerEvents = 'auto';
+                communityBtn.setAttribute('onclick', '');
+            }
 
             // Update real-time limits
             if(data.usage) {
@@ -445,10 +271,10 @@
                 const badge = document.getElementById('badgePremium');
                 if (limit !== -1 && currentUsed >= limit) {
                     badge.innerHTML = `❌ Limite atteinte (${planName})`;
+                    
                     // Disable inputs since the limit for the hour is hit
                     document.getElementById('fileInput').disabled = true;
                     document.getElementById('btnImport').disabled = true;
-                    document.getElementById('btnCamera').disabled = true;
                     document.getElementById('btnScan').disabled = true;
                 } else {
                     if (limit === -1) {
@@ -464,6 +290,111 @@
             document.getElementById('btnScan').disabled = false;
             console.error('Error:', error);
             alert("Erreur de connexion lors du scan.");
+        });
+    }
+
+    // --- NEW FUNCTION: Generate Treatment Plan ---
+    function genererPlanTraitement() {
+        if (!currentDiagnosticId) return;
+
+        const btn = document.getElementById('btnCreatePlan');
+        const notif = document.getElementById('planNotification');
+        
+        // UI Loading State
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Vérification...';
+        notif.style.display = 'none';
+
+        // Build the URL dynamically using Twig's path function
+        const url = "{{ path('app_user_and_diag_create_treatment_plan', {id: 'ID_PLACEHOLDER'}) }}".replace('ID_PLACEHOLDER', currentDiagnosticId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            notif.style.display = 'block';
+            
+            if (data.success) {
+                // Success UI
+                notif.className = 'inline-notification notif-success';
+                notif.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                btn.innerHTML = '<i class="bi bi-eye"></i> Voir le Plan';
+                
+                // Change button behavior to redirect to the new plan index
+                // Adjust this URL to match your actual route for viewing plans!
+                btn.onclick = () => window.location.href = `/user-and-diag/treatment-plan/`; 
+                btn.disabled = false;
+            } else {
+                // Error / Access Denied UI
+                notif.className = 'inline-notification notif-error';
+                
+                if (data.upgrade_required) {
+                    notif.innerHTML = `<i class="bi bi-lock-fill"></i> ${data.error} <br><a href="/user-and-diag/subscription" class="text-white text-decoration-underline mt-1 d-inline-block">Mettre à niveau</a>`;
+                } else {
+                    notif.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${data.error}`;
+                }
+                
+                btn.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            notif.style.display = 'block';
+            notif.className = 'inline-notification notif-error';
+            notif.innerHTML = '<i class="bi bi-x-circle-fill"></i> Une erreur réseau est survenue.';
+            btn.innerHTML = '<i class="bi bi-calendar2-check"></i> Générer un Plan de Traitement';
+            btn.disabled = false;
+        });
+    }
+
+    // --- "Demander un 2ème avis" function ---
+    function demanderSecondAvis() {
+        if (!currentDiagnosticId) return;
+
+        const btn = document.getElementById('btnSecondOpinion');
+        const notif = document.getElementById('secondOpinionNotification');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+        notif.style.display = 'none';
+
+        const url = "{{ path('app_user_and_diag_ask_second_opinion', {id: 'ID_PLACEHOLDER'}) }}".replace('ID_PLACEHOLDER', currentDiagnosticId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            notif.style.display = 'block';
+
+            if (data.success) {
+                notif.className = 'inline-notification notif-success';
+                notif.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Demande envoyée';
+                // Leave disabled to prevent spam
+            } else {
+                notif.className = 'inline-notification notif-error';
+                notif.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${data.error}`;
+                btn.innerHTML = '<i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            notif.style.display = 'block';
+            notif.className = 'inline-notification notif-error';
+            notif.innerHTML = '<i class="bi bi-x-circle-fill"></i> Erreur réseau.';
+            btn.innerHTML = '<i class="bi bi-person-badge"></i> Demander un 2ème avis (Agronome)';
+            btn.disabled = false;
         });
     }
 </script>

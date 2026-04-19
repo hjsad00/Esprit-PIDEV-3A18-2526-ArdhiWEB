@@ -1,0 +1,479 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord Agronome{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/UserAndDiag/expert-dashboard.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-background"></div>
+
+<div class="container" style="padding-top: 120px; padding-bottom: 50px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb m-0" style="--bs-breadcrumb-divider: '>';">
+                    <li class="breadcrumb-item"><a href="{{ path('app_client_dashboard') }}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Tableau de Bord Agronome</li>
+                </ol>
+            </nav>
+            <h2 class="text-white fw-bold mb-0">🔬 Tableau de Bord Agronome</h2>
+        </div>
+        <button class="btn-refresh" onclick="window.location.reload()">↻ Actualiser</button>
+    </div>
+
+    {# ─── MAIN BODY ─── #}
+    <div class="expert-body">
+
+        {# ── LEFT PANEL: Queue ── #}
+        <div class="queue-panel">
+            <div class="queue-label">
+                <div class="accent-bar"></div>
+                <span>DEMANDES EN ATTENTE</span>
+            </div>
+
+            {% if reviews is empty %}
+                <div class="empty-queue">
+                    <span style="font-size: 32px; opacity: 0.3;">🌿</span>
+                    <p>Aucune demande en attente.</p>
+                </div>
+            {% else %}
+                {% for review in reviews %}
+                    <div class="review-card" data-review-id="{{ review.id }}" onclick="loadReviewDetail({{ review.id }}, this)">
+                        {% if review.reviewType == 'DIAGNOSIS' %}
+                            <div class="review-type">🔬 Diagnostic</div>
+                        {% elseif review.reviewType == 'PROGRESS' %}
+                            <div class="review-type">📊 Suivi</div>
+                        {% else %}
+                            <div class="review-type">🛡 Prévention</div>
+                        {% endif %}
+                        <div class="review-farmer">De: {{ review.diagnostic ? (review.diagnostic.user ? review.diagnostic.user.prenom ~ ' ' ~ review.diagnostic.user.nom : 'Inconnu') : 'Inconnu' }}</div>
+                        <div class="review-status status-{{ review.status|lower }}">{{ review.status }}</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {# ── RIGHT PANEL: Detail ── #}
+        <div class="detail-panel" id="detailPanel">
+            
+            {# Empty state #}
+            <div class="empty-state" id="emptyState">
+                <span style="font-size: 48px; opacity: 0.3;">🌿</span>
+                <p class="empty-title">Sélectionnez un cas à examiner</p>
+                <p class="empty-sub">Choisissez une demande dans le panneau de gauche</p>
+            </div>
+
+            {# Loading state #}
+            <div class="loading-state" id="loadingState" style="display:none;">
+                <div class="spinner-border text-success" role="status"></div>
+                <p class="mt-3 text-white-50">Chargement des détails...</p>
+            </div>
+
+            {# ═══ DIAGNOSIS REVIEW PANEL ═══ #}
+            <div class="review-detail-card" id="diagnosisPanel" style="display:none;">
+                <div class="detail-header detail-header-green">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="detail-icon bg-green">🔬</div>
+                        <div>
+                            <div class="detail-label">ÉVALUATION DU DIAGNOSTIC</div>
+                            <div class="detail-title">Revue d'analyse IA</div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="detail-farmer" id="diagFarmerName">Agriculteur</div>
+                        <div class="detail-date" id="diagDate">Date</div>
+                    </div>
+                </div>
+
+                <div class="detail-body">
+                    <div class="image-ai-row">
+                        <div class="scan-image-wrapper">
+                            <img id="diagImage" src="" alt="Image scannée">
+                        </div>
+                        <div class="ai-result-col">
+                            <div class="section-label" style="color: rgba(230,200,100,0.55);">RÉSULTAT IA</div>
+                            <div class="ai-diagnosis-text" id="diagAiResult">Chargement...</div>
+                            <div class="separator"></div>
+                            <div class="section-label">Votre diagnostic expert</div>
+                            <input type="text" id="txtExpertDiseaseName" class="expert-input" placeholder="Confirmer ou corriger le nom de la maladie...">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-label">NOTES & RECOMMANDATIONS</div>
+                        <textarea id="txtExpertNotes" class="expert-textarea" rows="4" placeholder="Vos observations cliniques, recommandations de traitement..."></textarea>
+                    </div>
+
+                    <button class="btn-submit btn-submit-green" onclick="submitDiagnosisReview()">
+                        ✅ Soumettre l'Avis Diagnostic
+                    </button>
+                </div>
+            </div>
+
+            {# ═══ PROGRESS / PREVENTION REVIEW PANEL ═══ #}
+            <div class="review-detail-card" id="progressPanel" style="display:none;">
+                <div class="detail-header detail-header-purple">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="detail-icon bg-purple" id="progressIcon">📊</div>
+                        <div>
+                            <div class="detail-label" id="progressLabel">SUIVI DE TRAITEMENT</div>
+                            <div class="detail-title" id="progressTitle">Revue de progression</div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="detail-farmer" id="progressFarmerName">Agriculteur</div>
+                        <div class="detail-date" id="progressDiseaseName">Maladie</div>
+                    </div>
+                </div>
+
+                <div class="detail-body">
+                    {# Photo comparison (PROGRESS only) #}
+                    <div class="photo-comparison" id="photoComparisonBox">
+                        <div class="photo-col">
+                            <div class="photo-label">AVANT</div>
+                            <div class="photo-wrapper">
+                                <img id="imgOriginal" src="" alt="Avant">
+                            </div>
+                        </div>
+                        <div class="photo-arrow">→</div>
+                        <div class="photo-col">
+                            <div class="photo-label">APRÈS</div>
+                            <div class="photo-wrapper">
+                                <img id="imgFollowUp" src="" alt="Après">
+                            </div>
+                        </div>
+                    </div>
+
+                    {# AI Analysis box #}
+                    <div class="ai-analysis-box">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span>🤖</span>
+                            <span class="ai-analysis-title" id="lblAiAnalysisTitle">Analyse IA</span>
+                        </div>
+                        <p class="ai-analysis-text" id="lblAiAnalysis">...</p>
+                    </div>
+
+                    {# Task management section #}
+                    <div class="task-section-header">
+                        <div class="accent-bar accent-purple"></div>
+                        <span>GESTION DES TÂCHES</span>
+                        <div class="section-line"></div>
+                    </div>
+
+                    <div id="taskListContainer" class="task-list"></div>
+
+                    {# Add task row #}
+                    <div class="add-task-row">
+                        <span class="add-task-label">Ajouter</span>
+                        <input type="number" id="txtNewTaskDay" class="task-input task-day-input" placeholder="Jour" min="1">
+                        <input type="text" id="txtNewTaskDescription" class="task-input task-desc-input" placeholder="Description de la tâche...">
+                        <button class="btn-add-task" onclick="handleAddTask()">＋</button>
+                    </div>
+
+                    {# Verdict section #}
+                    <div class="task-section-header">
+                        <div class="accent-bar accent-gold"></div>
+                        <span style="color: rgba(220,200,120,0.55);">VERDICT & RAPPORT</span>
+                        <div class="section-line"></div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-label" style="color: rgba(200,180,120,0.5);">VERDICT EXPERT</div>
+                        <select id="verdictCombo" class="expert-select">
+                            <option value="">Choisir un verdict...</option>
+                            <option value="CONTINUE">CONTINUE — Poursuivre le plan</option>
+                            <option value="HEALED">HEALED — Guéri / Résolu</option>
+                            <option value="WORSENED">WORSENED — Aggravé</option>
+                        </select>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-label">NOTES & RECOMMANDATIONS</div>
+                        <textarea id="txtProgressNotes" class="expert-textarea" rows="4" placeholder="Vos observations et recommandations..."></textarea>
+                    </div>
+
+                    <button class="btn-submit btn-submit-purple" onclick="submitProgressReview()">
+                        ✅ Soumettre l'Avis de Suivi
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    let currentReviewId = null;
+    let currentReviewData = null;
+
+    function loadReviewDetail(reviewId, cardElement) {
+        currentReviewId = reviewId;
+
+        // Highlight selected card
+        document.querySelectorAll('.review-card').forEach(c => c.classList.remove('active'));
+        cardElement.classList.add('active');
+
+        // Show loading
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('diagnosisPanel').style.display = 'none';
+        document.getElementById('progressPanel').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'flex';
+
+        fetch(`{{ path('app_expert_review_detail', {id: 'REVIEW_ID'}) }}`.replace('REVIEW_ID', reviewId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('loadingState').style.display = 'none';
+            currentReviewData = data;
+
+            if (data.review_type === 'DIAGNOSIS') {
+                showDiagnosisPanel(data);
+            } else {
+                showProgressPanel(data);
+            }
+        })
+        .catch(err => {
+            document.getElementById('loadingState').style.display = 'none';
+            alert('Erreur lors du chargement des détails.');
+        });
+    }
+
+    function showDiagnosisPanel(data) {
+        document.getElementById('diagnosisPanel').style.display = 'block';
+        document.getElementById('progressPanel').style.display = 'none';
+
+        document.getElementById('diagFarmerName').textContent = 'Agriculteur: ' + (data.farmer_name || 'N/A');
+        document.getElementById('diagDate').textContent = 'Reçu le: ' + (data.created_at || 'N/A');
+        document.getElementById('diagAiResult').textContent = 'Diagnostic IA: ' + (data.diagnosis_result || 'N/A');
+
+        const diagImg = document.getElementById('diagImage');
+        if (data.original_image_url) {
+            diagImg.src = data.original_image_url;
+            diagImg.style.display = 'block';
+        } else {
+            diagImg.style.display = 'none';
+        }
+
+        document.getElementById('txtExpertDiseaseName').value = data.diagnosis_result || '';
+        document.getElementById('txtExpertNotes').value = '';
+    }
+
+    function showProgressPanel(data) {
+        document.getElementById('diagnosisPanel').style.display = 'none';
+        document.getElementById('progressPanel').style.display = 'block';
+
+        const isPrevention = data.review_type === 'PREVENTION';
+
+        // Adapt header
+        document.getElementById('progressIcon').textContent = isPrevention ? '🛡' : '📊';
+        document.getElementById('progressLabel').textContent = isPrevention ? 'SUIVI DE PRÉVENTION' : 'SUIVI DE TRAITEMENT';
+        document.getElementById('progressTitle').textContent = isPrevention ? 'Revue de prévention' : 'Revue de progression';
+
+        document.getElementById('progressFarmerName').textContent = 'Agriculteur: ' + (data.farmer_name || 'N/A');
+        document.getElementById('progressDiseaseName').textContent = 'Maladie: ' + (data.diagnosis_result || 'N/A');
+        document.getElementById('progressDiseaseName').style.display = isPrevention ? 'none' : 'block';
+
+        // Photo comparison
+        const photoBox = document.getElementById('photoComparisonBox');
+        if (isPrevention) {
+            photoBox.style.display = 'none';
+        } else {
+            photoBox.style.display = 'flex';
+            const imgOrig = document.getElementById('imgOriginal');
+            const imgFollow = document.getElementById('imgFollowUp');
+            imgOrig.src = data.original_image_url || '';
+            imgFollow.src = data.photo_url || '';
+        }
+
+        // AI Analysis
+        document.getElementById('lblAiAnalysisTitle').textContent = isPrevention ? '📋 Résumé des tâches en attente:' : '🤖 Analyse IA:';
+        document.getElementById('lblAiAnalysis').textContent = data.ai_analysis || 'Analyse IA non disponible';
+
+        // Task list
+        const taskContainer = document.getElementById('taskListContainer');
+        taskContainer.innerHTML = '';
+        (data.tasks || []).forEach(task => {
+            taskContainer.appendChild(createTaskRow(task));
+        });
+
+        document.getElementById('txtProgressNotes').value = '';
+        document.getElementById('verdictCombo').value = '';
+    }
+
+    function createTaskRow(task) {
+        const row = document.createElement('div');
+        row.className = 'task-row-expert';
+        row.id = `task-row-${task.id}`;
+
+        const statusIcon = task.status === 'COMPLETED' ? '✅' : (task.status === 'MISSED' ? '❌' : '⏳');
+        const isPending = task.status === 'PENDING';
+
+        row.innerHTML = `
+            <span class="task-day-badge">J</span>
+            <input type="number" class="task-edit-day" id="task-day-${task.id}" value="${task.day_offset}" style="width: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; text-align: center;" ${!isPending ? 'readonly' : ''}>
+            <span class="task-status-icon">${statusIcon}</span>
+            <input type="text" class="task-edit-input" value="${task.description}" id="task-desc-${task.id}" ${!isPending ? 'readonly' : ''}>
+            <button class="btn-task-save" onclick="saveTask(${task.id})" ${!isPending ? 'disabled' : ''}>💾</button>
+            <button class="btn-task-delete" onclick="deleteTask(${task.id})" ${!isPending ? 'disabled' : ''}>🗑</button>
+        `;
+
+        return row;
+    }
+
+    function saveTask(taskId) {
+        const desc = document.getElementById(`task-desc-${taskId}`).value.trim();
+        const dayInput = document.getElementById(`task-day-${taskId}`);
+        if (!desc) return;
+
+        const bodyData = { description: desc };
+        if (dayInput && dayInput.value) bodyData.day_offset = parseInt(dayInput.value);
+
+        fetch(`{{ path('app_expert_update_task', {id: 'TASK_ID'}) }}`.replace('TASK_ID', taskId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify(bodyData)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) showToast('Tâche mise à jour !');
+            else alert(data.error);
+        });
+    }
+
+    function deleteTask(taskId) {
+        if (!confirm('Supprimer cette tâche ?')) return;
+
+        fetch(`{{ path('app_expert_delete_task', {id: 'TASK_ID'}) }}`.replace('TASK_ID', taskId), {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`task-row-${taskId}`).remove();
+                showToast('Tâche supprimée.');
+            } else alert(data.error);
+        });
+    }
+
+    function handleAddTask() {
+        if (!currentReviewId) return;
+
+        const day = document.getElementById('txtNewTaskDay').value;
+        const desc = document.getElementById('txtNewTaskDescription').value.trim();
+
+        if (!day || !desc) { alert('Veuillez remplir le jour et la description.'); return; }
+
+        fetch(`{{ path('app_expert_add_task', {id: 'REVIEW_ID'}) }}`.replace('REVIEW_ID', currentReviewId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ day: parseInt(day), description: desc })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Add to internal state
+                if (!currentReviewData.tasks) currentReviewData.tasks = [];
+                currentReviewData.tasks.push({
+                    id: data.task_id,
+                    day_offset: parseInt(day),
+                    description: desc,
+                    status: 'PENDING'
+                });
+
+                // Sort tasks chronologically
+                currentReviewData.tasks.sort((a, b) => a.day_offset - b.day_offset);
+
+                // Re-render task list
+                const container = document.getElementById('taskListContainer');
+                container.innerHTML = '';
+                currentReviewData.tasks.forEach(task => {
+                    container.appendChild(createTaskRow(task));
+                });
+
+                document.getElementById('txtNewTaskDay').value = '';
+                document.getElementById('txtNewTaskDescription').value = '';
+                showToast('Nouvelle tâche ajoutée !');
+            } else alert(data.error);
+        });
+    }
+
+    function submitDiagnosisReview() {
+        if (!currentReviewId) return;
+
+        const diseaseName = document.getElementById('txtExpertDiseaseName').value.trim();
+        const notes = document.getElementById('txtExpertNotes').value.trim();
+
+        if (!diseaseName) { alert('Veuillez indiquer le nom de la maladie.'); return; }
+
+        const btn = document.querySelector('#diagnosisPanel .btn-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Soumission...';
+
+        fetch(`{{ path('app_expert_submit_diagnosis', {id: 'REVIEW_ID'}) }}`.replace('REVIEW_ID', currentReviewId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ disease_name: diseaseName, notes: notes })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                alert(data.error);
+                btn.disabled = false;
+                btn.innerHTML = '✅ Soumettre l\'Avis Diagnostic';
+            }
+        });
+    }
+
+    function submitProgressReview() {
+        if (!currentReviewId) return;
+
+        const verdict = document.getElementById('verdictCombo').value;
+        const notes = document.getElementById('txtProgressNotes').value.trim();
+
+        if (!verdict) { alert('Veuillez sélectionner un verdict.'); return; }
+
+        const btn = document.querySelector('#progressPanel .btn-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Soumission...';
+
+        fetch(`{{ path('app_expert_submit_progress', {id: 'REVIEW_ID'}) }}`.replace('REVIEW_ID', currentReviewId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ verdict: verdict, notes: notes })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                alert(data.error);
+                btn.disabled = false;
+                btn.innerHTML = '✅ Soumettre l\'Avis de Suivi';
+            }
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'expert-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 50);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+</script>
+{% endblock %}

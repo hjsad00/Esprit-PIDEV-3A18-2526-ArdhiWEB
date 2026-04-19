@@ -42,6 +42,9 @@ class CommunityComment
     #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true)]
     private ?CommunityComment $parentComment = null;
 
+    #[ORM\Column(nullable: true, options: ["default" => 0])]
+    private ?int $totalReadTime = 0;
+
     public function __construct()
     {
         $this->created_at = new \DateTime();
@@ -137,6 +140,17 @@ class CommunityComment
     public function setParentComment(?CommunityComment $parentComment): static
     {
         $this->parentComment = $parentComment;
+        return $this;
+    }
+
+    public function getTotalReadTime(): ?int
+    {
+        return $this->totalReadTime;
+    }
+
+    public function setTotalReadTime(?int $totalReadTime): static
+    {
+        $this->totalReadTime = $totalReadTime;
         return $this;
     }
 }

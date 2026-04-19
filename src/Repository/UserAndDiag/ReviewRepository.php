@@ -20,4 +20,17 @@ class ReviewRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Review::class);
     }
+
+    /**
+     * @return Review[]
+     */
+    public function findPendingReviews(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.status = :status')
+            ->setParameter('status', 'PENDING')
+            ->orderBy('r.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

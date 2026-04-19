@@ -9,11 +9,13 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 
 class AdminFarmHealthScanType extends AbstractType
 {
@@ -26,12 +28,17 @@ class AdminFarmHealthScanType extends AbstractType
             ->add('latitude', NumberType::class, ['label' => 'Latitude', 'required' => false, 'scale' => 6])
             ->add('longitude', NumberType::class, ['label' => 'Longitude', 'required' => false, 'scale' => 6])
             ->add('concerns', TextareaType::class, ['label' => 'Préoccupations', 'required' => false])
-            ->add('photo_crops', TextType::class, ['label' => 'Photo cultures', 'required' => false])
-            ->add('photo_soil', TextType::class, ['label' => 'Photo sol', 'required' => false])
-            ->add('photo_edges', TextType::class, ['label' => 'Photo bordures', 'required' => false])
-            ->add('photo_insects', TextType::class, ['label' => 'Photo insectes', 'required' => false])
-            ->add('photo_spacing', TextType::class, ['label' => 'Photo espacement', 'required' => false])
-            ->add('photo_overview', TextType::class, ['label' => 'Photo vue générale', 'required' => false])
+            ->add('photoCropsFile', FileType::class, ['label' => 'Upload Photo cultures', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
+
+            ->add('photoSoilFile', FileType::class, ['label' => 'Upload Photo sol', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
+
+            ->add('photoEdgesFile', FileType::class, ['label' => 'Upload Photo bordures', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
+
+            ->add('photoInsectsFile', FileType::class, ['label' => 'Upload Photo insectes', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
+
+            ->add('photoSpacingFile', FileType::class, ['label' => 'Upload Photo espacement', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
+
+            ->add('photoOverviewFile', FileType::class, ['label' => 'Upload Photo vue générale', 'mapped' => false, 'required' => false, 'constraints' => [new File(['maxSize' => '5M', 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp']])]])
             ->add('scan_date', DateTimeType::class, ['label' => 'Date scan', 'widget' => 'single_text', 'required' => false])
             ->add('status', ChoiceType::class, [
                 'label' => 'Statut',

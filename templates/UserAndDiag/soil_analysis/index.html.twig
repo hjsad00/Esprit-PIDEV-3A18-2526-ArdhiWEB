@@ -1,0 +1,192 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ardhi - Profil de Sol 3D Virtuel{% endblock %}
+
+{% block body_class %}dashboard-page{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="{{ asset('assets/css/UserAndDiag/soil-analysis.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="soil-wrapper">
+    <input type="hidden" id="soil-api-url" value="{{ path('app_user_and_diag_soil_api') }}">
+
+    {# ── TOP BAR ─────────────────────────────────────────────── #}
+    <div class="soil-topbar">
+        <a href="{{ path('app_client_dashboard') }}" class="btn-back">←</a>
+
+        <div class="brand">
+            <span class="brand-icon">🌍</span>
+            <div>
+                <div class="brand-sub">ARDHI PLATFORM</div>
+                <div class="brand-title">Profil de Sol 3D Virtuel</div>
+            </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="status-badge">
+            <span class="dot">●</span>
+            <span>Analyse complète</span>
+        </div>
+
+        <div class="view-toggle">
+            <button id="btn-3d" class="active">🧊 3D</button>
+            <button id="btn-chart">📊 Graphes</button>
+        </div>
+
+        <button class="btn-export" id="btn-export">⬇ CSV</button>
+
+        <button class="btn-analyze" id="btn-analyze">🔬  Analyser ce sol</button>
+    </div>
+
+    {# ── BODY ─────────────────────────────────────────────────── #}
+    <div class="soil-body">
+        {# LEFT: Map / 3D / Chart #}
+        <div class="soil-left">
+            <div id="soil-map"></div>
+            <canvas id="soil-3d-canvas"></canvas>
+
+            <div class="soil-chart-pane">
+                <div class="chart-title">PROFIL DE PROFONDEUR — TOUTES LES COUCHES</div>
+                <div id="chart-rows"></div>
+            </div>
+
+            {# Loading overlay #}
+            <div class="soil-loading">
+                <div class="spinner"></div>
+                <div class="spinner-text">Récupération des données SoilGrids…</div>
+            </div>
+
+            {# Floating labels #}
+            <span class="lbl-bottom-left">🌱 SoilCore Viewer</span>
+            <span class="lbl-bottom-right">⟳ Glisser · Molette · Cliquer sur une couche</span>
+            <span class="lbl-top-left" id="lbl-coords"></span>
+        </div>
+
+        {# RIGHT: Stats Panel #}
+        <div class="soil-right">
+            {# Header #}
+            <div class="stats-header">
+                <div class="header-info">
+                    <div class="header-sub">ANALYSE PHYTOPATHOLOGIQUE</div>
+                    <div class="header-depth" id="lbl-depth">Cliquez sur une couche</div>
+                </div>
+                <div class="score-ring">
+                    <span class="score-val" id="score-val">--</span>
+                    <span class="score-max">/100</span>
+                </div>
+            </div>
+
+            {# Compare row #}
+            <div class="compare-row">
+                <span class="compare-label">Couche :</span>
+                <div class="layer-mini-btns"></div>
+            </div>
+
+            {# Cards #}
+            <div class="cards-scroll">
+                {# pH Card #}
+                <div class="soil-card card-ph">
+                    <div class="card-header-row">
+                        <span class="card-icon">⚗</span>
+                        <span class="card-label" style="color:rgba(255,255,255,0.42)">pH DU SOL</span>
+                        <span class="card-badge" id="badge-ph"></span>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="big-value" id="val-ph">--</span>
+                        <span class="big-unit" style="margin-bottom:5px;">pH</span>
+                    </div>
+                    <div class="bar-wrap"><div class="bar-fill" id="bar-ph"></div></div>
+                    <div class="bar-labels"><span>Acide 0</span><span>7</span><span>Alcalin 14</span></div>
+                    <div class="card-status" id="status-ph" style="color:rgba(255,255,255,0.5)">En attente d'analyse…</div>
+                </div>
+
+                {# Nitrogen Card #}
+                <div class="soil-card card-nitrogen">
+                    <div class="card-header-row">
+                        <span class="card-icon">🌿</span>
+                        <span class="card-label" style="color:rgba(46,204,113,0.65)">AZOTE (N)</span>
+                        <span class="card-badge" id="badge-nitrogen"></span>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="big-value" id="val-nitrogen">--</span>
+                        <span class="big-unit" style="margin-bottom:5px;">cg/kg</span>
+                    </div>
+                    <div class="bar-wrap"><div class="bar-fill" id="bar-nitrogen"></div></div>
+                    <div class="card-status" id="status-nitrogen" style="color:rgba(255,255,255,0.5)">En attente d'analyse…</div>
+                </div>
+
+                {# Texture Card #}
+                <div class="soil-card card-texture">
+                    <div class="card-header-row">
+                        <span class="card-icon">🪨</span>
+                        <span class="card-label" style="color:rgba(230,180,80,0.65)">TEXTURE DU SOL</span>
+                    </div>
+                    <div class="texture-grid">
+                        <div class="texture-col">
+                            <div class="tex-head">
+                                <span class="tex-label">Sable</span>
+                                <span class="tex-val" id="val-sand" style="color:#e6a845">--%</span>
+                            </div>
+                            <div class="bar-wrap"><div class="bar-fill" id="bar-sand"></div></div>
+                        </div>
+                        <div class="texture-col">
+                            <div class="tex-head">
+                                <span class="tex-label">Argile</span>
+                                <span class="tex-val" id="val-clay" style="color:#a56336">--%</span>
+                            </div>
+                            <div class="bar-wrap"><div class="bar-fill" id="bar-clay"></div></div>
+                        </div>
+                    </div>
+                    <div class="card-status" id="status-texture" style="color:rgba(255,255,255,0.5);padding-top:4px;">En attente d'analyse…</div>
+                </div>
+
+                {# CEC Card #}
+                <div class="soil-card card-cec">
+                    <div class="card-header-row">
+                        <span class="card-icon">⚡</span>
+                        <span class="card-label" style="color:rgba(52,172,240,0.65)">ÉCHANGE CATIONIQUE (CEC)</span>
+                        <span class="card-badge" id="badge-cec"></span>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="big-value" id="val-cec">--</span>
+                        <span class="big-unit" style="margin-bottom:5px;">mmol(c)/kg</span>
+                    </div>
+                    <div class="bar-wrap"><div class="bar-fill" id="bar-cec"></div></div>
+                    <div style="color:rgba(255,255,255,0.32);font-size:10px;font-style:italic;margin-top:4px;">
+                        Rétention micronutriments (Cu, Zn, Mn).
+                    </div>
+                </div>
+
+                {# Recommendations Card #}
+                <div class="soil-card card-reco">
+                    <div class="card-header-row">
+                        <span class="card-icon">💡</span>
+                        <span class="card-label" style="color:rgba(180,120,220,0.65)">RECOMMANDATIONS</span>
+                    </div>
+                    <div class="reco-item" id="reco-1"></div>
+                    <div class="reco-item" id="reco-2"></div>
+                    <div class="reco-item" id="reco-3"></div>
+                </div>
+            </div>
+
+            {# Footer #}
+            <div class="stats-footer">
+                <span>SoilGrids API  •  ISRIC World Soil Information</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="{{ asset('assets/js/UserAndDiag/soil-analysis.js') }}"></script>
+{% endblock %}

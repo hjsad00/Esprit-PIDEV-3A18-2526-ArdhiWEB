@@ -15,12 +15,33 @@ use Symfony\Component\Routing\Annotation\Route;
 class AdminUserController extends AbstractController
 {
     #[Route('', name: 'admin_user_index')]
-    public function index(UserRepository $repo): Response
+    public function index(Request $request, UserRepository $repo): Response
     {
+        $q = $request->query->get('q');
+        $sort = $request->query->get('sort', 'id');
+        $direction = $request->query->get('direction', 'asc');
+
+        $qb = $repo->createQueryBuilder('u');
+
+        if ($q) {
+            $qb->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
+                ->setParameter('q', '%' . $q . '%');
+        }
+
+        // Validate sort field to prevent SQL injection or errors
+        $allowedFields = ['id', 'email', 'nom', 'prenom', 'points', 'level', 'phone'];
+        if (in_array($sort, $allowedFields)) {
+            $qb->orderBy('u.' . $sort, $direction);
+        } else {
+            $qb->orderBy('u.id', 'DESC');
+        }
+
+        $items = $qb->getQuery()->getResult();
+
         return $this->render('UserAndDiag/admin/crud/list.html.twig', [
             'page_title' => 'Utilisateurs',
             'icon' => 'bi-people-fill',
-            'items' => $repo->findAll(),
+            'items' => $items,
             'columns' => [
                 ['label' => 'ID', 'field' => 'id'],
                 ['label' => 'Email', 'field' => 'email'],

@@ -95,15 +95,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[Assert\Length(max: 255, maxMessage: 'La localisation ne peut pas dépasser 255 caractères.')]
     private ?string $location = null;
 
+    #[ORM\Column(options: ["default" => false])]
+    private ?bool $is_moderator = false;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $muted_until = null;
+
+    #[ORM\Column(options: ["default" => false])]
+    private ?bool $is_banned = false;
+
     /**
      * @var Collection<int, Parcelle>
      */
     #[ORM\OneToMany(targetEntity: Parcelle::class, mappedBy: 'agriculteur', cascade: ['remove'])]
     private Collection $parcelles;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $banner = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $bio = null;
+
+    /**
+     * @var Collection<int, UserBlock>
+     */
+    #[ORM\OneToMany(targetEntity: UserBlock::class, mappedBy: 'blocker', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $userBlocks;
+
     public function __construct()
     {
         $this->parcelles = new ArrayCollection();
+        $this->userBlocks = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -134,6 +159,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
             $roles[] = 'ROLE_' . strtoupper($this->role);
         }
         $roles[] = 'ROLE_USER';
+
+        // Admins are always moderators; non-admins can be promoted
+        if ($this->role === 'ADMIN' || $this->is_moderator) {
+            $roles[] = 'ROLE_MODERATOR';
+        }
+
         return array_unique($roles);
     }
 
@@ -262,11 +293,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getResetPasswordCode(): ?string
     {
-        // If the reset link has expired, treat it as non-existent
-        if ($this->reset_password_expires_at !== null && $this->reset_password_expires_at < new \DateTime()) {
-            return null;
-        }
-
         return $this->reset_password_code;
     }
 
@@ -313,6 +339,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     public function setLocation(?string $location): static
     {
         $this->location = $location;
+        return $this;
+    }
+
+    public function isModerator(): ?bool
+    {
+        return $this->is_moderator;
+    }
+
+    public function setIsModerator(bool $is_moderator): static
+    {
+        $this->is_moderator = $is_moderator;
+        return $this;
+    }
+
+    public function getMutedUntil(): ?\DateTimeInterface
+    {
+        return $this->muted_until;
+    }
+
+    public function setMutedUntil(?\DateTimeInterface $muted_until): static
+    {
+        $this->muted_until = $muted_until;
+        return $this;
+    }
+
+    public function isBanned(): ?bool
+    {
+        return $this->is_banned;
+    }
+
+    public function setIsBanned(bool $is_banned): static
+    {
+        $this->is_banned = $is_banned;
         return $this;
     }
 
@@ -412,5 +471,80 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
                 ->atPath('password_confirm')
                 ->addViolation();
         }
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
+        return $this;
+    }
+
+    public function getBanner(): ?string
+    {
+        return $this->banner;
+    }
+
+    public function setBanner(?string $banner): static
+    {
+        $this->banner = $banner;
+        return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): static
+    {
+        $this->bio = $bio;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserBlock>
+     */
+    public function getUserBlocks(): Collection
+    {
+        return $this->userBlocks;
+    }
+
+    public function addBlockedUser(self $user): static
+    {
+        if (!$this->isBlocking($user)) {
+            $userBlock = new UserBlock();
+            $userBlock->setBlocker($this);
+            $userBlock->setBlocked($user);
+            $this->userBlocks->add($userBlock);
+        }
+
+        return $this;
+    }
+
+    public function removeBlockedUser(self $user): static
+    {
+        foreach ($this->userBlocks as $userBlock) {
+            if ($userBlock->getBlocked() === $user) {
+                $this->userBlocks->removeElement($userBlock);
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    public function isBlocking(self $user): bool
+    {
+        foreach ($this->userBlocks as $userBlock) {
+            if ($userBlock->getBlocked() === $user) {
+                return true;
+            }
+        }
+        return false;
     }
 }
