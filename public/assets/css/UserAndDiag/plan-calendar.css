@@ -1,0 +1,239 @@
+/* ================================================================
+   PLAN CALENDAR - Dark Theme overrides for FullCalendar
+   ================================================================ */
+
+.calendar-wrapper {
+    position: relative;
+    min-height: 100vh;
+    padding-top: 80px;
+    background: linear-gradient(135deg, #04040e, #080818, #04100d);
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    overflow: hidden;
+}
+
+.calendar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.calendar-header .legend {
+    display: flex;
+    gap: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+/* FullCalendar Overrides */
+#calendar {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.fc-theme-standard .fc-scrollgrid {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.fc-theme-standard th,
+.fc-theme-standard td {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.fc-col-header-cell-cushion {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-decoration: none !important;
+    font-weight: 600;
+    padding: 10px 0 !important;
+}
+
+.fc-daygrid-day-number {
+    color: #fff !important;
+    text-decoration: none !important;
+    padding: 8px !important;
+}
+
+.fc-day-today {
+    background-color: rgba(39, 174, 96, 0.15) !important;
+}
+
+.fc-button-primary {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    text-transform: capitalize;
+    border-radius: 6px !important;
+}
+
+.fc-button-primary:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.fc-button-primary:disabled {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.fc-button-active {
+    background-color: #27ae60 !important;
+    border-color: #27ae60 !important;
+}
+
+.fc-toolbar-title {
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.5em !important;
+}
+
+.fc-event {
+    border: none !important;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+.fc-event-main {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+/* Modal styling */
+.fc-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.fc-modal-overlay.active {
+    display: flex;
+}
+
+.fc-modal {
+    background: #1a1e23;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.fc-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fc-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #fff;
+}
+
+.fc-modal-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.fc-modal-close:hover {
+    color: #fff;
+}
+
+.fc-modal-body {
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.fc-modal-body .task-meta {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.fc-modal-footer {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    text-align: right;
+}
+
+.fc-modal-footer .btn-link {
+    background: linear-gradient(to bottom right, #27ae60, #1e8449);
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    display: inline-block;
+}
