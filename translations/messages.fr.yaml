@@ -379,6 +379,13 @@ meteo:
         too_dry: 'Sécheresse extrême'
         too_hot: 'Chaleur excessive'
         too_cold: 'Gel risqué'
+    advice:
+        ideal: '✨ Conditions idéales pour tout type de travaux et plantations.'
+        wind_ok: '🚜 Vent calme : parfait pour les traitements et la pulvérisation.'
+        wind_bad: '💨 Vent fort : évitez les traitements et sécurisez les installations.'
+        heat: '☀️ Forte chaleur : privilégiez une irrigation tôt le matin ou soir.'
+        rain: "🌧️ Pluie prévue : évitez les traitements pulvérisés."
+        generic_good: "✅ Journée favorable aux activités agricoles."
 chatbot:
     greet_help: "Comment puis-je vous aider aujourd'hui ?"
     welcome: "Bonjour ! Je suis votre assistant RH propulsé par Gemini AI. <br>Que puis-je faire pour vous aujourd'hui?"

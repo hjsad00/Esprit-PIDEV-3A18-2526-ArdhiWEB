@@ -125,6 +125,7 @@ class RhChatbotController extends AbstractController
             'intention'       => $response->intention,
             'recommandations' => $recs,
             'disponibilites'  => $response->disponibilites,
+            'suggestions'     => $response->suggestions,
         ]);
     }
 }

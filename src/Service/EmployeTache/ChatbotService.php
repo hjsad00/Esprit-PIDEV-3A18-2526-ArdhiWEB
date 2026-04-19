@@ -18,6 +18,8 @@ class ChatbotResponse
     public array $recommandations = [];
     /** @var array */
     public array $disponibilites = [];
+    /** @var array */
+    public array $suggestions = [];
 }
 
 /**
@@ -41,6 +43,7 @@ class ChatbotService
         private RequestStack             $requestStack,
         private LocalMLIntentClassifier  $mlClassifier,
         private GeminiChatbotService     $geminiService,
+        private MeteoService             $meteoService,
     ) {}
 
     // ══════════════════════════════════════════════════════════════════
@@ -88,6 +91,7 @@ class ChatbotService
             'RECHERCHER_COMPETENCE' => $this->traiterRechercheCompetence($normalized, $idAgriculteur, $lang),
             'ANALYSER_PERFORMANCE'  => $this->traiterAnalysePerformance($idAgriculteur, $lang),
             'DISPONIBILITE'         => $this->traiterDisponibilite($idAgriculteur, $lang),
+            'METEO'                 => $this->traiterMeteo($idAgriculteur, $lang),
             'AIDE'                  => $this->genererAide($lang),
             default                 => $this->traiterUnknown($normalized, $messageOriginal, $idAgriculteur, $lang, $lastIntent),
         };
@@ -147,11 +151,21 @@ class ChatbotService
 
         [$idTache, $confidence] = $this->extraireIdTache($message, $idAgriculteur);
 
-        if ($idTache === null) {
-            // Lister uniquement les tâches non-terminées avec leurs IDs
+        if ($idTache === null || $confidence < 1.0) {
+            // Si ambiguïté (confidence < 1.0) ou non trouvé (null) → lister et proposer des suggestions
             $response->reponse = $this->translator->trans('chatbot.reco.need_task', [
                 '%list%' => "\n" . $this->listerTachesActives($idAgriculteur),
             ], null, $lang);
+
+            // Ajouter des suggestions cliquables
+            $actives = $this->findTachesActives($idAgriculteur);
+            foreach ($actives as $t) {
+                $response->suggestions[] = [
+                    'text'   => $t->getTitre(),
+                    'msg'    => "Tâche #" . $t->getId(),
+                    'action' => 'RECOMMANDER_EMPLOYE'
+                ];
+            }
             return $response;
         }
 
@@ -320,6 +334,35 @@ class ChatbotService
      *  1. Tente de détecter un ID de tâche → relance recommandation
      *  2. Sinon → délègue à Gemini AI pour une réponse intelligente
      */
+    /**
+     * Handler METEO : Donne les conditions actuelles et les conseils proactifs.
+     */
+    private function traiterMeteo(int $idAgriculteur, string $lang): ChatbotResponse {
+        $w = $this->meteoService->getCurrentWeather();
+        $response = new ChatbotResponse();
+        
+        if (!$w->isAvailable()) {
+            $response->reponse = $this->translator->trans('meteo.widget_title', [], null, $lang) . " : " . $this->translator->trans('notification.empty', [], null, $lang);
+            return $response;
+        }
+
+        $intro = sprintf("🌡️ **Météo à %s : %d°C (%s)**\n\n", $w->getCityName(), round($w->getTemperature()), $w->getDescription());
+        $advice = $this->meteoService->genererRecommandationsGenerales($w);
+        
+        $sb = $intro;
+        if (!empty($advice)) {
+            $sb .= "💡 **Conseils du jour :**\n";
+            foreach ($advice as $r) {
+                $sb .= "• " . $r->message . "\n";
+            }
+        } else {
+            $sb .= "Aucune recommandation spécifique pour ces conditions.";
+        }
+        
+        $response->reponse = $sb;
+        return $response;
+    }
+
     private function traiterUnknown(
         string  $message,
         string  $messageOriginal,
@@ -380,8 +423,8 @@ class ChatbotService
             $similarity   = 0;
             similar_text($message, $titre, $similarity);
 
-            // Exiger au moins 40% de similarité pour éviter les faux positifs
-            if ($similarity > $bestScore && $similarity >= 40.0) {
+            // Exiger au moins 85% de similarité pour éviter les faux positifs automatiques
+            if ($similarity > $bestScore && $similarity >= 85.0) {
                 $bestScore = $similarity;
                 $bestId    = $tache->getId();
             }
@@ -396,12 +439,7 @@ class ChatbotService
 
     private function listerTachesActives(int $idAgriculteur): string
     {
-        $taches = $this->tacheRepository->findBy(['idAgriculteur' => $idAgriculteur]);
-        $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
-
-        $actives = array_filter($taches, fn($t) =>
-            !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
-        );
+        $actives = $this->findTachesActives($idAgriculteur);
 
         if (empty($actives)) {
             return "  _(Aucune tâche active)_\n";
@@ -412,6 +450,19 @@ class ChatbotService
             $sb .= "  • **#{$t->getId()}** — {$t->getTitre()}\n";
         }
         return $sb;
+    }
+
+    /**
+     * @return Tache[]
+     */
+    private function findTachesActives(int $idAgriculteur): array
+    {
+        $taches = $this->tacheRepository->findBy(['idAgriculteur' => $idAgriculteur]);
+        $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
+
+        return array_filter($taches, fn($t) =>
+            !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
+        );
     }
 
     private function getEmployeActifDeTache(Tache $tache, int $idAgriculteur): ?Employe

@@ -24,6 +24,7 @@ class GeminiChatbotService
         private EmployeRepository    $employeRepository,
         private TacheRepository      $tacheRepository,
         private TranslatorInterface  $translator,
+        private MeteoService         $meteoService,
         private string               $geminiApiKey,
     ) {}
 
@@ -114,6 +115,24 @@ class GeminiChatbotService
             $tacheList = "- Aucune tâche active\n";
         }
 
+        // Contexte : météo actuelle
+        $w = $this->meteoService->getCurrentWeather();
+        $meteoContext = "Conditions météo actuelles : Impossible de récupérer les données.";
+        if ($w->isAvailable()) {
+            $meteoContext = sprintf(
+                "Météo actuelle à %s : %d°C, %s, Humidité %d%%, Vent %d km/h.",
+                $w->getCityName(),
+                round($w->getTemperature()),
+                $w->getDescription(),
+                $w->getHumidity(),
+                round($w->getWindSpeed())
+            );
+            $advice = $this->meteoService->genererRecommandationsGenerales($w);
+            if (!empty($advice)) {
+                $meteoContext .= " Conseils : " . implode(' ', array_map(fn($r) => $r->message, $advice));
+            }
+        }
+
         // Contexte conversationnel
         $contextInfo = '';
         if ($lastIntent) {
@@ -133,8 +152,11 @@ Tu es **SmartFarm RH**, l'assistant intelligent d'une plateforme agricole tunisi
 Tu aides les agriculteurs à gérer leurs employés et leurs tâches agricoles.
 Réponds en **{$langLabel}**, de manière concise, amicale et professionnelle (maximum 4 phrases).
 N'invente pas de données — utilise uniquement les informations ci-dessous.
-Si la question est hors sujet (météo, recettes, politique, etc.), réponds poliment que tu es spécialisé en gestion RH agricole.
+Si la question est hors sujet (recettes, politique, etc.), réponds poliment que tu es spécialisé en gestion agricole.
 {$contextInfo}
+**Météo et environnement :**
+{$meteoContext}
+
 **Employés actifs de la ferme :**
 {$empList}
 **Tâches agricoles en cours :**
@@ -142,7 +164,7 @@ Si la question est hors sujet (météo, recettes, politique, etc.), réponds pol
 
 **Question de l'agriculteur :** {$message}
 
-Réponds directement et utilement. Si tu peux suggérer une action (recommander un employé, voir les disponibilités, analyser les performances), mentionne-la.
+Réponds directement et utilement. Si tu peux suggérer une action (recommander un employé, voir les disponibilités, analyser les performances, conseil météo), mentionne-la.
 PROMPT;
     }
 

@@ -22,7 +22,7 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
  */
 class LocalMLIntentClassifier
 {
-    private const CACHE_KEY  = 'rh_chatbot_ml_pipeline_v5';
+    private const CACHE_KEY  = 'rh_chatbot_ml_pipeline_v7';
     private const CACHE_TTL  = 86400 * 7; // 7 jours
 
     private ?Pipeline $pipeline = null;
@@ -187,6 +187,10 @@ class LocalMLIntentClassifier
         $rules = [
             // AIDE (mots très courts ou incohérents, priorité haute)
             '/^(aide|help|ساعد|مساعدة|كيفاش|stat|asdf|klak|klok|qwerty|test|truc|machin|chose|comment ca marche|que peux.?tu|what can you)$/' => 'AIDE',
+            
+            // METEO
+            '/\b(meteo|temps|weather|climat|previsions|طقس|جو|noued)\b/' => 'METEO',
+
             // Pattern pour détecter les répétitions de caractères sans voyelles (gibberish fréquent)
             '/^[^aeiouy\s]{4,}$/' => 'AIDE',
 
@@ -404,6 +408,15 @@ class LocalMLIntentClassifier
                 "lorem ipsum", "dolor sit amet", "consectetur", "adipiscing",
                 "lundi", "mardi", "mercredi", "semaine", "parcelle",
                 "vache", "mouton", "olivier", "tomate", "pomme de terre"
+            ],
+
+            // ── METEO ────────────────────────────────────────────────
+            'METEO' => [
+                "quel temps fait il", "quelle est la meteo", "meteo aujourd hui",
+                "recommandation meteo", "conseil agricole meteo", "est ce qu il va pleuvoir",
+                "quels sont tes conseils pour aujourd hui", "conseille moi", "que faire aujourd hui",
+                "how is the weather", "weather forecast", "weather recommendations", "give me advice",
+                "طقس اليوم", "شنوة الجو", "فما مطر", "احوال جوية", "نصيحة اليوم"
             ],
         ];
 

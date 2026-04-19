@@ -200,4 +200,70 @@ class MeteoService
 
         return $recos;
     }
+
+    /**
+     * Recommandations générales basées uniquement sur la météo (sans tâche spécifique).
+     * @return Recommandation[]
+     */
+    public function genererRecommandationsGenerales(WeatherData $w): array
+    {
+        $recos = [];
+        if (!$w->isAvailable()) return $recos;
+
+        $temp  = $w->getTemperature();
+        $vent  = $w->getWindSpeed();
+        $pluie = $w->isRainExpected();
+
+        if ($pluie) {
+            $recos[] = new Recommandation(
+                Recommandation::NIVEAU_WARNING,
+                $this->translator->trans('meteo.advice.rain'),
+                "GEN_RAIN"
+            );
+        } else {
+            // Conditions idéales globales
+            if ($temp >= 18 && $temp <= 28 && $vent < 15) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.ideal'),
+                    "GEN_IDEAL"
+                );
+            }
+
+            // Focus sur le vent (traitements)
+            if ($vent < 10) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.wind_ok'),
+                    "GEN_WIND_OK"
+                );
+            } elseif ($vent > 35) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_WARNING,
+                    $this->translator->trans('meteo.advice.wind_bad'),
+                    "GEN_WIND_BAD"
+                );
+            }
+
+            // Focus sur la chaleur
+            if ($temp > 30) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_WARNING,
+                    $this->translator->trans('meteo.advice.heat'),
+                    "GEN_HEAT"
+                );
+            }
+
+            // Si rien d'autre et que c'est une belle journée
+            if (empty($recos) && $temp > 15 && !$pluie) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.generic_good'),
+                    "GEN_GOOD"
+                );
+            }
+        }
+
+        return $recos;
+    }
 }

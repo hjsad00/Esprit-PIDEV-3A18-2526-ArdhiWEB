@@ -380,6 +380,13 @@ meteo:
         too_dry: 'Extreme drought'
         too_hot: 'Excessive heat'
         too_cold: 'Frost risk'
+    advice:
+        ideal: '✨ Ideal conditions for all types of work and planting.'
+        wind_ok: '🚜 Calm wind: perfect for spray treatments.'
+        wind_bad: '💨 Strong wind: avoid spraying and secure equipment.'
+        heat: '☀️ High temperature: favor early morning or evening irrigation.'
+        rain: "🌧️ Rain expected: avoid spray treatments."
+        generic_good: "✅ Favorable day for agricultural activities."
 chatbot:
     greet_help: 'How can I help you today?'
     welcome: 'Hello! I am your HR assistant powered by Gemini AI. <br>How can I help you today?'
