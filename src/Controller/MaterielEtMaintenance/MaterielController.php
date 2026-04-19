@@ -360,8 +360,8 @@ class MaterielController extends AbstractController
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
-        // Sécurité : Ne pas autoriser la mise à jour si en vente ou réformé
-        if (in_array($materiel->getStatut(), ['en_vente', 'reforme'])) {
+        // Sécurité : Ne pas autoriser la mise à jour si en vente, vendu ou réformé
+        if (in_array($materiel->getStatut(), ['en_vente', 'vendu', 'reforme'])) {
             $this->addFlash('danger', 'Le compteur d\'heures est gelé pour ce matériel.');
             return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
         }

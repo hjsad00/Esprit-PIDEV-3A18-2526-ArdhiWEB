@@ -7,40 +7,119 @@
 {% block stylesheets %}
 <link href="{{ asset('assets/css/materiel/materiel.css') }}" rel="stylesheet">
 <style>
-    .ia-dashboard-hero {
-        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 20px;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+    .ia-page {
+        min-height: 100vh;
+        padding-bottom: 3rem;
+        background:
+            linear-gradient(to right, rgba(45, 74, 30, 0.18), rgba(45, 74, 30, 0.1)),
+            url('{{ asset("assets/img/ai_prediction.webp") }}') center/cover no-repeat fixed;
     }
+    .ia-dashboard-hero {
+        background: linear-gradient(to right, rgba(45, 74, 30, 0.9), rgba(45, 74, 30, 0.58));
+        color: white;
+        padding: 1.4rem 1.8rem;
+        border-radius: 20px;
+        margin-bottom: 1.6rem;
+        box-shadow: 0 14px 30px rgba(45, 74, 30, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .ia-panel {
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        border-radius: 18px;
+        box-shadow: 0 10px 26px rgba(28, 42, 22, 0.12);
+    }
+
     .ia-stat-card {
-        background: white;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbf7 100%);
         border-radius: 15px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
+        border: 1px solid #e0eadb;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         height: 100%;
     }
+
+    .ia-stat-card .display-5 {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
     .ia-mat-card {
-        background: white;
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdfb 100%);
         border-radius: 18px;
         padding: 1.5rem;
         margin-bottom: 1rem;
-        border: 1px solid #eee;
-        transition: transform 0.2s ease;
+        border: 1px solid #e5eee0;
+        box-shadow: 0 8px 20px rgba(24, 40, 21, 0.07);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .ia-mat-card:hover { transform: translateY(-3px); }
+
+    .ia-mat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 26px rgba(45, 74, 30, 0.14);
+    }
+
+    .ia-title {
+        color: #1f3523;
+        letter-spacing: 0.3px;
+    }
+
     .risk-badge { padding: 0.4rem 0.8rem; border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
     .risk-Faible { background: #e8f5e9; color: #2e7d32; }
     .risk-Modéré { background: #fff3e0; color: #e65100; }
     .risk-Élevé { background: #ffebee; color: #c62828; }
     .risk-none { background: #f5f5f5; color: #999; }
+
+    .ia-next-step-box {
+        background: #edf7ea;
+        color: #285b2b;
+        border: 1px solid #cfe7ca;
+        border-radius: 10px;
+        padding: 0.5rem;
+    }
+
+    .btn-ia-primary {
+        background: linear-gradient(135deg, #2d4a1e 0%, #4a7c3f 100%);
+        color: #fff;
+        border: 1px solid #2f5d29;
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(45, 74, 30, 0.24);
+    }
+
+    .btn-ia-primary:hover {
+        color: #fff;
+        filter: brightness(1.04);
+        transform: translateY(-1px);
+    }
+
+    .btn-ia-outline {
+        color: #2d4a1e;
+        border-color: #4a7c3f;
+    }
+
+    .btn-ia-outline:hover {
+        background: #2d4a1e;
+        color: #fff;
+        border-color: #2d4a1e;
+    }
+
+    @media (max-width: 768px) {
+        .ia-dashboard-hero {
+            padding: 1.2rem;
+        }
+
+        .ia-dashboard-hero h1 {
+            font-size: 1.4rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block body %}
+<div class="ia-page materiel-page-wrapper">
 <div class="container py-4">
     <div class="ia-dashboard-hero d-flex justify-content-between align-items-center flex-wrap gap-4">
         <div>
@@ -57,7 +136,7 @@
     <!-- Récapitulatif IA -->
     <div class="row g-4 mb-5">
         <div class="col-lg-4">
-            <div class="ia-stat-card text-center bg-white p-4 rounded shadow-sm h-100">
+            <div class="ia-panel p-4 h-100">
                 <h5 class="text-muted small text-uppercase fw-bold mb-4">Répartition des Risques</h5>
                 <canvas id="riskChart" style="max-height: 200px;"></canvas>
             </div>
@@ -90,8 +169,8 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold"><i class="bi bi-list-stars me-2 text-indigo-500"></i>Votre Flotte en Détail</h3>
-                <button id="btnAnalyseAll" class="btn btn-indigo-600 text-white rounded-pill px-4" style="background: #4f46e5;">
+                <h3 class="fw-bold ia-title"><i class="bi bi-list-stars me-2 text-success"></i>Votre Flotte en Détail</h3>
+                <button id="btnAnalyseAll" class="btn btn-ia-primary px-4">
                     <i class="bi bi-cpu me-2"></i> Analyser toute la flotte
                 </button>
             </div>
@@ -114,7 +193,7 @@
                             </p>
                             <div class="ia-result d-none">
                                 <p class="small mb-2 ia-text" style="line-height: 1.4;"></p>
-                                <div class="bg-indigo-50 p-2 rounded small" style="background: #f5f3ff; color: #4338ca;">
+                                <div class="ia-next-step-box small">
                                     <i class="bi bi-lightning-fill me-1"></i> <span class="ia-next-step"></span>
                                 </div>
                             </div>
@@ -122,7 +201,7 @@
 
                         <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
                             <span class="small text-muted"><i class="bi bi-speedometer2 me-1"></i> {{ m.heuresUtilisation|default(0) }} h</span>
-                            <button class="btn btn-outline-indigo btn-sm rounded-pill btn-analyse-single" style="color: #4f46e5; border-color: #4f46e5;">
+                            <button class="btn btn-ia-outline btn-sm rounded-pill btn-analyse-single">
                                 <i class="bi bi-stars me-1"></i> Analyser
                             </button>
                         </div>
@@ -132,6 +211,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -206,7 +286,6 @@ function runAnalysis(wrapper) {
         nextStep.textContent = data.prochaine_etape;
     })
     .catch(error => {
-        container.classList.remove('loading');
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-stars me-1"></i> Analyser';
         console.error('Error:', error);

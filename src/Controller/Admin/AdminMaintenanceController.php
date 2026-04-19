@@ -6,6 +6,7 @@ use App\Entity\MaterielEtMaintenance\Maintenance;
 use App\Repository\MaterielEtMaintenance\MaintenanceRepository;
 use App\Repository\UserAndDiag\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -176,7 +177,8 @@ class AdminMaintenanceController extends AbstractController
         UserRepository $userRepo,
         \App\Service\MaterielEtMaintenance\MaintenanceMailer $mailer,
         \App\Service\MaterielEtMaintenance\WhatsAppService $whatsApp,
-        \Symfony\Component\Workflow\Registry $workflowRegistry
+        \Symfony\Component\Workflow\Registry $workflowRegistry,
+        LoggerInterface $logger
     ): Response {
         $maintenance = $repo->find($id);
 
@@ -239,11 +241,6 @@ class AdminMaintenanceController extends AbstractController
             // --- Envoi E-mail ---
             $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
 
-            // --- Envoi WhatsApp ---
-            if ($user->getPhone()) {
-                $whatsApp->envoyer($user->getPhone(), $msgNotif);
-            }
-
         } elseif ($type === 'non_urgent_planifier') {
             $maintenance->setDecisionAdmin('planification_demandee');
             $maintenance->setStatutMaintenance('en_cours');
@@ -266,14 +263,21 @@ class AdminMaintenanceController extends AbstractController
             // --- Envoi E-mail ---
             $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
 
-            // --- Envoi WhatsApp ---
-            if ($user->getPhone()) {
-                $whatsApp->envoyer($user->getPhone(), $msgNotif);
-            }
-
         } else {
             $this->addFlash('danger', 'Type de réponse invalide.');
             return $this->redirectToRoute('admin_maintenance_urgente');
+        }
+
+        // --- Envoi WhatsApp commun (urgent + non urgent) ---
+        $phone = $user->getPhone();
+        if (!empty($phone)) {
+            $whatsApp->envoyer($phone, $msgNotif);
+        } else {
+            $logger->warning('Envoi WhatsApp ignoré: numéro manquant pour le propriétaire du matériel.', [
+                'maintenance_id' => $maintenance->getIdMaintenance(),
+                'reponse_type' => $type,
+                'user_id' => $user->getId(),
+            ]);
         }
 
         // On persiste et on flush tout explicitement

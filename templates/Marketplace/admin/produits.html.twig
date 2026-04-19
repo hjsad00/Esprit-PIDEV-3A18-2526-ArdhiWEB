@@ -117,7 +117,7 @@
                     <a href="{{ path('admin_marketplace_produits') }}" class="btn p-0 text-success fw-bold" style="font-size: 0.7rem; text-decoration: none;">Effacer</a>
                 </div>
 
-                <form method="GET" action="{{ path('admin_marketplace_produits') }}" id="filterForm">
+                <form method="GET" action="{{ path('admin_marketplace_produits') }}" id="filterForm" novalidate>
                     <div class="filter-group">
                         <label class="filter-label">Nom Produit</label>
                         <input type="text" name="nom" id="filter-nom" class="filter-input" placeholder="Ex: Fraises..." value="{{ filters.nom }}">

@@ -121,7 +121,7 @@
                     <a href="{{ path('admin_marketplace_commandes') }}" class="btn btn-link p-0 text-muted small fw-bold text-decoration-none">Effacer</a>
                 </div>
 
-                <form method="GET" action="{{ path('admin_marketplace_commandes') }}" id="filterForm">
+                <form method="GET" action="{{ path('admin_marketplace_commandes') }}" id="filterForm" novalidate>
                     <div class="filter-group">
                         <label class="filter-label">Référence ID</label>
                         <input type="text" name="id" id="filter-id" class="filter-input" placeholder="Ex: 45" value="{{ filters.id }}">

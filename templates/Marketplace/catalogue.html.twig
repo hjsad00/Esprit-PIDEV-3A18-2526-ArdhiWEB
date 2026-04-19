@@ -90,7 +90,7 @@
 
 
 
-                <form id="marketChatbotForm" class="market-chatbot-form" onsubmit="return window.marketplaceSendNow(event);">
+                <form id="marketChatbotForm" class="market-chatbot-form" onsubmit="return window.marketplaceSendNow(event);" novalidate>
                   <input
                     type="text"
                     id="marketChatbotInput"
@@ -147,7 +147,7 @@
               </button>
             </div>
 
-            <form method="GET" action="{{ path('app_marketplace_catalogue') }}" id="filterForm">
+            <form method="GET" action="{{ path('app_marketplace_catalogue') }}" id="filterForm" novalidate>
 
               {# ── Recherche par Nom ── #}
               <div class="sidebar-group">
@@ -453,7 +453,7 @@
 
                     {# Actions Panier #}
                     <div class="product-card-actions">
-                      <form action="{{ path('app_marketplace_panier_add', {id: produit.id}) }}" method="POST" class="product-cart-controls">
+                      <form action="{{ path('app_marketplace_panier_add', {id: produit.id}) }}" method="POST" class="product-cart-controls" novalidate>
                         <input type="number" name="quantite" class="product-qty-input" value="1" min="1" max="{{ produit.quantiteStock }}"
                                {{ produit.quantiteStock <= 0 ? 'disabled' : '' }}>
                         <button type="submit" class="product-btn-cart {{ produit.quantiteStock <= 0 ? 'disabled' : '' }}"
@@ -519,7 +519,7 @@
           </div>
 
           {% if app.user %}
-            <form id="reviewForm" class="review-form">
+            <form id="reviewForm" class="review-form" novalidate>
               <h4>Laisser un avis</h4>
               <div class="review-rating-input" id="reviewRatingInput" role="radiogroup" aria-label="Selectionner une note">
                 {% for i in 1..5 %}

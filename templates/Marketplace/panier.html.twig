@@ -107,8 +107,8 @@
                             {% endif %}
                           </td>
                           <td>
-                            <form action="{{ path('app_marketplace_panier_update', {id: ligne.produit.id}) }}"
-                                  method="POST" class="qty-control ajax-qty-form" data-id="{{ ligne.produit.id }}">
+                                <form action="{{ path('app_marketplace_panier_update', {id: ligne.produit.id}) }}"
+                                  method="POST" class="qty-control ajax-qty-form" data-id="{{ ligne.produit.id }}" novalidate>
                               <input type="number" name="quantite" value="{{ ligne.quantite }}"
                                      min="1" max="{{ ligne.produit.quantiteStock }}" class="qty-input">
                               <button type="submit" class="btn-qty-update" title="Mettre à jour">
@@ -123,8 +123,8 @@
                             </strong>
                           </td>
                           <td>
-                            <form action="{{ path('app_marketplace_panier_delete', {id: ligne.produit.id}) }}"
-                                  method="POST" class="ajax-delete-form" data-id="{{ ligne.produit.id }}">
+                                <form action="{{ path('app_marketplace_panier_delete', {id: ligne.produit.id}) }}"
+                                  method="POST" class="ajax-delete-form" data-id="{{ ligne.produit.id }}" novalidate>
                               <button type="submit" class="mp-action-delete" title="Retirer">
                                 <i class="bi bi-trash3"></i>
                               </button>
@@ -271,7 +271,7 @@
                     <i class="bi bi-shield-check"></i> Confirmer la commande
                   </button>
                   <div id="checkout-feedback" style="display:none;margin-top:10px;font-size:13px;font-weight:600;"></div>
-                  <form action="{{ path('app_marketplace_panier_clear') }}" method="POST" id="ajax-clear-form">
+                  <form action="{{ path('app_marketplace_panier_clear') }}" method="POST" id="ajax-clear-form" novalidate>
                     <button type="submit" class="btn-clear w-100">
                       <i class="bi bi-trash"></i> Vider le panier
                     </button>

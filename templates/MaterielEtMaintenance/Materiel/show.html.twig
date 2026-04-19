@@ -251,8 +251,8 @@
           <span class="fs-4 opacity-75">heures cumulées</span>
         </div>
         
-        {% if materiel.statut not in ['reforme', 'en_vente'] %}
-        <form action="{{ path('app_materiel_update_hours', {id: materiel.id}) }}" method="POST" class="d-flex gap-2">
+        {% if materiel.statut not in ['reforme', 'en_vente', 'vendu'] %}
+        <form action="{{ path('app_materiel_update_hours', {id: materiel.id}) }}" method="POST" class="d-flex gap-2" novalidate>
           <input type="number" name="heures" value="{{ materiel.heuresUtilisation }}" min="{{ materiel.heuresUtilisation }}" class="form-control bg-white border-0" style="max-width: 150px;" placeholder="Nouvelles heures...">
           <button type="submit" class="btn btn-success rounded-pill fw-bold px-4">Enregistrer les heures</button>
         </form>
@@ -260,7 +260,7 @@
         {% else %}
         <div class="alert alert-light bg-opacity-10 border-0 py-2 d-inline-flex align-items-center mb-0" style="background: rgba(255,255,255,0.15); color: #fff; border-radius: 10px;">
             <i class="bi bi-pause-circle-fill me-2 fs-5"></i>
-            <span class="small fw-bold">Compteur gelé : Le matériel est {{ materiel.statut == 'en_vente' ? 'en vente' : 'réformé' }}.</span>
+          <span class="small fw-bold">Compteur gelé : Le matériel est {% if materiel.statut == 'en_vente' %}en vente{% elseif materiel.statut == 'vendu' %}vendu{% else %}réformé{% endif %}.</span>
         </div>
         {% endif %}
 
@@ -325,7 +325,7 @@
                         </div>
                     {% endfor %}
 
-                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm">
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm" novalidate>
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <label class="form-label fw-bold text-danger"><i class="bi bi-megaphone me-1"></i> Signaler une panne / Urgence</label>
                         <textarea name="description" class="form-control mb-3" placeholder="Décrivez le problème ici pour l'administrateur..." rows="2"></textarea>
@@ -339,7 +339,7 @@
 
             {% if workflow_can(materiel, 'reformer') %}
                 <div class="col-md-6">
-                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'reformer'}) }}" method="POST" onsubmit="return confirm('Attention ! Cette action est irréversible. Réformer cette machine ?');">
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'reformer'}) }}" method="POST" onsubmit="return confirm('Attention ! Cette action est irréversible. Réformer cette machine ?');" novalidate>
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <button type="submit" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-trash me-2"></i> Réformer
@@ -543,7 +543,7 @@ document.getElementById('btnGenerateAI').addEventListener('click', function() {
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ path('app_materiel_mettre_en_vente', {id: materiel.id}) }}" method="POST">
+            <form action="{{ path('app_materiel_mettre_en_vente', {id: materiel.id}) }}" method="POST" novalidate>
                 <input type="hidden" name="_token" value="{{ csrf_token('vente_' ~ materiel.id) }}">
                 <div class="modal-body p-4">
                     <div class="row g-4">
