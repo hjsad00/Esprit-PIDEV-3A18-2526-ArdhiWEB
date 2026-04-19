@@ -1,0 +1,73 @@
+{# templates/evenement/qr_viewer.html.twig
+   Shown to the participant after registration — ported from Java QRCodeViewerController
+#}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon QR Code — {{ evenement.titre }}{% endblock %}
+
+{% block body %}
+<div class="container py-5" style="max-width: 520px;">
+
+    {# ── Header ──────────────────────────────────────────────────────────── #}
+    <div class="text-center mb-4">
+        <h4 class="fw-bold">🎟️ Votre QR Code d'accès</h4>
+        <p class="text-muted mb-1">
+            <span class="badge bg-success fs-6">📍 {{ evenement.titre }}</span>
+        </p>
+        <p class="text-muted small">{{ evenement.lieu }}</p>
+    </div>
+
+    {# ── QR card ─────────────────────────────────────────────────────────── #}
+    <div class="card shadow-sm border-0 text-center p-4">
+
+        {% if qrBase64 %}
+            <img src="{{ qrBase64 }}"
+                 alt="QR Code check-in"
+                 class="img-fluid mx-auto d-block mb-3"
+                 style="max-width: 260px; border-radius: 12px;">
+        {% else %}
+            <div class="alert alert-warning">⚠️ Erreur de génération du QR code</div>
+        {% endif %}
+
+        <h6 class="fw-bold mb-0">{{ participation.nomComplet }}</h6>
+
+        {% if tokenDisplay %}
+            <small class="text-muted">Token : {{ tokenDisplay }}</small>
+        {% endif %}
+
+        {# Status badge #}
+        <div class="mt-3">
+            {% set statut = participation.statut %}
+            {% if statut == 'PRESENT' %}
+                <span class="badge bg-success fs-6">✅ Présent(e)</span>
+            {% elseif statut == 'CONFIRME' %}
+                <span class="badge bg-primary fs-6">🟢 Confirmé(e)</span>
+            {% elseif statut == 'EN_ATTENTE' %}
+                <span class="badge bg-warning text-dark fs-6">⏳ En attente</span>
+            {% elseif statut == 'ANNULE' %}
+                <span class="badge bg-danger fs-6">❌ Annulé(e)</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Actions ─────────────────────────────────────────────────────────── #}
+    <div class="d-flex gap-2 justify-content-center mt-4">
+        <a href="{{ path('app_qr_download', {id: participation.id}) }}"
+           class="btn btn-success">
+            ⬇️ Télécharger SVG
+        </a>
+        <a href="{{ path('app_evenement_show', {id: evenement.id}) }}"
+           class="btn btn-outline-secondary">
+            ← Retour à l'événement
+        </a>
+    </div>
+
+    {# ── Instructions ────────────────────────────────────────────────────── #}
+    <div class="alert alert-info mt-4 small">
+        <strong>💡 Comment l'utiliser ?</strong><br>
+        Présentez ce QR code à l'entrée de l'événement. L'organisateur le scannera
+        pour confirmer votre présence. Vous pouvez aussi sauvegarder la capture d'écran.
+    </div>
+
+</div>
+{% endblock %}

@@ -5,29 +5,37 @@ namespace App\Controller\Evenement;
 use App\Entity\Evenement\Evenement;
 use App\Entity\Evenement\EvenementFavoris;
 use App\Entity\Evenement\Participation;
+use App\Entity\Evenement\ReviewComment;
 use App\Form\Evenement\EvenementType;
 use App\Form\Evenement\AvisType;
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\EvenementFavorisRepository;
 use App\Repository\Evenement\ParticipationRepository;
+use App\Repository\Evenement\ReviewCommentRepository;
 use App\Service\Evenement\EvenementParticipationMailer;
 use App\Service\Evenement\EvenementStatusSyncService;
+use App\Service\Evenement\GeminiAIEventService;
+use App\Service\Evenement\ParticipationPredictionService;
 use App\Service\Evenement\StatisticsService;
+use App\Service\Evenement\BadWordFilterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/evenement')]
 class EvenementController extends AbstractController
 {
     public function __construct(
-        private EvenementStatusSyncService $eventStatusSync,
+        private EvenementStatusSyncService   $eventStatusSync,
         private EvenementParticipationMailer $participationMailer,
-        private LoggerInterface $logger
+        private GeminiAIEventService         $aiService,
+        private ParticipationPredictionService $predictionService,
+        private LoggerInterface              $logger
     ) {}
 
     // ─── LIST ────────────────────────────────────────────────────────────────
@@ -39,14 +47,13 @@ class EvenementController extends AbstractController
     ): Response {
         $this->eventStatusSync->syncAll();
 
-        // Admin → redirect to admin dashboard
         if ($this->isGranted('ROLE_ADMIN')) {
             return $this->redirectToRoute('app_evenement_admin_dashboard');
         }
 
-        $type    = $request->query->get('type');
-        $statut  = $request->query->get('statut');
-        $search  = $request->query->get('search');
+        $type       = $request->query->get('type');
+        $statut     = $request->query->get('statut');
+        $search     = $request->query->get('search');
         $evenements = $evenementRepo->findWithFilters($type, $statut, $search);
 
         $favorisIds = [];
@@ -57,15 +64,54 @@ class EvenementController extends AbstractController
         }
 
         return $this->render('evenement/index.html.twig', [
-            'evenements'  => $evenements,
-            'favorisIds'  => $favorisIds,
-            'type'        => $type,
-            'statut'      => $statut,
-            'search'      => $search,
+            'evenements' => $evenements,
+            'favorisIds' => $favorisIds,
+            'type'       => $type,
+            'statut'     => $statut,
+            'search'     => $search,
         ]);
     }
 
-    // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────
+    // ─── FILTER (AJAX) ────────────────────────────────────────────────────
+    #[Route('/filter', name: 'app_evenement_filter', methods: ['GET'])]
+    public function filter(
+        Request $request,
+        EvenementRepository $evenementRepo,
+        EvenementFavorisRepository $favorisRepo
+    ): Response {
+        // Check for AJAX request
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
+
+        $type       = $request->query->get('type');
+        $statut     = $request->query->get('statut');
+        $search     = $request->query->get('search');
+        $evenements = $evenementRepo->findWithFilters($type, $statut, $search);
+
+        $favorisIds = [];
+        if ($this->getUser()) {
+            foreach ($favorisRepo->findByUser($this->getUser()) as $fav) {
+                $favorisIds[] = $fav->getEvenement()->getId();
+            }
+        }
+
+        // Return partial template for AJAX requests
+        if ($isAjax) {
+            return $this->render('evenement/_filter_results.html.twig', [
+                'evenements' => $evenements,
+                'favorisIds' => $favorisIds,
+                'type'       => $type,
+                'statut'     => $statut,
+                'search'     => $search,
+            ]);
+        }
+
+        // Fallback to full page if not AJAX
+        return $this->redirectToRoute('app_evenement_index', [
+            'type'   => $type,
+            'statut' => $statut,
+            'search' => $search,
+        ]);
+    }
     #[Route('/admin-dashboard', name: 'app_evenement_admin_dashboard', methods: ['GET'])]
     public function adminDashboard(
         EvenementRepository $evenementRepo,
@@ -73,9 +119,39 @@ class EvenementController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $this->eventStatusSync->syncAll();
+
+        $gs = $statisticsService->getGlobalStatistics();
+
+        $byStatus = [];
+        foreach ($gs['eventsByStatus'] as $row) {
+            $byStatus[$row['statut']] = $row['count'];
+        }
+
+        $stats = [
+            ['label' => 'Événements',    'count' => $gs['totalEvents'],         'icon' => 'bi-calendar-event-fill', 'color' => '#667A3F', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Participations','count' => $gs['totalParticipations'], 'icon' => 'bi-people-fill',         'color' => '#3498DB', 'route' => 'app_evenement_participations'],
+            ['label' => 'À venir',       'count' => $byStatus['A_VENIR']  ?? 0, 'icon' => 'bi-hourglass-split',    'color' => '#8BC34A', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'En cours',      'count' => $byStatus['EN_COURS'] ?? 0, 'icon' => 'bi-play-circle-fill',   'color' => '#3498DB', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Terminés',      'count' => $byStatus['TERMINE']  ?? 0, 'icon' => 'bi-check-circle-fill',  'color' => '#95a5a6', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Annulés',       'count' => $byStatus['ANNULE']   ?? 0, 'icon' => 'bi-x-circle-fill',      'color' => '#E74C3C', 'route' => 'app_evenement_admin_dashboard'],
+            ['label' => 'Note moyenne',  'count' => $gs['avgRating'],            'icon' => 'bi-star-fill',           'color' => '#F39C12', 'route' => 'app_evenement_statistics'],
+            ['label' => 'Taux présence', 'count' => $gs['tauxPresence'].'%',    'icon' => 'bi-person-check-fill',  'color' => '#1abc9c', 'route' => 'app_evenement_participations'],
+        ];
+
         return $this->render('evenement/admin_dashboard.html.twig', [
-            'globalStats' => $statisticsService->getGlobalStatistics(),
-            'evenements'  => $evenementRepo->findWithFilters(null, null, null),
+            'stats'      => $stats,
+            'evenements' => $evenementRepo->findWithFilters(null, null, null),
+        ]);
+    }
+
+    // ─── ADMIN LISTE ─────────────────────────────────────────────────────────
+    #[Route('/admin-liste', name: 'app_evenement_admin_liste', methods: ['GET'])]
+    public function adminListe(EvenementRepository $evenementRepo): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->eventStatusSync->syncAll();
+        return $this->render('evenement/admin_liste.html.twig', [
+            'evenements' => $evenementRepo->findWithFilters(null, null, null),
         ]);
     }
 
@@ -100,7 +176,11 @@ class EvenementController extends AbstractController
             $data['userStats'] = $statisticsService->getUserStatistics($user);
         }
 
-        return $this->render('evenement/statistics.html.twig', $data);
+        $template = $this->isGranted('ROLE_ADMIN')
+            ? 'evenement/admin_statistiques.html.twig'
+            : 'evenement/statistics.html.twig';
+
+        return $this->render($template, $data);
     }
 
     #[Route('/calendrier', name: 'app_evenement_calendrier', methods: ['GET'])]
@@ -109,7 +189,7 @@ class EvenementController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $this->eventStatusSync->syncAll();
 
-        $events = $evenementRepo->findWithFilters(null, null, null);
+        $events         = $evenementRepo->findWithFilters(null, null, null);
         $calendarEvents = array_map(static function (Evenement $e): array {
             return [
                 'id'        => $e->getId(),
@@ -122,9 +202,11 @@ class EvenementController extends AbstractController
             ];
         }, $events);
 
-        return $this->render('Evenement/calendrier.html.twig', [
-            'calendarEvents' => $calendarEvents,
-        ]);
+        $template = $this->isGranted('ROLE_ADMIN')
+            ? 'evenement/admin_calendrier.html.twig'
+            : 'evenement/calendrier.html.twig';
+
+        return $this->render($template, ['calendarEvents' => $calendarEvents]);
     }
 
     // ─── MES FAVORIS ─────────────────────────────────────────────────────────
@@ -149,6 +231,31 @@ class EvenementController extends AbstractController
         ]);
     }
 
+    // ─── MES ÉVÉNEMENTS ──────────────────────────────────────────────────────
+    #[Route('/mes-evenements', name: 'app_evenement_mes', methods: ['GET'])]
+    public function mesEvenements(Request $request, EvenementRepository $evenementRepo): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncAll();
+
+        if ($this->getUser()->getRole() !== 'AGRICULTEUR') {
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $type   = $request->query->get('type');
+        $statut = $request->query->get('statut');
+        $search = $request->query->get('search');
+
+        $evenements = $evenementRepo->findByCreateurWithFilters($this->getUser(), $type, $statut, $search);
+
+        return $this->render('evenement/mes_evenements.html.twig', [
+            'evenements' => $evenements,
+            'type'       => $type,
+            'statut'     => $statut,
+            'search'     => $search,
+        ]);
+    }
+
     // ─── PARTICIPATIONS (admin/creator) ──────────────────────────────────────
     #[Route('/participations', name: 'app_evenement_participations', methods: ['GET'])]
     public function participations(ParticipationRepository $participationRepo): Response
@@ -156,13 +263,15 @@ class EvenementController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $this->eventStatusSync->syncAll();
 
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $participations = $participationRepo->findAllOrdered();
-        } else {
-            $participations = $participationRepo->findForCreator($this->getUser());
-        }
+        $participations = $this->isGranted('ROLE_ADMIN')
+            ? $participationRepo->findAllOrdered()
+            : $participationRepo->findForCreator($this->getUser());
 
-        return $this->render('evenement/participations.html.twig', [
+        $template = $this->isGranted('ROLE_ADMIN')
+            ? 'evenement/admin_participations.html.twig'
+            : 'evenement/participations.html.twig';
+
+        return $this->render($template, [
             'participations' => $participations,
             'isAdmin'        => $this->isGranted('ROLE_ADMIN'),
         ]);
@@ -180,13 +289,13 @@ class EvenementController extends AbstractController
         $statut = $request->request->get('statut');
         if (!in_array($statut, ['CONFIRME', 'EN_ATTENTE', 'REFUSE', 'ANNULE', 'PRESENT'], true)) {
             $this->addFlash('danger', 'Statut invalide.');
-            return $this->redirectToRoute('app_evenement_participations');
+            return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
         }
 
         $ev = $participation->getEvenement();
         if ($ev->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
             $this->addFlash('danger', 'Non autorisé.');
-            return $this->redirectToRoute('app_evenement_participations');
+            return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
         }
 
         $participation->setStatut($statut);
@@ -200,13 +309,13 @@ class EvenementController extends AbstractController
                 $this->participationMailer->sendPresenceCertificateAndReviewInvite($participation);
                 $participation->setAttestationEnvoyee(true);
             } catch (\Throwable $e) {
-                $this->addFlash('warning', 'Statut mis a jour, mais envoi de l\'attestation impossible.');
+                $this->addFlash('warning', 'Statut mis à jour, mais envoi de l\'attestation impossible.');
             }
         }
 
         $em->flush();
         $this->addFlash('success', 'Statut mis à jour.');
-        return $this->redirectToRoute('app_evenement_participations');
+        return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('app_evenement_participations'));
     }
 
     // ─── CREATE ──────────────────────────────────────────────────────────────
@@ -215,40 +324,109 @@ class EvenementController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+        /** @var \App\Entity\UserAndDiag\User $user */
+        $user         = $this->getUser();
+        $organisateur = trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''));
+        if ($organisateur === '') {
+            $organisateur = $user->getEmail();
+        }
+
         $evenement = new Evenement();
+        $evenement->setOrganisateur($organisateur);
+        $evenement->setCreateur($user);
+
         $form = $this->createForm(EvenementType::class, $evenement);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($evenement->getDateFin() < $evenement->getDateDebut()) {
-                $this->addFlash('danger', 'La date de fin doit être ≥ à la date de début.');
-                return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
+            // ── Handle AI-generated image ──
+            $aiImagePath = $request->request->get('ai_image_path');
+            if ($aiImagePath && empty($form->get('imageFile')->getData())) {
+                $evenement->setImageUrl($aiImagePath);
             }
 
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
+                $uploadsDir  = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
                 if (!is_dir($uploadsDir)) {
                     mkdir($uploadsDir, 0755, true);
                 }
                 $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
                 try {
                     $imageFile->move($uploadsDir, $newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Impossible d\'enregistrer l\'image.');
-                    return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
+                    $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
+                } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+                    $this->addFlash('danger', "Impossible d'enregistrer l'image.");
+                    $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_new.html.twig' : 'evenement/new.html.twig';
+                    return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
                 }
-                $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
             }
 
-            $evenement->setCreateur($this->getUser());
             $em->persist($evenement);
             $em->flush();
+
             $this->addFlash('success', 'Événement créé avec succès !');
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
         }
 
-        return $this->render('evenement/new.html.twig', ['form' => $form, 'evenement' => $evenement]);
+        $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_new.html.twig' : 'evenement/new.html.twig';
+        return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
+    }
+
+    // ─── EDIT ────────────────────────────────────────────────────────────────
+    #[Route('/{id}/modifier', name: 'app_evenement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        if ($evenement->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('danger', 'Non autorisé.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $form = $this->createForm(EvenementType::class, $evenement);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            // ── Handle AI-generated image ──
+            $aiImagePath = $request->request->get('ai_image_path');
+            if ($aiImagePath && empty($form->get('imageFile')->getData())) {
+                $evenement->setImageUrl($aiImagePath);
+            }
+
+            /** @var \App\Entity\UserAndDiag\User $creator */
+            $creator = $evenement->getCreateur();
+            if ($creator) {
+                $organisateur = trim(($creator->getNom() ?? '') . ' ' . ($creator->getPrenom() ?? ''));
+                $evenement->setOrganisateur($organisateur ?: $creator->getEmail());
+            }
+
+            if ($form->isValid()) {
+                $imageFile = $form->get('imageFile')->getData();
+                if ($imageFile) {
+                    $uploadsDir  = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
+                    if (!is_dir($uploadsDir)) {
+                        mkdir($uploadsDir, 0755, true);
+                    }
+                    $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
+                    try {
+                        $imageFile->move($uploadsDir, $newFilename);
+                        $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
+                    } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+                        $this->addFlash('danger', "Impossible d'enregistrer l'image.");
+                        $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_edit.html.twig' : 'evenement/edit.html.twig';
+                        return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
+                    }
+                }
+
+                $em->flush();
+                $this->addFlash('success', 'Événement modifié avec succès !');
+                return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+            }
+        }
+
+        $tpl = $this->isGranted('ROLE_ADMIN') ? 'evenement/admin_edit.html.twig' : 'evenement/edit.html.twig';
+        return $this->render($tpl, ['form' => $form, 'evenement' => $evenement]);
     }
 
     // ─── SHOW ────────────────────────────────────────────────────────────────
@@ -267,31 +445,47 @@ class EvenementController extends AbstractController
         }
         $this->eventStatusSync->syncOne($evenement);
 
-        $isFavori = false;
+        $isFavori          = false;
         $userParticipation = null;
-        $avisForm = null;
+        $avisForm          = null;
 
         if ($this->getUser()) {
-            $isFavori          = (bool) $favorisRepo->findByUserAndEvenement($this->getUser(), $evenement);
-            $userParticipation = $participationRepo->findByUserAndEvenement($this->getUser(), $evenement);
+            $isFavori = (bool) $favorisRepo->findByUserAndEvenement($this->getUser(), $evenement);
 
-            // Show avis form only if user attended and event is finished and has no rating yet
-            if ($userParticipation
+            // Handle potential duplicates: pick the one with a note, or the most recent one
+            $participations = $participationRepo->findBy(['utilisateur' => $this->getUser(), 'evenement' => $evenement], ['id' => 'DESC']);
+            $userParticipation = null;
+            if (count($participations) > 0) {
+                // Try to find one that already has a note
+                foreach ($participations as $p) {
+                    if ($p->getNote() > 0) {
+                        $userParticipation = $p;
+                        break;
+                    }
+                }
+                // Fallback to the most recent one
+                if (!$userParticipation) {
+                    $userParticipation = $participations[0];
+                }
+            }
+
+            if (
+                $userParticipation
                 && $evenement->getStatut() === 'TERMINE'
                 && $userParticipation->getStatut() === 'PRESENT'
-                && $userParticipation->getNote() == 0
+                && ($userParticipation->getNote() === null || $userParticipation->getNote() == 0)
             ) {
                 $avisForm = $this->createForm(AvisType::class, $userParticipation)->createView();
             }
         }
 
-        // All reviews for this event
-        $avis = $evenement->getParticipations()->filter(
-            // Keep consistency with statistics: a review exists as soon as a rating is set.
-            fn($p) => $p->getNote() > 0
-        );
+        $avis = $evenement->getParticipations()->filter(fn($p) => $p->getNote() > 0);
 
-        return $this->render('evenement/show.html.twig', [
+        $template = $this->isGranted('ROLE_ADMIN')
+            ? 'evenement/admin_show.html.twig'
+            : 'evenement/show.html.twig';
+
+        return $this->render($template, [
             'evenement'         => $evenement,
             'isFavori'          => $isFavori,
             'userParticipation' => $userParticipation,
@@ -305,8 +499,10 @@ class EvenementController extends AbstractController
     public function ajouterAvis(
         Evenement $evenement,
         ParticipationRepository $participationRepo,
+        EvenementFavorisRepository $favorisRepo,
         EntityManagerInterface $em,
-        Request $request
+        Request $request,
+        BadWordFilterService $badWordFilterService
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $this->eventStatusSync->syncOne($evenement);
@@ -318,6 +514,12 @@ class EvenementController extends AbstractController
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
         }
 
+        // ✅ Prevent rating twice
+        if ($participation->getNote() > 0) {
+            $this->addFlash('warning', 'Vous avez déjà noté cet événement. Vous ne pouvez noter qu\'une seule fois.');
+            return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+        }
+
         if ($evenement->getStatut() !== 'TERMINE') {
             $this->addFlash('danger', "L'événement n'est pas encore terminé.");
             return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
@@ -326,58 +528,95 @@ class EvenementController extends AbstractController
         $form = $this->createForm(AvisType::class, $participation);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
-            $this->addFlash('success', 'Votre avis a été enregistré, merci !');
-        } else {
-            $this->addFlash('danger', 'Veuillez sélectionner une note.');
+        if ($form->isSubmitted()) {
+            // ✅ Check for bad words BEFORE validation
+            $avisText = $participation->getAvis();
+            if ($avisText && $badWordFilterService->containsBadWords($avisText)) {
+                $badWords = $badWordFilterService->hasBadWords($avisText);
+                $this->addFlash('danger', $badWordFilterService->getErrorMessage($badWords));
+                return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+            }
+
+            if ($form->isValid()) {
+                $em->flush();
+                $this->addFlash('success', 'Votre avis a été enregistré, merci !');
+            } else {
+                // Check for validation errors
+                $errors = $form->getErrors(true);
+                if (count($errors) > 0) {
+                    foreach ($errors as $error) {
+                        $this->addFlash('danger', $error->getMessage());
+                    }
+                } else {
+                    $this->addFlash('danger', 'Veuillez sélectionner une note.');
+                }
+            }
         }
 
         return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
     }
 
-    // ─── EDIT ────────────────────────────────────────────────────────────────
-    #[Route('/{id}/modifier', name: 'app_evenement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
-    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $em): Response
-    {
+    // ─── AJOUTER AVIS AJAX ────────────────────────────────────────────────────
+    #[Route('/{id}/soumettre-avis', name: 'app_evenement_avis_ajax', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function ajouterAvisAjax(
+        Evenement $evenement,
+        ParticipationRepository $participationRepo,
+        EntityManagerInterface $em,
+        Request $request,
+        BadWordFilterService $badWordFilterService
+    ): JsonResponse {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
 
-        if ($evenement->getCreateur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('danger', 'Non autorisé.');
-            return $this->redirectToRoute('app_evenement_index');
+        $participations = $participationRepo->findBy(['utilisateur' => $this->getUser(), 'evenement' => $evenement], ['id' => 'DESC']);
+        $participation = null;
+        if (count($participations) > 0) {
+            foreach ($participations as $p) {
+                if ($p->getNote() > 0) {
+                    $participation = $p;
+                    break;
+                }
+            }
+            if (!$participation) $participation = $participations[0];
         }
 
-        $form = $this->createForm(EvenementType::class, $evenement);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ($evenement->getDateFin() < $evenement->getDateDebut()) {
-                $this->addFlash('danger', 'La date de fin doit être ≥ à la date de début.');
-                return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
-            }
-
-            $imageFile = $form->get('imageFile')->getData();
-            if ($imageFile) {
-                $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
-                if (!is_dir($uploadsDir)) {
-                    mkdir($uploadsDir, 0755, true);
-                }
-                $newFilename = uniqid('event_', true) . '.' . ($imageFile->guessExtension() ?: 'jpg');
-                try {
-                    $imageFile->move($uploadsDir, $newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Impossible d\'enregistrer l\'image.');
-                    return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
-                }
-                $evenement->setImageUrl('/uploads/evenements/' . $newFilename);
-            }
-
-            $em->flush();
-            $this->addFlash('success', 'Événement modifié avec succès !');
-            return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+        if (!$participation || $participation->getStatut() !== 'PRESENT') {
+            return $this->json(['error' => 'Vous devez avoir assisté à cet événement.'], 403);
+        }
+        if ($participation->getNote() !== null && $participation->getNote() > 0) {
+            return $this->json(['error' => 'Vous avez déjà noté cet événement.'], 409);
+        }
+        if ($evenement->getStatut() !== 'TERMINE') {
+            return $this->json(['error' => "L'événement n'est pas encore terminé."], 400);
         }
 
-        return $this->render('evenement/edit.html.twig', ['form' => $form, 'evenement' => $evenement]);
+        $note = (int) $request->request->get('note', 0);
+        
+        // Capture avis using the unified key avis[avis]
+        $avisData = $request->request->all('avis');
+        $avisText = trim((string) ($avisData['avis'] ?? ''));
+
+        if ($note < 1 || $note > 5) {
+            return $this->json(['error' => 'Veuillez sélectionner une note entre 1 et 5.'], 400);
+        }
+
+        // ← This is the critical check — must run before flush
+        if ($avisText !== '' && $badWordFilterService->containsBadWords($avisText)) {
+            $badWords = $badWordFilterService->hasBadWords($avisText);
+            return $this->json([
+                'error'    => $badWordFilterService->getErrorMessage($badWords),
+                'badWords' => true,
+            ], 400);
+        }
+
+        $participation->setNote($note);
+        $participation->setAvis($avisText !== '' ? $avisText : null);
+        $em->flush();
+
+        return $this->json([
+            'success' => true, 
+            'message' => 'Votre avis a été enregistré (Note: ' . $note . ', Avis: ' . ($avisText ?: 'vide') . '), merci !'
+        ]);
     }
 
     // ─── DELETE ──────────────────────────────────────────────────────────────
@@ -482,11 +721,10 @@ class EvenementController extends AbstractController
             $this->participationMailer->sendInscriptionConfirmation($existing);
         } catch (\Throwable $e) {
             $this->logger->error('Confirmation email failed for participation #{id}: {message}', [
-                'id' => $existing->getId(),
+                'id'      => $existing->getId(),
                 'message' => $e->getMessage(),
-                'exception' => $e,
             ]);
-            $this->addFlash('warning', 'Inscription validee, mais email de confirmation non envoye.');
+            $this->addFlash('warning', 'Inscription validée, mais email de confirmation non envoyé.');
         }
 
         $this->addFlash('success', 'Inscription confirmée !');
@@ -517,5 +755,253 @@ class EvenementController extends AbstractController
         }
 
         return $this->redirectToRoute('app_evenement_show', ['id' => $evenement->getId()]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── AI FEATURES (new — ported from Java desktop app) ─────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * AJAX — Generate AI description + Unsplash image for a new event.
+     *
+     * POST /evenement/ai/generer
+     * Body (JSON): { "titre": "...", "type": "FOIRE", "lieu": "Tunis" }
+     * Response (JSON): { "description": "...", "imagePath": "/uploads/evenements/xxx.jpg" }
+     */
+    #[Route('/ai/generer', name: 'app_evenement_ai_generate', methods: ['POST'])]
+    public function aiGenerate(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $data  = json_decode($request->getContent(), true) ?? [];
+        $titre = trim($data['titre'] ?? '');
+        $type  = trim($data['type']  ?? '');
+        $lieu  = trim($data['lieu']  ?? '');
+
+        if ($titre === '' || $type === '' || $lieu === '') {
+            return $this->json(['error' => 'Titre, type et lieu sont requis.'], 400);
+        }
+
+        $result = $this->aiService->genererEvenementComplet($titre, $type, $lieu);
+
+        return $this->json([
+            'description' => $result['description'],
+            'imagePath'   => $result['imagePath'],
+        ]);
+    }
+
+    /**
+     * AJAX — Predict attendance for a (not-yet-saved) event.
+     *
+     * POST /evenement/ai/predire
+     * Body (JSON): { "titre": "...", "type": "FOIRE", "lieu": "Tunis",
+     *                "dateDebut": "2025-10-01", "nombrePlacesMax": 200,
+     *                "description": "..." }
+     * Response (JSON): { "participantsPredits": 120, "confiance": 0.75,
+     *                    "confianceTexte": "Élevée", "facteurs": {...},
+     *                    "recommandations": {...} }
+     */
+    #[Route('/ai/predire', name: 'app_evenement_ai_predict', methods: ['POST'])]
+    public function aiPredict(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        // Build a temporary (non-persisted) Evenement for the prediction engine
+        $tempEvent = new Evenement();
+        $tempEvent->setTitre($data['titre']       ?? '');
+        $tempEvent->setType($data['type']          ?? 'FOIRE');
+        $tempEvent->setLieu($data['lieu']          ?? '');
+        $tempEvent->setDescription($data['description'] ?? '');
+        $tempEvent->setNombrePlacesMax((int) ($data['nombrePlacesMax'] ?? 100));
+
+        if (!empty($data['dateDebut'])) {
+            try {
+                $tempEvent->setDateDebut(new \DateTime($data['dateDebut']));
+            } catch (\Throwable) {
+                // leave null — scorer handles it
+            }
+        }
+
+        $result = $this->predictionService->predireParticipation($tempEvent);
+
+        return $this->json($result);
+    }
+
+    // ─── AJOUTER COMMENTAIRE À UN AVIS ────────────────────────────────────────
+    #[Route('/{id}/avis/{participationId}/commentaire', name: 'app_evenement_avis_commentaire', methods: ['POST'], requirements: ['id' => '\d+', 'participationId' => '\d+'])]
+    public function ajouterCommentaireAvis(
+        int $id,
+        int $participationId,
+        ReviewCommentRepository $reviewCommentRepo,
+        EntityManagerInterface $em,
+        Request $request,
+        BadWordFilterService $badWordFilterService,
+        ParticipationRepository $participationRepo,
+        \Psr\Log\LoggerInterface $logger
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $participation = $participationRepo->find($participationId);
+        if (!$participation) {
+            $logger->error('Comment submission failed: Participation {id} not found.', ['id' => $participationId]);
+            return $this->json(['error' => 'Participation introuvable.'], 404);
+        }
+
+        $content = trim($request->request->get('content', ''));
+        $parentId = $request->request->get('parent_id');
+
+        if (!$content) {
+            return $this->json(['error' => 'Contenu vide'], 400);
+        }
+
+        // Check for bad words
+        if ($badWordFilterService->containsBadWords($content)) {
+            $badWords = $badWordFilterService->hasBadWords($content);
+            return $this->json(['error' => $badWordFilterService->getErrorMessage($badWords)], 400);
+        }
+
+        $comment = new ReviewComment();
+        $comment->setParticipation($participation);
+        $comment->setUser($this->getUser());
+        $comment->setContent($content);
+
+        if ($parentId) {
+            $parent = $reviewCommentRepo->find($parentId);
+            if ($parent) {
+                $comment->setParentComment($parent);
+            }
+        }
+
+        $em->persist($comment);
+        $em->flush();
+
+        return $this->json([
+            'id'        => $comment->getId(),
+            'userName'  => $this->getUser()->getPrenom() . ' ' . $this->getUser()->getNom(),
+            'content'   => $comment->getContent(),
+            'date'      => $comment->getCreatedAt()->format('d/m/Y H:i'),
+            'parentId'  => $comment->getParentComment()?->getId(),
+        ]);
+    }
+
+    #[Route('/{id}/avis/supprimer', name: 'app_evenement_avis_supprimer', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function supprimerAvisAjax(
+        Evenement $evenement,
+        ParticipationRepository $participationRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->eventStatusSync->syncOne($evenement);
+
+        $participation = $participationRepo->findByUserAndEvenement($this->getUser(), $evenement);
+        if (!$participation) {
+            return $this->json(['error' => 'Avis introuvable.'], 404);
+        }
+
+        // Reset the review fields
+        $participation->setNote(0);
+        $participation->setAvis(null);
+        
+        $em->flush();
+
+        return $this->json(['message' => 'Avis supprimé avec succès.']);
+    }
+
+    // ─── RÉCUPÉRER COMMENTAIRES D'UN AVIS ────────────────────────────────────
+    #[Route('/{id}/avis/{participationId}/commentaires', name: 'app_evenement_avis_commentaires', methods: ['GET'], requirements: ['id' => '\d+', 'participationId' => '\d+'])]
+    public function getCommentairesAvis(
+        int $participationId,
+        ReviewCommentRepository $reviewCommentRepo,
+        ParticipationRepository $participationRepo
+    ): JsonResponse {
+        $participation = $participationRepo->find($participationId);
+        if (!$participation) {
+            return $this->json([], 200);
+        }
+
+        $currentUserId = $this->getUser()?->getId();
+        $comments = $reviewCommentRepo->findByParticipation($participation);
+
+        $data = [];
+        foreach ($comments as $comment) {
+            $replies = $reviewCommentRepo->findReplies($comment);
+            $data[] = [
+                'id'        => $comment->getId(),
+                'userName'  => $comment->getUser()->getPrenom() . ' ' . $comment->getUser()->getNom(),
+                'content'   => $comment->getContent(),
+                'date'      => $comment->getCreatedAt()->format('d/m/Y H:i'),
+                'isOwner'   => $comment->getUser()->getId() === $currentUserId,
+                'replies'   => array_map(fn($r) => [
+                    'id'       => $r->getId(),
+                    'userName' => $r->getUser()->getPrenom() . ' ' . $r->getUser()->getNom(),
+                    'content'  => $r->getContent(),
+                    'date'     => $r->getCreatedAt()->format('d/m/Y H:i'),
+                    'isOwner'  => $r->getUser()->getId() === $currentUserId,
+                ], $replies),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/commentaire/{commentId}/modifier', name: 'app_evenement_commentaire_edit', methods: ['POST'], requirements: ['commentId' => '\d+'])]
+    public function editCommentaire(
+        int $commentId,
+        Request $request,
+        EntityManagerInterface $em,
+        ReviewCommentRepository $reviewCommentRepo,
+        BadWordFilterService $badWordFilterService
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $comment = $reviewCommentRepo->find($commentId);
+        if (!$comment) {
+            return $this->json(['error' => 'Commentaire introuvable.'], 404);
+        }
+        if ($comment->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Non autorisé.'], 403);
+        }
+
+        $content = trim($request->request->get('content', ''));
+        if (!$content) {
+            return $this->json(['error' => 'Contenu vide.'], 400);
+        }
+        if ($badWordFilterService->containsBadWords($content)) {
+            return $this->json(['error' => $badWordFilterService->getErrorMessage($badWordFilterService->hasBadWords($content))], 400);
+        }
+
+        $comment->setContent($content);
+        $em->flush();
+
+        return $this->json([
+            'id'      => $comment->getId(),
+            'content' => $comment->getContent(),
+            'edited'  => true,
+        ]);
+    }
+
+    #[Route('/commentaire/{commentId}/supprimer', name: 'app_evenement_commentaire_delete', methods: ['POST'], requirements: ['commentId' => '\d+'])]
+    public function deleteCommentaire(
+        int $commentId,
+        ReviewCommentRepository $reviewCommentRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $comment = $reviewCommentRepo->find($commentId);
+        if (!$comment) {
+            return $this->json(['error' => 'Commentaire introuvable.'], 404);
+        }
+        if ($comment->getUser() !== $this->getUser()) {
+            return $this->json(['error' => 'Non autorisé.'], 403);
+        }
+
+        $participationId = $comment->getParticipation()->getId();
+        $em->remove($comment);
+        $em->flush();
+
+        return $this->json(['deleted' => true, 'participationId' => $participationId]);
     }
 }

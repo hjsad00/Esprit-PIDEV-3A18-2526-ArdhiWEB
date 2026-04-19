@@ -8,8 +8,9 @@ use App\Repository\Evenement\ParticipationRepository;
 class StatisticsService
 {
     public function __construct(
-        private EvenementRepository    $evenementRepo,
-        private ParticipationRepository $participationRepo
+        private EvenementRepository         $evenementRepo,
+        private ParticipationRepository      $participationRepo,
+        private \App\Repository\Evenement\EvenementFavorisRepository $favorisRepo
     ) {}
 
     /**
@@ -118,11 +119,7 @@ class StatisticsService
 
         $total        = count($allPart);
         $confirmes    = count(array_filter($allPart, fn($p) => in_array($p->getStatut(), ['CONFIRME','PRESENT'])));
-        $favorites    = $this->participationRepo->createQueryBuilder('p')
-            ->select('COUNT(p.id)')
-            ->join('App\Entity\Evenement\EvenementFavoris', 'f', 'WITH', 'f.utilisateur = :u')
-            ->setParameter('u', $user)
-            ->getQuery()->getSingleScalarResult();
+        $favorites    = $this->favorisRepo->count(['utilisateur' => $user]);
 
         // By status
         $statusMap = [];

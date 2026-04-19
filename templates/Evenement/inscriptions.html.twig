@@ -138,8 +138,13 @@
             Votre note : {% for i in 1..5 %}<i class="bi bi-star-fill" style="color:{{ i<=p.note ? '#F39C12' : '#d1d5db' }};font-size:.8rem;"></i>{% endfor %}
           </div>
           {% endif %}
-          <div class="d-flex gap-2 mt-3">
+          <div class="d-flex gap-2 mt-3 flex-wrap">
             <a href="{{ path('app_evenement_show', {id: p.evenement.id}) }}" class="btn-voir">Voir l'événement</a>
+            {% if p.statut != 'ANNULE' %}
+            <a href="{{ path('app_qr_viewer', {id: p.id}) }}" class="btn-voir" style="background:#3498DB;">
+                <i class="bi bi-qr-code me-1"></i> Mon QR Code
+            </a>
+            {% endif %}
             {% if p.statut != 'ANNULE' and p.evenement.statut not in ['TERMINE','ANNULE'] %}
             <form method="post" action="{{ path('app_evenement_desinscrire', {id: p.evenement.id}) }}" class="m-0">
               <input type="hidden" name="_token" value="{{ csrf_token('desinscrire'~p.evenement.id) }}">

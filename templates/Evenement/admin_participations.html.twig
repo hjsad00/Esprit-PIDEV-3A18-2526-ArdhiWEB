@@ -1,0 +1,62 @@
+{% extends 'evenement/admin_layout.html.twig' %}
+{% block title %}Gestion des Participations - Ardhi Admin{% endblock %}
+{% block page_title %}Gestion des Participations{% endblock %}
+
+{% block body %}
+<div class="card shadow-sm">
+  <div class="card-header bg-white py-3">
+    <h5 class="fw-bold mb-0" style="font-size:.95rem;color:#1a2e05;">
+      <i class="bi bi-people-fill me-2 text-warning"></i>Toutes les participations ({{ participations|length }})
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    {% if participations is empty %}
+      <div class="p-4 text-center text-muted">Aucune participation à gérer.</div>
+    {% else %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Événement</th>
+            <th>Participant</th>
+            <th>Date inscription</th>
+            <th>Places</th>
+            <th>Statut</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in participations %}
+          <tr>
+            <td>
+              <a href="{{ path('app_evenement_show', {id: p.evenement.id}) }}" class="text-decoration-none fw-semibold" style="font-size:.9rem;">
+                {{ p.evenement.titre|slice(0,32) }}
+              </a>
+            </td>
+            <td style="font-size:.88rem;">{{ p.utilisateur.prenom }} {{ p.utilisateur.nom }}</td>
+            <td style="white-space:nowrap;font-size:.84rem;color:#6b7280;">{{ p.dateInscription ? p.dateInscription|date('d/m/Y H:i') : '-' }}</td>
+            <td style="font-size:.84rem;">{{ p.nombrePersonnes }}</td>
+            <td>
+              <span class="badge bg-{{ p.statut=='CONFIRME' ? 'success' : p.statut=='PRESENT' ? 'info text-dark' : p.statut=='EN_ATTENTE' ? 'warning text-dark' : p.statut=='REFUSE' ? 'danger' : 'secondary' }}">
+                {{ p.statut|replace({'EN_ATTENTE':'EN ATTENTE'}) }}
+              </span>
+            </td>
+            <td class="text-end">
+              <form method="post" action="{{ path('app_evenement_participation_update', {id: p.id}) }}" class="d-flex gap-2 justify-content-end">
+                <select name="statut" class="form-select form-select-sm" style="width:140px;">
+                  {% for code, label in {'CONFIRME':'Confirmer','EN_ATTENTE':'En attente','PRESENT':'Présent','REFUSE':'Refuser','ANNULE':'Annuler'} %}
+                    <option value="{{ code }}" {% if p.statut == code %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-success">OK</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

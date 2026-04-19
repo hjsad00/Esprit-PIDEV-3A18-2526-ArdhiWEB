@@ -26,6 +26,7 @@ class EvenementParticipationMailer
             return;
         }
 
+
         $email = (new TemplatedEmail())
             ->from(new Address($this->mailFrom, 'Ardhi Evenements'))
             ->to(new Address($user->getEmail(), trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? ''))))

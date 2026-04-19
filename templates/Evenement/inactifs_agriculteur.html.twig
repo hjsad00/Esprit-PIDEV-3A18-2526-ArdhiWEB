@@ -1,0 +1,231 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Participants inactifs - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+    .glass-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px;
+        color: #1a2e05;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+    }
+    .stat-tile { padding: 1.5rem; text-align: center; border-radius: 16px; transition: transform 0.3s; }
+    .stat-tile:hover { transform: translateY(-5px); }
+    .risk-bar { height: 8px; border-radius: 4px; background: rgba(0,0,0,0.05); overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+    .badge-risk { border-radius: 20px; padding: 4px 14px; font-size: 11px; font-weight: bold; color: white; }
+    .table-glass { color: #111827 !important; }
+    .table-glass thead th { background: #f8fafc; color: #334155; border-bottom: 2px solid #e2e8f0; border-top: none; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    .table-glass td { border-bottom: 1px solid #f1f5f9; padding: 1.25rem 0.75rem; vertical-align: middle; }
+    .profile-item:hover { background: #fdfdfd; }
+    .hero-alt { min-height: 480px !important; }
+    .text-600 { color: #4b5563 !important; } /* Dark Grey */
+    .indicator-text { color: #111827 !important; font-weight: 500; } /* Near Black for maximum clarity */
+    .border-standard { border-color: #d1d5db !important; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="hero section dark-background hero-alt"
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.7),rgba(10,15,8,.3)),url('{{ asset('assets/img/hero_3.jpg') }}');
+         background-size:cover;background-position:center;padding-top:120px;">
+  <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
+    <div class="hero-left" style="max-width:920px;">
+      <span class="hero-label">ANALYSE D'ENGAGEMENT</span>
+      <h1 class="hero-headline">Participants inactifs</h1>
+      <p class="hero-description">Identifiez les participants à risque pour vos événements et relancez-les avec des recommandations personnalisées.</p>
+      <div class="hero-actions-row">
+          <a href="{{ path('app_evenement_participations') }}" class="hero-btn-secondary">Retour aux participations</a>
+          <button id="btn-relance-auto" class="hero-btn-primary" style="background:#F39C12; border-color:#F39C12;">
+              <i class="bi bi-magic me-2"></i>Relances automatiques
+          </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services section" style="padding-top:40px;">
+  <div class="container">
+
+    {# ── STATS TILES ── #}
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-tile glass-card" style="border-left: 4px solid #3498DB;">
+                <div class="text-primary small fw-bold mb-1" style="color:#2980b9!important;">ANALYSÉS</div>
+                <div class="h2 fw-bold mb-0" id="stat-total">{{ globalStats.total }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-tile glass-card" style="border-left: 4px solid #E74C3C;">
+                <div class="text-danger small fw-bold mb-1" style="color:#c0392b!important;">URGENTS (≥80)</div>
+                <div class="h2 fw-bold mb-0" id="stat-urgent">{{ globalStats.urgent }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-tile glass-card" style="border-left: 4px solid #F39C12;">
+                <div class="text-warning small fw-bold mb-1" style="color:#d35400!important;">IMPORTANTS (60-79)</div>
+                <div class="h2 fw-bold mb-0" id="stat-important">{{ globalStats.important }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-tile glass-card" style="border-left: 4px solid #9B59B6;">
+                <div class="text-info small fw-bold mb-1" style="color:#8e44ad!important;">SCORE MOYEN</div>
+                <div class="h2 fw-bold mb-0" id="stat-score">{{ globalStats.scoreMoyen|number_format(1) }}</div>
+            </div>
+        </div>
+    </div>
+
+    {# ── MAIN TABLE ── #}
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0"><i class="bi bi-person-x-fill me-2 text-warning"></i>Profils à risque ({{ profiles|length }})</h5>
+            <div class="input-group input-group-sm" style="width:250px;">
+                <span class="input-group-text bg-transparent border-standard text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" id="search-input" class="form-control bg-white border-standard text-dark" placeholder="Chercher un participant...">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-glass mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Participant</th>
+                        <th style="width: 20%;">Score de risque</th>
+                        <th>Niveau</th>
+                        <th>Indicateurs</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="profiles-body">
+                    {% for p in profiles %}
+                    <tr class="profile-item" data-search="{{ p.nomComplet|lower }} {{ p.email|lower }}">
+                        <td>
+                            <div class="fw-bold">{{ p.nomComplet }}</div>
+                            <div class="small indicator-text">{{ p.email }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="risk-bar">
+                                        <div class="risk-bar-fill" style="width: {{ p.riskScore }}%; background: {{ p.riskColor }}"></div>
+                                    </div>
+                                </div>
+                                <span class="fw-bold" style="color: {{ p.riskColor }}">{{ p.riskScore|round }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-risk" style="background: {{ p.riskColor }}44; color: {{ p.riskColor }}; border-color: {{ p.riskColor }}66;">
+                                {{ p.riskLevel }}
+                            </span>
+                        </td>
+                        <td class="small indicator-text">
+                            {% if p.indicateurs is empty %}
+                                <span class="text-muted" style="font-style:italic; font-size:0.8rem;">Aucun risque détecté</span>
+                            {% else %}
+                                {% for ind in p.indicateurs|slice(0,2) %}
+                                    <div class="mb-1">⚡ {{ ind }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success btn-relance" data-id="{{ p.userId }}" title="Envoyer relance personnalisée">
+                                <i class="bi bi-send-fill"></i> Relance
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const searchInput = document.getElementById('search-input');
+    const profilesBody = document.getElementById('profiles-body');
+
+    // Filter logic
+    searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        document.querySelectorAll('.profile-item').forEach(row => {
+            row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+        });
+    });
+
+    // Single Relance
+    profilesBody.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-relance');
+        if (!btn) return;
+
+        const userId = btn.dataset.id;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+            const resp = await fetch(`/evenement/inactifs/relance/${userId}`, { method: 'POST' });
+            const res  = await resp.json();
+            
+            Swal.fire({
+                icon: res.success ? 'success' : 'error',
+                title: res.success ? 'Succès' : 'Erreur',
+                text: res.message,
+                background: '#1a1f18',
+                color: '#fff',
+                confirmButtonColor: '#667A3F'
+            });
+        } catch(err) {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de contacter le serveur.' });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send-fill"></i> Relance';
+        }
+    });
+
+    // Auto Relances
+    document.getElementById('btn-relance-auto')?.addEventListener('click', async () => {
+        const { value: confirm } = await Swal.fire({
+            title: 'Envoyer des relances automatiques ?',
+            text: "Le système enverra des recommandations personnalisées aux profils ayant un risque ≥ 30.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Oui, lancer la campagne',
+            cancelButtonText: 'Annuler',
+            background: '#1a1f18', color: '#fff', confirmButtonColor: '#F39C12'
+        });
+
+        if (!confirm) return;
+
+        Swal.fire({
+            title: 'Campagne en cours...',
+            html: 'Envoi des emails personnalisés...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            background: '#1a1f18', color: '#fff'
+        });
+
+        try {
+            const resp = await fetch('/evenement/inactifs/relances-auto', { method: 'POST' });
+            const res  = await resp.json();
+            Swal.fire({
+                icon: 'success',
+                title: 'Campagne terminée',
+                html: `Relances envoyées: <b>${res.total}</b><br>Échecs: <b>${res.echecs}</b>`,
+                background: '#1a1f18', color: '#fff', confirmButtonColor: '#667A3F'
+            });
+        } catch(err) {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: 'Échec de la campagne.' });
+        }
+    });
+});
+</script>
+{% endblock %}

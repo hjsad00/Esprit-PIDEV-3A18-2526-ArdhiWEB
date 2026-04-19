@@ -1,0 +1,393 @@
+{# templates/evenement/qr_checkin_agriculteur.html.twig
+   Organiser check-in portal for Agriculteurs — portal style (like favoris.html.twig)
+#}
+{% extends 'base.html.twig' %}
+
+{% block title %}Scanner QR — Check-in - Ardhi{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('assets/css/homepage.css') }}" rel="stylesheet">
+<style>
+    /* Portal styles from favoris.html.twig */
+    .hero-qr { min-height:540px !important; overflow:visible; }
+    .hero-qr .hero-left { padding:100px 40px 80px 40px !important; }
+
+    /* Custom check-in cards */
+    .stat-card { border-radius: 16px; text-align: center; padding: 1.2rem 1rem; color: white; margin-bottom: 10px; }
+    .badge-statut { border-radius: 10px; padding: 4px 12px; font-size: 11px; font-weight: bold; }
+    .statut-PRESENT    { background: #50C878; color: white; }
+    .statut-CONFIRME   { background: #3498DB; color: white; }
+    .statut-EN_ATTENTE { background: #F39C12; color: white; }
+    .statut-ANNULE     { background: #E74C3C; color: white; }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    #qr-input {
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        padding: 15px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+    }
+    #qr-input:focus {
+        border-color: #667A3F;
+        box-shadow: 0 0 0 3px rgba(102, 122, 63, 0.1);
+        outline: none;
+    }
+
+    #result-box { border-radius: 15px; padding: 1.2rem; border-width: 2px; border-style: solid; display: none; margin-top: 15px; }
+    #result-box.success { background: rgba(39,174,96,.1);  border-color: rgba(39,174,96,.4); }
+    #result-box.error   { background: rgba(231,76,60,.1);  border-color: rgba(231,76,60,.4); }
+    #result-msg  { font-weight: bold; font-size: 15px; }
+    .result-success { color: #27AE60; }
+    .result-error   { color: #E74C3C; }
+
+    .participants-table-wrap {
+        background: #fff;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .table thead th {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        padding: 15px 20px;
+    }
+    .table tbody td {
+        padding: 15px 20px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .filter-section {
+        margin-top: -40px;
+        position: relative;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+{# ── Hero Section ────────────────────────────────────────────────────────── #}
+<section class="hero section dark-background hero-qr"
+  style="background-image:linear-gradient(180deg,rgba(10,15,8,.65),rgba(10,15,8,.15)),url('{{ asset('assets/img/hero_4.jpg') }}');
+         background-size:cover;background-position:center;padding-top:120px;">
+  <div class="hero-content-wrapper" style="align-items:center;justify-content:center;">
+    <div class="hero-left" style="max-width:850px; text-align: center;">
+      <span class="hero-label">CHECK-IN ÉVÉNEMENTS</span>
+      <h1 class="hero-headline">Dashboard de l'Organisateur</h1>
+      <p class="hero-description" id="event-title-label">
+          {% if selectedEvenement %}
+              📍 {{ selectedEvenement.titre }} — {{ selectedEvenement.lieu }}
+          {% else %}
+              Sélectionnez un événement pour commencer le scan.
+          {% endif %}
+      </p>
+      <div class="hero-cta-group justify-content-center">
+        <a href="{{ path('app_evenement_index') }}" class="hero-btn-secondary">Retour aux événements</a>
+        <a href="{{ path('app_evenement_participations') }}" class="hero-btn-primary">Gérer les listes</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services section" style="padding-top:0;">
+  <div class="container">
+
+    <div class="row filter-section">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-muted small mb-2">📅 SÉLECTIONNER UN ÉVÉNEMENT</label>
+                        <select id="event-select" class="form-select form-select-lg" style="border-radius: 12px; border: 2px solid #e2e8f0;">
+                            {% for evt in evenements %}
+                                <option value="{{ evt.id }}" {% if selectedEvenement and evt.id == selectedEvenement.id %}selected{% endif %}>
+                                    {{ evt.id }} — {{ evt.titre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="row g-2">
+                           <div class="col-6">
+                               <div class="stat-card" style="background:#27AE60;">
+                                   <div class="fs-4 fw-bold" id="stat-presents">{{ stats.presents }}</div>
+                                   <small style="font-size: 0.7rem;">Présents</small>
+                               </div>
+                           </div>
+                           <div class="col-6">
+                               <div class="stat-card" style="background:#3498DB;">
+                                   <div class="fs-4 fw-bold" id="stat-inscrits">{{ stats.inscrits }}</div>
+                                   <small style="font-size: 0.7rem;">Inscrits</small>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 pb-5">
+        {# Scanner Column #}
+        <div class="col-lg-5">
+            <div class="glass-card h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-qr-code-scan me-2"></i>Scanner un Participant</h5>
+                <p class="text-muted small">Collez le contenu du QR code ou utilisez votre douchette pour scanner directement ici.</p>
+
+                <textarea id="qr-input" class="form-control font-monospace mb-3" rows="3"
+                          placeholder="Données du scan ici…" autofocus></textarea>
+
+                <button id="btn-scan" class="btn btn-success w-100 py-3 fw-bold shadow-sm" style="border-radius: 12px;">
+                    ✅ VALIDER LE CHECK-IN
+                </button>
+
+                <div id="result-box">
+                    <div class="d-flex align-items-start gap-3">
+                        <span id="result-icon" style="font-size:32px;"></span>
+                        <div>
+                            <div id="result-msg"></div>
+                            <small id="result-detail" class="text-muted"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                     <div class="d-flex justify-content-between align-items-center mb-2">
+                         <span class="text-muted small">Progression</span>
+                         <span class="fw-bold small" id="stat-taux">{{ stats.taux }}%</span>
+                     </div>
+                     <div class="progress" style="height: 10px; border-radius: 10px;">
+                         <div class="progress-bar bg-success" id="stat-progress-bar" style="width: {{ stats.taux }}%"></div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        {# Participants List Column #}
+        <div class="col-lg-7">
+            <div class="participants-table-wrap">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                    <h6 class="fw-bold mb-0">👥 Liste des inscrits</h6>
+                    <div class="d-flex gap-2">
+                        <input type="search" id="search-input" class="form-control form-control-sm"
+                               placeholder="Rechercher…" style="width:160px; border-radius: 8px;">
+                        <button id="btn-refresh" class="btn btn-light btn-sm border">🔄</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="participants-table">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th class="text-center">Statut</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participants-tbody">
+                            <tr><td colspan="3" class="text-center text-muted py-5">Initialisation…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+    // ── State ─────────────────────────────────────────────────────────────
+    let currentEventId = {{ selectedEvenement ? selectedEvenement.id : 'null' }};
+    let resultTimer    = null;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────
+    const eventSelect  = document.getElementById('event-select');
+    const qrInput      = document.getElementById('qr-input');
+    const btnScan      = document.getElementById('btn-scan');
+    const btnRefresh   = document.getElementById('btn-refresh');
+    const searchInput  = document.getElementById('search-input');
+    const resultBox    = document.getElementById('result-box');
+    const resultIcon   = document.getElementById('result-icon');
+    const resultMsg    = document.getElementById('result-msg');
+    const resultDetail = document.getElementById('result-detail');
+    const tbody        = document.getElementById('participants-tbody');
+    const titleLabel   = document.getElementById('event-title-label');
+    const progressBar  = document.getElementById('stat-progress-bar');
+
+    // ── Stat helpers ──────────────────────────────────────────────────────
+    function updateStats(stats) {
+        document.getElementById('stat-presents').textContent = stats.presents;
+        document.getElementById('stat-inscrits').textContent = stats.inscrits;
+        document.getElementById('stat-taux').textContent     = stats.taux + '%';
+        if(progressBar) progressBar.style.width = stats.taux + '%';
+    }
+
+    // ── Show result box ───────────────────────────────────────────────────
+    function showResult(success, message, detail) {
+        clearTimeout(resultTimer);
+        resultBox.className = success ? 'success' : 'error';
+        resultBox.classList.add(success ? 'success' : 'error');
+        resultIcon.textContent   = success ? '✅' : '❌';
+        resultMsg.textContent    = message;
+        resultMsg.className      = success ? 'result-success' : 'result-error';
+        resultDetail.textContent = detail ?? '';
+        resultBox.style.display  = 'block';
+
+        resultTimer = setTimeout(() => { resultBox.style.display = 'none'; }, 6000);
+    }
+
+    // ── Load participants table ───────────────────────────────────────────
+    async function loadParticipants(search = '') {
+        if (!currentEventId) return;
+
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-success me-2"></div>Chargement…</td></tr>';
+
+        const urlTemplate = "{{ path('app_qr_participants', {evenementId: 999999}) }}";
+        const url = urlTemplate.replace('999999', currentEventId)
+                    + (search ? '?search=' + encodeURIComponent(search) : '');
+
+        const res  = await fetch(url);
+        const list = await res.json();
+
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-5">Aucun participant trouvé</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(p => `
+            <tr>
+                <td>
+                    <div class="fw-bold" style="color:#1a2e05;">${escHtml(p.nomComplet ?? '—')}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">${escHtml(p.email ?? '—')}</div>
+                </td>
+                <td class="text-center">
+                    <span class="badge-statut statut-${p.statut}">
+                        ${statutLabel(p.statut)}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm ${p.statut === 'PRESENT' || p.statut === 'ANNULE' ? 'btn-light disabled' : 'btn-success'}"
+                            onclick="manualCheckin(${p.id})"
+                            ${p.statut === 'PRESENT' || p.statut === 'ANNULE' ? 'disabled' : ''}>
+                        ✅
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // ── Refresh stats ─────────────────────────────────────────────────────
+    async function refreshStats() {
+        if (!currentEventId) return;
+        const urlTemplate = "{{ path('app_qr_stats', {evenementId: 999999}) }}";
+        const url = urlTemplate.replace('999999', currentEventId);
+        const res   = await fetch(url);
+        const stats = await res.json();
+        updateStats(stats);
+    }
+
+    // ── Handle QR scan ────────────────────────────────────────────────────
+    async function handleScan() {
+        const content = qrInput.value.trim();
+        if (!content) return;
+
+        btnScan.disabled    = true;
+        btnScan.textContent = '⏳ Validation…';
+
+        try {
+            const res  = await fetch('{{ path("app_qr_scan") }}', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ qrContent: content }),
+            });
+            const data = await res.json();
+
+            const detail = data.participation
+                ? data.participation.nomComplet + (data.participation.email ? ' • ' + data.participation.email : '')
+                : '';
+
+            showResult(data.success, data.message, detail);
+
+            if (data.success) {
+                if (data.stats) updateStats(data.stats);
+                loadParticipants(searchInput.value.trim());
+            }
+
+        } catch (e) {
+            showResult(false, 'Erreur réseau : ' + e.message);
+        } finally {
+            btnScan.disabled    = false;
+            btnScan.textContent = '✅ VALIDER LE CHECK-IN';
+            qrInput.value       = '';
+            qrInput.focus();
+        }
+    }
+
+    // ── Manual check-in ──────────────────────────────────────────────────
+    window.manualCheckin = async function (participationId) {
+        if (!confirm('Marquer ce participant comme présent ?')) return;
+
+        const urlTemplate = "{{ path('app_qr_checkin_manuel', {id: 999999}) }}";
+        const url = urlTemplate.replace('999999', participationId);
+
+        const res  = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+
+        showResult(data.success, data.message);
+        if (data.stats) updateStats(data.stats);
+        loadParticipants(searchInput.value.trim());
+    };
+
+    // ── Listeners ─────────────────────────────────────────────────────────
+    eventSelect.addEventListener('change', () => {
+        currentEventId = parseInt(eventSelect.value);
+        loadParticipants();
+        refreshStats();
+        const opt = eventSelect.options[eventSelect.selectedIndex];
+        titleLabel.textContent = '📍 ' + opt.textContent.split(' — ').slice(1).join(' — ');
+    });
+
+    let searchTimer;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => loadParticipants(searchInput.value.trim()), 300);
+    });
+
+    btnScan.addEventListener('click', handleScan);
+    btnRefresh.addEventListener('click', () => {
+        loadParticipants(searchInput.value.trim());
+        refreshStats();
+    });
+
+    qrInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleScan(); }
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function statutLabel(s) { return { PRESENT:'Présent', CONFIRME:'Confirmé', EN_ATTENTE:'En attente', ANNULE:'Annulé' }[s] ?? s; }
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    if (currentEventId) loadParticipants();
+
+})();
+</script>
+{% endblock %}

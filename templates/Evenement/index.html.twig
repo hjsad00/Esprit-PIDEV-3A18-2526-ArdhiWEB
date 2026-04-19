@@ -88,6 +88,9 @@
         {% if app.user and app.user.role in ['AGRICULTEUR','ADMIN'] %}
           <a href="{{ path('app_evenement_new') }}" class="hero-btn-primary">Créer un événement</a>
         {% endif %}
+        {% if app.user and app.user.role == 'AGRICULTEUR' %}
+          <a href="{{ path('app_evenement_mes') }}" class="hero-btn-secondary">Mes événements</a>
+        {% endif %}
         <a href="#events" class="hero-btn-secondary">Voir les événements</a>
       </div>
     </div>
@@ -123,6 +126,14 @@
           <div class="service-sidebar-text"><h4>Calendrier</h4><span>Vue mensuelle</span></div>
         </a>
 
+        {% if app.user.role == 'AGRICULTEUR' %}
+        <a href="{{ path('app_evenement_mes') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_evenement_mes' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-calendar2-check"></i></div>
+          <div class="service-sidebar-text"><h4>Mes événements</h4><span>Événements créés</span></div>
+        </a>
+        {% endif %}
+
         {% if app.user.role in ['AGRICULTEUR','ADMIN'] %}
         <a href="{{ path('app_evenement_statistics') }}"
            class="service-sidebar-item{{ currentRoute == 'app_evenement_statistics' ? ' active' : '' }}">
@@ -133,6 +144,11 @@
            class="service-sidebar-item{{ currentRoute == 'app_evenement_participations' ? ' active' : '' }}">
           <div class="service-sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
           <div class="service-sidebar-text"><h4>Participations</h4><span>Gérer les inscriptions</span></div>
+        </a>
+        <a href="{{ path('app_qr_checkin') }}"
+           class="service-sidebar-item{{ currentRoute == 'app_qr_checkin' ? ' active' : '' }}">
+          <div class="service-sidebar-icon"><i class="bi bi-qr-code-scan"></i></div>
+          <div class="service-sidebar-text"><h4>Scanner QR</h4><span>Check-in participants</span></div>
         </a>
         {% endif %}
         {% endif %}
@@ -155,15 +171,9 @@
   var dots = document.querySelectorAll('#hero .carousel-indicators li');
   if (!img) return;
   var srcs = [
-<<<<<<< HEAD
-    "{{ asset('assets/img/event1.png') }}",
-    "{{ asset('assets/img/event2.png') }}",
-    "{{ asset('assets/img/event3.png') }}"
-=======
     "{{ asset('assets/img/event.png') }}",
     "{{ asset('assets/img/hero_3.jpg') }}",
     "{{ asset('assets/img/hero_4.jpg') }}"
->>>>>>> 50b917802fff4097277f0b8795178de657608264
   ];
   var i = 0;
   setInterval(function(){
@@ -181,7 +191,7 @@
 {# ── FILTER + GRID ── #}
 <div class="container" id="events">
   <div class="filter-wrap">
-    <form method="get" action="{{ path('app_evenement_index') }}">
+    <form id="event-filter-form" method="get" action="{{ path('app_evenement_index') }}">
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label class="form-label fw-semibold small text-muted mb-1">Rechercher</label>
@@ -213,72 +223,10 @@
     </form>
   </div>
 
-  <p class="text-muted mt-3 mb-4 small">
-    <i class="bi bi-calendar3 me-1 text-success"></i>
-    <strong>{{ evenements|length }}</strong> événement(s){% if (type??'') or (statut??'') or (search??'') %} — filtrés{% endif %}
-  </p>
-
-  {% if evenements is empty %}
-    <div class="text-center py-5" style="color:#9ca3af;">
-      <i class="bi bi-calendar-x" style="font-size:4rem;color:#d1d5db;display:block;margin-bottom:16px;"></i>
-      <h5 class="fw-bold">Aucun événement trouvé</h5>
-      <p>Modifiez vos filtres ou créez un événement.</p>
-      {% if app.user %}<a href="{{ path('app_evenement_new') }}" class="btn-voir mt-2">Créer un événement</a>{% endif %}
-    </div>
-  {% else %}
-  <div class="row g-4 pb-5">
-    {% for e in evenements %}
-    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index0%3)*100 }}">
-      <div class="ev-card">
-        {% if e.imageUrl %}
-          <img src="{{ asset(e.imageUrl) }}" class="ev-card-img" alt="{{ e.titre }}"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-          <div class="ev-card-placeholder" style="display:none;">
-            {% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}
-          </div>
-        {% else %}
-          <div class="ev-card-placeholder">
-            {% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}
-          </div>
-        {% endif %}
-
-        <div class="ev-card-body">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="b-type b-{{ e.type }}">{{ e.type }}</span>
-            <span class="b-stat b-{{ e.statut }}">
-              {% if e.statut=='A_VENIR' %}À venir{% elseif e.statut=='EN_COURS' %}En cours{% elseif e.statut=='TERMINE' %}Terminé{% else %}Annulé{% endif %}
-            </span>
-          </div>
-          <h5 class="ev-card-title">{{ e.titre }}</h5>
-          <div class="ev-meta"><i class="bi bi-geo-alt-fill"></i>{{ e.lieu }}</div>
-          <div class="ev-meta"><i class="bi bi-calendar3"></i>{{ e.dateDebut|date('d/m/Y') }}{% if e.dateFin != e.dateDebut %} → {{ e.dateFin|date('d/m/Y') }}{% endif %}</div>
-          <div class="ev-meta"><i class="bi bi-person-fill"></i>{{ e.organisateur }}</div>
-          {% set pct = e.nombrePlacesMax>0 ? ((e.nombreParticipants/e.nombrePlacesMax)*100)|round : 0 %}
-          <div class="ev-bar">
-            <div class="ev-bar-fill" style="width:{{ pct>100?100:pct }}%;background:{{ pct>=90?'#E74C3C':(pct>=60?'#F39C12':'#8BC34A') }}"></div>
-          </div>
-          <div class="d-flex justify-content-between" style="font-size:.76rem;color:#9ca3af;">
-            <span>{{ e.nombreParticipants }} inscrits</span>
-            <span>{{ e.placesRestantes }} restantes</span>
-          </div>
-        </div>
-
-        <div class="ev-card-foot">
-          <a href="{{ path('app_evenement_show', {id: e.id}) }}" class="btn-voir">Voir les détails</a>
-          {% if app.user and app.user.role != 'ADMIN' %}
-          <form method="post" action="{{ path('app_evenement_toggle_favori', {id: e.id}) }}" class="m-0">
-            <input type="hidden" name="_token" value="{{ csrf_token('favori'~e.id) }}">
-            <button type="submit" class="btn-fav {{ e.id in favorisIds ? 'on' : '' }}"
-                    title="{{ e.id in favorisIds ? 'Retirer des favoris' : 'Ajouter aux favoris' }}">
-              <i class="bi bi-heart-fill"></i>
-            </button>
-          </form>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endfor %}
+  <div id="events-grid">
+    {% include 'evenement/_filter_results.html.twig' %}
   </div>
-  {% endif %}
 </div>
+
+<script src="{{ asset('assets/js/evenement-filter.js') }}"></script>
 {% endblock %}

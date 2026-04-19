@@ -1,0 +1,39 @@
+{% extends 'evenement/admin_layout.html.twig' %}
+{% block title %}Modifier : {{ evenement.titre|slice(0,40) }} - Ardhi Admin{% endblock %}
+{% block page_title %}Modifier : {{ evenement.titre|slice(0,45) }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+.form-control,.form-select{border-radius:10px;border:1.5px solid #e2e8f0;padding:10px 14px;font-size:.95rem;transition:all .2s;}
+.form-control:focus,.form-select:focus{border-color:#667A3F;box-shadow:0 0 0 3px rgba(102,122,63,.12);outline:none;}
+.form-label{font-size:.88rem;color:#475569;font-weight:600;margin-bottom:6px;}
+input[type="file"]::file-selector-button{background:#667A3F;color:white;border:none;border-radius:6px;padding:5px 10px;margin-right:10px;cursor:pointer;font-weight:600;}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <a href="{{ path('app_evenement_show', {id: evenement.id}) }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left me-1"></i>Voir l'événement
+    </a>
+    <a href="{{ path('app_evenement_admin_liste') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-table me-1"></i>Liste
+    </a>
+  </div>
+  <span class="badge bg-{{ evenement.statut=='A_VENIR'?'success':evenement.statut=='EN_COURS'?'info text-dark':evenement.statut=='TERMINE'?'secondary':'danger' }}">
+    {{ evenement.statut|replace({'A_VENIR':'À venir','EN_COURS':'En cours','TERMINE':'Terminé','ANNULE':'Annulé'}) }}
+  </span>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white py-3">
+    <h5 class="fw-bold mb-0" style="font-size:.95rem;color:#1a2e05;">
+      <i class="bi bi-pencil-fill me-2 text-warning"></i>Modifier l'événement
+    </h5>
+  </div>
+  <div class="card-body">
+    {{ include('evenement/_form.html.twig', {'button_label': 'Enregistrer les modifications'}) }}
+  </div>
+</div>
+{% endblock %}

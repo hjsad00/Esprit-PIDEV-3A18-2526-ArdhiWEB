@@ -78,4 +78,22 @@ class ParticipationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Counts participations for a given event that have a specific statut.
+     * Used by ParticipationPredictionService for historical attendance figures.
+     */
+    public function countByStatut(
+        \App\Entity\Evenement\Evenement $evenement,
+        string $statut
+    ): int {
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->andWhere('p.evenement = :evenement')
+            ->andWhere('p.statut = :statut')
+            ->setParameter('evenement', $evenement)
+            ->setParameter('statut', $statut)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

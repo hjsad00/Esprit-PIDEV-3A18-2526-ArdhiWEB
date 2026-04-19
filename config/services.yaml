@@ -19,6 +19,7 @@ services:
         bind:
             string $mailFrom: '%app.mail_from%'
             string $projectDir: '%kernel.project_dir%'
+            string $projectDir: '%kernel.project_dir%'
             string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
             string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
             string $twilioFrom: '%env(MATERIEL_TWILIO_FROM)%'
@@ -44,3 +45,43 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
             $calendarId: '%env(GOOGLE_CALENDAR_ID)%'
+
+    App\Service\Evenement\UnsplashImageService:
+        arguments:
+            $httpClient:  '@http_client'
+            $logger:      '@logger'
+            $projectDir:  '%kernel.project_dir%'
+
+    App\Service\Evenement\GeminiAIEventService:
+        arguments:
+            $httpClient:      '@http_client'
+            $unsplashService: '@App\Service\Evenement\UnsplashImageService'
+            $logger:          '@logger'
+
+    App\Service\Evenement\ParticipationPredictionService: ~
+
+    App\Service\Evenement\QRCodeService:
+        arguments:
+            $em:                 '@doctrine.orm.entity_manager'
+            $participationRepo:  '@App\Repository\Evenement\ParticipationRepository'
+            $evenementRepo:      '@App\Repository\Evenement\EvenementRepository'
+            $logger:             '@logger'
+            $projectDir:         '%kernel.project_dir%'
+
+    App\Service\Evenement\CalendarExportService:
+        arguments:
+            $logger:       '@logger'
+            $projectDir:   '%kernel.project_dir%'
+            $requestStack: '@request_stack'
+
+    App\Service\Evenement\SmartEmailRecommendationService:
+        arguments:
+            $participationRepo: '@App\Repository\Evenement\ParticipationRepository'
+            $evenementRepo:     '@App\Repository\Evenement\EvenementRepository'
+            $mailer:            '@mailer'
+            $logger:            '@logger'
+            $mailFrom:          '%env(MAILER_FROM)%'
+
+    App\Service\Evenement\InactiveParticipantDetectionService: ~
+
+
