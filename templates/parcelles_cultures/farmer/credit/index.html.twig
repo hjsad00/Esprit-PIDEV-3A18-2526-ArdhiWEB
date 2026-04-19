@@ -180,9 +180,9 @@
                                             <a href="{{ path('farmer_credit_show', {id: dossier.id}) }}" class="action-btn btn-view" title="Voir les détails">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ path('farmer_credit_export_pdf', {id: dossier.id}) }}" class="action-btn btn-pdf" title="Exporter en PDF">
+                                            <button type="button" class="action-btn btn-pdf" title="Exporter en PDF" onclick="openLanguageModal({{ dossier.id }})">
                                                 <i class="bi bi-file-pdf"></i>
-                                            </a>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -205,4 +205,47 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de sélection de langue pour PDF -->
+<div class="modal fade" id="languageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #116530; border: none;">
+                <h5 class="modal-title text-white">Sélectionner la langue du PDF</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success btn-lg" onclick="downloadPDF('fr')">
+                        <i class="bi bi-globe"></i> Français
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-lg" onclick="downloadPDF('en')">
+                        <i class="bi bi-globe"></i> English
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-lg" onclick="downloadPDF('ar')">
+                        <i class="bi bi-globe"></i> العربية
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDossierId = null;
+
+function openLanguageModal(dossierId) {
+    currentDossierId = dossierId;
+    const modal = new bootstrap.Modal(document.getElementById('languageModal'));
+    modal.show();
+}
+
+function downloadPDF(locale) {
+    if (currentDossierId) {
+        window.location.href = `{{ path('farmer_credit_export_pdf', {id: '__ID__'}) }}?locale=${locale}`.replace('__ID__', currentDossierId);
+        const modal = bootstrap.Modal.getInstance(document.getElementById('languageModal'));
+        modal.hide();
+    }
+}
+</script>
 {% endblock %}
