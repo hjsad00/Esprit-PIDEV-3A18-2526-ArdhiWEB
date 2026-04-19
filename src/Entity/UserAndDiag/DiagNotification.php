@@ -15,7 +15,7 @@ class DiagNotification
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'diagNotifications')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Column(length: 50)]

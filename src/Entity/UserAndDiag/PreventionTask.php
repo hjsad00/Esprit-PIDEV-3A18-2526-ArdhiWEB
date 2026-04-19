@@ -14,7 +14,7 @@ class PreventionTask
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: PreventionPlan::class)]
-    #[ORM\JoinColumn(name: 'prevention_plan_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'prevention_plan_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?PreventionPlan $preventionPlan = null;
 
     #[ORM\Column]

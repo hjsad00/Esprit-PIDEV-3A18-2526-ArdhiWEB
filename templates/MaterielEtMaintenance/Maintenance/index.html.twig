@@ -16,9 +16,14 @@
         <div class="mat-stats-header" data-aos="fade-down" style="background: linear-gradient(to right, rgba(45, 74, 30, 0.88), rgba(45, 74, 30, 0.55)), url('{{ asset("assets/img/maintenance.webp") }}') center/cover no-repeat; padding: 1.2rem 2rem; border-radius: 15px; color: #fff; border: 1px solid rgba(255,255,255,0.4); margin-bottom: 1.5rem;">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <h1 style="font-size:1.5rem; font-weight:700; margin:0; color: #fff !important;"><i class="bi bi-tools me-2"></i>Calendrier des Interventions</h1>
-                <a href="{{ path('app_materiel_et_maintenance') }}" class="btn btn-outline-light btn-sm rounded-pill" style="border-color: rgba(255,255,255,0.4); color: white; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="bi bi-arrow-left"></i> Retour
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ path('app_materiel_et_maintenance') }}" class="btn btn-outline-light btn-sm rounded-pill" style="border-color: rgba(255,255,255,0.4); color: white; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                    <a href="{{ path('app_reclamation_index') }}" class="btn btn-outline-light btn-sm rounded-pill" style="border-color: rgba(255,255,255,0.4); color: white; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-exclamation-circle"></i> Reclamations
+                    </a>
+                </div>
             </div>
             <p style="font-size:0.88rem; opacity:0.75; margin:0 0 1rem;">Suivez l'historique et la progression des réparations.</p>
             
@@ -51,7 +56,7 @@
         {# Action Bar & Filters #}
         <div class="mat-action-bar flex-wrap gap-4" data-aos="fade-up" data-aos-delay="100">
             <div class="mat-filters flex-grow-1">
-                <form id="filter-form-maintenance" method="get" action="{{ path('app_maintenance_index') }}" class="w-100 d-flex gap-3 align-items-center">
+                <form id="filter-form-maintenance" method="get" action="{{ path('app_maintenance_index') }}" class="w-100 d-flex gap-3 align-items-center" novalidate>
                     <input type="text" name="search" id="filter-search-maint" class="mat-input flex-grow-1" placeholder="Rechercher (ex: Tracteur John Deere...)" value="{{ search }}">
                     <select name="type" class="mat-input">
                         <option value="">Types d'intervention</option>
@@ -166,7 +171,7 @@
                                 </span>
                             </a>
                             
-                            <form method="post" action="{{ path('app_maintenance_delete', {'id': m.idMaintenance}) }}" onsubmit="return confirm('Supprimer cette intervention ?');" style="margin:0;">
+                            <form method="post" action="{{ path('app_maintenance_delete', {'id': m.idMaintenance}) }}" onsubmit="return confirm('Supprimer cette intervention ?');" style="margin:0;" novalidate>
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_maintenance_' ~ m.idMaintenance) }}">
                                 <button type="submit" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 45px; padding: 8px 0; border-color: #e74c3c; color: #e74c3c; background: transparent;" title="Supprimer">
                                     <i class="bi bi-trash fs-6"></i>

@@ -7,6 +7,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\ButtonType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -19,45 +21,95 @@ class ParcelleFormType extends AbstractType
                 'label' => 'Surface (hectares)',
                 'required' => true,
                 'scale' => 2,
-                'attr' => ['min' => 0.01, 'step' => 0.01]
+                'attr' => [
+                    'min' => 0.01,
+                    'step' => 0.01,
+                    'class' => 'form-control',
+                    'placeholder' => 'Ex: 5.5',
+                ]
             ])
             ->add('localisation', TextType::class, [
                 'label' => 'Localisation',
-                'required' => true
-            ])
-            ->add('type_sol', ChoiceType::class, [
-                'label' => 'Type de sol',
-                'choices' => [
-                    'Argileux' => 'argileux',
-                    'Calcaire' => 'calcaire',
-                    'Limoneux' => 'limoneux',
-                    'Sableux' => 'sableux',
-                ],
-                'required' => true
-            ])
-            ->add('systeme_irrigation', ChoiceType::class, [
-                'label' => 'Système d\'irrigation',
-                'choices' => [
-                    'Goutte à goutte' => 'goutte_a_goutte',
-                    'Aspersion' => 'aspersion',
-                    'Submersion' => 'submersion',
-                    'Pluvial' => 'pluvial',
-                ],
-                'required' => true
+                'required' => true,
+                'attr' => [
+                    'class' => 'form-control',
+                    'placeholder' => 'Cliquez sur la carte ou entrez une adresse',
+                    'id' => 'localisation-input',
+                ]
             ])
             ->add('latitude', NumberType::class, [
                 'label' => 'Latitude',
                 'required' => false,
-                'scale' => 6,
-                'attr' => ['placeholder' => 'ex: 36.806389']
+                'scale' => 4,
+                'attr' => [
+                    'id' => 'latitude-input',
+                    'class' => 'form-control',
+                    'placeholder' => 'Auto',
+                    'readonly' => 'readonly',
+                ]
             ])
             ->add('longitude', NumberType::class, [
                 'label' => 'Longitude',
                 'required' => false,
-                'scale' => 6,
-                'attr' => ['placeholder' => 'ex: 10.182778']
+                'scale' => 4,
+                'attr' => [
+                    'id' => 'longitude-input',
+                    'class' => 'form-control',
+                    'placeholder' => 'Auto',
+                    'readonly' => 'readonly',
+                ]
             ])
-        ;
+            ->add('type_sol', ChoiceType::class, [
+                'label' => 'Type de sol',
+                'choices' => [
+                    'Argileux' => 'Argileux',
+                    'Sableux' => 'Sableux',
+                    'Limoneux' => 'Limoneux',
+                    'Calcaire' => 'Calcaire',
+                    'Argilo-sableux' => 'Argilo-sableux',
+                    'Argilo-limoneux' => 'Argilo-limoneux',
+                    'Tourbeux' => 'Tourbeux',
+                ],
+                'required' => true,
+                'attr' => [
+                    'class' => 'form-select',
+                    'id' => 'typeSol',
+                ]
+            ])
+            ->add('systeme_irrigation', ChoiceType::class, [
+                'label' => 'Système d\'irrigation',
+                'choices' => [
+                    'Goutte-à-goutte' => 'Goutte-à-goutte',
+                    'Aspersion' => 'Aspersion',
+                    'Gravitaire' => 'Gravitaire',
+                    'Pivot' => 'Pivot',
+                    'Micro-aspersion' => 'Micro-aspersion',
+                    'Pluvial' => 'Pluvial',
+                ],
+                'required' => true,
+                'attr' => [
+                    'class' => 'form-select',
+                    'id' => 'systemeIrrigation',
+                ]
+            ])
+            ->add('statut', ChoiceType::class, [
+                'label' => 'Statut',
+                'choices' => [
+                    'Active' => 'active',
+                    'En repos' => 'repos',
+                ],
+                'attr' => [
+                    'class' => 'form-select',
+                ],
+            ])
+            ->add('iaRecommend', ButtonType::class, [
+                'label' => '🤖 Remplissage IA',
+                'attr' => [
+                    'class' => 'btn btn-success btn-sm mt-2',
+                    'id' => 'ia-recommend-btn',
+                    'type' => 'button',
+                ],
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

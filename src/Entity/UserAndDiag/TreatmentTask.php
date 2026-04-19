@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TreatmentTaskRepository::class)]
 #[ORM\Table(name: 'treatment_task')]
-class TreatmentTask 
+class TreatmentTask
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -16,7 +16,7 @@ class TreatmentTask
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: TreatmentPlan::class)]
-    #[ORM\JoinColumn(name: 'treatment_plan_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'treatment_plan_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?TreatmentPlan $treatmentPlan = null;
 
     #[ORM\Column]

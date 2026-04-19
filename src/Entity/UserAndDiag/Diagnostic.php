@@ -26,7 +26,7 @@ class Diagnostic
     private ?float $confiance = 0;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]

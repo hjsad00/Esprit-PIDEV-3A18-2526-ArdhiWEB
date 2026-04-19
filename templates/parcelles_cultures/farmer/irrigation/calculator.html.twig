@@ -8,19 +8,53 @@
     .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
     .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; height: 100%; }
     .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
-    .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; }
-    .form-control:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); }
+    .form-control, .form-select { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; }
+    .form-control:focus, .form-select:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); outline: none; }
     .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; font-size: 0.9rem; }
-    .btn-calculate { background: #116530; color: white; border-radius: 50px; padding: 14px; font-weight: 700; border: none; width: 100%; transition: all 0.3s; box-shadow: 0 8px 20px rgba(17,101,48,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .btn-calculate:hover { background: #1e8341; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,101,48,0.3); }
+    .btn-calculate { background: linear-gradient(135deg, #116530, #1e8341); color: white; border-radius: 50px; padding: 14px; font-weight: 700; border: none; width: 100%; transition: all 0.3s; box-shadow: 0 8px 20px rgba(17,101,48,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+    .btn-calculate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,101,48,0.3); }
+    .btn-calculate:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-premium-back { color: #116530; background: #e8f5e9; border-radius: 50px; padding: 10px 20px; font-weight: 600; text-decoration: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; }
     .btn-premium-back:hover { background: #116530; color: white; }
+    
     .result-metric { background: #f8faf7; border-radius: 16px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; border-left: 4px solid #116530; }
-    .result-metric.highlight { background: #e8f5e9; border-left-color: #116530; }
+    .result-metric.highlight { background: #e8f5e9; border-left-color: #116530; border-left-width: 6px; }
+    .result-metric.stress { background: #ffe8e8; border-left-color: #dc3545; }
+    .result-metric.modere { background: #fff8e8; border-left-color: #f59e0b; }
     .result-label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; }
     .result-value { font-size: 1.8rem; font-weight: 800; color: #116530; }
     .result-sub { font-size: 0.8rem; color: #aaa; }
+    
     .conditions-box { background: #f0f9ff; border-radius: 12px; padding: 15px; font-size: 0.85rem; color: #555; border-left: 4px solid #4299e1; }
+    .meteo-box { background: #f5e6ff; border-radius: 12px; padding: 15px; font-size: 0.85rem; color: #555; border-left: 4px solid #9f7aea; }
+    
+    .loader { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .conseil-box { background: linear-gradient(135deg, rgba(17,101,48,0.1), rgba(62,207,142,0.1)); border-radius: 16px; padding: 20px; border-left: 4px solid #116530; margin-top: 20px; }
+    .conseil-title { font-weight: 700; color: #116530; margin-bottom: 10px; font-size: 1.1rem; }
+    
+    .nav-tabs { border-bottom: 2px solid #eee; }
+    .nav-tabs .nav-link { color: #999; font-weight: 500; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .nav-tabs .nav-link:hover { color: #116530; border-bottom-color: #116530; }
+    .nav-tabs .nav-link.active { color: #116530; border-bottom-color: #116530; }
+    
+    .weather-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 12px 15px; margin-bottom: 10px; }
+    .weather-current { font-size: 2rem; font-weight: 700; }
+    .weather-desc { font-size: 0.85rem; opacity: 0.9; margin-top: 3px; }
+    .weather-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    .weather-detail-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; }
+    .weather-detail-label { font-size: 0.65rem; opacity: 0.8; text-transform: uppercase; }
+    .weather-detail-value { font-size: 1rem; font-weight: 700; margin-top: 3px; }
+    
+    .forecast-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
+    .forecast-day { font-weight: 600; color: #116530; font-size: 0.85rem; }
+    .forecast-temp { font-size: 1.2rem; font-weight: 700; color: #2d3436; margin: 5px 0; }
+    .forecast-temps { font-size: 0.75rem; color: #999; }
+    .forecast-item { background: #f8faf7; padding: 8px; border-radius: 8px; text-align: center; }
+    .forecast-emoji { font-size: 1.5rem; }
+    
+    #results { min-height: 200px; }
 </style>
 {% endblock %}
 
@@ -41,132 +75,557 @@
             </div>
 
             <div class="page-header" data-aos="fade-down">
-                <h1 class="page-title">Calculateur d'Irrigation</h1>
-                <p class="text-muted lead mt-2">Estimez les besoins en eau de votre parcelle selon les conditions climatiques du jour.</p>
+                <h1 class="page-title">🤖 Calculateur d'Irrigation IA</h1>
+                <p class="text-muted lead mt-2">Estimez les besoins en eau de votre parcelle selon les conditions climatiques en temps réel.</p>
+            </div>
+
+            <!-- SECTION MÉTÉO EN HAUT -->
+            <div class="mb-4" data-aos="fade-up" data-aos-delay="50">
+                <div class="premium-card" style="padding: 15px 20px;">
+                    <span class="card-label" style="margin-bottom: 12px; font-size: 11px;"><i class="bi bi-cloud"></i> Météo</span>
+                    
+                    <div id="weather">
+                        <div class="text-center py-3 text-muted" style="font-size: 0.85rem;">
+                            <i class="bi bi-cloud-fog2" style="font-size: 2.5rem; color: #cce8d8;"></i>
+                            <h5 class="mt-2" style="color: #bbb; font-size: 0.95rem;">Météo</h5>
+                            <p style="margin: 0; font-size: 0.8rem;">Sélectionnez une parcelle ci-dessous.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row g-4">
+                <!-- Formulaire à gauche -->
                 <div class="col-lg-5" data-aos="fade-right" data-aos-delay="100">
                     <div class="premium-card">
-                        <span class="card-label"><i class="bi bi-droplet-fill"></i> Paramètres du Calcul</span>
+                        <span class="card-label"><i class="bi bi-droplet-fill"></i> Paramètres IA</span>
 
-                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        <!-- Sélection de parcelle -->
+                        <div class="mb-4">
+                            <label class="form-label">📍 Sélectionnez votre parcelle</label>
+                            <select id="parcelleSelect" class="form-select">
+                                <option value="">-- Choisir une parcelle --</option>
+                            </select>
+                        </div>
+
+                        <hr class="my-3">
 
                         <div class="mb-4">
-                            {{ form_label(form.date) }}
-                            {{ form_widget(form.date, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
-                            {% if form.date.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.date) }}</div>{% endif %}
+                            <label class="form-label">Localisation (Latitude)</label>
+                            <input type="number" id="latitude" class="form-control" placeholder="Ex: 36.8" step="0.0001" value="" readonly style="background-color: #f8faf7;">
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Températures (°C)</label>
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    {{ form_label(form.temperature_min) }}
-                                    {{ form_widget(form.temperature_min, {'attr': {'class': 'form-control', 'placeholder': 'Min'}}) }}
-                                    {% if form.temperature_min.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.temperature_min) }}</div>{% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {{ form_label(form.temperature_max) }}
-                                    {{ form_widget(form.temperature_max, {'attr': {'class': 'form-control', 'placeholder': 'Max'}}) }}
-                                    {% if form.temperature_max.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.temperature_max) }}</div>{% endif %}
-                                </div>
+                            <label class="form-label">Localisation (Longitude)</label>
+                            <input type="number" id="longitude" class="form-control" placeholder="Ex: 10.2" step="0.0001" value="" readonly style="background-color: #f8faf7;">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">🌾 Culture/Récolte</label>
+                            <select id="culture" class="form-select">
+                                <option value="">-- Sélectionner une parcelle d'abord --</option>
+                            </select>
+                            <div id="culturesParcelleList" class="mt-2" style="display:none;">
+                                <small class="text-muted">Cultures de la parcelle:</small>
+                                <div id="culturesParcelleItems"></div>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            {{ form_label(form.precipitations) }}
-                            {{ form_widget(form.precipitations, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 5'}}) }}
-                            {% if form.precipitations.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.precipitations) }}</div>{% endif %}
-                            <small class="text-muted">En millimètres (mm)</small>
+                            <label class="form-label">📐 Surface (hectares)</label>
+                            <input type="number" id="surface" class="form-control" placeholder="Ex: 5.5" step="0.01" value="1" min="0.01" readonly style="background-color: #f8faf7;">
                         </div>
 
                         <div class="mb-4">
-                            {{ form_label(form.humidite) }}
-                            {{ form_widget(form.humidite, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 60'}}) }}
-                            {% if form.humidite.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.humidite) }}</div>{% endif %}
-                            <small class="text-muted">Humidité du sol (0-100%)</small>
+                            <label class="form-label">🌍 Saison (optionnel)</label>
+                            <select id="saison" class="form-select">
+                                <option value="">-- Auto (saison actuelle) --</option>
+                                <option value="printemps">Printemps</option>
+                                <option value="ete">Été</option>
+                                <option value="automne">Automne</option>
+                                <option value="hiver">Hiver</option>
+                            </select>
                         </div>
 
-                        <div class="mb-5">
-                            {{ form_label(form.kc) }}
-                            {{ form_widget(form.kc, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 0.75'}}) }}
-                            {% if form.kc.vars.errors|length > 0 %}<div class="invalid-feedback d-block">{{ form_errors(form.kc) }}</div>{% endif %}
-                            <small class="text-muted">Coefficient cultural (ex: 0.3-1.2)</small>
-                        </div>
-
-                        <button type="submit" class="btn-calculate">
-                            <i class="bi bi-droplet-half"></i> Lancer le calcul
+                        <button id="btnCalculate" class="btn-calculate" type="button">
+                            <i class="bi bi-lightning-charge-fill"></i> Calculer avec IA
                         </button>
-
-                        {{ form_end(form) }}
+                        
+                        <small class="text-muted d-block mt-3">
+                            💡 Conseil : Les coordonnées et surface se remplissent automatiquement après sélection de la parcelle.
+                        </small>
                     </div>
                 </div>
 
-                {% if calculation_result %}
+                <!-- Résultats à droite -->
                 <div class="col-lg-7" data-aos="fade-left" data-aos-delay="150">
                     <div class="premium-card">
                         <span class="card-label"><i class="bi bi-bar-chart-line-fill"></i> Résultats du Calcul</span>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-sm-6">
-                                <div class="result-metric">
-                                    <span class="result-label">Température Moyenne</span>
-                                    <span class="result-value">{{ calculation_result.temp|round(1) }} <small style="font-size:1rem">°C</small></span>
-                                    <span class="result-sub">(Min + Max) / 2</span>
-                                </div>
+                        
+                        <div id="results">
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-cloud-drizzle" style="font-size: 4rem; color: #cce8d8;"></i>
+                                <h4 class="mt-3" style="color: #bbb;">Résultats ici</h4>
+                                <p>Remplissez les paramètres et lancez le calcul IA pour voir vos besoins en irrigation.</p>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="result-metric">
-                                    <span class="result-label">ET0 – Évapotranspiration</span>
-                                    <span class="result-value">{{ calculation_result.et0|round(3) }} <small style="font-size:1rem">mm/j</small></span>
-                                    <span class="result-sub">Évaporation estimée du terrain</span>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="result-metric">
-                                    <span class="result-label">Besoin Brut</span>
-                                    <span class="result-value">{{ calculation_result.besoin_brut|round(3) }} <small style="font-size:1rem">mm/j</small></span>
-                                    <span class="result-sub">Kc × ET0</span>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="result-metric">
-                                    <span class="result-label">Besoin Net</span>
-                                    <span class="result-value" style="color:#e67e22;">{{ calculation_result.besoin_net|round(3) }} <small style="font-size:1rem">mm/j</small></span>
-                                    <span class="result-sub">Après soustraction des pluies</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="result-metric highlight" style="border-left-width: 6px;">
-                            <span class="result-label"><i class="bi bi-droplet-fill me-1"></i> Volume d'Irrigation Recommandé</span>
-                            <span class="result-value" style="font-size: 2.5rem;">
-                                {{ (calculation_result.volume_litres)|round(0)|number_format(0, '.', ' ') }}
-                                <small style="font-size:1.2rem; font-weight:500; color:#555">L</small>
-                            </span>
-                            <span class="result-sub">= {{ (calculation_result.volume_m3)|round(2) }} m³</span>
-                        </div>
-
-                        <div class="conditions-box mt-4">
-                            <strong><i class="bi bi-thermometer-half me-2"></i>Conditions d'Entrée :</strong><br>
-                            Température moy: <strong>{{ calculation_result.temp }}°C</strong> &nbsp;|&nbsp;
-                            Précipitations: <strong>{{ calculation_result.precip }} mm</strong> &nbsp;|&nbsp;
-                            Humidité: <strong>{{ calculation_result.humidite }}%</strong>
                         </div>
                     </div>
                 </div>
-                {% else %}
-                <div class="col-lg-7 d-flex align-items-center justify-content-center" data-aos="fade-left">
-                    <div class="text-center py-5 text-muted">
-                        <i class="bi bi-cloud-drizzle" style="font-size: 4rem; color: #cce8d8;"></i>
-                        <h4 class="mt-3" style="color: #bbb;">Résultats ici</h4>
-                        <p>Remplissez le formulaire et lancez le calcul pour voir vos besoins en irrigation.</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Charger les parcelles au chargement de la page
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Page loaded, loading parcelles...');
+    await loadParcelles();
+});
+
+// Charger les parcelles de l'utilisateur
+async function loadParcelles() {
+    try {
+        console.log('Fetching parcelles from /farmer/irrigation/api/parcelles');
+        const response = await fetch('/farmer/irrigation/api/parcelles');
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', response.status, errorText);
+            return;
+        }
+        
+        const parcelles = await response.json();
+        console.log('Parcelles received:', parcelles);
+        
+        const select = document.getElementById('parcelleSelect');
+        
+        if (!parcelles || parcelles.length === 0) {
+            console.warn('No parcelles found');
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '-- Aucune parcelle disponible --';
+            select.appendChild(option);
+            return;
+        }
+        
+        parcelles.forEach(parcelle => {
+            console.log('Adding parcelle:', parcelle.nom);
+            const option = document.createElement('option');
+            option.value = parcelle.id;
+            option.textContent = parcelle.nom;
+            select.appendChild(option);
+        });
+        
+        console.log('Parcelles loaded successfully');
+    } catch (error) {
+        console.error('Error loading parcelles:', error);
+        const select = document.getElementById('parcelleSelect');
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '-- Erreur lors du chargement --';
+        select.appendChild(option);
+    }
+}
+
+// Quand une parcelle est sélectionnée
+document.getElementById('parcelleSelect').addEventListener('change', async function() {
+    const parcelleId = this.value;
+    console.log('Parcelle selected:', parcelleId);
+    
+    if (!parcelleId) {
+        // Réinitialiser les champs
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+        document.getElementById('surface').value = '1';
+        document.getElementById('culture').value = '';
+        document.getElementById('culturesParcelleList').style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/farmer/irrigation/api/parcelle/${parcelleId}`);
+        console.log('API Response status:', response.status);
+        const parcelle = await response.json();
+        console.log('Parcelle data received:', parcelle);
+
+        if (response.ok) {
+            // Remplir latitude et longitude
+            console.log('Setting latitude:', parcelle.latitude, 'longitude:', parcelle.longitude);
+            const latField = document.getElementById('latitude');
+            const lonField = document.getElementById('longitude');
+            
+            latField.value = parcelle.latitude ? parseFloat(parcelle.latitude) : '';
+            lonField.value = parcelle.longitude ? parseFloat(parcelle.longitude) : '';
+            
+            if (!parcelle.latitude || !parcelle.longitude) {
+                console.warn('⚠️ Latitude ou longitude manquante dans la base de données');
+            }
+            
+            // Remplir la surface
+            document.getElementById('surface').value = parcelle.surface_hectares || '1';
+
+            // Afficher les cultures de la parcelle
+            if (parcelle.cultures && parcelle.cultures.length > 0) {
+                const culturesDiv = document.getElementById('culturesParcelleItems');
+                culturesDiv.innerHTML = '';
+                const cultureSelect = document.getElementById('culture');
+                
+                // Vider le dropdown et le remplir avec les cultures de la parcelle
+                cultureSelect.innerHTML = '';
+                
+                parcelle.cultures.forEach((culture, index) => {
+                    const option = document.createElement('option');
+                    option.value = culture.nom.toLowerCase();
+                    option.textContent = culture.nom;
+                    cultureSelect.appendChild(option);
+                    
+                    // Auto-sélectionner la première culture
+                    if (index === 0) {
+                        cultureSelect.value = culture.nom.toLowerCase();
+                        console.log('Auto-selecting first culture:', culture.nom);
+                    }
+                });
+                
+                // Afficher aussi les badges cliquables
+                parcelle.cultures.forEach(culture => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success me-2 mb-2';
+                    badge.textContent = culture.nom;
+                    badge.style.cursor = 'pointer';
+                    badge.style.fontSize = '0.85rem';
+                    badge.style.padding = '6px 10px';
+                    
+                    // Clic sur le badge pour sélectionner la culture
+                    badge.addEventListener('click', function() {
+                        const cultureName = culture.nom.toLowerCase();
+                        console.log('Culture selected via badge:', cultureName);
+                        cultureSelect.value = cultureName;
+                    });
+                    
+                    culturesDiv.appendChild(badge);
+                });
+                
+                document.getElementById('culturesParcelleList').style.display = 'block';
+            } else {
+                // Pas de cultures associées
+                const cultureSelect = document.getElementById('culture');
+                cultureSelect.innerHTML = '<option value="">-- Aucune culture pour cette parcelle --</option>';
+                document.getElementById('culturesParcelleList').style.display = 'none';
+            }
+            
+            // Charger la météo pour cette parcelle
+            if (parcelle.latitude && parcelle.longitude) {
+                await loadWeather(parcelle.latitude, parcelle.longitude);
+            } else {
+                document.getElementById('weather').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Coordonnées manquantes pour cette parcelle.
+                    </div>
+                `;
+            }
+        } else {
+            console.error('API error:', parcelle.error || 'Unknown error');
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des détails:', error);
+        console.error('Détails:', error.message);
+    }
+});
+
+// Bouton Calculer
+document.getElementById('btnCalculate').addEventListener('click', async function() {
+    const btn = this;
+    const lat = parseFloat(document.getElementById('latitude').value);
+    const lon = parseFloat(document.getElementById('longitude').value);
+    const culture = document.getElementById('culture').value;
+    const surface = parseFloat(document.getElementById('surface').value);
+    const saison = document.getElementById('saison').value || null;
+
+    // Validation
+    if (!lat || !lon || !culture || !surface) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+
+    // Désactiver le bouton
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Calcul en cours...';
+
+    try {
+        const response = await fetch('/api/irrigation/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lon,
+                culture: culture,
+                surface: surface,
+                saison: saison,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            displayResults(data);
+        } else {
+            alert('Erreur: ' + (data.error || 'Calcul échoué'));
+        }
+    } catch (error) {
+        alert('Erreur réseau: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Calculer avec IA';
+    }
+});
+
+function displayResults(data) {
+    const resultsDiv = document.getElementById('results');
+    
+    const niveauClass = data.niveauIrrigation === 'ÉLEVÉ' ? 'stress' : (data.niveauIrrigation === 'MODÉRÉ' ? 'modere' : '');
+    
+    let html = `
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">🌡️ Température Moyenne</span>
+                    <span class="result-value">${data.temperatureMoyenne} <small style="font-size:1rem">°C</small></span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">💧 Humidité</span>
+                    <span class="result-value">${data.humidite} <small style="font-size:1rem">%</small></span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">📊 ET0 (Évapotranspiration)</span>
+                    <span class="result-value">${data.et0} <small style="font-size:1rem">mm</small></span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">🌧️ Précipitations</span>
+                    <span class="result-value">${data.precipitationsSemaine} <small style="font-size:1rem">mm</small></span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">🌾 Besoin Brut</span>
+                    <span class="result-value">${data.besoinBrut} <small style="font-size:1rem">mm</small></span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="result-metric">
+                    <span class="result-label">✓ Besoin Net</span>
+                    <span class="result-value" style="color:#e67e22;">${data.besoinNet} <small style="font-size:1rem">mm</small></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-metric highlight ${niveauClass}">
+            <span class="result-label"><i class="bi bi-droplet-fill me-1"></i> 💦 Volume d'Irrigation</span>
+            <span class="result-value" style="font-size: 2.5rem;">
+                ${(data.volumeEauLitres).toLocaleString('fr-FR')}
+                <small style="font-size:1.2rem; font-weight:500; color:#555">L</small>
+            </span>
+            <span class="result-sub">= ${data.volumeEauM3} m³ pour ${data.surfaceHectares} ha</span>
+        </div>
+
+        <div class="result-metric ${data.niveauIrrigation === 'AUCUN' ? 'highlight' : 'modere'}" style="margin-top: 15px;">
+            <span class="result-label">📈 Niveau d'Irrigation</span>
+            <span class="result-value" style="font-size: 1.5rem;">${data.niveauIrrigation}</span>
+            <span class="result-sub">${getNiveauDescription(data.niveauIrrigation)}</span>
+        </div>
+
+        ${data.stressHydriqueDetecte ? `
+            <div class="result-metric stress">
+                <span class="result-label">⚠️ ALERTE STRESS HYDRIQUE</span>
+                <span class="result-value" style="color: #dc3545; font-size: 1.2rem;">${data.causeStress}</span>
+            </div>
+        ` : ''}
+
+        <div class="meteo-box mt-4">
+            <strong><i class="bi bi-cloud-fill me-2"></i>Données Météo :</strong><br>
+            ${data.donneesFallback ? '📡 Données par défaut (pas d\'API)' : '🌐 Données en temps réel'}<br>
+            Min: <strong>${data.temperatureMin}°C</strong> | 
+            Max: <strong>${data.temperatureMax}°C</strong>
+        </div>
+
+        <div class="conseil-box">
+            <div class="conseil-title">💡 Conseil Principal</div>
+            <p style="margin: 0;">${data.conseilPrincipal}</p>
+        </div>
+    `;
+
+    resultsDiv.innerHTML = html;
+}
+
+function getNiveauDescription(niveau) {
+    const descriptions = {
+        'AUCUN': '✓ Pas d\'irrigation nécessaire',
+        'FAIBLE': '💧 Arrosage léger',
+        'MODÉRÉ': '💧💧 Arrosage régulier',
+        'ÉLEVÉ': '⚠️ Irrigation intensive'
+    };
+    return descriptions[niveau] || '';
+}
+
+// Charger les données météo
+async function loadWeather(latitude, longitude) {
+    try {
+        console.log('Loading weather for:', latitude, longitude);
+        const response = await fetch(`/api/irrigation/weather?latitude=${latitude}&longitude=${longitude}`);
+        
+        if (!response.ok) {
+            throw new Error('Weather API error');
+        }
+        
+        const data = await response.json();
+        console.log('Weather data:', data);
+        
+        displayWeather(data);
+    } catch (error) {
+        console.error('Erreur météo:', error);
+        document.getElementById('weather').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> Erreur lors du chargement de la météo
+            </div>
+        `;
+    }
+}
+
+function displayWeather(data) {
+    const weatherDiv = document.getElementById('weather');
+    const current = data.current || {};
+    const daily = data.daily || {};
+    
+    // Code météo WMO
+    const weatherDescription = getWeatherDescription(current.weather_code);
+    const weatherEmoji = getWeatherEmoji(current.weather_code);
+    
+    let html = `
+        <div class="weather-card">
+            <div style="font-size: 2.2rem;">${weatherEmoji}</div>
+            <div class="weather-current">${Math.round(current.temperature_2m || 0)}°C</div>
+            <div class="weather-desc">${weatherDescription}</div>
+            
+            <div class="weather-details">
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">💧 Humidité</div>
+                    <div class="weather-detail-value">${current.relative_humidity_2m || 0}%</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">💨 Vent</div>
+                    <div class="weather-detail-value">${Math.round(current.wind_speed_10m || 0)} km/h</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">🌧️ Pluie</div>
+                    <div class="weather-detail-value">${current.precipitation || 0} mm</div>
+                </div>
+                <div class="weather-detail-item">
+                    <div class="weather-detail-label">📍 Zone</div>
+                    <div class="weather-detail-value">${data.timezone || 'UTC'}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size: 0.8rem; color: #116530; font-weight: 600; margin-top: 8px; margin-bottom: 6px;">📅 Prévisions</div>
+        <div class="forecast-container">
+    `;
+    
+    // Ajouter les prévisions
+    if (daily.time && daily.time.length > 0) {
+        for (let i = 0; i < Math.min(5, daily.time.length); i++) {
+            const date = new Date(daily.time[i]);
+            const day = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+            const emoji = getWeatherEmoji(daily.weather_code[i]);
+            const tempMax = daily.temperature_2m_max[i];
+            const tempMin = daily.temperature_2m_min[i];
+            const precip = daily.precipitation_sum[i];
+            
+            html += `
+                <div class="forecast-item">
+                    <div class="forecast-emoji">${emoji}</div>
+                    <div class="forecast-day">${day}</div>
+                    <div class="forecast-temp">${Math.round(tempMax)}°</div>
+                    <div class="forecast-temps">${Math.round(tempMin)}° | ${precip}mm</div>
+                </div>
+            `;
+        }
+    }
+    
+    html += `</div>`;
+    
+    weatherDiv.innerHTML = html;
+}
+
+function getWeatherDescription(code) {
+    const descriptions = {
+        0: 'Dégagé',
+        1: 'Partiellement nuageux',
+        2: 'Très nuageux',
+        3: 'Couvert',
+        45: 'Brumeux',
+        48: 'Dépôt de givre',
+        51: 'Bruine légère',
+        53: 'Bruine modérée',
+        55: 'Bruine dense',
+        61: 'Pluie faible',
+        63: 'Pluie modérée',
+        65: 'Pluie forte',
+        71: 'Neige faible',
+        73: 'Neige modérée',
+        75: 'Neige forte',
+        77: 'Grains de neige',
+        80: 'Averses faibles',
+        81: 'Averses modérées',
+        82: 'Averses fortes',
+        85: 'Averses de neige faibles',
+        86: 'Averses de neige fortes',
+        95: 'Orage faible',
+        96: 'Orage avec grêle faible',
+        99: 'Orage avec grêle forte',
+    };
+    return descriptions[code] || 'Conditions inconnues';
+}
+
+function getWeatherEmoji(code) {
+    const emojis = {
+        0: '☀️',
+        1: '🌤️',
+        2: '⛅',
+        3: '☁️',
+        45: '🌫️',
+        48: '🌫️',
+        51: '🌦️',
+        53: '🌧️',
+        55: '⛈️',
+        61: '🌧️',
+        63: '🌧️',
+        65: '⛈️',
+        71: '🌨️',
+        73: '🌨️',
+        75: '❄️',
+        77: '🌨️',
+        80: '🌧️',
+        81: '⛈️',
+        82: '⛈️',
+        85: '🌨️',
+        86: '🌨️',
+        95: '⛈️',
+        96: '⛈️',
+        99: '⛈️',
+    };
+    return emojis[code] || '🌤️';
+}
+
+</script>
 {% endblock %}

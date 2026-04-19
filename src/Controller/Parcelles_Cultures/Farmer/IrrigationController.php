@@ -6,8 +6,10 @@ use App\Entity\Parcelles_Cultures\Parcelle;
 use App\DTO\Parcelles_Cultures\IrrigationDTO;
 use App\Form\Parcelles_Cultures\Type\IrrigationFormType;
 use App\Repository\Parcelles_Cultures\IrrigationRequestRepository;
+use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use App\Service\Parcelles_Cultures\IrrigationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,7 +21,8 @@ class IrrigationController extends AbstractController
 {
     public function __construct(
         private IrrigationRequestRepository $irrigationRepository,
-        private IrrigationService $irrigationService
+        private IrrigationService $irrigationService,
+        private ParcelleRepository $parcelleRepository
     ) {
     }
 
@@ -66,6 +69,54 @@ class IrrigationController extends AbstractController
         return $this->render('parcelles_cultures/farmer/irrigation/calculator.html.twig', [
             'form' => $form->createView(),
             'calculation_result' => $result,
+        ]);
+    }
+
+    #[Route('/api/parcelles', name: 'api_parcelles', methods: ['GET'])]
+    public function apiParcelles(): JsonResponse
+    {
+        $user = $this->getUser();
+        
+        if (!$user) {
+            return $this->json(['error' => 'User not authenticated'], 401);
+        }
+        
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
+        
+        $data = [];
+        foreach ($parcelles as $parcelle) {
+            $data[] = [
+                'id' => $parcelle->getId(),
+                'nom' => $parcelle->getLocalisation() . ' (Surface: ' . $parcelle->getSurface() . 'ha)',
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/parcelle/{id}', name: 'api_parcelle_details', methods: ['GET'])]
+    public function apiParcelleDetails(Parcelle $parcelle): JsonResponse
+    {
+        // Vérifier que l'utilisateur est propriétaire de la parcelle
+        if ($parcelle->getAgriculteur() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
+
+        $cultures = [];
+        foreach ($parcelle->getCultures() as $culture) {
+            $cultures[] = [
+                'id' => $culture->getId(),
+                'nom' => $culture->getTypeCulture() ?? $culture->getNomCulture(),
+            ];
+        }
+
+        return $this->json([
+            'id' => $parcelle->getId(),
+            'localisation' => $parcelle->getLocalisation(),
+            'latitude' => $parcelle->getLatitude(),
+            'longitude' => $parcelle->getLongitude(),
+            'surface_hectares' => $parcelle->getSurface(),
+            'cultures' => $cultures,
         ]);
     }
 }

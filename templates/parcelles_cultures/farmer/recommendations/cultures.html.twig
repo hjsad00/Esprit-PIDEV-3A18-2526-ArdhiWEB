@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recommandations IA Cultures - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+        .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+        .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; }
+        .form-select { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; }
+        .form-select:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); }
+        .btn-get-recommendations { background: linear-gradient(135deg, #116530, #1e8341); color: white; border-radius: 50px; padding: 12px 35px; border: none; cursor: pointer; font-weight: 700; transition: all 0.3s; }
+        .btn-get-recommendations:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(17, 101, 48, 0.3); }
+        
+        .culture-card { background: white; border-radius: 16px; border: 2px solid #e0e0e0; padding: 25px; margin-bottom: 20px; transition: all 0.3s; }
+        .culture-card:hover { border-color: #116530; box-shadow: 0 10px 30px rgba(17, 101, 48, 0.1); }
+        .culture-card h4 { color: #116530; margin-bottom: 15px; font-weight: 700; }
+        .culture-badge { display: inline-block; background: #e8f5e9; color: #116530; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 8px; margin-bottom: 8px; }
+        .culture-metric { margin: 10px 0; font-size: 0.95rem; }
+        .culture-metric strong { color: #2d3436; }
+        .btn-apply { background: #28a745; color: white; border-radius: 12px; padding: 8px 16px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .btn-apply:hover { background: #20c997; }
+        
+        .loader { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .hidden { display: none; }
+        .recommendations-container { margin-top: 30px; }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+
+<div class="container-fluid py-5 px-lg-5">
+    <div class="row">
+        <div class="col-md-3 col-xl-2">
+            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
+        </div>
+
+        <div class="col-md-9 col-xl-10">
+            <div class="page-header">
+                <h1 class="page-title">🤖 Recommandations IA pour Cultures</h1>
+                <p class="text-muted lead mt-2">Obtenez des recommandations personnalisées pour vos cultures basées sur l'IA Gemini.</p>
+            </div>
+
+            <div class="premium-card">
+                <h3 class="mb-4"><i class="bi bi-hexagon-fill"></i> Sélectionnez une parcelle</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="parcelle-select" class="form-label">Parcelle</label>
+                        <select id="parcelle-select" class="form-select">
+                            <option value="">-- Choisir une parcelle --</option>
+                            {% for parcelle in parcelles %}
+                                <option value="{{ parcelle.id }}">
+                                    #{{ parcelle.id }} - {{ parcelle.localisation }} ({{ parcelle.surface }} ha)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button id="get-recommendations-btn" class="btn-get-recommendations mt-4">
+                    <i class="bi bi-robot"></i> Obtenir les recommandations
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="hidden" style="text-align: center; padding: 40px;">
+                <div class="loader" style="margin: 0 auto; margin-bottom: 15px;"></div>
+                <p style="color: #116530; font-weight: 600;">Analyse en cours par l'IA Gemini...</p>
+            </div>
+
+            <!-- Recommendations Container -->
+            <div id="recommendations-container" class="recommendations-container hidden">
+                <div id="explanation" style="background: #e8f5e9; border-left: 4px solid #116530; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                    <h5 style="color: #116530; margin-bottom: 10px;">📊 Analyse Globale</h5>
+                    <p id="explanation-text"></p>
+                </div>
+
+                <div id="cultures-list"></div>
+
+                <div style="text-align: center; margin-top: 25px;">
+                    <button id="save-cultures-btn" class="btn btn-lg btn-success">
+                        <i class="bi bi-save"></i> Sauvegarder ces cultures
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="hidden" style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; color: #721c24; margin-top: 20px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('get-recommendations-btn');
+    const select = document.getElementById('parcelle-select');
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('recommendations-container');
+    const errorDiv = document.getElementById('error-message');
+
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        if (!select.value) {
+            alert('Veuillez sélectionner une parcelle');
+            return;
+        }
+
+        loading.classList.remove('hidden');
+        container.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+        btn.disabled = true;
+
+        fetch('/farmer/recommendations/api/cultures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parcelleId: parseInt(select.value) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            btn.disabled = false;
+
+            if (data.error) {
+                errorDiv.textContent = 'Erreur: ' + data.error;
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            displayRecommendations(data);
+        })
+        .catch(err => {
+            loading.classList.add('hidden');
+            btn.disabled = false;
+            errorDiv.textContent = 'Erreur réseau: ' + err.message;
+            errorDiv.classList.remove('hidden');
+        });
+    });
+
+    function displayRecommendations(data) {
+        document.getElementById('explanation-text').textContent = data.explication_globale || 'Recommandations personnalisées';
+
+        let culturesHtml = '';
+        const cultures = [];
+
+        if (data.culture1) {
+            culturesHtml += buildCultureCard(1, data.culture1);
+            cultures.push(data.culture1);
+        }
+        if (data.culture2) {
+            culturesHtml += buildCultureCard(2, data.culture2);
+            cultures.push(data.culture2);
+        }
+
+        document.getElementById('cultures-list').innerHTML = culturesHtml;
+        container.classList.remove('hidden');
+
+        // Save button handler
+        document.getElementById('save-cultures-btn').addEventListener('click', function() {
+            saveCultures(cultures);
+        }, { once: true });
+    }
+
+    function buildCultureCard(num, culture) {
+        return `
+            <div class="culture-card">
+                <h4><i class="bi bi-leaf"></i> Culture ${num}: ${culture.nom}</h4>
+                <div>
+                    <span class="culture-badge">${culture.type}</span>
+                </div>
+                <div class="culture-metric">
+                    <strong>📊 Surface recommandée:</strong> ${culture.surface} ha
+                </div>
+                <div class="culture-metric">
+                    <strong>🌾 Rendement estimé:</strong> ${culture.rendement_estime} t/ha
+                </div>
+                <div class="culture-metric">
+                    <strong>💡 Justification:</strong> ${culture.justification}
+                </div>
+            </div>
+        `;
+    }
+
+    function saveCultures(cultures) {
+        const loading = document.getElementById('loading');
+        loading.classList.remove('hidden');
+
+        fetch('/farmer/recommendations/api/cultures/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                parcelleId: parseInt(select.value),
+                cultures: cultures
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+
+            if (data.success) {
+                alert('✅ Cultures enregistrées avec succès!');
+                window.location.href = '{{ path("farmer_culture_index") }}';
+            } else {
+                alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(err => {
+            loading.classList.add('hidden');
+            alert('Erreur réseau: ' + err.message);
+        });
+    }
+});
+</script>
+{% endblock %}

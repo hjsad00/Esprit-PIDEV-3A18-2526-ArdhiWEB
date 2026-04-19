@@ -1,0 +1,302 @@
+/**
+ * ROI Module - Premium Styling
+ * Styles avancés pour le module d'analyse financière
+ */
+
+:root {
+    --primary-green: #116530;
+    --secondary-green: #1e8341;
+    --light-green: #e8f5e9;
+    --light-bg: #f8faf7;
+}
+
+/* ============= PREMIUM CARDS ============= */
+.premium-card {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============= FORM STYLING ============= */
+.form-section {
+    border-top: 2px solid var(--light-green);
+    padding-top: 15px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-green) !important;
+    box-shadow: 0 0 0 6px rgba(17, 101, 48, 0.08) !important;
+}
+
+/* ============= BUTTON ANIMATIONS ============= */
+.btn-calculate {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-calculate::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-calculate:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* ============= RESULTS STYLING ============= */
+.roi-score-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.roi-score-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.1), transparent);
+    pointer-events: none;
+}
+
+.roi-score-box .score-num {
+    animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ============= METRIC CARDS ============= */
+.result-metric {
+    transition: all 0.3s ease;
+}
+
+.result-metric:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(17, 101, 48, 0.08);
+    border-left-color: var(--secondary-green);
+}
+
+.result-value {
+    font-feature-settings: 'tnum';
+}
+
+/* ============= RISK BAND ============= */
+.risk-band {
+    animation: slideIn 0.4s ease 0.2s both;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.risk-band.faible {
+    border-left: 4px solid #116530;
+}
+
+.risk-band.modere {
+    border-left: 4px solid #f59e0b;
+}
+
+.risk-band.eleve {
+    border-left: 4px solid #e53e3e;
+}
+
+/* ============= AI ANALYSIS BLOCK ============= */
+.ai-analysis-block {
+    animation: slideUp 0.5s ease 0.3s both;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ai-analysis-title {
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.ai-analysis-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(to right, var(--primary-green), transparent);
+}
+
+.ai-list-card {
+    transition: all 0.3s ease;
+}
+
+.ai-list-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(17, 101, 48, 0.12);
+}
+
+.ai-list-card ul li {
+    position: relative;
+    padding-left: 20px;
+}
+
+.ai-list-card ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+    color: var(--primary-green);
+}
+
+.ai-list-card.faibles ul li::before {
+    content: '✗';
+    color: #e53e3e;
+}
+
+.ai-list-card.actions ul li::before {
+    content: '→';
+    color: #f59e0b;
+}
+
+/* ============= ALTERNATIVE BLOCK ============= */
+.alternatives-block {
+    animation: slideUp 0.5s ease 0.4s both;
+}
+
+.alt-badge {
+    animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.alt-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(230, 81, 0, 0.2);
+}
+
+/* ============= LOADER ============= */
+#roi-loader .spinner-border {
+    border-width: 4px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============= RESPONSIVE ============= */
+@media (max-width: 992px) {
+    .ai-lists-block {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .ai-list-card.actions {
+        grid-column: auto !important;
+    }
+    
+    .metrics-row {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ============= PRINT STYLES ============= */
+@media print {
+    .btn-calculate,
+    .btn-premium-back,
+    .form-control,
+    .form-select,
+    .form-label {
+        display: none;
+    }
+    
+    .premium-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+}
+
+/* ============= ACCESSIBILITY ============= */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ============= DARK MODE SUPPORT ============= */
+@media (prefers-color-scheme: dark) {
+    .premium-card {
+        background: #1a1a1a;
+        border-color: #333;
+    }
+    
+    .form-control,
+    .form-select {
+        background: #2a2a2a;
+        color: #fff;
+        border-color: #444;
+    }
+    
+    .result-metric {
+        background: #2a2a2a;
+    }
+    
+    .result-value,
+    .result-label {
+        color: #f0f0f0;
+    }
+}

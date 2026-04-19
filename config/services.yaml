@@ -46,6 +46,28 @@ services:
             $projectDir: '%kernel.project_dir%'
             $calendarId: '%env(GOOGLE_CALENDAR_ID)%'
 
+    # Parcelles Cultures - External API Services
+    App\Service\ExternalAPI\GroqService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+
+    App\Service\ExternalAPI\GeminiService:
+        arguments:
+            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+
+    App\Service\ExternalAPI\WeatherService: ~
+
+    # New Culture AI Services
+    App\Service\WeatherService:
+        arguments:
+            $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+
+    App\Service\GeminiService:
+        arguments:
+            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+
+    App\Service\CultureAdvisorService: ~
+
     App\Service\Evenement\UnsplashImageService:
         arguments:
             $httpClient:  '@http_client'

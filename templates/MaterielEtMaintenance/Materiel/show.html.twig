@@ -179,6 +179,28 @@
     </div>
 </div>
 
+{# Affichage local des notifications serveur (succès/erreur/info) #}
+{% for message in app.flashes('success') %}
+  <div class="alert alert-success shadow-sm border-0 border-start border-4 border-success mt-3 mb-0 py-2">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('danger') %}
+  <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mt-3 mb-0 py-2">
+    <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('warning') %}
+  <div class="alert alert-warning shadow-sm border-0 border-start border-4 border-warning mt-3 mb-0 py-2">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+{% for message in app.flashes('info') %}
+  <div class="alert alert-info shadow-sm border-0 border-start border-4 border-info mt-3 mb-0 py-2">
+    <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+  </div>
+{% endfor %}
+
 <div class="py-4">
   <div class="row g-4">
     <div class="col-lg-5">
@@ -251,8 +273,8 @@
           <span class="fs-4 opacity-75">heures cumulées</span>
         </div>
         
-        {% if materiel.statut not in ['reforme', 'en_vente'] %}
-        <form action="{{ path('app_materiel_update_hours', {id: materiel.id}) }}" method="POST" class="d-flex gap-2">
+        {% if materiel.statut not in ['reforme', 'en_vente', 'vendu'] %}
+        <form action="{{ path('app_materiel_update_hours', {id: materiel.id}) }}" method="POST" class="d-flex gap-2" novalidate>
           <input type="number" name="heures" value="{{ materiel.heuresUtilisation }}" min="{{ materiel.heuresUtilisation }}" class="form-control bg-white border-0" style="max-width: 150px;" placeholder="Nouvelles heures...">
           <button type="submit" class="btn btn-success rounded-pill fw-bold px-4">Enregistrer les heures</button>
         </form>
@@ -260,7 +282,7 @@
         {% else %}
         <div class="alert alert-light bg-opacity-10 border-0 py-2 d-inline-flex align-items-center mb-0" style="background: rgba(255,255,255,0.15); color: #fff; border-radius: 10px;">
             <i class="bi bi-pause-circle-fill me-2 fs-5"></i>
-            <span class="small fw-bold">Compteur gelé : Le matériel est {{ materiel.statut == 'en_vente' ? 'en vente' : 'réformé' }}.</span>
+          <span class="small fw-bold">Compteur gelé : Le matériel est {% if materiel.statut == 'en_vente' %}en vente{% elseif materiel.statut == 'vendu' %}vendu{% else %}réformé{% endif %}.</span>
         </div>
         {% endif %}
 
@@ -318,20 +340,16 @@
                 </div>
             {% elseif workflow_can(materiel, 'mettre_en_maintenance') %}
                 <div class="col-12">
-                    {# Affichage local des erreurs de validation pour ce formulaire #}
-                    {% for message in app.flashes('danger') %}
-                        <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mb-3 py-2">
-                            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
-                        </div>
-                    {% endfor %}
-
-                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm">
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'mettre_en_maintenance'}) }}" method="POST" class="bg-white p-3 rounded border shadow-sm" novalidate>
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <label class="form-label fw-bold text-danger"><i class="bi bi-megaphone me-1"></i> Signaler une panne / Urgence</label>
                         <textarea name="description" class="form-control mb-3" placeholder="Décrivez le problème ici pour l'administrateur..." rows="2"></textarea>
                         <button type="submit" class="btn btn-danger w-100 shadow-sm fw-bold">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i> METTRE EN MAINTENANCE (URGENT)
                         </button>
+                        <p class="small text-danger fw-semibold mt-2 mb-0">
+                          Minimum 10 caracteres requis pour la description.
+                        </p>
                     </form>
                 </div>
             {% endif %}
@@ -339,7 +357,7 @@
 
             {% if workflow_can(materiel, 'reformer') %}
                 <div class="col-md-6">
-                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'reformer'}) }}" method="POST" onsubmit="return confirm('Attention ! Cette action est irréversible. Réformer cette machine ?');">
+                    <form action="{{ path('app_materiel_transition', {id: materiel.id, transition: 'reformer'}) }}" method="POST" onsubmit="return confirm('Attention ! Cette action est irréversible. Réformer cette machine ?');" novalidate>
                         <input type="hidden" name="_token" value="{{ csrf_token('workflow_' ~ materiel.id) }}">
                         <button type="submit" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-trash me-2"></i> Réformer
@@ -543,7 +561,7 @@ document.getElementById('btnGenerateAI').addEventListener('click', function() {
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <form action="{{ path('app_materiel_mettre_en_vente', {id: materiel.id}) }}" method="POST">
+            <form action="{{ path('app_materiel_mettre_en_vente', {id: materiel.id}) }}" method="POST" novalidate>
                 <input type="hidden" name="_token" value="{{ csrf_token('vente_' ~ materiel.id) }}">
                 <div class="modal-body p-4">
                     <div class="row g-4">

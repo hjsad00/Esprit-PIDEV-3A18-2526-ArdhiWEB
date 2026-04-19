@@ -16,11 +16,11 @@ class PreventionPlan
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: FarmHealthReport::class)]
-    #[ORM\JoinColumn(name: 'report_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'report_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?FarmHealthReport $report = null;
 
     #[ORM\ManyToOne(targetEntity: Vulnerability::class)]
-    #[ORM\JoinColumn(name: 'vulnerability_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'vulnerability_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Vulnerability $vulnerability = null;
 
     #[ORM\Column(length: 255)]

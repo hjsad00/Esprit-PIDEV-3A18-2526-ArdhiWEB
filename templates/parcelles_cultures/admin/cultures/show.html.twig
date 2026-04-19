@@ -1,102 +1,99 @@
-{% extends 'base.html.twig' %}
+{% extends 'parcelles_cultures/admin/admin_base.html.twig' %}
 
 {% block title %}Culture #{{ culture.id }} - Détails{% endblock %}
+{% block page_title %}Culture #{{ culture.id }} - Détails{% endblock %}
 
 {% block body %}
-{% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
+<div class="admin-table-card">
+  <div class="admin-table-header">
+    <h2><i class="bi bi-flower1 me-2"></i>{{ culture.nomCulture }}</h2>
+    <a href="{{ path('admin_culture_index') }}" class="btn btn-admin-outline">
+      <i class="bi bi-arrow-left me-1"></i>Retour
+    </a>
+  </div>
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-2">
-            {% include 'parcelles_cultures/components/sidebar.html.twig' %}
-        </div>
-        <div class="col-md-10">
-            <div class="mb-4">
-                <a href="{{ path('admin_culture_index') }}" class="btn btn-secondary mb-3">
-                    <i class="fas fa-arrow-left"></i> Retour
-                </a>
-            </div>
-
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h3 class="card-title mb-0"><i class="fas fa-leaf"></i> Détails de la Culture: {{ culture.nomCulture }}</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h5>Informations Générales</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Nom:</th>
-                                    <td>{{ culture.nomCulture }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Type:</th>
-                                    <td>{{ culture.typeCulture }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Saison:</th>
-                                    <td>{{ culture.saison }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Parcelle:</th>
-                                    <td>
-                                        <a href="{{ path('admin_parcelle_show', {id: culture.parcelle.id}) }}">#{{ culture.parcelle.id }}</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Agriculteur:</th>
-                                    <td>{{ culture.parcelle.agriculteur.email }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Production & Rendement</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Surface utilisée:</th>
-                                    <td>{{ culture.surfaceUtilisee }} ha</td>
-                                </tr>
-                                <tr>
-                                    <th>Rendement estimé:</th>
-                                    <td>{{ culture.rendementEstime }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Production estimée:</th>
-                                    <td class="fw-bold text-success">{{ culture.productionEstimee|round(2) }}</td>
-                                </tr>
-                                <tr>
-                                    <th>État:</th>
-                                    <td><span class="badge bg-info">{{ culture.etatCulture }}</span></td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Dates</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Plantation:</th>
-                                    <td>{{ culture.datePlantation|date('d/m/Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Récolte prévue:</th>
-                                    <td>{{ culture.dateRecoltePrevue|date('d/m/Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Créé le:</th>
-                                    <td>{{ culture.createdAt|date('d/m/Y H:i') }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+        <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Informations Générales</h5>
+        <table class="table table-sm table-borderless">
+          <tr>
+            <th style="width: 35%;">Nom:</th>
+            <td>{{ culture.nomCulture }}</td>
+          </tr>
+          <tr>
+            <th>Type:</th>
+            <td><span class="badge badge-admin" style="background: #e8f5e9; color: #116530;">{{ culture.typeCulture }}</span></td>
+          </tr>
+          <tr>
+            <th>Saison:</th>
+            <td>{{ culture.saison }}</td>
+          </tr>
+          <tr>
+            <th>Parcelle:</th>
+            <td>
+              <a href="{{ path('admin_parcelle_show', {id: culture.parcelle.id}) }}" class="text-decoration-none">P-{{ culture.parcelle.id }}</a>
+            </td>
+          </tr>
+          <tr>
+            <th>Agriculteur:</th>
+            <td>{{ culture.parcelle.agriculteur.email }}</td>
+          </tr>
+        </table>
+      </div>
     </div>
+
+    <div class="col-md-6">
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+        <h5 class="mb-3"><i class="bi bi-bar-chart me-2"></i>Production & Rendement</h5>
+        <table class="table table-sm table-borderless">
+          <tr>
+            <th style="width: 35%;">Surface utilisée:</th>
+            <td>{{ culture.surfaceUtilisee }} ha</td>
+          </tr>
+          <tr>
+            <th>Rendement estimé:</th>
+            <td>{{ culture.rendementEstime }} kg/ha</td>
+          </tr>
+          <tr>
+            <th>Production estimée:</th>
+            <td class="fw-bold" style="color: #116530;">{{ culture.productionEstimee|round(0)|number_format(0, '.', ' ') }} kg</td>
+          </tr>
+          <tr>
+            <th>État:</th>
+            <td>
+              {% if culture.etatCulture == 'active' or culture.etatCulture == 'actif' %}
+                <span class="badge bg-success badge-admin">Actif</span>
+              {% else %}
+                <span class="badge bg-info badge-admin">{{ culture.etatCulture }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+    <h5 class="mb-3"><i class="bi bi-calendar me-2"></i>Dates</h5>
+    <table class="table table-sm table-borderless">
+      <tr>
+        <th style="width: 25%;">Plantation:</th>
+        <td>{{ culture.datePlantation|date('d/m/Y') }}</td>
+      </tr>
+      <tr>
+        <th>Récolte prévue:</th>
+        <td>{{ culture.dateRecoltePrevue|date('d/m/Y') }}</td>
+      </tr>
+      <tr>
+        <th>Créé le:</th>
+        <td>{{ culture.createdAt|date('d/m/Y H:i') }}</td>
+      </tr>
+      <tr>
+        <th>Modifié le:</th>
+        <td>{{ culture.updatedAt|date('d/m/Y H:i') }}</td>
+      </tr>
+    </table>
+  </div>
 </div>
 {% endblock %}

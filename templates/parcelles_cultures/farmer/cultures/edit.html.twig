@@ -1,123 +1,611 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier Culture: {{ culture.typeCulture|capitalize }}{% endblock %}
+{% block title %}Modifier Culture: {{ culture.typeCulture|capitalize }} - Ardhi{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .page-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+        .page-title { font-family: 'Marcellus', serif; color: #116530; font-size: 2.5rem; margin: 0; }
+        .premium-card { background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; margin-bottom: 25px; transition: all 0.3s; }
+        .premium-card:hover { box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
+        .card-label { font-size: 12px; font-weight: 700; color: #116530; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .form-control, .form-select { border-radius: 12px; padding: 12px 15px; border: 1px solid #eee; transition: all 0.3s; font-size: 0.95rem; }
+        .form-control:focus, .form-select:focus { border-color: #116530; box-shadow: 0 0 0 4px rgba(17, 101, 48, 0.05); outline: none; }
+        .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; font-size: 0.9rem; }
+        .btn-save { background: #116530; color: white; border-radius: 50px; padding: 12px 35px; font-weight: 700; border: none; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(17, 101, 48, 0.2); display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+        .btn-save:hover { background: #1e8341; color: white; transform: translateY(-2px); box-shadow: 0 12px 25px rgba(17, 101, 48, 0.3); }
+        .btn-cancel-link { color: #636e72; background: #f0f0f0; border-radius: 50px; padding: 12px 25px; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .btn-cancel-link:hover { background: #dfe6e9; color: #2d3436; }
+        .btn-premium-back { color: #116530; background: #e8f5e9; border-radius: 50px; padding: 10px 20px; font-weight: 600; text-decoration: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .btn-premium-back:hover { background: #116530; color: white; }
+        
+        /* IA Recommendation Button */
+        .btn-ia-recommend { background: linear-gradient(135deg, #116530, #1e8341); color: white; border-radius: 50px; padding: 10px 20px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; width: 100%; }
+        .btn-ia-recommend:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(17, 101, 48, 0.3); color: white; }
+        
+        /* Blocks AI classes */
+        .card-header-custom { border-radius: 12px 12px 0 0 !important; font-weight: bold; }
+    </style>
+{% endblock %}
 
 {% block body %}
 {% include 'parcelles_cultures/components/navigation_menu.html.twig' %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-5 px-lg-5">
     <div class="row">
-        <div class="col-md-2">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-xl-2">
             {% include 'parcelles_cultures/components/sidebar.html.twig' %}
         </div>
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header bg-warning text-white">
-                    <h3 class="card-title mb-0"><i class="fas fa-edit"></i> Modifier: {{ culture.typeCulture|capitalize }}</h3>
-                </div>
-                <div class="card-body">
-                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                {{ form_label(form.type_culture) }}
-                                {{ form_widget(form.type_culture, {'attr': {'class': 'form-control'}}) }}
-                                {% if form.type_culture.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.type_culture) }}
-                                    </div>
-                                {% endif %}
-                            </div>
+        <!-- Contenu Principal -->
+        <div class="col-md-9 col-xl-10">
+            <div data-aos="fade-right">
+                <a href="{{ path('farmer_culture_index') }}" class="btn-premium-back">
+                    <i class="bi bi-arrow-left"></i> Retour aux cultures
+                </a>
+            </div>
+
+            <div class="page-header" data-aos="fade-down">
+                <h1 class="page-title">✏️ Modifier : {{ culture.typeCulture|capitalize }}</h1>
+                <p class="text-muted lead mt-2">Mettez à jour les informations de votre culture en profitant des prévisions agricoles de l'IA.</p>
+            </div>
+
+            <div class="row">
+                <!-- COLONNE GAUCHE: FORMULAIRE -->
+                <div class="col-md-6">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'id': 'form-culture', 'data-aos': 'fade-up'}}) }}
+                    
+                    <div class="premium-card">
+                        <span class="card-label"><i class="bi bi-ui-checks"></i> Modification de la Culture</span>
+                        
+                        <!-- PARCELLE DROPDOWN -->
+                        <div class="mb-4">
+                            {{ form_label(form.parcelle, 'Sélectionnez une Parcelle', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.parcelle, {'attr': {'class': 'form-select', 'id': 'form-parcelle'}}) }}
+                            {% if form.parcelle.vars.errors|length > 0 %}
+                                <div class="invalid-feedback d-block">{{ form_errors(form.parcelle) }}</div>
+                            {% endif %}
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.saison) }}
-                                {{ form_widget(form.saison, {'attr': {'class': 'form-control'}}) }}
+                        <!-- BOUTON IA MANUEL -->
+                        <div class="mb-4">
+                            <button type="button" class="btn-ia-recommend" id="btn-trigger-ai" onclick="manualTriggerAI()">
+                                <i class="bi bi-magic"></i> Analyser manuellement avec l'IA
+                            </button>
+                        </div>
+
+                        <!-- TYPE CULTURE -->
+                        <div class="mb-4">
+                            {{ form_label(form.type_culture, 'Type de Culture', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.type_culture, {'attr': {'class': 'form-control', 'id': 'form-culture-type', 'placeholder': 'Ex: Tomate, Olivier...'}}) }}
+                            {% if form.type_culture.vars.errors|length > 0 %}
+                                <div class="invalid-feedback d-block">{{ form_errors(form.type_culture) }}</div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2"><i class="bi bi-info-circle"></i> L'assistant IA vous suggérera les meilleures cultures</small>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <!-- SAISON -->
+                            <div class="col-md-6">
+                                {{ form_label(form.saison, 'Saison', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.saison, {'attr': {'class': 'form-select', 'id': 'form-season'}}) }}
                                 {% if form.saison.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.saison) }}
-                                    </div>
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.saison) }}</div>
                                 {% endif %}
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.surface_utilisee) }}
-                                {{ form_widget(form.surface_utilisee, {'attr': {'class': 'form-control'}}) }}
+                            <!-- SURFACE -->
+                            <div class="col-md-6">
+                                {{ form_label(form.surface_utilisee, 'Surface (ha)', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.surface_utilisee, {'attr': {'class': 'form-control', 'id': 'form-surface', 'type': 'number', 'step': '0.1', 'placeholder': 'Ex: 5.5'}}) }}
                                 {% if form.surface_utilisee.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.surface_utilisee) }}
-                                    </div>
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.surface_utilisee) }}</div>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.date_plantation) }}
+                        <div class="row g-3 mb-4">
+                            <!-- DATE PLANTATION -->
+                            <div class="col-md-6">
+                                {{ form_label(form.date_plantation, 'Date de Plantation', {'label_attr': {'class': 'form-label'}}) }}
                                 {{ form_widget(form.date_plantation, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
                                 {% if form.date_plantation.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.date_plantation) }}
-                                    </div>
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.date_plantation) }}</div>
                                 {% endif %}
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.date_recolte_prevue) }}
+                            <!-- DATE RÉCOLTE -->
+                            <div class="col-md-6">
+                                {{ form_label(form.date_recolte_prevue, 'Date de Récolte Prévue', {'label_attr': {'class': 'form-label'}}) }}
                                 {{ form_widget(form.date_recolte_prevue, {'attr': {'class': 'form-control', 'type': 'date'}}) }}
                                 {% if form.date_recolte_prevue.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.date_recolte_prevue) }}
-                                    </div>
+                                    <div class="invalid-feedback d-block">{{ form_errors(form.date_recolte_prevue) }}</div>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.rendement_estime) }}
-                                {{ form_widget(form.rendement_estime, {'attr': {'class': 'form-control'}}) }}
-                                {% if form.rendement_estime.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.rendement_estime) }}
-                                    </div>
-                                {% endif %}
-                            </div>
+                        <!-- RENDEMENT -->
+                        <div class="mb-4">
+                            {{ form_label(form.rendement_estime, 'Rendement Estimé (kg/ha)', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.rendement_estime, {'attr': {'class': 'form-control', 'type': 'number', 'placeholder': 'Ex: 4500'}}) }}
+                            {% if form.rendement_estime.vars.errors|length > 0 %}
+                                <div class="invalid-feedback d-block">{{ form_errors(form.rendement_estime) }}</div>
+                            {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form_label(form.parcelle) }}
-                                {{ form_widget(form.parcelle) }}
-                                {% if form.parcelle.vars.errors|length > 0 %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form_errors(form.parcelle) }}
-                                    </div>
-                                {% endif %}
-                            </div>
+
+                        <!-- BUTTONS -->
+                        <div class="d-flex justify-content-end align-items-center gap-3 mt-4">
+                            <a href="{{ path('farmer_culture_show', {id: culture.id}) }}" class="btn-cancel-link">Annuler</a>
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-save-fill"></i> Mettre à jour
+                            </button>
                         </div>
                     </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ path('farmer_culture_show', {id: culture.id}) }}" class="btn btn-secondary">Annuler</a>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-save"></i> Mettre à jour
-                        </button>
-                    </div>
-
                     {{ form_end(form) }}
+                </div>
+
+                <!-- COLONNE DROITE: ASSISTANT IA -->
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <!-- BLOC MESSAGE INTRO -->
+                    <div id="ai-intro" class="premium-card" style="border-left: 5px solid #116530;">
+                        <span class="card-label" style="color: #116530;"><i class="bi bi-robot"></i> Assistant IA Intelligent</span>
+                        <div class="text-center mt-4">
+                            <p class="text-muted">
+                                <strong>Sélectionnez une parcelle</strong> pour obtenir:
+                            </p>
+                            <ul class="list-unstyled text-start d-inline-block mt-2">
+                                <li><i class="bi bi-cloud-sun text-warning"></i> Météo actuelle en temps réel</li>
+                                <li><i class="bi bi-flower1 text-success"></i> Culture recommandée par IA</li>
+                                <li><i class="bi bi-lightbulb text-info"></i> Alternatives adaptées</li>
+                                <li><i class="bi bi-exclamation-triangle text-danger"></i> Alertes et risques</li>
+                                <li><i class="bi bi-pie-chart text-secondary"></i> Disponibilité surface</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- BLOC CHARGEMENT -->
+                    <div id="ai-loading" class="premium-card text-center" style="display: none; border-left: 5px solid #ffc107;">
+                        <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <h5 class="mb-1"><strong>⏳ Analyse en cours...</strong></h5>
+                        <p class="text-muted mb-0">Google Gemini analyse la météo et le sol...</p>
+                    </div>
+
+                    <!-- BLOC MÉTÉO -->
+                    <div id="ai-weather" class="card mb-4 border-0 shadow-sm" style="display: none; border-radius: 16px; overflow: hidden;">
+                        <div class="card-header bg-info text-white py-3 card-header-custom d-flex align-items-center">
+                            <i class="bi bi-cloud-haze2-fill fs-5 me-2"></i> <h5 class="mb-0">Météo Actuelle</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-6 border-end">
+                                    <h2 id="weather-temp" class="text-dark mb-0 fw-bold">--°C</h2>
+                                    <p class="text-muted small text-uppercase fw-bold mb-0 mt-1">Température</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h2 id="weather-humidity" class="text-dark mb-0 fw-bold">--%</h2>
+                                    <p class="text-muted small text-uppercase fw-bold mb-0 mt-1">Humidité</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="mb-2">
+                                <strong>🌧️ Pluie:</strong> <span id="weather-rain">-</span> mm
+                            </p>
+                            <p class="mb-2">
+                                <strong>💨 Vent:</strong> <span id="weather-wind">-</span> km/h
+                            </p>
+                            <p class="mb-0">
+                                <strong>⛅ Conditions:</strong> <span id="weather-description">-</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- BLOC SURFACE OCCUPATION -->
+                    <div id="ai-occupation" class="card border-secondary mb-4" style="display: none;">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0">📊 Occupation Parcelle</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress mb-2" style="height: 30px;">
+                                <div id="occupation-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <p class="mb-1">
+                                <strong id="occupation-percent">0%</strong> utilisée - <strong id="occupation-remaining">0</strong> ha restant(s)
+                            </p>
+                            <small class="text-muted" id="occupation-status">-</small>
+                        </div>
+                    </div>
+
+                    <!-- BLOC RECOMMANDATION PRINCIPALE -->
+                    <div id="ai-recommendation" class="card border-success mb-4" style="display: none;">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">🔥 Culture Recommandée par IA</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3 id="rec-culture" class="text-success">-</h3>
+                            <p id="rec-justification" class="text-muted">-</p>
+                            <button type="button" class="btn btn-success btn-sm" id="btn-use-recommendation" onclick="useRecommendation()">
+                                ✨ Utiliser cette recommandation
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BLOC ALTERNATIVES -->
+                    <div id="ai-alternatives" class="card border-warning mb-4" style="display: none;">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">💡 Alternatives Recommandées</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul id="alternatives-list" class="list-group">
+                                <li class="list-group-item">-</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- BLOC ALERTES -->
+                    <div id="ai-alerts" class="card border-danger mb-4" style="display: none;">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">⚠️ Avertissements</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul id="alerts-list" class="list-group">
+                                <li class="list-group-item bg-light">-</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- BLOC CONSEILS -->
+                    <div id="ai-advices" class="card border-info mb-4" style="display: none;">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">💡 Conseils Pratiques</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul id="advices-list" class="list-group">
+                                <li class="list-group-item bg-light">-</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- BLOC ÉVALUATION CULTURE SAISIE -->
+                    <div id="ai-assessment" class="card mb-4" style="display: none;">
+                        <div class="card-header" id="assessment-header">
+                            <h5 class="card-title mb-0">✅ Évaluation Culture Saisie</h5>
+                        </div>
+                        <div class="card-body">
+                            <p id="assessment-text">-</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- CSS PERSONNALISÉ -->
+<style>
+    .card {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .bg-gradient {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    #occupation-bar.bg-success { background-color: #28a745 !important; }
+    #occupation-bar.bg-warning { background-color: #ffc107 !important; }
+    #occupation-bar.bg-danger { background-color: #dc3545 !important; }
+</style>
+
+<!-- JAVASCRIPT INTERACTIF -->
+<script>
+    const apiKey = '{{ openweather_api_key|default("") }}';
+    let currentParcelleId = null;
+
+    function initAI() {
+        console.log('✅ Page chargée - Initialisation AI');
+
+        // Chercher le select parcelle par NAME au lieu d'ID
+        let selectParcelle = document.querySelector('select[name$="[parcelle]"]');
+        
+        if (!selectParcelle) {
+            selectParcelle = document.getElementById('form-parcelle') || document.getElementById('form_parcelle');
+        }
+        
+        console.log('📍 Élément select trouvé:', selectParcelle);
+        
+        if (selectParcelle) {
+            const options = selectParcelle.querySelectorAll('option');
+            const countSpan = document.getElementById('parcelle-count');
+            if (countSpan && options.length > 0) {
+                countSpan.textContent = (options.length - 1) + ' parcelle(s)';
+            }
+            
+            // Pour s'assurer qu'on n'ajoute pas le listener plusieurs fois avec Turbo
+            if (!selectParcelle.hasAttribute('data-ai-listener')) {
+                selectParcelle.addEventListener('change', function() {
+                    currentParcelleId = this.value;
+                    console.log('🌾 EVENT: Parcelle changée à:', currentParcelleId);
+                    if (currentParcelleId) {
+                        analyzeParcelleAI();
+                    } else {
+                        showIntro();
+                    }
+                });
+                selectParcelle.setAttribute('data-ai-listener', 'true');
+                console.log('✅ Listener "change" attaché au dropdown');
+            }
+            
+            // Si une parcelle est déjà sélectionnée (ex: refresh ou retour erreur form)
+            if (selectParcelle.value) {
+                currentParcelleId = selectParcelle.value;
+                analyzeParcelleAI();
+            } else {
+                showIntro();
+            }
+        }
+
+        // Détecter changement saison
+        const seasonSelect = document.getElementById('form-season') || document.getElementById('form_saison') || document.querySelector('select[name$="[saison]"]');
+        if (seasonSelect && !seasonSelect.hasAttribute('data-ai-listener')) {
+            seasonSelect.addEventListener('change', function() {
+                console.log('📅 EVENT: Saison changée à:', this.value);
+                if (currentParcelleId) {
+                    analyzeParcelleAI();
+                }
+            });
+            seasonSelect.setAttribute('data-ai-listener', 'true');
+        }
+
+        // Détecter changement culture saisie
+        const cultureInput = document.getElementById('form-culture-type') || document.getElementById('form_type_culture') || document.querySelector('input[name$="[type_culture]"]');
+        if (cultureInput && !cultureInput.hasAttribute('data-ai-listener')) {
+            cultureInput.addEventListener('change', function() {
+                console.log('🌱 EVENT: Culture changée à:', this.value);
+                if (currentParcelleId) {
+                    analyzeParcelleAI();
+                }
+            });
+            cultureInput.setAttribute('data-ai-listener', 'true');
+        }
+    }
+
+    // Initialisation pour chargement normal ET Turbo/Hotwire
+    document.addEventListener('DOMContentLoaded', initAI);
+    document.addEventListener('turbo:load', initAI);
+    
+    // Exécution immédiate au cas où le script est chargé après DOMContentLoaded
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        initAI();
+    }
+
+    // Déclencher manuellement l'IA via le bouton
+    function manualTriggerAI() {
+        console.log('🔘 Bouton IA cliqué!');
+        
+        let selectParcelle = document.querySelector('select[name$="[parcelle]"]') 
+                          || document.getElementById('form-parcelle') 
+                          || document.getElementById('form_parcelle')
+                          || document.querySelector('[name*="parcelle"]');
+                          
+        if (!selectParcelle) {
+            alert("Erreur critique: Aucun champ 'Parcelle' trouvé dans le DOM.");
+            return;
+        }
+
+        currentParcelleId = selectParcelle.value;
+        
+        if (!currentParcelleId || currentParcelleId === "") {
+            alert("⚠️ La valeur de la parcelle est vide! Assurez-vous d'avoir bien fait le choix.");
+            return;
+        }
+        
+        analyzeParcelleAI();
+    }
+
+    // Analyser parcelle avec IA
+    async function analyzeParcelleAI() {
+        const parcelleId = currentParcelleId;
+        
+        // Sécuriser la lecture de la saison
+        const elemSeason = document.getElementById('form-season') || document.querySelector('[name$="[saison]"]');
+        const season = elemSeason ? elemSeason.value : 'printemps';
+        
+        // Sécuriser la lecture de la culture
+        const elemCulture = document.getElementById('form-culture-type') || document.querySelector('[name$="[type_culture]"]');
+        const cultureSaisie = elemCulture ? elemCulture.value : null;
+
+        console.log('🚀 AJAX Lancé:', { parcelleId, season, cultureSaisie });
+
+        // Afficher loader
+        const loader = document.getElementById('ai-loading');
+        if (loader) loader.style.display = 'block';
+        hideAllAIBlocs();
+
+        try {
+            const payload = {
+                parcelle_id: parseInt(parcelleId),
+                season: season,
+                culture: cultureSaisie
+            };
+
+            console.log('📤 Envoi au serveur:', payload);
+
+            const response = await fetch('/api/culture/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            console.log('📥 Réponse reçue:', response.status, response.statusText);
+
+            const data = await response.json();
+
+            console.log('📦 Données JSON:', data);
+
+            if (!response.ok || !data.success) {
+                console.error('❌ Erreur API:', data.error);
+                if (loader) loader.style.display = 'none';
+                alert('Erreur IA: ' + (data.error || 'Erreur inconnue'));
+                return;
+            }
+
+            // Afficher résultats
+            console.log('✅ Succès! Affichage des résultats...');
+            displayWeatherInfo(data.weather);
+            displayOccupationInfo(data.parcelle);
+            displayRecommendation(data.recommendation);
+
+            // Masquer loader
+            if (loader) loader.style.display = 'none';
+
+        } catch (error) {
+            console.error('❌ Erreur fetch:', error);
+            const loader = document.getElementById('ai-loading');
+            if (loader) loader.style.display = 'none';
+            alert('Erreur réseau: ' + error.message);
+        }
+    }
+
+    // Afficher météo
+    function displayWeatherInfo(weather) {
+        console.log('🌤️ displayWeatherInfo appelée:', weather);
+        try {
+            const card = document.getElementById('ai-weather');
+            if (!card) {
+                console.error('❌ Élément #ai-weather NOT FOUND!');
+                return;
+            }
+            card.style.display = 'block';
+            document.getElementById('weather-temp').textContent = Math.round(weather.temperature) + '°C';
+            document.getElementById('weather-humidity').textContent = weather.humidity + '%';
+            document.getElementById('weather-rain').textContent = weather.rain?.toFixed(1) || '0';
+            document.getElementById('weather-wind').textContent = Math.round(weather.wind_speed);
+            document.getElementById('weather-description').textContent = weather.description || '-';
+            console.log('✅ Météo affichée');
+        } catch (err) {
+            console.error('❌ Erreur displayWeatherInfo:', err);
+        }
+    }
+
+    // Afficher occupation
+    function displayOccupationInfo(parcelle) {
+        console.log('📊 displayOccupationInfo appelée:', parcelle);
+        try {
+            document.getElementById('ai-occupation').style.display = 'block';
+            const percent = parcelle.occupation_percent;
+            const bar = document.getElementById('occupation-bar');
+
+            bar.style.width = percent + '%';
+            if (percent < 70) {
+                bar.className = 'progress-bar bg-success';
+                document.getElementById('occupation-status').textContent = '✅ Parcelle bien disponible';
+            } else if (percent < 90) {
+                bar.className = 'progress-bar bg-warning';
+                document.getElementById('occupation-status').textContent = '⚠️ Parcelle presque pleine';
+            } else {
+                bar.className = 'progress-bar bg-danger';
+                document.getElementById('occupation-status').textContent = '❌ Parcelle saturée';
+            }
+
+            document.getElementById('occupation-percent').textContent = percent + '%';
+            document.getElementById('occupation-remaining').textContent = parcelle.remaining_surface.toFixed(1);
+            console.log('✅ Occupation affichée');
+        } catch (err) {
+            console.error('❌ Erreur displayOccupationInfo:', err);
+        }
+    }
+
+    // Afficher recommandation
+    function displayRecommendation(rec) {
+        console.log('🎯 displayRecommendation appelée:', rec);
+        try {
+            if (rec.principal) {
+                document.getElementById('ai-recommendation').style.display = 'block';
+                document.getElementById('rec-culture').textContent = '🔥 ' + rec.principal;
+                document.getElementById('rec-justification').textContent = rec.justification || '-';
+                console.log('✅ Recommandation affichée');
+            }
+
+            if (rec.alternatives && rec.alternatives.length > 0) {
+                document.getElementById('ai-alternatives').style.display = 'block';
+                const list = document.getElementById('alternatives-list');
+                list.innerHTML = rec.alternatives.map(alt => `<li class="list-group-item">• ${alt}</li>`).join('');
+                console.log('✅ Alternatives affichées');
+            }
+
+            if (rec.risks && rec.risks.length > 0) {
+                document.getElementById('ai-alerts').style.display = 'block';
+                const list = document.getElementById('alerts-list');
+                list.innerHTML = rec.risks.map(risk => `<li class="list-group-item">${risk}</li>`).join('');
+                console.log('✅ Alertes affichées');
+            }
+
+            if (rec.advices && rec.advices.length > 0) {
+                document.getElementById('ai-advices').style.display = 'block';
+                const list = document.getElementById('advices-list');
+                list.innerHTML = rec.advices.map(advice => `<li class="list-group-item">💡 ${advice}</li>`).join('');
+                console.log('✅ Conseils affichés');
+            }
+
+            if (rec.assessment) {
+                document.getElementById('ai-assessment').style.display = 'block';
+                const header = document.getElementById('assessment-header');
+                if (rec.assessment === 'OK') {
+                    header.className = 'card-header bg-success text-white';
+                    header.innerHTML = '<h5 class="card-title mb-0">✅ Culture Saisie Confirmée</h5>';
+                    document.getElementById('assessment-text').textContent = 'Votre choix est approprié pour cette saison et ces conditions.';
+                } else {
+                    header.className = 'card-header bg-warning text-dark';
+                    header.innerHTML = '<h5 class="card-title mb-0">⚠️ Culture Moins Adaptée</h5>';
+                    document.getElementById('assessment-text').textContent = 'Cette culture est moins optimale. Considérez les alternatives recommandées.';
+                }
+                console.log('✅ Évaluation affichée');
+            }
+        } catch (err) {
+            console.error('❌ Erreur displayRecommendation:', err);
+        }
+    }
+
+    // Utiliser recommandation
+    function useRecommendation() {
+        const recommendation = document.getElementById('rec-culture').textContent.replace('🔥 ', '');
+        document.getElementById('form-culture-type').value = recommendation;
+        
+        // Accepter recommandation en BD
+        fetch('/api/culture/accept-recommendation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                parcelle_id: currentParcelleId
+            })
+        });
+
+        alert('✨ Culture "' + recommendation + '" a été sélectionnée!');
+    }
+
+    // Masquer tous blocs IA
+    function hideAllAIBlocs() {
+        document.getElementById('ai-intro').style.display = 'none';
+        document.getElementById('ai-weather').style.display = 'none';
+        document.getElementById('ai-occupation').style.display = 'none';
+        document.getElementById('ai-recommendation').style.display = 'none';
+        document.getElementById('ai-alternatives').style.display = 'none';
+        document.getElementById('ai-alerts').style.display = 'none';
+        document.getElementById('ai-advices').style.display = 'none';
+        document.getElementById('ai-assessment').style.display = 'none';
+    }
+
+    // Afficher intro
+    function showIntro() {
+        hideAllAIBlocs();
+        document.getElementById('ai-intro').style.display = 'block';
+    }
+</script>
 {% endblock %}
