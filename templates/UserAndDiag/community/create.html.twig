@@ -32,9 +32,12 @@
             <div class="form-group">
                 <label>Image jointe (optionnel)</label>
                 <div class="file-zone" id="fileZone">
-                    <input type="file" name="image" accept="image/*" id="fileInput">
-                    <p>📷 Cliquez ou glissez une image ici</p>
-                    <img id="imgPreview" class="preview" style="display:none" alt="Preview">
+                    <input type="file" name="image" accept="image/*" id="fileInput" {% if prefill_image_url %}style="display:none;"{% endif %}>
+                    <p id="filePrompt" {% if prefill_image_url %}style="display:none;"{% endif %}>📷 Cliquez ou glissez une image ici</p>
+                    <img id="imgPreview" class="preview" {% if prefill_image_url %}src="{{ prefill_image_url }}" style="display:block;"{% else %}style="display:none;"{% endif %} alt="Preview">
+                    {% if prefill_image_url %}
+                        <input type="hidden" name="existing_image_url" value="{{ prefill_image_url }}">
+                    {% endif %}
                 </div>
             </div>
             <button type="submit" class="btn-publish">Publier la question</button>

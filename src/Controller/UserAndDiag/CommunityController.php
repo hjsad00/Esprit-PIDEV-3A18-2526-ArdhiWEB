@@ -68,6 +68,7 @@ class CommunityController extends AbstractController
         /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
         $keyword = $request->query->get('q', '');
+        $sort = $request->query->get('sort', 'trending');
 
         $posts = $keyword
             ? $postRepo->searchByKeyword($keyword)
@@ -85,28 +86,30 @@ class CommunityController extends AbstractController
             ];
         }
 
-        // Trending algorithm sort
-        usort($feedData, function ($a, $b) {
-            $pA = $a['post'];
-            $pB = $b['post'];
+        if ($sort === 'trending') {
+            // Trending algorithm sort
+            usort($feedData, function ($a, $b) {
+                $pA = $a['post'];
+                $pB = $b['post'];
 
-            // Score = (Likes * 10) + (CTR percentage) + (Dwell time in minutes)
-            $ctrA = $pA->getFeedImpressions() > 0 ? ($pA->getViews() / $pA->getFeedImpressions() * 100) : 0;
-            $scoreA = ($pA->getLikes() * 10) + $ctrA + ($pA->getTotalFeedDwellTime() / 60);
+                // Score = (Likes * 10) + (CTR percentage) + (Dwell time in minutes)
+                $ctrA = $pA->getFeedImpressions() > 0 ? ($pA->getViews() / $pA->getFeedImpressions() * 100) : 0;
+                $scoreA = ($pA->getLikes() * 10) + $ctrA + ($pA->getTotalFeedDwellTime() / 60);
 
-            $ctrB = $pB->getFeedImpressions() > 0 ? ($pB->getViews() / $pB->getFeedImpressions() * 100) : 0;
-            $scoreB = ($pB->getLikes() * 10) + $ctrB + ($pB->getTotalFeedDwellTime() / 60);
+                $ctrB = $pB->getFeedImpressions() > 0 ? ($pB->getViews() / $pB->getFeedImpressions() * 100) : 0;
+                $scoreB = ($pB->getLikes() * 10) + $ctrB + ($pB->getTotalFeedDwellTime() / 60);
 
-            // Also heavily weight recency so old posts decay
-            // Decay: -1 point per hour old
-            $hoursA = (time() - $pA->getCreatedAt()->getTimestamp()) / 3600;
-            $hoursB = (time() - $pB->getCreatedAt()->getTimestamp()) / 3600;
+                // Also heavily weight recency so old posts decay
+                // Decay: -1 point per hour old
+                $hoursA = (time() - $pA->getCreatedAt()->getTimestamp()) / 3600;
+                $hoursB = (time() - $pB->getCreatedAt()->getTimestamp()) / 3600;
 
-            $scoreA -= $hoursA;
-            $scoreB -= $hoursB;
+                $scoreA -= $hoursA;
+                $scoreB -= $hoursB;
 
-            return $scoreB <=> $scoreA;
-        });
+                return $scoreB <=> $scoreA;
+            });
+        }
 
         $latestMuteReason = null;
         if ($user && $user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
@@ -124,6 +127,7 @@ class CommunityController extends AbstractController
             'keyword' => $keyword,
             'isModerator' => $this->isGranted('ROLE_MODERATOR'),
             'latestMuteReason' => $latestMuteReason,
+            'currentSort' => $sort,
         ]);
     }
 
@@ -150,6 +154,7 @@ class CommunityController extends AbstractController
         if ($request->isMethod('POST')) {
             $title = trim($request->request->get('title', ''));
             $description = trim($request->request->get('description', ''));
+            $existingImageUrl = trim($request->request->get('existing_image_url', ''));
 
             $post = new CommunityPost();
             $post->setUser($user);
@@ -163,6 +168,8 @@ class CommunityController extends AbstractController
                 if ($imgUrl) {
                     $post->setImageUrl($imgUrl);
                 }
+            } elseif (!empty($existingImageUrl)) {
+                $post->setImageUrl($existingImageUrl);
             }
 
             $em->persist($post);
@@ -190,6 +197,7 @@ class CommunityController extends AbstractController
         return $this->render('UserAndDiag/community/create.html.twig', [
             'prefill_title' => $request->query->get('title', ''),
             'prefill_description' => $request->query->get('description', ''),
+            'prefill_image_url' => $request->query->get('imageUrl', ''),
         ]);
     }
 

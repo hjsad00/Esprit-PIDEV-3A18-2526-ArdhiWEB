@@ -251,17 +251,12 @@
             // Update Community Button — pre-fill with diagnostic results
             const communityBtn = document.getElementById('btnCommunity');
             if (communityBtn) {
-                const title = encodeURIComponent(`[Diagnostic] ${data.plante} — ${data.maladie} (${data.confiance}% fiabilité)`);
+                const title = encodeURIComponent(`Aide pour ${data.plante.toUpperCase()}`);
                 const desc = encodeURIComponent(
-                    `🌱 Plante : ${data.plante}\n` +
-                    `🔬 Maladie détectée : ${data.maladie}\n` +
-                    `📊 Fiabilité : ${data.confiance}%\n` +
-                    `💊 Traitement suggéré : ${data.traitement.nom} (${data.traitement.type})\n` +
-                    `📝 Description : ${data.traitement.description}\n\n` +
-                    `---\n` +
-                    `Bonjour la communauté, j'ai effectué un diagnostic IA et j'aimerais avoir vos avis ou retours d'expérience sur ce résultat. Merci !`
+                    `L'IA a détecté : ${data.maladie} (Confiance: ${data.confiance}%).\n` +
+                    `Je ne suis pas sûr de ce résultat. Qu'en pensez-vous ?`
                 );
-                const communityUrl = `{{ path('app_user_and_diag_community_new') }}?title=${title}&description=${desc}`;
+                const communityUrl = `{{ path('app_user_and_diag_community_new') }}?title=${title}&description=${desc}&imageUrl=${encodeURIComponent(data.image_url)}`;
                 communityBtn.setAttribute('href', communityUrl);
                 communityBtn.style.opacity = '1';
                 communityBtn.style.pointerEvents = 'auto';
