@@ -1,0 +1,921 @@
+{# ═══════════════════════════════════════════════════════════════
+   WIDGET CHATBOT RH — Style LinkedIn Premium
+   Améliorations visuelles :
+     • Layout style messagerie LinkedIn (bulles + avatars + timestamps)
+     • Cartes employé enrichies (photo, barres de score animées, badge confiance)
+     • Cartes disponibilité avec jauge de charge de travail
+     • Suggestions chips contextuelles après chaque réponse
+     • Historique persistant dans sessionStorage
+     • Animations fluides (entrée des messages, loader dots)
+     • Header avec status en ligne + menu actions
+   Améliorations logiques :
+     • Contexte de conversation (mémorise le dernier intent)
+     • Gestion d'erreur enrichie
+     • Actions rapides dans les cartes (voir fiche, envoyer email)
+     • Formatage Markdown basique (gras, listes) dans les réponses
+   ═══════════════════════════════════════════════════════════════ #}
+
+<style>
+/* ─── Variables ──────────────────────────────────────────────── */
+:root {
+  --cb-green:       #0a66c2; /* LinkedIn blue principal */
+  --cb-green-light: #e8f0fe;
+  --cb-bot-bg:      #ffffff;
+  --cb-user-bg:     #0a66c2;
+  --cb-user-color:  #ffffff;
+  --cb-msg-bg:      #f3f2ef; /* fond LinkedIn */
+  --cb-radius:      18px;
+  --cb-shadow:      0 8px 30px rgba(0,0,0,.18);
+  --cb-font:        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ─── Conteneur principal ────────────────────────────────────── */
+#rh-cb {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9998;
+  font-family: var(--cb-font);
+}
+
+/* ─── Launcher ────────────────────────────────────────────────── */
+#rh-cb-launch {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--cb-green);
+  border: none;
+  box-shadow: 0 4px 20px rgba(10,102,194,.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+  position: relative;
+}
+#rh-cb-launch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(10,102,194,.55);
+}
+#rh-cb-launch .cb-notif-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 12px; height: 12px;
+  background: #e74c3c;
+  border: 2px solid white;
+  border-radius: 50%;
+  animation: cbPulse 2s infinite;
+}
+@keyframes cbPulse {
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.3);opacity:.7}
+}
+
+/* ─── Fenêtre ─────────────────────────────────────────────────── */
+#rh-cb-window {
+  position: absolute;
+  bottom: 74px;
+  right: 0;
+  width: 420px;
+  height: 600px;
+  max-height: calc(100vh - 100px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--cb-shadow);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.08);
+  transform-origin: bottom right;
+}
+#rh-cb-window.cb-open {
+  display: flex;
+  animation: cbWindowIn .28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cbWindowIn {
+  from{opacity:0;transform:scale(.85) translateY(16px)}
+  to  {opacity:1;transform:scale(1)   translateY(0)}
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+#rh-cb-header {
+  background: var(--cb-green);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.cb-bot-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  border: 2px solid rgba(255,255,255,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: white; flex-shrink: 0; position: relative;
+}
+.cb-online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 10px; height: 10px;
+  background: #2ecc71;
+  border: 2px solid white; border-radius: 50%;
+}
+.cb-header-info { flex: 1; }
+.cb-header-name { color: white; font-size: 14px; font-weight: 700; line-height: 1.2; }
+.cb-header-status { color: rgba(255,255,255,.8); font-size: 11px; margin-top: 2px; }
+.cb-header-actions { display: flex; gap: 4px; }
+.cb-header-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.15); border: none; color: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: background .2s;
+}
+.cb-header-btn:hover { background: rgba(255,255,255,.3); }
+
+/* ─── Zone messages ──────────────────────────────────────────── */
+#rh-cb-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--cb-msg-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scroll-behavior: smooth;
+}
+#rh-cb-messages::-webkit-scrollbar { width: 4px; }
+#rh-cb-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+/* ─── Groupes de messages ─────────────────────────────────────── */
+.cb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.cb-group.bot  { align-items: flex-start; }
+.cb-group.user { align-items: flex-end; }
+
+/* Avatar de groupe */
+.cb-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cb-group.user .cb-group-header { flex-direction: row-reverse; }
+
+.cb-msg-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--cb-green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: white; flex-shrink: 0;
+}
+.cb-msg-avatar.user-av { background: #666; }
+.cb-sender-label { font-size: 11px; font-weight: 600; color: #555; }
+.cb-timestamp    { font-size: 10px; color: #aaa; margin-left: 4px; }
+
+/* ─── Bulles ─────────────────────────────────────────────────── */
+.cb-bubble {
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1d;
+  max-width: 100%;
+  word-break: break-word;
+  animation: cbMsgIn .2s ease;
+}
+@keyframes cbMsgIn {
+  from{opacity:0;transform:translateY(6px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+.cb-group.bot  .cb-bubble {
+  background: white;
+  border-radius: 4px 16px 16px 16px;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.cb-group.user .cb-bubble {
+  background: var(--cb-user-bg);
+  color: var(--cb-user-color);
+  border-radius: 16px 4px 16px 16px;
+}
+.cb-group.bot  .cb-bubble + .cb-bubble { border-radius: 4px 16px 16px 16px; }
+.cb-group.user .cb-bubble + .cb-bubble { border-radius: 16px 4px 16px 16px; }
+
+/* ─── Typing indicator ───────────────────────────────────────── */
+.cb-typing {
+  display: flex; gap: 4px; padding: 10px 14px;
+  background: white; border-radius: 4px 16px 16px 16px;
+  border: 1px solid rgba(0,0,0,.06);
+  width: fit-content;
+  animation: cbMsgIn .2s ease;
+}
+.cb-typing span {
+  width: 7px; height: 7px; background: var(--cb-green);
+  border-radius: 50%; display: block;
+  animation: cbDot 1.3s infinite ease-in-out;
+}
+.cb-typing span:nth-child(2){animation-delay:.16s}
+.cb-typing span:nth-child(3){animation-delay:.32s}
+@keyframes cbDot {
+  0%,80%,100%{transform:scale(.8);opacity:.4}
+  40%{transform:scale(1.1);opacity:1}
+}
+
+/* ─── CARTE EMPLOYÉ style LinkedIn ─────────────────────────────── */
+.cb-emp-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 6px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  animation: cbMsgIn .25s ease;
+}
+.cb-emp-card-top {
+  background: linear-gradient(135deg, #0a66c2 0%, #0e77de 100%);
+  height: 44px;
+  position: relative;
+}
+.cb-emp-card-body { padding: 0 14px 14px; }
+.cb-emp-photo-wrap {
+  margin-top: -22px;
+  margin-bottom: 8px;
+}
+.cb-emp-photo, .cb-emp-initials {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.cb-emp-initials { background: var(--cb-green); }
+.cb-emp-name { font-size: 14px; font-weight: 700; color: #1d1d1d; line-height: 1.2; }
+.cb-emp-poste { font-size: 12px; color: #555; margin-top: 1px; }
+.cb-emp-rank {
+  float: right; margin-top: -42px;
+  background: rgba(255,255,255,.2);
+  color: white; border-radius: 20px;
+  padding: 3px 10px; font-size: 11px; font-weight: 700;
+}
+
+/* Badge confiance */
+.cb-confidence {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  margin: 8px 0;
+}
+
+/* Barres de score */
+.cb-scores { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; }
+.cb-score-row { display: flex; flex-direction: column; gap: 3px; }
+.cb-score-lbl {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #555; font-weight: 600;
+}
+.cb-bar-bg { height: 5px; background: #eee; border-radius: 3px; overflow: hidden; }
+.cb-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* Raison */
+.cb-reason {
+  font-size: 11px; color: #666; font-style: italic;
+  margin: 6px 0 10px;
+  padding: 6px 10px;
+  background: #f8f8f8;
+  border-left: 3px solid var(--cb-green);
+  border-radius: 0 6px 6px 0;
+}
+
+/* Actions carte */
+.cb-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cb-card-btn {
+  flex: 1; padding: 7px 10px;
+  border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  border: 1.5px solid;
+}
+.cb-card-btn.primary {
+  background: var(--cb-green); color: white;
+  border-color: var(--cb-green);
+}
+.cb-card-btn.secondary {
+  background: white; color: var(--cb-green);
+  border-color: var(--cb-green);
+}
+.cb-card-btn:hover.primary { background: #1f6a1f; }
+.cb-card-btn:hover.secondary { background: var(--cb-green-light); }
+
+/* ─── CARTE DISPONIBILITÉ ─────────────────────────────────────── */
+.cb-dispo-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  animation: cbMsgIn .2s ease;
+}
+.cb-dispo-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--cb-green); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.cb-dispo-info { flex: 1; min-width: 0; }
+.cb-dispo-name { font-size: 13px; font-weight: 700; color: #1d1d1d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-dispo-poste { font-size: 11px; color: #777; }
+.cb-dispo-right { text-align: right; flex-shrink: 0; }
+.cb-dispo-status { font-size: 11px; font-weight: 700; }
+.cb-dispo-tasks { font-size: 10px; color: #aaa; margin-top: 1px; }
+
+/* Jauge de charge */
+.cb-load-bar {
+  height: 3px; background: #eee; border-radius: 2px;
+  overflow: hidden; margin-top: 6px; width: 100%;
+}
+.cb-load-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
+
+/* ─── Chips de suggestion ────────────────────────────────────── */
+#rh-cb-chips {
+  padding: 10px 12px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+#rh-cb-chips::-webkit-scrollbar { display: none; }
+.cb-chip {
+  white-space: nowrap;
+  padding: 6px 13px;
+  background: var(--cb-green-light);
+  color: var(--cb-green);
+  border: 1px solid #c8d8f0;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .15s; flex-shrink: 0;
+}
+.cb-chip:hover { background: var(--cb-green); color: white; border-color: var(--cb-green); }
+
+/* ─── Zone de saisie ─────────────────────────────────────────── */
+#rh-cb-input-area {
+  padding: 12px 14px;
+  background: white;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+#rh-cb-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-family: var(--cb-font);
+  outline: none;
+  transition: border-color .2s;
+  resize: none;
+  max-height: 80px;
+  min-height: 40px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+#rh-cb-input:focus { border-color: var(--cb-green); }
+#rh-cb-send {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--cb-green);
+  color: white; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; cursor: pointer; flex-shrink: 0;
+  transition: transform .2s, background .2s;
+}
+#rh-cb-send:hover { transform: scale(1.08); background: #084fa8; }
+#rh-cb-send:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+</style>
+
+{# ─── HTML ─────────────────────────────────────────────────────── #}
+<div id="rh-cb">
+
+  {# Fenêtre #}
+  <div id="rh-cb-window">
+
+    {# Header #}
+    <div id="rh-cb-header">
+      <div class="cb-bot-avatar" style="background:#e8f0fe; color:#1a73e8; font-size: 20px;">
+        ✨
+        <span class="cb-online-dot"></span>
+      </div>
+      <div class="cb-header-info">
+        <div class="cb-header-name">SmartFarm AI</div>
+        <div class="cb-header-status" id="rh-cb-status">● {{ 'status.online'|trans|default('En ligne') }}</div>
+      </div>
+      <div class="cb-header-actions">
+        <button class="cb-header-btn" id="rh-cb-clear" title="Effacer la conversation">
+          <i class="bi bi-trash3"></i>
+        </button>
+        <button class="cb-header-btn" id="rh-cb-close" title="Fermer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    {# Messages #}
+    <div id="rh-cb-messages">
+      {# Message de bienvenue injecté par JS #}
+    </div>
+
+    {# Chips de suggestion #}
+    <div id="rh-cb-chips">
+      <div class="cb-chip" data-action="recommander" data-msg="{{ 'chatbot.suggestion.reco'|trans|default('Recommander un employé') }}">🎯 {{ 'chatbot.suggestion.reco'|trans|default('Recommander') }}</div>
+      <div class="cb-chip" data-action="performances" data-msg="{{ 'chatbot.suggestion.perf'|trans|default('Analyser les performances') }}">📊 {{ 'chatbot.suggestion.perf'|trans|default('Performances') }}</div>
+      <div class="cb-chip" data-action="disponibilite" data-msg="{{ 'chatbot.suggestion.dispo'|trans|default('Voir les disponibilités') }}">📅 {{ 'chatbot.suggestion.dispo'|trans|default('Disponibilités') }}</div>
+      <div class="cb-chip" data-action="aide" data-msg="{{ 'chatbot.suggestion.help'|trans|default('aide') }}">❓ Aide</div>
+    </div>
+
+    {# Input #}
+    <div id="rh-cb-input-area">
+      <textarea id="rh-cb-input"
+                placeholder="{{ 'chatbot.input_placeholder'|trans|default('Posez votre question RH...') }}"
+                rows="1"
+                autocomplete="off"></textarea>
+      <button id="rh-cb-send"><i class="bi bi-send-fill"></i></button>
+    </div>
+
+  </div>
+
+  {# Bouton launcher #}
+  <button id="rh-cb-launch" title="{{ 'chatbot.title'|trans|default('SmartFarm AI Assistant') }}">
+    <i class="bi bi-stars"></i>
+    <span class="cb-notif-dot" id="rh-cb-notif"></span>
+  </button>
+
+</div>
+
+<script>
+(function() {
+'use strict';
+
+const SEND_URL   = '{{ path("app_rh_chatbot_send") }}';
+const STORE_KEY  = 'rh_cb_history';
+const MAX_HIST   = 30;
+
+const win      = document.getElementById('rh-cb-window');
+const launch   = document.getElementById('rh-cb-launch');
+const closeBtn = document.getElementById('rh-cb-close');
+const clearBtn = document.getElementById('rh-cb-clear');
+const msgs     = document.getElementById('rh-cb-messages');
+const input    = document.getElementById('rh-cb-input');
+const sendBtn  = document.getElementById('rh-cb-send');
+const chips    = document.querySelectorAll('.cb-chip');
+const notifDot = document.getElementById('rh-cb-notif');
+const statusEl = document.getElementById('rh-cb-status');
+
+let isOpen      = false;
+let lastIntent  = null;
+let msgCount    = 0;
+
+/* ── Ouverture / fermeture ───────────────────────────────────── */
+launch.addEventListener('click', () => {
+  isOpen = !isOpen;
+  win.classList.toggle('cb-open', isOpen);
+  if (isOpen) {
+    notifDot.style.display = 'none';
+    if (msgs.children.length === 0) initConversation();
+    setTimeout(() => input.focus(), 200);
+    scrollBottom();
+  }
+});
+
+closeBtn.addEventListener('click', () => {
+  isOpen = false;
+  win.classList.remove('cb-open');
+});
+
+clearBtn.addEventListener('click', () => {
+  msgs.innerHTML = '';
+  sessionStorage.removeItem(STORE_KEY);
+  lastIntent = null;
+  initConversation();
+});
+
+/* ── Message de bienvenue ────────────────────────────────────── */
+function initConversation() {
+  const welcome = '{{ "chatbot.welcome"|trans|default("Bonjour ! Je suis votre assistant RH propulsé par Gemini AI. Comment puis-je vous aider ?")|e("js") }}';
+  addBotBubble(welcome, false);
+}
+
+/* ── Chips ───────────────────────────────────────────────────── */
+chips.forEach(c => c.addEventListener('click', () => {
+  const chipAction = c.dataset.action || '';
+  const chipMsg    = c.dataset.msg    || '';
+  send(chipMsg, chipAction);
+}));
+
+/* ── Saisie ──────────────────────────────────────────────────── */
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+});
+
+sendBtn.addEventListener('click', () => send());
+
+/* ── Envoi ───────────────────────────────────────────────────── */
+async function send(text, action = '') {
+  const msg = (text || input.value).trim();
+  if (!msg && !action) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addUserBubble(msg);
+  scrollBottom();
+
+  sendBtn.disabled = true;
+  statusEl.textContent = '⟳ {{ "chatbot.thinking"|trans|default("En train d\'analyser...")|e("js") }}';
+
+  const typingId = addTyping();
+
+  try {
+    const res  = await fetch(SEND_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: msg, action: action, lastIntent: lastIntent })
+    });
+    const data = await res.json();
+
+    removeTyping(typingId);
+    statusEl.textContent = '● {{ "status.online"|trans|default("En ligne")|e("js") }}';
+
+    if (data.error) {
+      addBotBubble('❌ ' + data.error);
+    } else {
+      if (data.reponse) {
+        // Badge Gemini si réponse générée par l'IA
+        const geminiPrefix = data.intention === 'GEMINI_FALLBACK'
+          ? '<span style="font-size:10px;background:#e8f0fe;color:#1a73e8;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">✨ Gemini AI</span><br>'
+          : '';
+        addBotBubble(geminiPrefix + formatText(data.reponse));
+      }
+      lastIntent = data.intention;
+
+      if (data.recommandations?.length > 0) {
+        data.recommandations.forEach((r, i) => renderEmpCard(r, i));
+      }
+      if (data.disponibilites?.length > 0 && data.intention === 'DISPONIBILITE') {
+        renderDispos(data.disponibilites);
+      }
+      if (data.suggestions?.length > 0) {
+        renderSuggestions(data.suggestions);
+      }
+
+      updateChips(data.intention);
+    }
+  } catch(err) {
+    removeTyping(typingId);
+    statusEl.textContent = '● {{ "status.online"|trans|default("En ligne")|e("js") }}';
+    addBotBubble('❌ {{ "chatbot.error.network"|trans|default("Erreur réseau. Veuillez réessayer.")|e("js") }}');
+  }
+
+  sendBtn.disabled = false;
+  scrollBottom();
+}
+
+/* ── Formatage Markdown basique ─────────────────────────────── */
+function formatText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+/* ── Ajout bulle bot ─────────────────────────────────────────── */
+function addBotBubble(html, animate = true) {
+  const g = getOrCreateGroup('bot');
+  const b = document.createElement('div');
+  b.className = 'cb-bubble';
+  if (!animate) b.style.animation = 'none';
+  b.innerHTML = html;
+  g.appendChild(b);
+  updateGroupTimestamp(g);
+  scrollBottom();
+  return b;
+}
+
+/* ── Ajout bulle utilisateur ─────────────────────────────────── */
+function addUserBubble(text) {
+  const g = document.createElement('div');
+  g.className = 'cb-group user';
+  g.dataset.sender = 'user';
+
+  const time = nowTime();
+  const initials = '{{ app.user ? (app.user.prenom|default("")|slice(0,1) ~ app.user.nom|default("")|slice(0,1))|upper : "U" }}';
+
+  g.innerHTML = `
+    <div class="cb-group-header">
+      <div class="cb-sender-label">{{ app.user ? (app.user.prenom ~ " " ~ app.user.nom)|default("Vous") : "Vous" }}</div>
+      <span class="cb-timestamp">${time}</span>
+      <div class="cb-msg-avatar user-av">${initials}</div>
+    </div>
+    <div class="cb-bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(g);
+}
+
+/* ── Groupes de messages bot ─────────────────────────────────── */
+function getOrCreateGroup(sender) {
+  const last = msgs.lastElementChild;
+  if (last && last.classList.contains('cb-group') && last.dataset.sender === sender) {
+    return last;
+  }
+  const g = document.createElement('div');
+  g.className = `cb-group ${sender}`;
+  g.dataset.sender = sender;
+
+  const time = nowTime();
+  g.innerHTML = `
+    <div class="cb-group-header">
+      <div class="cb-msg-avatar" style="background:#e8f0fe; color:#1a73e8; display:flex; align-items:center; justify-content:center; font-size:12px;">✨</div>
+      <div class="cb-sender-label">SmartFarm AI</div>
+      <span class="cb-timestamp">${time}</span>
+    </div>`;
+  msgs.appendChild(g);
+  return g;
+}
+
+function updateGroupTimestamp(g) {
+  const ts = g.querySelector('.cb-timestamp');
+  if (ts) ts.textContent = nowTime();
+}
+
+/* ── Typing indicator ────────────────────────────────────────── */
+function addTyping() {
+  const id = 'cb-typing-' + (++msgCount);
+  const g = getOrCreateGroup('bot');
+  const t = document.createElement('div');
+  t.className = 'cb-typing';
+  t.id = id;
+  t.innerHTML = '<span></span><span></span><span></span>';
+  g.appendChild(t);
+  scrollBottom();
+  return id;
+}
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+/* ── CARTE EMPLOYÉ (style LinkedIn) ─────────────────────────── */
+function renderEmpCard(rec, rank) {
+  const g = getOrCreateGroup('bot');
+  const card = document.createElement('div');
+  card.className = 'cb-emp-card';
+
+  const emp      = rec.employe;
+  const initials = ((emp.prenom||'?')[0] + (emp.nom||'?')[0]).toUpperCase();
+  const photoEl  = emp.photoPath
+    ? `<img src="${emp.photoPath}" class="cb-emp-photo" alt="${escHtml(emp.prenom)}">`
+    : `<div class="cb-emp-initials">${initials}</div>`;
+
+  const medals   = ['🥇','🥈','🥉'];
+  const medal    = medals[rank] || `#${rank+1}`;
+
+  const confColor = rec.indiceConfiance >= 80 ? '#27ae60'
+                  : rec.indiceConfiance >= 60 ? '#f39c12' : '#e74c3c';
+
+  const scoreTotal = Math.round(rec.scoreTotal || 0);
+  const scoreComp  = Math.round(rec.scoreCompetences || 0);
+  const scorePerf  = Math.round(rec.scorePerformance  || 0);
+  const scoreDispo = Math.round(rec.scoreDisponibilite || 0);
+  const conf       = Math.round(rec.indiceConfiance    || 0);
+
+  const emailAction = emp.email
+    ? `<a href="mailto:${emp.email}" class="cb-card-btn secondary"><i class="bi bi-envelope"></i></a>`
+    : '';
+
+  card.innerHTML = `
+    <div class="cb-emp-card-top">
+      <span class="cb-emp-rank">${medal} ${scoreTotal}%</span>
+    </div>
+    <div class="cb-emp-card-body">
+      <div class="cb-emp-photo-wrap">${photoEl}</div>
+      <div class="cb-emp-name">${escHtml(emp.prenom)} ${escHtml(emp.nom)}</div>
+      <div class="cb-emp-poste">${escHtml(emp.poste || '—')}</div>
+
+      <div class="cb-confidence" style="background:${confColor}18;color:${confColor}">
+        ${rec.emoji || '⭐'} ${rec.appreciation || ''} — {{ "chatbot.confidence"|trans|default("Confiance")|e("js") }} ${conf}%
+      </div>
+
+      <div class="cb-scores">
+        ${scoreBar('{{ "ai.matching.reason.skills"|trans|default("Compétences")|e("js") }}',      scoreComp,  '#0a66c2')}
+        ${scoreBar('{{ "employe.performance"|trans|default("Performance")|e("js") }}',             scorePerf,  '#27ae60')}
+        ${scoreBar('{{ "ai.matching.reason.availability"|trans|default("Disponibilité")|e("js") }}', scoreDispo, '#f39c12')}
+      </div>
+
+      ${rec.raisonRecommandation ? `<div class="cb-reason">"${escHtml(rec.raisonRecommandation)}"</div>` : ''}
+
+      <div class="cb-card-actions">
+        <a href="/employes/${emp.id}" class="cb-card-btn primary">
+          <i class="bi bi-person"></i> {{ "common.view"|trans|default("Voir la fiche")|e("js") }}
+        </a>
+        ${emailAction}
+      </div>
+    </div>`;
+
+  g.appendChild(card);
+
+  /* Anime les barres après insertion */
+  setTimeout(() => {
+    card.querySelectorAll('.cb-bar-fill').forEach(bar => {
+      const w = bar.dataset.width;
+      if (w) bar.style.width = w + '%';
+    });
+  }, 100);
+}
+
+function scoreBar(label, val, color) {
+  return `
+    <div class="cb-score-row">
+      <div class="cb-score-lbl"><span>${label}</span><span>${val}%</span></div>
+      <div class="cb-bar-bg">
+        <div class="cb-bar-fill" data-width="${val}" style="width:0%;background:${color}"></div>
+      </div>
+    </div>`;
+}
+
+/* ── CARTE DISPONIBILITÉ ─────────────────────────────────────── */
+function renderDispos(dispos) {
+  const g = getOrCreateGroup('bot');
+  const wrap = document.createElement('div');
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+  wrap.style.gap = '6px';
+  wrap.style.width = '100%';
+
+  dispos.forEach(d => {
+    const emp      = d.employe;
+    const initials = ((emp.prenom||'?')[0] + (emp.nom||'?')[0]).toUpperCase();
+    const charge   = Math.min(100, (d.tachesEnCours || 0) * 20); /* max 5 tâches = 100% */
+    const barColor = d.couleurStatut || '#27ae60';
+
+    const card = document.createElement('div');
+    card.className = 'cb-dispo-card';
+
+    const photoEl = emp.photoPath
+      ? `<img src="${emp.photoPath}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+      : `<div class="cb-dispo-avatar">${initials}</div>`;
+
+    card.innerHTML = `
+      ${photoEl}
+      <div class="cb-dispo-info">
+        <div class="cb-dispo-name">${escHtml(emp.prenom)} ${escHtml(emp.nom)}</div>
+        <div class="cb-dispo-poste">${escHtml(emp.poste || '—')}</div>
+        <div class="cb-load-bar">
+          <div class="cb-load-fill" data-w="${charge}" style="width:0%;background:${barColor}"></div>
+        </div>
+      </div>
+      <div class="cb-dispo-right">
+        <div class="cb-dispo-status" style="color:${barColor}">${d.dotEmoji} ${d.statutLabel}</div>
+        <div class="cb-dispo-tasks">${d.tachesEnCours} {{ "common.tasks"|trans|default("tâche(s)")|e("js") }}</div>
+      </div>`;
+
+    wrap.appendChild(card);
+  });
+
+  g.appendChild(wrap);
+
+  /* Anime les jauges */
+  setTimeout(() => {
+    wrap.querySelectorAll('.cb-load-fill').forEach(b => {
+      b.style.transition = 'width .8s ease';
+      b.style.width = b.dataset.w + '%';
+    });
+  }, 100);
+}
+
+/* ── Chips contextuelles après réponse ───────────────────────── */
+function updateChips(intent) {
+  const chipsEl = document.getElementById('rh-cb-chips');
+  const suggestions = {
+    'RECOMMANDER_EMPLOYE': [
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+    ],
+    'ANALYSER_PERFORMANCE': [
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+    ],
+    'DISPONIBILITE': [
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+    ],
+    'GEMINI_FALLBACK': [
+      { icon:'🎯', action:'recommander',   msg:'{{ "chatbot.suggestion.reco"|trans|default("Recommander un employé")|e("js") }}',   label:'{{ "chatbot.suggestion.reco"|trans|default("Recommander")|e("js") }}' },
+      { icon:'📊', action:'performances',  msg:'{{ "chatbot.suggestion.perf"|trans|default("Analyser les performances")|e("js") }}', label:'{{ "chatbot.suggestion.perf"|trans|default("Performances")|e("js") }}' },
+      { icon:'📅', action:'disponibilite', msg:'{{ "chatbot.suggestion.dispo"|trans|default("Voir les disponibilités")|e("js") }}',  label:'{{ "chatbot.suggestion.dispo"|trans|default("Disponibilités")|e("js") }}' },
+    ],
+  };
+
+  const newChips = suggestions[intent];
+  if (!newChips) return;
+
+  chipsEl.innerHTML = '';
+  newChips.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'cb-chip';
+    chip.dataset.msg    = c.msg;
+    chip.dataset.action = c.action || '';
+    chip.textContent = c.icon + ' ' + c.label;
+    chip.addEventListener('click', () => send(c.msg, c.action || ''));
+    chipsEl.appendChild(chip);
+  });
+
+  /* Rebouton Aide */
+  const aide = document.createElement('div');
+  aide.className = 'cb-chip';
+  aide.dataset.action = 'aide';
+  aide.dataset.msg    = 'aide';
+  aide.textContent = '❓ Aide';
+  aide.addEventListener('click', () => send('aide', 'aide'));
+  chipsEl.appendChild(aide);
+}
+
+
+/* ── Utilitaires ─────────────────────────────────────────────── */
+function scrollBottom() {
+  requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
+}
+function nowTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ────────────────────────────────────────────────────── */
+initConversation();
+
+/* ── Suggestions dynamiques (Chips dans le flux) ──────────────── */
+function renderSuggestions(suggestions) {
+  const g = getOrCreateGroup('bot');
+  const container = document.createElement('div');
+  container.className = 'cb-suggestions-dynamic';
+  container.style.display = 'flex';
+  container.style.flexWrap = 'wrap';
+  container.style.gap = '8px';
+  container.style.padding = '10px 0 10px 48px';
+
+  suggestions.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'cb-dynamic-chip';
+    btn.innerHTML = `<i class="bi bi-tag"></i> ${escHtml(s.text)}`;
+    btn.style.cssText = `
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: #1a73e8;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    btn.onmouseover = () => { btn.style.background = '#f1f7fe'; btn.style.borderColor = '#1a73e8'; };
+    btn.onmouseout  = () => { btn.style.background = 'white';   btn.style.borderColor = '#e0e0e0'; };
+    
+    btn.onclick = () => {
+      // Désactiver tous les boutons du groupe pour éviter le double clic
+      container.querySelectorAll('button').forEach(b => b.disabled = true);
+      send(s.msg, s.action);
+    };
+    container.appendChild(btn);
+  });
+
+  g.appendChild(container);
+  scrollBottom();
+}
+
+})();
+</script>

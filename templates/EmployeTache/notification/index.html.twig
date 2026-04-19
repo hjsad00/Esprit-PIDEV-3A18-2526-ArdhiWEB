@@ -173,21 +173,21 @@
     {# ── En-tête ───────────────────────────────────────────────────────── #}
     <div class="notif-header-card">
         <div>
-            <div class="notif-header-title">🔔 Notifications</div>
+            <div class="notif-header-title">{{ 'notification.title'|trans }}</div>
             <div class="notif-header-sub">
-                Restez informé de vos activités agricoles
+                {{ 'notification.subtitle'|trans }}
                 {% if supervision_mode %}<span class="badge bg-warning text-dark ms-2">📋 {{ nom_supervise }}</span>{% endif %}
             </div>
         </div>
         <div style="display:flex; gap:1rem;">
             <div class="notif-stat-badge">
                 <div class="stat-num">{{ total }}</div>
-                <div class="stat-lbl">Total</div>
+                <div class="stat-lbl">{{ 'notification.total'|trans }}</div>
             </div>
             {% if nb_non_lues > 0 %}
             <div class="notif-stat-badge">
                 <div class="stat-num" style="color:#e74c3c;">{{ nb_non_lues }}</div>
-                <div class="stat-lbl">Non lues</div>
+                <div class="stat-lbl">{{ 'notification.unread'|trans }}</div>
             </div>
             {% endif %}
         </div>
@@ -197,13 +197,13 @@
     <div class="notif-actions">
         <button class="btn-notif-action btn-mark-all" id="btn-mark-all"
             onclick="markAllRead()" {% if nb_non_lues == 0 %}disabled{% endif %}>
-            ✓ Tout marquer comme lu
+            {{ 'notification.mark_all_read'|trans }}
         </button>
         <button class="btn-notif-action btn-refresh" onclick="refreshNotifs()">
-            🔄 Actualiser
+            {{ 'notification.refresh'|trans }}
         </button>
         <a href="{{ path('tache_index') }}" class="btn-notif-action btn-refresh">
-            📋 Voir les tâches
+            📋 {{ 'tache.title'|trans }}
         </a>
     </div>
 
@@ -212,8 +212,8 @@
         {% if notifications is empty %}
             <div class="notif-empty">
                 <div class="notif-empty-icon">🔔</div>
-                <div class="notif-empty-title">Aucune notification</div>
-                <div class="notif-empty-sub">Tout est à jour. Les alertes de retard et météo apparaîtront ici.</div>
+                <div class="notif-empty-title">{{ 'common.no_selection'|trans }}</div>
+                <div class="notif-empty-sub">{{ 'notification.empty'|trans }}</div>
             </div>
         {% else %}
             {% for notif in notifications %}
@@ -223,34 +223,58 @@
                     {% elseif notif.priorite == 'WARNING' %}notif-warning
                     {% endif %}"
                     id="notif-{{ notif.id }}"
-                    style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+                    style="animation-delay: {{ loop.index0 * 0.05 }}s; {{ notif.idTache ? 'cursor:pointer;' : '' }}"
+                    {% if notif.idTache %}onclick="window.location.href='{{ path('tache_index', {'search': notif.idTache}) }}'"{% endif %}>
 
                     <div class="notif-card-header">
                         <span class="notif-icon">{{ notif.icone }}</span>
                         <div class="notif-title-block">
-                            <div class="notif-title">{{ notif.titre }}</div>
-                            <div class="notif-time">{{ notif.dateCreation|date('d/m/Y H:i') }} · {{ notif.tempsEcoule }}</div>
+                            {% set n_titre = notif.titre %}
+                            {% if 'Tâche en retard :' in n_titre %}
+                                {% set taskTitle = n_titre|replace({'Tâche en retard : ': ''}) %}
+                                {% set n_titre = 'notification.types.task_overdue'|trans({'%title%': taskTitle}) %}
+                            {% elseif 'Tâche bloquée :' in n_titre %}
+                                {% set taskTitle = n_titre|replace({'Tâche bloquée : ': ''}) %}
+                                {% set n_titre = 'notification.types.task_blocked'|trans({'%title%': taskTitle}) %}
+                            {% endif %}
+                            
+                            {% set n_time = notif.tempsEcoule %}
+                            {% set n_time = n_time|replace({' j': ' ' ~ 'time.days'|trans|default('j'), ' h': ' ' ~ 'time.hours'|trans|default('h'), ' min': ' ' ~ 'time.mins'|trans|default('min'), "À l'instant": 'time.just_now'|trans|default("À l'instant")}) %}
+                            
+                            <div class="notif-title">{{ n_titre }}</div>
+                            <div class="notif-time">{{ notif.dateCreation|date('d/m/Y H:i') }} · {{ n_time }}</div>
                         </div>
                         <span class="notif-badge
                             {% if notif.priorite == 'CRITICAL' %}badge-critical
                             {% elseif notif.priorite == 'WARNING' %}badge-warning
                             {% else %}badge-info{% endif %}">
-                            {% if notif.priorite == 'CRITICAL' %}CRITIQUE
-                            {% elseif notif.priorite == 'WARNING' %}ATTENTION
-                            {% else %}INFO{% endif %}
+                            {% if notif.priorite == 'CRITICAL' %}{{ 'common.error'|trans|upper }}
+                            {% elseif notif.priorite == 'WARNING' %}{{ 'common.warning'|trans|upper }}
+                            {% else %}{{ 'common.info'|trans|upper }}{% endif %}
                         </span>
                     </div>
 
-                    <div class="notif-message">{{ notif.message }}</div>
+                    {% set n_msg = notif.message %}
+                    {% if 'Date limite :' in n_msg and 'Retard :' in n_msg %}
+                        {% set parts = n_msg|split('|') %}
+                        {% if parts|length == 2 %}
+                            {% set dateRem = parts[0]|replace({'Date limite : ': ''})|trim %}
+                            {% set daysRem = parts[1]|replace({'Retard : ': '', ' jour(s)': ''})|trim %}
+                            {% set n_msg = 'notification.messages.overdue_detail'|trans({'%date%': dateRem, '%days%': daysRem}) %}
+                        {% endif %}
+                    {% elseif 'En cours sans modification' in n_msg %}
+                        {% set n_msg = 'notification.messages.blocked_detail'|trans %}
+                    {% endif %}
+                    <div class="notif-message">{{ n_msg }}</div>
 
                     <div class="notif-card-footer">
                         {% if not notif.lue %}
-                        <button class="btn-small btn-read" onclick="markRead({{ notif.id }})">
-                            ✓ Marquer comme lu
+                        <button class="btn-small btn-read" onclick="event.stopPropagation(); markRead({{ notif.id }})">
+                            ✓ {{ 'notification.mark_read'|trans|default('Marquer comme lu') }}
                         </button>
                         {% endif %}
-                        <button class="btn-small btn-delete" onclick="deleteNotif({{ notif.id }})">
-                            🗑 Supprimer
+                        <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteNotif({{ notif.id }})">
+                            🗑 {{ 'common.delete'|trans }}
                         </button>
                     </div>
                 </div>

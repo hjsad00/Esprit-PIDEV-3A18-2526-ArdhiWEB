@@ -1,154 +1,602 @@
 {% extends 'base.html.twig' %}
-{% block title %}Administration — Employés & Tâches{% endblock %}
+{% block title %}Admin — Gestion Employés & Tâches{% endblock %}
 
 {% block stylesheets %}
 <style>
-.admin-page { padding: 90px 0 60px; background: #f4f6f9; min-height: 100vh; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.admin-header {
-    background: white; border-radius: 14px; padding: 16px 24px;
-    margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.07);
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+/* ═══════════════════════════════════════════════════
+   PAGE BASE
+   ═══════════════════════════════════════════════════ */
+.emp-admin-page {
+    padding: 90px 0 60px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f5e9 50%, #f1f8e9 100%);
+    font-family: 'Inter', sans-serif;
 }
-.admin-title { font-size: 1.25rem; font-weight: 700; color: #1B5E20;
-    display: flex; align-items: center; gap: 10px; }
-.admin-total { color: #888; font-size: .85rem; }
-.hint-text { color: #27ae60; font-size: .82rem; font-style: italic; }
 
-/* Barre recherche */
-.admin-search {
-    background: white; border-radius: 10px; padding: 10px 16px;
-    margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    display: flex; align-items: center; gap: 10px;
+/* ═══════════════════════════════════════════════════
+   HERO HEADER
+   ═══════════════════════════════════════════════════ */
+.emp-hero {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 100%);
+    margin: 0 24px 28px;
+    border-radius: 24px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(27,94,32,.2);
+    border: none;
 }
-.admin-search input {
-    flex: 1; border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px; font-size: .88rem;
+
+/* Effet orbe lumineux */
+.emp-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,222,128,0.2) 0%, transparent 70%);
+    pointer-events: none;
 }
-.admin-search input:focus { border-color: #27ae60; outline: none; }
-
-/* Table — identique au desktop */
-.admin-table-wrap {
-    background: white; border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden;
+.emp-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 30%;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%);
+    pointer-events: none;
 }
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table thead th {
-    background: #4a7c59; color: white; font-size: .81rem; font-weight: 700;
-    padding: 12px 14px; text-align: left; border: none; white-space: nowrap;
+
+.hero-left { position: relative; z-index: 1; }
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(74,222,128,0.12);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 30px;
+    padding: 4px 14px;
+    color: #4ade80;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
 }
-.admin-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
-.admin-table tbody tr:hover { background: #f6fbf6; }
-.admin-table tbody td { padding: 14px; vertical-align: middle; font-size: .89rem; color: #333; }
 
-/* Compteurs */
-.nb-badge { background: #e8f5e9; color: #1B5E20; border-radius: 20px;
-    padding: 3px 10px; font-size: .8rem; font-weight: 600; }
+.hero-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: white;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin: 0 0 6px;
+}
+.hero-title span {
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-sub { color: rgba(255,255,255,0.55); font-size: .88rem; }
 
-/* Boutons Employés / Tâches — identiques au desktop */
-.btn-employes { background: #27ae60; color: white; border: none; border-radius: 8px;
-    padding: 7px 16px; font-weight: 600; font-size: .85rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px; transition: .2s; text-decoration: none; }
-.btn-employes:hover { background: #219150; color: white; }
+.hero-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
 
-.btn-taches { background: #3498db; color: white; border: none; border-radius: 8px;
-    padding: 7px 16px; font-weight: 600; font-size: .85rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px; transition: .2s; text-decoration: none; }
-.btn-taches:hover { background: #2176ae; color: white; }
+.btn-retour-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 9px 18px;
+    color: rgba(255,255,255,0.8);
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s;
+    backdrop-filter: blur(10px);
+}
+.btn-retour-admin:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transform: translateY(-1px);
+}
 
-/* Empty */
-.admin-empty { text-align:center; padding:50px 20px; color:#bbb; }
+/* ═══════════════════════════════════════════════════
+   KPI CARDS ROW
+   ═══════════════════════════════════════════════════ */
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 0 24px 28px;
+}
+
+.kpi-card {
+    border-radius: 18px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    opacity: .12;
+    transform: translate(25px,-25px);
+}
+.kpi-green  { background: white; box-shadow: 0 4px 20px rgba(27,94,32,.08); border: 1px solid #e8f5e9; }
+.kpi-green::after  { background: #27ae60; }
+.kpi-blue   { background: white; box-shadow: 0 4px 20px rgba(13,102,147,.08); border: 1px solid #e3f2fd; }
+.kpi-blue::after   { background: #3498db; }
+.kpi-purple { background: white; box-shadow: 0 4px 20px rgba(142,68,173,.08); border: 1px solid #f3e5f5; }
+.kpi-purple::after { background: #8e44ad; }
+.kpi-amber  { background: white; box-shadow: 0 4px 20px rgba(243,156,18,.08); border: 1px solid #fff8e1; }
+.kpi-amber::after  { background: #f39c12; }
+
+.kpi-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: #f4f6f9;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.kpi-body { flex: 1; min-width: 0; }
+.kpi-value { font-size: 2rem; font-weight: 900; color: #1B5E20; line-height: 1; }
+.kpi-label { font-size: .75rem; color: #888; font-weight: 500; margin-top: 3px; white-space: nowrap; }
+.kpi-trend {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN PANEL (table + search)
+   ═══════════════════════════════════════════════════ */
+.main-panel {
+    margin: 0 24px;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e8f5e9;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(27,94,32,.08);
+}
+
+/* Toolbar intégrée */
+.panel-toolbar {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #f0f7f0;
+    background: #f8fdf8;
+}
+.panel-toolbar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1B5E20;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-right: auto;
+}
+.panel-toolbar-title i { color: #27ae60; }
+
+.search-glass {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid #d1e7d1;
+    border-radius: 10px;
+    padding: 8px 14px;
+    transition: border-color .2s;
+}
+.search-glass:focus-within { border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,.1); }
+.search-glass i { color: #aaa; }
+.search-glass input {
+    background: none;
+    border: none;
+    outline: none;
+    color: #333;
+    font-size: .88rem;
+    width: 220px;
+}
+.search-glass input::placeholder { color: #aaa; }
+
+.btn-search {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #27ae60; color: white; border: none;
+    border-radius: 9px; padding: 8px 16px;
+    font-size: .83rem; font-weight: 700; cursor: pointer;
+    transition: all .2s;
+}
+.btn-search:hover { background: #219150; transform: translateY(-1px); }
+
+.btn-refresh {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    color: #555;
+    border-radius: 9px; padding: 8px 14px;
+    font-size: .83rem; font-weight: 600;
+    text-decoration: none; transition: all .2s;
+}
+.btn-refresh:hover { background: #f4f4f4; color: #1B5E20; border-color: #27ae60; }
+
+/* Table */
+.emp-table { width: 100%; border-collapse: collapse; }
+
+.emp-table thead th {
+    background: #f0f7f2;
+    color: #5a7a5a;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    text-align: left;
+    border: none;
+    border-bottom: 1px solid #e8f5e9;
+}
+
+.emp-table tbody tr {
+    border-bottom: 1px solid #f4faf4;
+    transition: background .15s;
+}
+.emp-table tbody tr:hover { background: #f8fdf8; }
+.emp-table tbody tr:last-child { border-bottom: none; }
+
+.emp-table tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    font-size: .88rem;
+    color: #333;
+}
+
+/* Avatar lettres */
+.user-cell {
+    display: flex; align-items: center; gap: 12px;
+}
+.user-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: .9rem; color: white;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.6);
+}
+.user-name { font-weight: 700; color: #1B5E20; font-size: .92rem; }
+.user-id   { font-size: .72rem; color: #aaa; }
+
+/* Email */
+.user-email {
+    color: #999;
+    font-size: .82rem;
+    font-style: italic;
+}
+
+/* Badge compteur */
+.count-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 700;
+}
+.count-emp  { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+.count-task { background: rgba(34,211,238,0.12); color: #22d3ee; border: 1px solid rgba(34,211,238,0.2); }
+.count-zero { background: rgba(0,0,0,0.04); color: #888; border: 1px solid rgba(0,0,0,0.08); }
+
+/* Mini progress bar */
+.mini-bar-wrap {
+    display: flex; align-items: center; gap: 8px;
+}
+.mini-bar {
+    width: 60px; height: 5px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.mini-bar-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+}
+
+/* Boutons actions */
+.btn-emp {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(74,222,128,0.12);
+    border: 1px solid rgba(74,222,128,0.25);
+    color: #4ade80;
+    border-radius: 8px; padding: 6px 14px;
+    font-size: .8rem; font-weight: 700;
+    text-decoration: none; transition: all .2s;
+    white-space: nowrap;
+}
+.btn-emp:hover { background: rgba(74,222,128,0.25); color: #4ade80; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(74,222,128,0.2); }
+
+.btn-task {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.2);
+    color: #22d3ee;
+    border-radius: 8px; padding: 6px 14px;
+    font-size: .8rem; font-weight: 700;
+    text-decoration: none; transition: all .2s;
+    white-space: nowrap;
+}
+.btn-task:hover { background: rgba(34,211,238,0.2); color: #22d3ee; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,211,238,0.15); }
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 70px 30px;
+    color: #ccc;
+}
+.empty-state i { font-size: 3.5rem; display: block; margin-bottom: 16px; color: #ddd; }
+.empty-state h5 { color: #aaa; }
+
+/* Footer panel */
+.panel-footer {
+    padding: 14px 24px;
+    border-top: 1px solid #f0f7f0;
+    background: #f8fdf8;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+}
+.panel-footer-info { font-size: .78rem; color: #aaa; }
+.panel-footer-dots {
+    display: flex; gap: 5px;
+}
+.status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Animations entrée */
+.fade-in-up { animation: fadeInUp .5s ease both; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .emp-hero { margin: 0 12px 20px; padding: 20px; }
+    .kpi-row  { margin: 0 12px 20px; }
+    .main-panel { margin: 0 12px; }
+    .hero-title { font-size: 1.4rem; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="admin-page">
-<div class="container-fluid px-4">
+<div class="emp-admin-page">
 
-    {# ── Header ─────────────────────────────────────────────────── #}
-    <div class="admin-header">
-        <div>
-            <div class="admin-title">
-                <i class="bi bi-people-fill"></i>
-                Gestion des Agriculteurs
+    {# ── HERO HEADER ─────────────────────────────────────────────── #}
+    <div class="emp-hero fade-in-up">
+        <div class="hero-left">
+            <div class="hero-badge">
+                <i class="bi bi-shield-fill-check"></i> ADMINISTRATION MODULE RH
             </div>
-            <div class="admin-total">Total : {{ total }}</div>
+            <h1 class="hero-title">Gestion <span>Employés & Tâches</span></h1>
+            <p class="hero-sub">
+                <i class="bi bi-info-circle me-1"></i>
+                Sélectionnez un agriculteur pour gérer ses employés ou ses tâches en mode supervision
+            </p>
         </div>
-        <div class="hint-text">
-            <i class="bi bi-info-circle me-1"></i>
-            Cliquez sur Employés ou Tâches pour gérer ceux d'un agriculteur
+        <div class="hero-right">
+            {% if app.user %}
+            <div style="text-align:right; color:rgba(255,255,255,.5); font-size:.8rem; line-height:1.4;">
+                <div style="color:white;font-weight:700">{{ app.user.prenom }} {{ app.user.nom }}</div>
+                <div>Administrateur</div>
+            </div>
+            {% endif %}
+            <a href="{{ path('admin_dashboard') }}" class="btn-retour-admin">
+                <i class="bi bi-arrow-left"></i> Portail Admin
+            </a>
         </div>
-        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Retour Admin
-        </a>
     </div>
 
-    {# ── Recherche ───────────────────────────────────────────────── #}
-    <form method="GET" action="{{ path('admin_agriculteurs_employe') }}">
-    <div class="admin-search">
-        <i class="bi bi-search text-muted"></i>
-        <input type="text" name="search" value="{{ search }}"
-               placeholder="Rechercher par nom, prénom, email...">
-        <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:7px">
-            Rechercher
-        </button>
-        {% if search %}
-            <a href="{{ path('admin_agriculteurs_employe') }}" class="btn btn-outline-secondary btn-sm">
+    {# ── KPI ROW ─────────────────────────────────────────────────── #}
+    {% set totalEmp   = data|reduce((c, r) => c + r.nbEmployes, 0) %}
+    {% set totalTasks = data|reduce((c, r) => c + r.nbTaches, 0) %}
+
+    <div class="kpi-row fade-in-up" style="animation-delay:.08s">
+
+        <div class="kpi-card kpi-green">
+            <div class="kpi-icon">🧑‍🌾</div>
+            <div class="kpi-body">
+                <div class="kpi-value">{{ total }}</div>
+                <div class="kpi-label">Agriculteurs</div>
+                <span class="kpi-trend" style="background:rgba(74,222,128,.15);color:#4ade80">Supervisés</span>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-blue">
+            <div class="kpi-icon">👥</div>
+            <div class="kpi-body">
+                <div class="kpi-value">{{ totalEmp }}</div>
+                <div class="kpi-label">Total Employés</div>
+                <span class="kpi-trend" style="background:rgba(34,211,238,.12);color:#22d3ee">Enregistrés</span>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-purple">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-body">
+                <div class="kpi-value">{{ totalTasks }}</div>
+                <div class="kpi-label">Total Tâches</div>
+                <span class="kpi-trend" style="background:rgba(167,139,250,.12);color:#a78bfa">Toutes fermes</span>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-amber">
+            <div class="kpi-icon">📊</div>
+            <div class="kpi-body">
+                <div class="kpi-value">{{ total > 0 ? (totalEmp / total)|round(1) : 0 }}</div>
+                <div class="kpi-label">Moy. Employés / Ferme</div>
+                <span class="kpi-trend" style="background:rgba(251,191,36,.12);color:#fbbf24">Par agriculteur</span>
+            </div>
+        </div>
+
+    </div>
+
+    {# ── TABLE PANEL ─────────────────────────────────────────────── #}
+    <div class="main-panel fade-in-up" style="animation-delay:.15s">
+
+        {# Toolbar #}
+        <form method="GET" action="{{ path('admin_agriculteurs_employe') }}">
+        <div class="panel-toolbar">
+            <div class="panel-toolbar-title">
+                <i class="bi bi-table"></i>
+                Liste des Agriculteurs
+                <span style="font-size:.75rem; background:rgba(74,222,128,.12); color:#4ade80; border:1px solid rgba(74,222,128,.2); border-radius:20px; padding:2px 10px; font-weight:700;">
+                    {{ total }} comptes
+                </span>
+            </div>
+
+            <div class="search-glass">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" value="{{ search }}"
+                       placeholder="Nom, prénom, email...">
+            </div>
+            <button type="submit" class="btn-search">
+                <i class="bi bi-search"></i> Rechercher
+            </button>
+            {% if search %}
+            <a href="{{ path('admin_agriculteurs_employe') }}" class="btn-refresh">
                 <i class="bi bi-x-lg"></i>
             </a>
-        {% endif %}
-        <a href="{{ path('admin_agriculteurs_employe') }}" class="btn btn-outline-secondary btn-sm ms-1">
-            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
-        </a>
-    </div>
-    </form>
+            {% endif %}
+            <a href="{{ path('admin_agriculteurs_employe') }}" class="btn-refresh">
+                <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </a>
+        </div>
+        </form>
 
-    {# ── Table agriculteurs ──────────────────────────────────────── #}
-    <div class="admin-table-wrap">
+        {# Table #}
         {% if data|length > 0 %}
         <div class="table-responsive">
-        <table class="admin-table">
+        <table class="emp-table">
             <thead>
             <tr>
-                <th>ID</th>
-                <th>Nom</th>
-                <th>Prénom</th>
+                <th>#</th>
+                <th>Agriculteur</th>
                 <th>Email</th>
-                <th>Nb Employés</th>
-                <th>Nb Tâches</th>
-                <th>Actions</th>
+                <th>Employés</th>
+                <th>Tâches</th>
+                <th>Charge</th>
+                <th style="text-align:center">Actions</th>
             </tr>
             </thead>
             <tbody>
+            {% set avatarColors = ['#4ade80','#22d3ee','#a78bfa','#fbbf24','#f87171','#34d399','#60a5fa'] %}
             {% for row in data %}
+            {% set initiales = (row.user.prenom|slice(0,1) ~ row.user.nom|slice(0,1))|upper %}
+            {% set color = avatarColors[loop.index0 % 7] %}
+            {% set maxTasks = data|reduce((m, r) => r.nbTaches > m ? r.nbTaches : m, 1) %}
             <tr>
-                <td><strong>{{ row.user.id }}</strong></td>
-                <td>{{ row.user.nom }}</td>
-                <td>{{ row.user.prenom }}</td>
+                {# ID #}
                 <td>
-                    <span title="{{ row.user.email }}">
-                        {{ row.user.email|length > 28
-                            ? row.user.email|slice(0,25) ~ '...'
-                            : row.user.email }}
+                    <span style="color:#999;font-size:.78rem;font-weight:600">#{{ row.user.id }}</span>
+                </td>
+
+                {# Nom + avatar #}
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar" style="background:{{ color }}22;color:{{ color }};border-color:{{ color }}33">
+                            {{ initiales }}
+                        </div>
+                        <div>
+                            <div class="user-name">{{ row.user.prenom }} {{ row.user.nom }}</div>
+                            <div class="user-id">Agriculteur</div>
+                        </div>
+                    </div>
+                </td>
+
+                {# Email #}
+                <td>
+                    <span class="user-email" title="{{ row.user.email }}">
+                        {{ row.user.email|length > 30 ? row.user.email|slice(0,28) ~ '…' : row.user.email }}
                     </span>
                 </td>
+
+                {# Nb Employés #}
                 <td>
-                    <span class="nb-badge">{{ row.nbEmployes }}</span>
+                    <span class="count-pill {{ row.nbEmployes > 0 ? 'count-emp' : 'count-zero' }}">
+                        <i class="bi bi-people-fill" style="font-size:.7rem"></i>
+                        {{ row.nbEmployes }}
+                    </span>
                 </td>
+
+                {# Nb Tâches #}
                 <td>
-                    <span class="nb-badge" style="background:#e3f2fd;color:#0d47a1">
+                    <span class="count-pill {{ row.nbTaches > 0 ? 'count-task' : 'count-zero' }}">
+                        <i class="bi bi-clipboard-check" style="font-size:.7rem"></i>
                         {{ row.nbTaches }}
                     </span>
                 </td>
+
+                {# Mini barre charge #}
                 <td>
-                    <div class="d-flex gap-2">
-                        {# Bouton Employés — identique au desktop #}
-                        <a href="{{ path('admin_gerer_employes', {id: row.user.id}) }}"
-                           class="btn-employes">
+                    <div class="mini-bar-wrap">
+                        <div class="mini-bar">
+                            <div class="mini-bar-fill" style="width:{{ maxTasks > 0 ? (row.nbTaches / maxTasks * 100)|round : 0 }}%"></div>
+                        </div>
+                        <span style="font-size:.72rem;color:#999">
+                            {{ maxTasks > 0 ? (row.nbTaches / maxTasks * 100)|round : 0 }}%
+                        </span>
+                    </div>
+                </td>
+
+                {# Actions #}
+                <td>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ path('admin_gerer_employes', {id: row.user.id}) }}" class="btn-emp">
                             <i class="bi bi-people-fill"></i> Employés
                         </a>
-                        {# Bouton Tâches — identique au desktop #}
-                        <a href="{{ path('admin_gerer_taches', {id: row.user.id}) }}"
-                           class="btn-taches">
+                        <a href="{{ path('admin_gerer_taches', {id: row.user.id}) }}" class="btn-task">
                             <i class="bi bi-clipboard-check"></i> Tâches
                         </a>
                     </div>
@@ -158,14 +606,40 @@
             </tbody>
         </table>
         </div>
+
         {% else %}
-        <div class="admin-empty">
-            <i class="bi bi-people d-block" style="font-size:3rem;margin-bottom:10px"></i>
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
             <h5>Aucun agriculteur trouvé</h5>
+            {% if search %}
+            <p style="font-size:.85rem;margin-top:8px">Aucun résultat pour « {{ search }} »</p>
+            <a href="{{ path('admin_agriculteurs_employe') }}" class="btn-search mt-3" style="display:inline-flex;margin-top:16px">
+                <i class="bi bi-x-circle"></i> Effacer la recherche
+            </a>
+            {% endif %}
         </div>
         {% endif %}
-    </div>
 
-</div>
+        {# Footer du panel #}
+        <div class="panel-footer">
+            <div class="panel-footer-info">
+                <div class="status-dot" style="display:inline-block;margin-right:6px"></div>
+                Module actif — {{ total }} agriculteur(s) supervisé(s) —
+                {{ totalEmp }} employé(s) — {{ totalTasks }} tâche(s)
+            </div>
+            <div style="display:flex;gap:8px">
+                <a href="{{ path('admin_dashboard') }}" class="btn-refresh" style="font-size:.75rem;padding:5px 12px;">
+                    <i class="bi bi-grid-fill"></i> Portail Admin
+                </a>
+                {% if app.user %}
+                <a href="{{ path('app_logout') }}" class="btn-refresh" style="font-size:.75rem;padding:5px 12px;color:#f87171;border-color:rgba(248,113,113,0.2)">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>{# /main-panel #}
+
 </div>
 {% endblock %}

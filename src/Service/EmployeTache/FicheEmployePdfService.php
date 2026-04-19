@@ -3,6 +3,7 @@
 namespace App\Service\EmployeTache;
 
 use App\Entity\EmployeTache\Employe;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Service dédié à la génération du PDF de la Fiche Employé
@@ -10,10 +11,12 @@ use App\Entity\EmployeTache\Employe;
 class FicheEmployePdfService
 {
     private QrCodeService $qrCodeService;
+    private TranslatorInterface $translator;
 
-    public function __construct(QrCodeService $qrCodeService)
+    public function __construct(QrCodeService $qrCodeService, TranslatorInterface $translator)
     {
         $this->qrCodeService = $qrCodeService;
+        $this->translator = $translator;
     }
 
     /**
@@ -28,13 +31,21 @@ class FicheEmployePdfService
         // Métadonnées
         $pdf->SetCreator('Ardhi - Ressources Humaines');
         $pdf->SetAuthor('Ardhi');
-        $pdf->SetTitle('Fiche Employe - ' . $employe->getNomComplet());
+        $pdf->SetTitle($this->translator->trans('employe.fiche_title') . ' - ' . $employe->getNomComplet());
 
         // Marges et configuration d'impression
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 15);
         $pdf->setPrintHeader(false); // En-tête personnalisé
         $pdf->setPrintFooter(false); // Pied de page personnalisé
+
+        $currentLocale = $this->translator->getLocale();
+        $isAr = ($currentLocale === 'ar');
+        $font = $isAr ? 'freeserif' : 'helvetica';
+
+        if ($isAr) {
+            $pdf->setRTL(true);
+        }
 
         $pdf->AddPage();
 
@@ -52,22 +63,22 @@ class FicheEmployePdfService
         $pdf->Rect(150, 10, 50, 30, 'F'); // Bloc droit
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('helvetica', 'B', 26);
+        $pdf->SetFont($font, 'B', 26);
         $pdf->SetXY(20, 12);
-        $pdf->Cell(130, 12, '🌿 ARDHI', 0, 1, 'L');
+        $pdf->Cell(130, 12, 'ARDHI', 0, 1, 'L');
         
         $pdf->SetTextColor(200, 255, 200);
-        $pdf->SetFont('helvetica', 'B', 14);
+        $pdf->SetFont($font, 'B', 14);
         $pdf->SetXY(20, 24);
-        $pdf->Cell(130, 10, 'FICHE EMPLOYÉ', 0, 1, 'L');
+        $pdf->Cell(130, 10, $this->translator->trans('employe.fiche_title'), 0, 1, 'L');
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('helvetica', 'B', 16);
+        $pdf->SetFont($font, 'B', 16);
         $pdf->SetXY(150, 12);
-        $pdf->Cell(50, 12, 'ID : #' . $employe->getId(), 0, 1, 'C');
+        $pdf->Cell(50, 12, $this->translator->trans('common.id') . ' : #' . $employe->getId(), 0, 1, 'C');
 
         $pdf->SetTextColor(180, 220, 180);
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont($font, '', 10);
         $pdf->SetXY(150, 24);
         $pdf->Cell(50, 10, date('d/m/Y'), 0, 1, 'C');
 
@@ -87,15 +98,15 @@ class FicheEmployePdfService
         } else {
             // Avatar texte
             $pdf->SetTextColor($vertArdhiR, $vertArdhiG, $vertArdhiB);
-            $pdf->SetFont('helvetica', 'B', 46);
+            $pdf->SetFont($font, 'B', 46);
             $pdf->SetXY(10, $yPhotoQr + 10);
             $pdf->Cell(90, 30, $employe->getInitiales(), 0, 1, 'C', true);
         }
         
         $pdf->SetTextColor(80, 80, 80);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetFont($font, 'B', 10);
         $pdf->SetXY(10, $yPhotoQr + 55);
-        $pdf->Cell(90, 5, 'PHOTO', 0, 1, 'C');
+        $pdf->Cell(90, 5, strtoupper($this->translator->trans('employe.form.photo')), 0, 1, 'C');
 
         // Bloc QR Code (droite)
         $pdf->Rect(110, $yPhotoQr, 90, 60, 'DF');
@@ -111,32 +122,32 @@ class FicheEmployePdfService
         }
 
         $pdf->SetTextColor(150, 150, 150);
-        $pdf->SetFont('helvetica', 'I', 8);
+        $pdf->SetFont($font, 'I', 8);
         $pdf->SetXY(110, $yPhotoQr + 55);
-        $pdf->Cell(90, 5, 'Scannez pour la fiche mobile', 0, 1, 'C');
+        $pdf->Cell(90, 5, $this->translator->trans('employe.scan_mobile'), 0, 1, 'C');
 
         $pdf->SetY($yPhotoQr + 65);
 
         // ── SECTION IDENTITE ───────────────────────────────────────────────
-        $this->addSectionTitle($pdf, "👤 IDENTITÉ", $vertArdhiR, $vertArdhiG, $vertArdhiB);
+        $this->addSectionTitle($pdf, $this->translator->trans('employe.form.identity'), $vertArdhiR, $vertArdhiG, $vertArdhiB, $font);
         
         $pNom = $employe->getNom();
         $pPrenom = $employe->getPrenom();
         $pPoste = $employe->getPoste() ?? '—';
-        $pStatut = $employe->isActif() ? "✓ Actif" : "✗ Inactif";
+        $pStatut = $employe->isActif() ? "✓ " . $this->translator->trans('common.active') : "✗ " . $this->translator->trans('common.inactive');
 
-        $this->addRow($pdf, "Nom", $pNom, "Prénom", $pPrenom, true);
-        $this->addRow($pdf, "Poste", $pPoste, "Statut", $pStatut, false);
+        $this->addRow($pdf, $this->translator->trans('employe.col.nom'), $pNom, $this->translator->trans('employe.col.prenom'), $pPrenom, true, $font);
+        $this->addRow($pdf, $this->translator->trans('employe.col.poste'), $pPoste, $this->translator->trans('employe.col.actif'), $pStatut, false, $font);
 
         $pdf->SetY($pdf->GetY() + 5);
 
         // ── SECTION CONTACT ────────────────────────────────────────────────
-        $this->addSectionTitle($pdf, "📞 CONTACT", $bleuAccentR, $bleuAccentG, $bleuAccentB);
+        $this->addSectionTitle($pdf, $this->translator->trans('employe.form.contact'), $bleuAccentR, $bleuAccentG, $bleuAccentB, $font);
         
         $pEmail = $employe->getEmail() ?? '—';
         $pTel = $employe->getTelephone() ?? '—';
 
-        $this->addRow($pdf, "Email", $pEmail, "Téléphone", $pTel, true);
+        $this->addRow($pdf, $this->translator->trans('employe.col.email'), $pEmail, $this->translator->trans('employe.col.telephone'), $pTel, true, $font);
 
         $pdf->SetY($pdf->GetY() + 10);
 
@@ -144,35 +155,36 @@ class FicheEmployePdfService
         $pdf->SetX(60);
         if ($employe->isActif()) {
             $pdf->SetFillColor($vertArdhiR, $vertArdhiG, $vertArdhiB);
-            $vText = "  ✓  EMPLOYÉ ACTIF  ";
+            $vText = "  ✓  " . $this->translator->trans('common.active') . "  ";
         } else {
             $pdf->SetFillColor(192, 57, 43); // Rouge
-            $vText = "  ✗  EMPLOYÉ INACTIF  ";
+            $vText = "  ✗  " . $this->translator->trans('common.inactive') . "  ";
         }
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetFont($font, 'B', 10);
         $pdf->Cell(90, 10, $vText, 0, 1, 'C', true);
 
         // ── PIED DE PAGE ───────────────────────────────────────────────────
         $pdf->SetY(270);
         $pdf->SetTextColor(150, 150, 150);
-        $pdf->SetFont('helvetica', 'I', 8);
-        $pdf->Cell(0, 5, 'Document généré automatiquement par Ardhi · ' . date('d/m/Y à H:i') . ' · Confidentiel', 0, 1, 'C');
+        $pdf->SetFont($font, 'I', 8);
+        $footer = $this->translator->trans('common.generated_by', ['%name%' => 'Ardhi', '%date%' => date('d/m/Y à H:i')]);
+        $pdf->Cell(0, 5, $footer . ' · ' . ($isAr ? 'سري للغاية' : 'Confidentiel'), 0, 1, 'C');
 
         return $pdf->Output('fiche.pdf', 'S');
     }
 
-    private function addSectionTitle(\TCPDF $pdf, string $title, int $r, int $g, int $b)
+    private function addSectionTitle(\TCPDF $pdf, string $title, int $r, int $g, int $b, string $font)
     {
         $pdf->SetFillColor(27, 94, 32); // Vert foncé
         if ($r != 39) $pdf->SetFillColor(13, 71, 161); // Si bleu, on passe en bleu foncé
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->SetFont($font, 'B', 11);
         $pdf->Cell(190, 8, '  ' . $title, 0, 1, 'L', true);
     }
 
-    private function addRow(\TCPDF $pdf, string $l1, string $v1, string $l2, string $v2, bool $gris)
+    private function addRow(\TCPDF $pdf, string $l1, string $v1, string $l2, string $v2, bool $gris, string $font)
     {
         if ($gris) {
             $pdf->SetFillColor(245, 247, 250); // Gris clair
@@ -183,19 +195,19 @@ class FicheEmployePdfService
         $pdf->SetLineStyle(array('width' => 0.1, 'color' => array(220, 220, 220)));
 
         $pdf->SetTextColor(80, 80, 80);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetFont($font, 'B', 10);
         $pdf->Cell(35, 8, '  ' . $l1, 1, 0, 'L', true);
 
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont($font, '', 10);
         $pdf->Cell(60, 8, ' ' . $v1, 1, 0, 'L', true);
 
         $pdf->SetTextColor(80, 80, 80);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetFont($font, 'B', 10);
         $pdf->Cell(35, 8, '  ' . $l2, 1, 0, 'L', true);
 
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont($font, '', 10);
         $pdf->Cell(60, 8, ' ' . $v2, 1, 1, 'L', true);
     }
 }

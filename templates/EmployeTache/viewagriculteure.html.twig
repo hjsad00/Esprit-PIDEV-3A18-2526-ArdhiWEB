@@ -27,6 +27,64 @@
             0%, 100% { transform: scale(1); }
             50%       { transform: scale(1.15); }
         }
+
+        /* Styles Sélecteur de Langue */
+        .lang-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .lang-circle:hover, .lang-circle.active {
+            background: #116530;
+            border-color: #116530;
+            transform: scale(1.1);
+        }
+
+        /* Support RTL Dynamique */
+        [dir="rtl"] .hero-inner {
+            flex-direction: row-reverse;
+        }
+        [dir="rtl"] .hero-left {
+            text-align: right !important;
+        }
+        [dir="rtl"] .hero-headline br {
+            display: none;
+        }
+        
+        .hero-description {
+            font-size: 1.05rem; /* Rendre un petit peu plus petit en haut */
+            line-height: 1.5;
+            max-width: 600px;
+            opacity: 0.9;
+        }
+        [dir="rtl"] .category-item {
+            flex-direction: row-reverse;
+            text-align: right;
+            border-left: none !important;
+            border-right: 4px solid transparent;
+        }
+        [dir="rtl"] .category-item:hover {
+            border-right-color: #116530;
+        }
+        [dir="rtl"] .category-icon {
+            margin-left: 1.5rem;
+            margin-right: 0;
+        }
+        [dir="rtl"] .hero-btn-primary i {
+            margin-left: 8px;
+            margin-right: 0;
+        }
     </style>
 {% endblock %}
 
@@ -41,17 +99,22 @@
         <div class="hero-inner">
 
           <div class="hero-left">
-            <div class="hero-label">ARDHI GESTION RH</div>
+            <div class="hero-label">{{ 'dashboard.rh_label'|trans }}</div>
             <h1 class="hero-headline">
-              {{ 'dashboard.title'|trans }}
+              {{ 'dashboard.title'|trans|raw|replace({'Employés': 'employés ', 'Tâches': 'tâches'}) }}
             </h1>
             <p class="hero-description">
               {{ 'dashboard.subtitle'|trans }}
             </p>
 
-            <a href="{{ path('employe_index') }}" class="hero-btn-primary">
-              <i class="bi bi-people"></i> {{ 'dashboard.manage.employees'|trans }}
+            <a href="{{ path('employe_index') }}" class="hero-btn-primary" style="margin-bottom: 2rem;">
+              <i class="bi bi-people"></i> {{ 'employe.go_tasks'|trans }}
             </a>
+            
+            <!-- Widget Météo Agricole moved to left -->
+            <div style="margin-top: 1rem; max-width: 90%;">
+               {{ render(controller('App\\Controller\\EmployeTache\\MeteoController::widgetMeteo')) }}
+            </div>
           </div>
 
           <div class="hero-right">
@@ -83,35 +146,15 @@
                 </div>
               </a>
 
-              {# NOTIFICATIONS ✅ #}
-              <a href="{{ path('notification_index') }}" class="category-item">
-                <div class="category-icon">
-                  <i class="bi bi-bell-fill"></i>
-                </div>
-                <div class="category-text">
-                  <h4>
-                    {{ 'dashboard.card.notifications'|trans }}
-                    {% if nb_notif_non_lues is defined and nb_notif_non_lues > 0 %}
-                      <span class="notif-badge-circle">
-                        {{ nb_notif_non_lues > 99 ? '99+' : nb_notif_non_lues }}
-                      </span>
-                    {% endif %}
-                  </h4>
-                  <span>{{ 'dashboard.card.notifications_desc'|trans }}</span>
-                </div>
-              </a>
-
+              {# GESTION EMPLOYES — FIN DE LISTE #}
             </div>
 
-            <!-- Widget Météo Agricole -->
-            <div style="margin-top: 2rem;">
-               {{ render(controller('App\\Controller\\EmployeTache\\MeteoController::widgetMeteo')) }}
-            </div>
           </div>
 
         </div>
       </div>
     </section>
 
-    {% include 'EmployeTache/_rh_chatbot_widget.html.twig' %}
+    {% include 'EmployeTache/rh_chatbot_widget.html.twig' %}
+    {% include 'EmployeTache/_i18n_support.html.twig' %}
 {% endblock %}

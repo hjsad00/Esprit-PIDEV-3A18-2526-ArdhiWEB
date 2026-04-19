@@ -47,8 +47,14 @@ class TacheRepository extends ServiceEntityRepository
             ->setParameter('agri', $idAgriculteur);
 
         if ($search !== '') {
-            $qb->andWhere('t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
-               ->setParameter('s', '%' . $search . '%');
+            if (is_numeric($search)) {
+                $qb->andWhere('t.id = :sid OR t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
+                   ->setParameter('sid', (int) $search)
+                   ->setParameter('s', '%' . $search . '%');
+            } else {
+                $qb->andWhere('t.titre LIKE :s OR t.description LIKE :s OR t.categorie LIKE :s')
+                   ->setParameter('s', '%' . $search . '%');
+            }
         }
 
         if ($statut !== 'Tous') {
@@ -274,14 +280,7 @@ class TacheRepository extends ServiceEntityRepository
         }
         return $counts;
     }
-     /**
-     * Récupère toutes les tâches d'un employé pour le calcul de performance.
-     * Identique à la requête SQL du PerformanceService.java :
-     *   "SELECT statut, date_debut, date_fin FROM tache WHERE id_employe = ?"
-     *
-     * Utilisé UNIQUEMENT par PerformanceService::calculatePerformance()
-     */
-    public function findTachesParEmployePourPerformance(int $idEmploye): array
+      public function findTachesParEmployePourPerformance(int $idEmploye): array
     {
         return $this->createQueryBuilder('t')
             ->select('t')
@@ -289,5 +288,36 @@ class TacheRepository extends ServiceEntityRepository
             ->setParameter('emp', $idEmploye)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * ✅ Récupère les tâches terminées pour calculer l'historique de risque.
+     */
+    public function findHistoriquePourRisque(int $idEmploye): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.idEmploye = :emp')
+            ->andWhere('t.statut IN (:finished)')
+            ->setParameter('emp', $idEmploye)
+            ->setParameter('finished', ['Terminé', 'Validé', 'Annulé'])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * ✅ Compte les tâches actives pour évaluer la charge de travail (en excluant la tâche courante).
+     */
+    public function countChargeActuelle(int $idEmploye, int $excludeTacheId): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.idEmploye = :emp')
+            ->andWhere('t.id != :exclude')
+            ->andWhere('t.statut IN (:actives)')
+            ->setParameter('emp', $idEmploye)
+            ->setParameter('exclude', $excludeTacheId)
+            ->setParameter('actives', ['En attente', 'En cours'])
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

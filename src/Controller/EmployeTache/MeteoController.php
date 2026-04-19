@@ -33,13 +33,15 @@ class MeteoController extends AbstractController
 
         // 2. Compute recommendations if weather is available
         if ($weatherData->isAvailable()) {
-            // Retrieve today's tasks
+            // A. Recommandations Proactives (Générales)
+            foreach ($meteoService->genererRecommandationsGenerales($weatherData) as $reco) {
+                $recommandations[] = $reco;
+            }
+
+            // B. Recommandations liées aux tâches du jour
             $tachesDuJour = $tacheRepository->findTachesDuJour($idAgriculteur);
-            
             foreach ($tachesDuJour as $tache) {
-                // Generate alerts/positive messages
-                $recosTache = $meteoService->analyserConditionsPourTache($tache, $weatherData);
-                foreach ($recosTache as $reco) {
+                foreach ($meteoService->analyserConditionsPourTache($tache, $weatherData) as $reco) {
                     $recommandations[] = $reco;
                 }
             }

@@ -134,6 +134,16 @@
                 <span>Gestion d'équipe</span>
               </div>
             </a>
+            {% elseif app.user %}
+            <a href="javascript:void(0)" class="service-sidebar-item" style="cursor:default;opacity:0.75" title="Module réservé aux agriculteurs">
+              <div class="service-sidebar-icon">
+                <i class="bi bi-people"></i>
+              </div>
+              <div class="service-sidebar-text">
+                <h4>Employés <i class="bi bi-lock-fill" style="font-size:0.75rem;margin-left:2px"></i></h4>
+                <span>Gestion d'équipe</span>
+              </div>
+            </a>
             {% endif %}
 
             </div>
@@ -246,6 +256,19 @@
               </div>
             </div>
           </a>
+        </div>
+        {% elseif app.user %}
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+            <div class="service-item" style="cursor:default; opacity:0.85;" title="Module réservé aux agriculteurs">
+              <span class="number">06</span>
+              <div class="service-item-icon">
+                <i class="bi bi-people display-4" style="color:#aaa"></i>
+              </div>
+              <div class="service-item-content">
+                <h3 class="service-heading" style="color:#666">Employés <i class="bi bi-lock-fill ms-1" style="font-size:1.1rem;color:#ccc"></i></h3>
+                <p>Gérez les plannings, les tâches et les profils de vos ouvriers agricoles depuis une interface centralisée.</p>
+              </div>
+            </div>
         </div>
         {% endif %}
  

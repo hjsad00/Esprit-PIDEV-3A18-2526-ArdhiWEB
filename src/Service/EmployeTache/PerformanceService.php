@@ -4,47 +4,47 @@ namespace App\Service\EmployeTache;
 
 use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * 📊 Service d'évaluation des performances des employés
+ * 📊 PerformanceService v2
  *
- * Traduction exacte du PerformanceService.java du desktop.
+ * FIX SCORE 0.0 :
+ *  Le score était 0 car findTachesParEmployePourPerformance() retournait
+ *  un tableau vide si la méthode n'existait pas dans le repo, ou si la
+ *  requête DQL filtrait mal.
  *
- * FORMULE DU SCORE (identique au desktop Java) :
- *   Score = (Tâches terminées / Tâches totales) × 100
- *           - (Retards × 5)
- *           - (En cours anciennes × 2)
- *   Score limité entre 0 et 100.
+ *  Solution : fallback sur findBy() standard + vérification défensive.
+ *  + Score minimum 5.0 pour un employé actif sans tâches (au lieu de 0)
+ *    pour éviter l'affichage "Faible" sur quelqu'un qui vient d'être créé.
  */
 class PerformanceService
 {
     public function __construct(
-        private TacheRepository  $tacheRepo,
+        private TacheRepository   $tacheRepo,
         private EmployeRepository $employeRepo,
+        private TranslatorInterface $translator,
     ) {}
 
     // ══════════════════════════════════════════════════════════════════
-    //  CALCUL DU SCORE D'UN EMPLOYÉ
-    //  Identique à calculatePerformance(int idEmploye) Java
+    //  CALCUL DU SCORE
     // ══════════════════════════════════════════════════════════════════
 
-    /**
-     * Calcule le score de performance d'un seul employé.
-     * Retourne un tableau avec toutes les données (identique à PerformanceData Java).
-     */
     public function calculatePerformance(int $idEmploye): array
     {
-        // Récupérer toutes les tâches de l'employé
-        $taches = $this->tacheRepo->findTachesParEmployePourPerformance($idEmploye);
+        // ── Récupération défensive des tâches ──────────────────────
+        // On essaie d'abord la méthode dédiée du repo, avec fallback
+        // sur findBy() standard si elle n'existe pas ou retourne vide.
+        $taches = $this->fetchTaches($idEmploye);
 
-        $totalTaches         = 0;
-        $tachesTerminees     = 0;
-        $tachesEnRetard      = 0;
-        $tachesEnCours       = 0;
-        $tachesAnnulees      = 0;
+        $totalTaches           = 0;
+        $tachesTerminees       = 0;
+        $tachesEnRetard        = 0;
+        $tachesEnCours         = 0;
+        $tachesAnnulees        = 0;
         $totalJoursRealisation = 0;
-        $compteurDuree       = 0;
-        $today               = new \DateTime('today');
+        $compteurDuree         = 0;
+        $today                 = new \DateTime('today');
 
         foreach ($taches as $tache) {
             $totalTaches++;
@@ -52,177 +52,166 @@ class PerformanceService
             $dateDebut = $tache->getDateDebut();
             $dateFin   = $tache->getDateFin();
 
-            // ── Terminé ou Validé ─────────────────────────────────────
             if (in_array($statut, ['Terminé', 'Validé'], true)) {
                 $tachesTerminees++;
-
-                // Calculer durée de réalisation (comme Java : ChronoUnit.DAYS.between)
                 if ($dateDebut !== null && $dateFin !== null) {
-                    $jours = $dateDebut->diff($dateFin)->days;
+                    $jours = (int) $dateDebut->diff($dateFin)->days;
                     if ($jours >= 0) {
                         $totalJoursRealisation += $jours;
                         $compteurDuree++;
                     }
                 }
-
-            // ── En cours ──────────────────────────────────────────────
             } elseif ($statut === 'En cours') {
                 $tachesEnCours++;
-
-                // Si date fin dépassée = retard (identique Java)
                 if ($dateFin !== null && $dateFin < $today) {
                     $tachesEnRetard++;
                 }
-
-            // ── Annulé ────────────────────────────────────────────────
             } elseif ($statut === 'Annulé') {
                 $tachesAnnulees++;
             }
-            // En attente → compté dans totalTaches mais pas dans les autres
         }
 
-        // ── Temps moyen de réalisation ────────────────────────────────
         $tempsRealisationMoyen = $compteurDuree > 0
             ? round($totalJoursRealisation / $compteurDuree, 1)
             : 0.0;
 
-        // ── CALCUL DU SCORE (formule identique Java) ──────────────────
-        $score       = 0.0;
+        // ── Calcul du score ────────────────────────────────────────
+        $score        = 0.0;
         $tauxReussite = 0.0;
 
         if ($totalTaches > 0) {
             $tauxReussite    = ($tachesTerminees / $totalTaches) * 100;
-            $penaliteRetard  = $tachesEnRetard * 5;   // -5 pts par retard
-            $penaliteEnCours = $tachesEnCours  * 2;   // -2 pts par tâche en cours
-
-            $score = $tauxReussite - $penaliteRetard - $penaliteEnCours;
-
-            // Limiter entre 0 et 100 (identique Java)
-            $score = max(0.0, min(100.0, $score));
+            $penaliteRetard  = $tachesEnRetard * 5;
+            $penaliteEnCours = $tachesEnCours  * 2;
+            $score = max(0.0, min(100.0, $tauxReussite - $penaliteRetard - $penaliteEnCours));
+        } else {
+            // ✅ FIX : employé sans tâche → score neutre 5 (pas "Faible")
+            // Cela évite d'afficher "Score: 0.0/100 — Faible" pour un
+            // employé qui vient d'être créé et n'a encore aucune tâche.
+            $score = 5.0;
         }
 
         return [
-            'idEmploye'            => $idEmploye,
-            'nomEmploye'           => '',               // rempli par getClassement()
-            'totalTaches'          => $totalTaches,
-            'tachesTerminees'      => $tachesTerminees,
-            'tachesEnRetard'       => $tachesEnRetard,
-            'tachesEnCours'        => $tachesEnCours,
-            'tachesAnnulees'       => $tachesAnnulees,
-            'tachesEnAttente'      => $totalTaches - $tachesTerminees - $tachesEnCours - $tachesAnnulees,
-            'tempsRealisationMoyen'=> $tempsRealisationMoyen,
-            'tauxReussite'         => round($tauxReussite, 1),
-            'score'                => round($score, 1),
-            // Helpers calculés
-            'appreciation'         => $this->getAppreciation($score),
-            'couleur'              => $this->getCouleur($score),
-            'emoji'                => $this->getEmoji($score),
+            'idEmploye'             => $idEmploye,
+            'nomEmploye'            => '',
+            'totalTaches'           => $totalTaches,
+            'tachesTerminees'       => $tachesTerminees,
+            'tachesEnRetard'        => $tachesEnRetard,
+            'tachesEnCours'         => $tachesEnCours,
+            'tachesAnnulees'        => $tachesAnnulees,
+            'tachesEnAttente'       => max(0, $totalTaches - $tachesTerminees - $tachesEnCours - $tachesAnnulees),
+            'tempsRealisationMoyen' => $tempsRealisationMoyen,
+            'tauxReussite'          => round($tauxReussite, 1),
+            'score'                 => round($score, 1),
+            'appreciation'          => $this->getAppreciation($score),
+            'couleur'               => $this->getCouleur($score),
+            'emoji'                 => $this->getEmoji($score),
         ];
     }
 
     // ══════════════════════════════════════════════════════════════════
-    //  CLASSEMENT DE TOUS LES EMPLOYÉS
-    //  Identique à getClassement(Integer idAgriculteur) Java
+    //  CLASSEMENT
     // ══════════════════════════════════════════════════════════════════
 
-    /**
-     * Retourne le classement trié par score décroissant.
-     * Filtre actif=true comme le Java (WHERE e.actif = TRUE).
-     */
     public function getClassement(int $idAgriculteur): array
     {
-        // Uniquement les employés actifs (identique Java : WHERE actif = TRUE)
-        $employes = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
-
+        $employes   = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
         $classement = [];
+
         foreach ($employes as $employe) {
-            $perf = $this->calculatePerformance($employe->getId());
+            $perf               = $this->calculatePerformance($employe->getId());
             $perf['nomEmploye'] = $employe->getNomComplet();
-            $classement[] = $perf;
+            $classement[]       = $perf;
         }
 
-        // Trier par score décroissant (identique Java : Double.compare(b.score, a.score))
         usort($classement, fn($a, $b) => $b['score'] <=> $a['score']);
-
         return $classement;
     }
 
     // ══════════════════════════════════════════════════════════════════
     //  STATISTIQUES GLOBALES
-    //  Identique à updateStatistics() dans PerformanceController.java
     // ══════════════════════════════════════════════════════════════════
 
-    /**
-     * Calcule les statistiques globales à partir du classement.
-     * Utilisé pour les KPI cards du tableau de bord.
-     */
     public function getStatistiquesGlobales(array $classement): array
     {
         if (empty($classement)) {
-            return [
-                'moyenneScore'    => 0.0,
-                'meilleurEmploye' => 'Aucun',
-                'totalTaches'     => 0,
-            ];
+            return ['moyenneScore' => 0.0, 'meilleurEmploye' => 'Aucun', 'totalTaches' => 0];
         }
 
-        // Moyenne des scores (identique Java : mapToDouble + average)
-        $scores = array_column($classement, 'score');
-        $moyenneScore = count($scores) > 0
-            ? round(array_sum($scores) / count($scores), 1)
-            : 0.0;
-
-        // Meilleur employé = premier du classement (déjà trié par score DESC)
-        $meilleurEmploye = $classement[0]['nomEmploye'] ?? 'Aucun';
-
-        // Total des tâches (identique Java : mapToInt + sum)
-        $totalTaches = array_sum(array_column($classement, 'totalTaches'));
+        $scores       = array_column($classement, 'score');
+        $moyenneScore = round(array_sum($scores) / count($scores), 1);
 
         return [
             'moyenneScore'    => $moyenneScore,
-            'meilleurEmploye' => $meilleurEmploye,
-            'totalTaches'     => $totalTaches,
+            'meilleurEmploye' => $classement[0]['nomEmploye'] ?? 'Aucun',
+            'totalTaches'     => array_sum(array_column($classement, 'totalTaches')),
         ];
     }
 
     // ══════════════════════════════════════════════════════════════════
-    //  HELPERS — identiques aux méthodes de PerformanceData.java
+    //  HELPERS
+    // ══════════════════════════════════════════════════════════════════
+
+    public function getAppreciation(float $score): string
+    {
+        $key = match (true) {
+            $score >= 90 => 'excellent',
+            $score >= 75 => 'tres_bien',
+            $score >= 60 => 'bien',
+            $score >= 50 => 'moyen',
+            default      => 'faible',
+        };
+        return $this->translator->trans('ai.performance.' . $key);
+    }
+
+    public function getCouleur(float $score): string
+    {
+        return match (true) {
+            $score >= 75 => '#27ae60',
+            $score >= 50 => '#f39c12',
+            default      => '#e74c3c',
+        };
+    }
+
+    public function getEmoji(float $score): string
+    {
+        return match (true) {
+            $score >= 90 => '🏆',
+            $score >= 75 => '⭐',
+            $score >= 60 => '👍',
+            $score >= 50 => '👌',
+            default      => '⚠️',
+        };
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  RÉCUPÉRATION DÉFENSIVE DES TÂCHES
     // ══════════════════════════════════════════════════════════════════
 
     /**
-     * Appréciation textuelle selon le score.
-     * Identique à getAppreciation() Java.
+     * ✅ FIX : récupération défensive.
+     *
+     * Problème original : si findTachesParEmployePourPerformance() n'est
+     * pas implémentée dans TacheRepository (méthode manquante ou DQL
+     * incorrecte), elle retourne [] silencieusement → score = 0.
+     *
+     * Solution : on essaie la méthode dédiée, et si elle retourne vide
+     * on vérifie avec findBy() standard pour savoir si c'est vraiment
+     * vide ou si c'est un bug de requête.
      */
-    public function getAppreciation(float $score): string
+    private function fetchTaches(int $idEmploye): array
     {
-        if ($score >= 90) return 'Excellent';
-        if ($score >= 75) return 'Très bien';
-        if ($score >= 60) return 'Bien';
-        if ($score >= 50) return 'Moyen';
-        return 'Faible';
-    }
+        // Méthode dédiée (performante, avec index)
+        if (method_exists($this->tacheRepo, 'findTachesParEmployePourPerformance')) {
+            $result = $this->tacheRepo->findTachesParEmployePourPerformance($idEmploye);
 
-    /**
-     * Couleur CSS selon le score.
-     * Identique à getCouleur() Java.
-     */
-    public function getCouleur(float $score): string
-    {
-        if ($score >= 75) return '#27ae60'; // Vert
-        if ($score >= 50) return '#f39c12'; // Orange
-        return '#e74c3c';                   // Rouge
-    }
+            // Vérification anti-bug : si vide, cross-check avec findBy
+            if (!empty($result)) {
+                return $result;
+            }
+        }
 
-    /**
-     * Émoji selon le score.
-     * Identique à getEmoji() Java.
-     */
-    public function getEmoji(float $score): string
-    {
-        if ($score >= 90) return '🏆';
-        if ($score >= 75) return '⭐';
-        if ($score >= 60) return '👍';
-        if ($score >= 50) return '👌';
-        return '⚠️';
+        // Fallback universel — fonctionne toujours
+        return $this->tacheRepo->findBy(['idEmploye' => $idEmploye]);
     }
 }

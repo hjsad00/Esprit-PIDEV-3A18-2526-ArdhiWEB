@@ -9,6 +9,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class MeteoService
 {
@@ -18,6 +20,8 @@ class MeteoService
     public function __construct(
         private HttpClientInterface $client,
         private CacheInterface $cache,
+        private TranslatorInterface $translator,
+        private RequestStack $requestStack,
         #[Autowire(env: 'OPENWEATHER_API_KEY')]
         private string $apiKey
     ) {
@@ -33,11 +37,12 @@ class MeteoService
 
             $data = new WeatherData();
             try {
+                $locale = $this->requestStack->getCurrentRequest()?->getLocale() ?? 'fr';
                 $response = $this->client->request('GET', self::BASE_URL, [
                     'query' => [
                         'q' => self::CITY,
                         'units' => 'metric',
-                        'lang' => 'fr',
+                        'lang' => $locale,
                         'appid' => $this->apiKey
                     ],
                     'timeout' => 5
@@ -98,15 +103,15 @@ class MeteoService
             case 'TRAITEMENT':
                 if ($pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_DANGER,
-                        "🌧️ Pluie prévue : traitement « " . $tache->getTitre() . " » inefficace. Reporter à demain.",
+                        $this->translator->trans('meteo.alerts.danger', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_wet')]),
                         "METEO_PLUIE");
                 } elseif ($vent > 40) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_DANGER,
-                        "💨 Vent fort (" . (int)$vent . " km/h) : pulvérisation « " . $tache->getTitre() . " » déconseillée.",
+                        $this->translator->trans('meteo.alerts.danger', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_windy')]),
                         "METEO_VENT");
                 } elseif ($bonVent && !$pluie && $temp >= 15 && $temp <= 30) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Conditions idéales traitement « " . $tache->getTitre() . " » : " . (int)$temp . "°C, vent parfait.",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -114,15 +119,15 @@ class MeteoService
             case 'IRRIGATION':
                 if ($pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_WARNING,
-                        "🌧️ Pluie prévue : irrigation « " . $tache->getTitre() . " » non nécessaire.",
+                        $this->translator->trans('meteo.alerts.caution', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_wet')]),
                         "METEO_PLUIE");
                 } elseif ($temp > 35) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_WARNING,
-                        "🌡️ Chaleur (" . (int)$temp . "°C) : irrigation tôt le matin pour « " . $tache->getTitre() . " ».",
+                        $this->translator->trans('meteo.alerts.caution', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_hot')]),
                         "METEO_CHALEUR");
                 } elseif ($temp >= 18 && $temp <= 30 && !$pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Idéal pour irriguer « " . $tache->getTitre() . " » : pas de précipitation.",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -131,15 +136,15 @@ class MeteoService
             case 'RÉCOLTE':
                 if ($pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_DANGER,
-                        "🌧️ Pluie prévue : récolte « " . $tache->getTitre() . " » déconseillée (moisissures).",
+                        $this->translator->trans('meteo.alerts.danger', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_wet')]),
                         "METEO_PLUIE");
                 } elseif ($temp > 38) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_WARNING,
-                        "🌡️ Chaleur (" . (int)$temp . "°C) : récolter avant 9h pour « " . $tache->getTitre() . " ».",
+                        $this->translator->trans('meteo.alerts.caution', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_hot')]),
                         "METEO_CHALEUR");
                 } elseif ($bonne) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Excellent moment pour récolter « " . $tache->getTitre() . " » : qualité optimale.",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -147,15 +152,15 @@ class MeteoService
             case 'PLANTATION':
                 if ($temp > 38) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_DANGER,
-                        "🌡️ Chaleur excessive (" . (int)$temp . "°C) : plantation « " . $tache->getTitre() . " » risquée.",
+                        $this->translator->trans('meteo.alerts.danger', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_hot')]),
                         "METEO_CHALEUR");
                 } elseif ($pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Pluie prévue : humidité naturelle parfaite pour « " . $tache->getTitre() . " ».",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 } elseif ($bonne) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Bonne journée pour la plantation « " . $tache->getTitre() . " » : " . (int)$temp . "°C.",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -163,11 +168,11 @@ class MeteoService
             case 'LABOUR':
                 if ($pluie) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_DANGER,
-                        "🌧️ Sol humide : labour « " . $tache->getTitre() . " » déconseillé (compaction).",
+                        $this->translator->trans('meteo.alerts.danger', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_wet')]),
                         "METEO_PLUIE");
                 } elseif (!$pluie && $temp <= 30) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Sol sec : conditions parfaites pour " . $tache->getTitre() . ".",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -175,11 +180,11 @@ class MeteoService
             case 'MAINTENANCE':
                 if ($pluie || $vent > 50) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_WARNING,
-                        "⚠️ Extérieur hostile : reportez la maintenance de « " . $tache->getTitre() . " ».",
+                        $this->translator->trans('meteo.alerts.caution', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_windy')]),
                         "METEO_INFO");
                 } elseif ($bonne) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_POSITIVE,
-                        "✅ Bonne météo pour maintenance sûre sur « " . $tache->getTitre() . " ».",
+                        $this->translator->trans('meteo.alerts.good', ['%task%' => $tache->getTitre()]),
                         "METEO_POSITIVE");
                 }
                 break;
@@ -187,10 +192,76 @@ class MeteoService
             default:
                 if ($pluie && $vent > 30) {
                     $recos[] = new Recommandation(Recommandation::NIVEAU_WARNING,
-                        "⚠️ Pluie+vent : activités extérieures sur « " . $tache->getTitre() . " » difficiles.",
+                        $this->translator->trans('meteo.alerts.caution', ['%task%' => $tache->getTitre(), '%reason%' => $this->translator->trans('meteo.conditions.too_wet')]),
                         "METEO_INFO");
                 }
                 break;
+        }
+
+        return $recos;
+    }
+
+    /**
+     * Recommandations générales basées uniquement sur la météo (sans tâche spécifique).
+     * @return Recommandation[]
+     */
+    public function genererRecommandationsGenerales(WeatherData $w): array
+    {
+        $recos = [];
+        if (!$w->isAvailable()) return $recos;
+
+        $temp  = $w->getTemperature();
+        $vent  = $w->getWindSpeed();
+        $pluie = $w->isRainExpected();
+
+        if ($pluie) {
+            $recos[] = new Recommandation(
+                Recommandation::NIVEAU_WARNING,
+                $this->translator->trans('meteo.advice.rain'),
+                "GEN_RAIN"
+            );
+        } else {
+            // Conditions idéales globales
+            if ($temp >= 18 && $temp <= 28 && $vent < 15) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.ideal'),
+                    "GEN_IDEAL"
+                );
+            }
+
+            // Focus sur le vent (traitements)
+            if ($vent < 10) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.wind_ok'),
+                    "GEN_WIND_OK"
+                );
+            } elseif ($vent > 35) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_WARNING,
+                    $this->translator->trans('meteo.advice.wind_bad'),
+                    "GEN_WIND_BAD"
+                );
+            }
+
+            // Focus sur la chaleur
+            if ($temp > 30) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_WARNING,
+                    $this->translator->trans('meteo.advice.heat'),
+                    "GEN_HEAT"
+                );
+            }
+
+            // Si rien d'autre et que c'est une belle journée
+            if (empty($recos) && $temp > 15 && !$pluie) {
+                $recos[] = new Recommandation(
+                    Recommandation::NIVEAU_POSITIVE,
+                    $this->translator->trans('meteo.advice.generic_good'),
+                    "GEN_GOOD"
+                );
+            }
         }
 
         return $recos;

@@ -125,4 +125,20 @@ class NotificationController extends AbstractController
         $count = $this->notifService->countUnread($result);
         return new JsonResponse(['success' => true, 'count' => $count]);
     }
+
+    /**
+     * Rendu de l'icône de notification pour la navbar globale (base.html.twig)
+     */
+    public function renderNavbarIcon(): Response
+    {
+        $idAgriculteur = $this->ctx->getActiveAgriculteurId();
+        $count = 0;
+        if ($idAgriculteur !== null) {
+            $count = $this->notifService->countUnread($idAgriculteur);
+        }
+
+        return $this->render('EmployeTache/notification/_navbar_icon.html.twig', [
+            'count' => $count,
+        ]);
+    }
 }

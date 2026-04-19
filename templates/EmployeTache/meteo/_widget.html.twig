@@ -4,31 +4,39 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
     color: white;
     width: 100%;
     margin-bottom: 2rem;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
+.meteo-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
 .meteo-header {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 1rem;
 }
 
 .meteo-icon {
-    font-size: 3rem;
+    font-size: 2.5rem;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .meteo-info h2 {
     margin: 0;
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     line-height: 1.1;
     font-family: inherit;
@@ -36,54 +44,51 @@
 
 .meteo-info p {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.8);
     text-transform: capitalize;
 }
 
 .meteo-stats {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .meteo-stat-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
+    gap: 0.4rem;
+    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.9);
 }
 
 .meteo-stat-item i {
     color: #3b82f6;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
-.meteo-alerts-title {
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1rem;
-    font-weight: 600;
+.meteo-alerts-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .meteo-alert-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 /* Alert Items Style */
 .meteo-alert {
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    border-left: 4px solid;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border-left: 3px solid;
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .meteo-alert p {
@@ -115,62 +120,67 @@
 
 <div class="meteo-glass-panel">
     {% if not weather.available %}
-        <div class="meteo-header">
-            <div class="meteo-icon">⚠️</div>
-            <div class="meteo-info">
-                <h2>N/A</h2>
-                <p>Météo indisponible</p>
-                <small>{{ weather.description }}</small>
+        <div class="meteo-top-row">
+            <div class="meteo-header">
+                <div class="meteo-icon">⚠️</div>
+                <div class="meteo-info">
+                    <h2>N/A</h2>
+                    <p>{{ 'meteo.widget_title'|trans }}</p>
+                    <small style="color: rgba(255,255,255,0.6);">{{ weather.description }}</small>
+                </div>
             </div>
         </div>
     {% else %}
-        <div class="meteo-header">
-            <div class="meteo-icon">
-                <img src="https://openweathermap.org/img/wn/{{ weather.iconCode }}@2x.png" alt="Météo" width="80" height="80">
+        <div class="meteo-top-row">
+            <div class="meteo-header">
+                <div class="meteo-icon">
+                    <img src="https://openweathermap.org/img/wn/{{ weather.iconCode }}@2x.png" alt="Météo" width="60" height="60" style="object-fit: contain;">
+                </div>
+                <div class="meteo-info">
+                    <h2>{{ weather.temperature|round }}°C</h2>
+                    <p>{{ weather.description }}</p>
+                </div>
             </div>
-            <div class="meteo-info">
-                <h2>{{ weather.temperature|round }}°C</h2>
-                <p>{{ weather.description }}</p>
-            </div>
-        </div>
 
-        <div class="meteo-stats">
-            <div class="meteo-stat-item">
-                <i class="bi bi-droplet-fill"></i>
-                {{ weather.humidity }}% Humidité
-            </div>
-            <div class="meteo-stat-item">
-                <i class="bi bi-wind" style="color: #cbd5e1;"></i>
-                {{ weather.windSpeed|round }} km/h
-            </div>
-            <div class="meteo-stat-item">
-                <i class="bi bi-thermometer-half" style="color: #f59e0b;"></i>
-                Ressenti {{ weather.feelsLike|round }}°C
+            <div class="meteo-stats">
+                <div class="meteo-stat-item">
+                    <i class="bi bi-droplet-fill"></i>
+                    {{ weather.humidity }}% <span style="font-size: 0.8em; opacity: 0.8;">{{ 'meteo.humidity'|trans }}</span>
+                </div>
+                <div class="meteo-stat-item">
+                    <i class="bi bi-wind" style="color: #cbd5e1;"></i>
+                    {{ weather.windSpeed|round }} km/h <span style="font-size: 0.8em; opacity: 0.8;">{{ 'meteo.wind'|trans }}</span>
+                </div>
+                <div class="meteo-stat-item">
+                    <i class="bi bi-thermometer-half" style="color: #f59e0b;"></i>
+                    <span style="font-size: 0.8em; opacity: 0.8;">{{ 'meteo.temp'|trans }}</span> {{ weather.feelsLike|round }}°C
+                </div>
             </div>
         </div>
         
-        <div class="meteo-alerts-title">Alertes Météo Agricoles</div>
-        <div class="meteo-alert-list">
-            {% if recommandations|length > 0 %}
-                {% for reco in recommandations %}
-                    {% set alertClass = 'alert-info' %}
-                    {% if reco.niveau == 'POSITIVE' %}
-                        {% set alertClass = 'alert-positive' %}
-                    {% elseif reco.niveau == 'WARNING' %}
-                        {% set alertClass = 'alert-warning' %}
-                    {% elseif reco.niveau == 'DANGER' %}
-                        {% set alertClass = 'alert-danger' %}
-                    {% endif %}
+        <div class="meteo-alerts-container">
+            <div class="meteo-alert-list">
+                {% if recommandations|length > 0 %}
+                    {% for reco in recommandations %}
+                        {% set alertClass = 'alert-info' %}
+                        {% if reco.niveau == 'POSITIVE' %}
+                            {% set alertClass = 'alert-positive' %}
+                        {% elseif reco.niveau == 'WARNING' %}
+                            {% set alertClass = 'alert-warning' %}
+                        {% elseif reco.niveau == 'DANGER' %}
+                            {% set alertClass = 'alert-danger' %}
+                        {% endif %}
 
-                    <div class="meteo-alert {{ alertClass }}">
-                        <p>{{ reco.message }}</p>
+                        <div class="meteo-alert {{ alertClass }}">
+                            <p>{{ reco.message }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="meteo-alert alert-info" style="border-left-color: #94a3b8; background: rgba(148, 163, 184, 0.1);">
+                        <p>{{ 'notification.empty'|trans }}</p>
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="meteo-alert alert-info" style="border-left-color: #94a3b8; background: rgba(148, 163, 184, 0.1);">
-                    <p>Aucune recommandation critique pour les tâches d'aujourd'hui.</p>
-                </div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 </div>

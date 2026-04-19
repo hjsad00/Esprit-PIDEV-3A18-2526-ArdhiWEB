@@ -3,113 +3,59 @@
 
 {% block stylesheets %}
 <style>
-/* ── Page ──────────────────────────────────────────────────────── */
 .emp-page { padding: 90px 0 60px; background: #f0f2f0; min-height: 100vh; }
-
-/* ── Top bar ───────────────────────────────────────────────────── */
 .emp-topbar {
     background: white; border-radius: 14px; padding: 14px 22px;
     margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
-.emp-topbar-title { font-size: 1.25rem; font-weight: 700; color: #1B5E20;
-    display: flex; align-items: center; gap: 9px; }
+.emp-topbar-title { font-size: 1.25rem; font-weight: 700; color: #1B5E20; display: flex; align-items: center; gap: 9px; }
 .emp-badge { border-radius: 20px; padding: 3px 13px; font-size: .82rem; font-weight: 700; }
 .badge-total   { background:#e8f5e9; color:#1B5E20; }
 .badge-actif   { background:#d4edda; color:#155724; }
 .badge-inactif { background:#f8d7da; color:#721c24; }
-.badge-top     { background:#e8eaf6; color:#283593; font-size:.76rem; }
-
-/* ── Toolbar recherche + tri ───────────────────────────────────── */
 .emp-toolbar {
     background: white; border-radius: 12px; padding: 12px 18px;
     margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
-.emp-search {
-    flex: 1; min-width: 220px; border: 1.5px solid #ccc;
-    border-radius: 8px; padding: 8px 13px; font-size: .9rem; transition: .2s;
-}
+.emp-search { flex: 1; min-width: 220px; border: 1.5px solid #ccc; border-radius: 8px; padding: 8px 13px; font-size: .9rem; transition: .2s; }
 .emp-search:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 0 3px rgba(39,174,96,.12); }
-
-/* Séparateur vertical */
 .toolbar-sep { width: 1px; height: 32px; background: #e0e0e0; flex-shrink: 0; }
-
-/* Label tri */
 .tri-label { font-size: .82rem; font-weight: 600; color: #777; white-space: nowrap; }
-
-/* Sélecteur de tri */
-.tri-select {
-    border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px;
-    font-size: .88rem; background: white; cursor: pointer; transition: .2s;
-    min-width: 130px;
-}
+.tri-select { border: 1.5px solid #ccc; border-radius: 8px; padding: 7px 12px; font-size: .88rem; background: white; cursor: pointer; min-width: 130px; }
 .tri-select:focus { border-color: #27ae60; outline: none; }
-
-/* Boutons direction ↑ ↓ */
-.btn-dir {
-    width: 34px; height: 34px; border: 1.5px solid #ccc; border-radius: 8px;
-    background: white; cursor: pointer; font-size: 1rem; display: flex;
-    align-items: center; justify-content: center; transition: .15s; flex-shrink: 0;
-}
+.btn-dir { width: 34px; height: 34px; border: 1.5px solid #ccc; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: .15s; flex-shrink: 0; }
 .btn-dir:hover { border-color: #27ae60; background: #e8f5e9; color: #1B5E20; }
 .btn-dir.active { background: #27ae60; border-color: #27ae60; color: white; }
-
-/* Bouton Actualiser */
-.btn-actualiser {
-    border: 1.5px solid #ccc; border-radius: 8px; background: white;
-    padding: 7px 14px; font-size: .85rem; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 6px; color: #555; transition: .15s;
-    text-decoration: none;
-}
+.btn-actualiser { border: 1.5px solid #ccc; border-radius: 8px; background: white; padding: 7px 14px; font-size: .85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #555; transition: .15s; text-decoration: none; }
 .btn-actualiser:hover { border-color: #27ae60; color: #1B5E20; }
-
-/* ── Table ─────────────────────────────────────────────────────── */
-.emp-table-wrap {
-    background: white; border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 18px;
-}
+.emp-table-wrap { background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 18px; }
 .emp-table { width: 100%; border-collapse: collapse; }
-.emp-table thead th {
-    background: #4a7c59; color: white; font-size: .81rem; font-weight: 700;
-    letter-spacing: .3px; padding: 12px 13px; text-align: left; border: none;
-    white-space: nowrap; user-select: none;
-}
+.emp-table thead th { background: #4a7c59; color: white; font-size: .81rem; font-weight: 700; letter-spacing: .3px; padding: 12px 13px; text-align: left; border: none; white-space: nowrap; user-select: none; }
 .emp-table thead th.sortable { cursor: pointer; }
 .emp-table thead th.sortable:hover { background: #3d6b4b; }
 .emp-table thead th.sorted-asc::after  { content: ' ↑'; opacity: .9; }
 .emp-table thead th.sorted-desc::after { content: ' ↓'; opacity: .9; }
-
 .emp-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .12s; cursor: pointer; }
 .emp-table tbody tr:hover { background: #f6fbf6; }
 .emp-table tbody tr.selected { background: #e8f5e9 !important; }
 .emp-table tbody td { padding: 11px 13px; vertical-align: middle; font-size: .89rem; color: #333; }
-
-/* ── Avatar ────────────────────────────────────────────────────── */
-.emp-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex;
-    align-items: center; justify-content: center; font-weight: 700;
-    font-size: .92rem; color: white; flex-shrink: 0; }
+.emp-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .92rem; color: white; flex-shrink: 0; }
 .emp-photo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #27ae60; }
-
-/* ── QR badge ──────────────────────────────────────────────────── */
-.qr-badge { font-family: monospace; font-size: .7rem; background: #f5f5f5;
-    border: 1px solid #ddd; border-radius: 5px; padding: 2px 7px; color: #555; }
-
-/* ── Statut badges ─────────────────────────────────────────────── */
 .st-actif   { background:#d4edda; color:#155724; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
 .st-inactif { background:#f8d7da; color:#721c24; padding:3px 11px; border-radius:20px; font-size:.78rem; font-weight:600; }
 
-/* ── Score performance inline ──────────────────────────────────── */
-.perf-mini {
-    display: inline-flex; align-items: center; gap: 5px;
+/* ── CERCLE PERFORMANCE — identique à colPerformance Java ────────── */
+.perf-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: .85rem; color: white;
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
+    border: none; outline: none;
 }
-.perf-mini-bar {
-    width: 45px; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;
-}
-.perf-mini-fill { height: 100%; border-radius: 3px; }
-.perf-mini-val { font-size: .75rem; font-weight: 700; }
+.perf-circle:hover { transform: scale(1.18); box-shadow: 0 4px 14px rgba(0,0,0,.28); }
 
-/* ── Boutons action ligne ──────────────────────────────────────── */
 .btn-voir  { background:#e8f5e9; color:#1B5E20; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
 .btn-modif { background:#fff3cd; color:#856404; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; }
 .btn-suppr { background:#f8d7da; color:#842029; border:none; border-radius:6px; padding:4px 9px; font-size:.78rem; font-weight:600; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; }
@@ -119,14 +65,7 @@
 .btn-voir:hover  { background:#27ae60; color:white; }
 .btn-modif:hover { background:#ffc107; color:#000; }
 .btn-suppr:hover { background:#dc3545; color:white; }
-.btn-perf:hover  { background:#3949ab; color:white; }
-
-/* ── Barre du bas ──────────────────────────────────────────────── */
-.emp-bottombar {
-    background: white; border-radius: 14px; padding: 14px 22px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08);
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-}
+.emp-bottombar { background: white; border-radius: 14px; padding: 14px 22px; box-shadow: 0 2px 12px rgba(0,0,0,.08); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .btn-add    { background:#27ae60; color:white; border:none; border-radius:10px; padding:10px 22px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
 .btn-add:hover { background:#219150; color:white; transform:translateY(-1px); }
 .btn-orange { background:#f39c12; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
@@ -138,37 +77,37 @@
 .btn-purple { background:#8e44ad; color:white; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.2s; text-decoration:none; }
 .btn-purple:hover { background:#6c3483; color:white; transform:translateY(-1px); }
 .bottom-info { margin-left:auto; color:#aaa; font-size:.83rem; font-style:italic; }
-
-/* ── Empty ─────────────────────────────────────────────────────── */
 .emp-empty { text-align:center; padding:55px 20px; color:#bbb; }
 .emp-empty i { font-size:3.5rem; margin-bottom:12px; display:block; }
 
-/* ── Top 3 banner ──────────────────────────────────────────────── */
-.top3-banner {
-    background: linear-gradient(135deg,#1B5E20,#2E7D32);
-    border-radius: 12px; padding: 12px 20px; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    box-shadow: 0 3px 14px rgba(27,94,32,.25);
-}
-.top3-banner-title { color:rgba(255,255,255,.75); font-size:.82rem; font-weight:700; white-space:nowrap; }
-.top3-item {
-    display: flex; align-items: center; gap: 7px;
-    background: rgba(255,255,255,.15); border-radius: 20px;
-    padding: 5px 14px; color: white; font-size: .83rem; font-weight: 700;
-}
-.top3-item .medal { font-size: 1rem; }
-.top3-item .score-pill {
-    background: rgba(255,255,255,.25); border-radius: 10px;
-    padding: 1px 8px; font-size: .75rem;
-}
-.top3-btn {
-    margin-left: auto; background: rgba(255,255,255,.2); color: white;
-    border: 1px solid rgba(255,255,255,.4); border-radius: 8px;
-    padding: 7px 16px; font-size: .82rem; font-weight: 700;
-    text-decoration: none; display: flex; align-items: center; gap: 6px;
-    transition: .2s;
-}
-.top3-btn:hover { background: rgba(255,255,255,.35); color: white; }
+/* ── MODAL PERFORMANCE — identique fenêtre desktop Java ─────────── */
+.perf-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:3000; align-items:center; justify-content:center; }
+.perf-overlay.active { display:flex; }
+.perf-modal { background:white; border-radius:16px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:popIn .22s ease; }
+@keyframes popIn { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* En-tête rose→bleu identique au desktop */
+.perf-modal-header { background:linear-gradient(135deg,#e91e8c,#1565c0); padding:24px 24px 20px; border-radius:16px 16px 0 0; color:white; display:flex; align-items:center; gap:18px; }
+.perf-score-circle { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:800; color:white; flex-shrink:0; border:3px solid rgba(255,255,255,.4); }
+.perf-modal-name   { font-size:1.35rem; font-weight:800; }
+.perf-modal-apprec { font-size:.95rem; opacity:.9; margin-top:3px; }
+.perf-modal-taux   { font-size:.82rem; opacity:.75; margin-top:2px; }
+.perf-modal-body { padding:22px 24px; }
+.perf-section-title { font-size:.82rem; font-weight:700; color:#1B5E20; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e8f5e9; padding-bottom:6px; margin-bottom:14px; margin-top:20px; display:flex; align-items:center; gap:6px; }
+.perf-section-title:first-child { margin-top:0; }
+.perf-stat-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f5f5f5; font-size:.9rem; }
+.perf-stat-row:last-child { border-bottom:none; }
+.perf-stat-label { display:flex; align-items:center; gap:8px; color:#555; }
+.perf-stat-value { font-weight:700; }
+.perf-bar-wrap { margin:10px 0 18px; }
+.perf-bar { height:16px; background:#e0e0e0; border-radius:8px; overflow:hidden; }
+.perf-bar-fill { height:100%; border-radius:8px; transition:width .5s ease; }
+.perf-bar-labels { display:flex; justify-content:space-between; font-size:.75rem; color:#999; margin-top:4px; }
+.perf-modal-footer { padding:14px 24px 20px; display:flex; justify-content:flex-end; }
+.btn-fermer { padding:10px 32px; background:linear-gradient(135deg,#1565c0,#1976d2); color:white; border:none; border-radius:20px; font-weight:700; font-size:.95rem; cursor:pointer; transition:.2s; }
+.btn-fermer:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(21,101,192,.35); }
+.perf-spinner { border:3px solid #eee; border-top-color:#1565c0; border-radius:50%; width:40px; height:40px; animation:spin .7s linear infinite; margin:40px auto; }
+@keyframes spin { to{transform:rotate(360deg)} }
 </style>
 {% endblock %}
 
@@ -176,233 +115,173 @@
 <div class="emp-page">
 <div class="container-fluid px-4">
 
-    {# ── Top bar : titre + compteurs ─────────────────────────────── #}
     <div class="emp-topbar">
-        <div class="emp-topbar-title">
-            <i class="bi bi-people-fill"></i> Gestion des Employés
-        </div>
-        <span class="emp-badge badge-total">{{ total }} Total</span>
-        <span class="emp-badge badge-actif">{{ total_actifs }} Actifs</span>
-        <span class="emp-badge badge-inactif">{{ total - total_actifs }} Inactifs</span>
-    </div>
-
-    {# ── Bandeau Top 3 Performance (identique à updateTopPerformers() Java) #}
-    {% if top3 is defined and top3|length > 0 %}
-    <div class="top3-banner">
-        <span class="top3-banner-title">🏆 Top Performeurs :</span>
-        {% set medals = ['🥇','🥈','🥉'] %}
-        {% for i, p in top3 %}
-        <div class="top3-item">
-            <span class="medal">{{ medals[i] }}</span>
-            <span>{{ p.nomEmploye }}</span>
-            <span class="score-pill">{{ p.score }} pts</span>
-        </div>
-        {% endfor %}
-        <a href="{{ path('employe_performance') }}" class="top3-btn">
-            <i class="bi bi-bar-chart-line-fill"></i> Voir le classement
-        </a>
+        <div class="emp-topbar-title"><i class="bi bi-people-fill"></i> {{ 'employe.title'|trans }}</div>
+        <span class="emp-badge badge-total">{{ total }} {{ 'common.total'|trans }}</span>
+        <span class="emp-badge badge-actif">{{ total_actifs }} {{ 'common.active'|trans }}</span>
+        <span class="emp-badge badge-inactif">{{ total - total_actifs }} {{ 'employe.empty'|trans|split(' ')|last }}</span>
     </div>
     {% endif %}
 
-    {# ── Toolbar : recherche + tri ──────────────────────────────── #}
     <form method="GET" action="{{ path('employe_index') }}">
     <div class="emp-toolbar">
-
         <i class="bi bi-search text-muted"></i>
         <input type="text" name="search" value="{{ search }}" class="emp-search"
-               placeholder="Rechercher par nom, prénom, email, poste...">
-
+               placeholder="{{ 'employe.search.prompt'|trans }}">
         {% if search %}
             <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}"
                class="btn btn-outline-secondary btn-sm" style="border-radius:7px">
                 <i class="bi bi-x-lg"></i>
             </a>
         {% endif %}
-
         <div class="toolbar-sep"></div>
-
-        <span class="tri-label">Trier par :</span>
+        <span class="tri-label">{{ 'common.sort.by'|trans }}</span>
         <select name="tri" class="tri-select" onchange="this.form.submit()">
             <option value="id"        {{ tri == 'id'        ? 'selected' : '' }}>ID</option>
-            <option value="nom"       {{ tri == 'nom'       ? 'selected' : '' }}>Nom</option>
-            <option value="prenom"    {{ tri == 'prenom'    ? 'selected' : '' }}>Prénom</option>
-            <option value="email"     {{ tri == 'email'     ? 'selected' : '' }}>Email</option>
-            <option value="poste"     {{ tri == 'poste'     ? 'selected' : '' }}>Poste</option>
-            <option value="telephone" {{ tri == 'telephone' ? 'selected' : '' }}>Téléphone</option>
-            <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>Actif</option>
+            <option value="nom"       {{ tri == 'nom'       ? 'selected' : '' }}>{{ 'employe.col.nom'|trans }}</option>
+            <option value="prenom"    {{ tri == 'prenom'    ? 'selected' : '' }}>{{ 'employe.col.prenom'|trans }}</option>
+            <option value="email"     {{ tri == 'email'     ? 'selected' : '' }}>{{ 'employe.col.email'|trans }}</option>
+            <option value="poste"     {{ tri == 'poste'     ? 'selected' : '' }}>{{ 'employe.col.poste'|trans }}</option>
+            <option value="telephone" {{ tri == 'telephone' ? 'selected' : '' }}>{{ 'employe.col.telephone'|trans }}</option>
+            <option value="actif"     {{ tri == 'actif'     ? 'selected' : '' }}>{{ 'employe.col.actif'|trans }}</option>
         </select>
-
         <input type="hidden" name="direction" id="directionInput" value="{{ direction }}">
-
         <button type="submit" class="btn-dir {{ direction == 'asc' ? 'active' : '' }}"
-                title="Ordre croissant" onclick="setDir('asc')">↑</button>
+                title="Croissant" onclick="setDir('asc')">↑</button>
         <button type="submit" class="btn-dir {{ direction == 'desc' ? 'active' : '' }}"
-                title="Ordre décroissant" onclick="setDir('desc')">↓</button>
-
+                title="Décroissant" onclick="setDir('desc')">↓</button>
         <div class="toolbar-sep"></div>
-
         <a href="{{ path('employe_index', {tri: tri, direction: direction}) }}" class="btn-actualiser">
-            <i class="bi bi-arrow-clockwise"></i> Actualiser
+            <i class="bi bi-arrow-clockwise"></i> {{ 'common.refresh'|trans }}
+        </a>
+        <a href="{{ path('tache_index') }}" class="btn btn-dark" style="border-radius:8px; font-weight:700;">
+            <i class="bi bi-list-task"></i> {{ 'tache.title'|trans|replace({'📋 ': ''}) }}
         </a>
         <a href="{{ path('employe_pdf') }}" class="btn btn-danger" style="border-radius:8px">
-            <i class="bi bi-file-earmark-pdf"></i> PDF
+            <i class="bi bi-file-earmark-pdf"></i> {{ 'common.export_pdf'|trans|replace({'📄 ': ''}) }}
         </a>
-        <a href="{{ path('employe_statistiques') }}" class="btn btn-success" style="border-radius:8px;background:#1B5E20;border-color:#1B5E20;">
-            <i class="bi bi-bar-chart-line-fill"></i> Statistiques
+        <a href="{{ path('employe_statistiques') }}" class="btn btn-info text-white" style="border-radius:8px">
+            <i class="bi bi-bar-chart-fill"></i> {{ 'common.statistics'|trans|replace({'📊 ': ''}) }}
         </a>
-        {# ✅ NOUVEAU — Bouton Performance (identique au bouton "Top Performeurs" du desktop Java) #}
-        <a href="{{ path('employe_performance') }}" class="btn" style="border-radius:8px;background:#8e44ad;border-color:#8e44ad;color:white;font-weight:700;">
-            <i class="bi bi-graph-up-arrow"></i> Performance
+        <a href="{{ path('employe_performance') }}" class="btn btn-warning"
+           style="border-radius:8px; background:#f39c12; border-color:#f39c12; color:white; font-weight:700;">
+            <i class="bi bi-trophy-fill"></i> {{ 'employe.top_performance'|trans }}
         </a>
         <button type="submit" class="btn btn-success btn-sm px-3" style="border-radius:8px">
-            <i class="bi bi-search me-1"></i>Rechercher
+            <i class="bi bi-search me-1"></i>{{ 'common.search'|trans }}
         </button>
-
     </div>
     </form>
 
-    {# ── Table ──────────────────────────────────────────────────── #}
+    {% if top3|length > 0 %}
+    <div class="row mb-4 justify-content-center g-3">
+        {% for item in top3 %}
+        {% set colors = {1: '#f1c40f', 2: '#bdc3c7', 3: '#cd7f32'} %}
+        <div class="col-md-4" style="max-width:300px">
+            <div style="background:white; border-radius:12px; padding:15px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.05); position:relative; border-top: 4px solid {{ colors[loop.index] }}; height:100%;">
+                <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:{{ colors[loop.index] }}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                    {{ loop.index }}
+                </div>
+                <div style="margin-top:15px; display:flex; flex-direction:column; align-items:center;">
+                    {% if item.emp.hasPhoto %}
+                        <img src="{{ item.emp.photoPath }}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; margin-bottom:8px; border:2px solid {{ colors[loop.index] }};" alt="{{ item.emp.nomComplet }}">
+                    {% else %}
+                        <div class="emp-avatar" style="width:50px; height:50px; background:{{ colors[loop.index] }}; margin-bottom:8px; border: 2px solid white; box-shadow:0 0 5px rgba(0,0,0,0.1);">{{ item.emp.initiales }}</div>
+                    {% endif %}
+                    <h5 style="margin:0; font-size:.95rem; font-weight:700; color:#2c3e50">{{ item.emp.nomComplet }}</h5>
+                    <p style="margin:0; font-size:0.8rem; color:#7f8c8d; padding-top:2px">{{ item.emp.poste ?? '—' }}</p>
+                    <div style="margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <button type="button" class="perf-circle" style="width:28px; height:28px; font-size:0.75rem; background:{{ item.perf.couleur }}; box-shadow:0 0 8px {{ item.perf.couleur }}88;" onclick="ouvrirPerf({{ item.emp.id }},'{{ item.emp.nomComplet|e('js') }}')">
+                            {{ item.perf.score|round }}
+                        </button>
+                        <span style="font-size:0.8rem; font-weight:700; color:{{ item.perf.couleur }}">{{ item.perf.emoji|default('') }} {{ item.perf.appreciation }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="emp-table-wrap">
         {% if employes|length > 0 %}
         <div class="table-responsive">
         <table class="emp-table">
-            <thead>
-            <tr>
-                <th>Photo</th>
-                <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'id', direction: (tri == 'id' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">QR</a>
-                </th>
-                <th class="sortable {{ tri == 'id' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'id', direction: (tri == 'id' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">ID</a>
-                </th>
-                <th class="sortable {{ tri == 'nom' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'nom', direction: (tri == 'nom' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Nom</a>
-                </th>
-                <th class="sortable {{ tri == 'prenom' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'prenom', direction: (tri == 'prenom' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Prénom</a>
-                </th>
-                <th class="sortable {{ tri == 'email' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'email', direction: (tri == 'email' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Email</a>
-                </th>
-                <th class="sortable {{ tri == 'poste' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'poste', direction: (tri == 'poste' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Poste</a>
-                </th>
-                <th class="sortable {{ tri == 'telephone' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'telephone', direction: (tri == 'telephone' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Téléphone</a>
-                </th>
-                <th class="sortable {{ tri == 'actif' ? (direction == 'asc' ? 'sorted-asc' : 'sorted-desc') : '' }}">
-                    <a href="{{ path('employe_index', {tri: 'actif', direction: (tri == 'actif' and direction == 'asc') ? 'desc' : 'asc', search: search}) }}"
-                       style="color:white;text-decoration:none">Actif</a>
-                </th>
-                {# ✅ NOUVELLE COLONNE Performance (identique à colPerformance Java) #}
-                <th style="text-align:center">Performance</th>
-                <th class="text-center">Actions</th>
-            </tr>
-            </thead>
+            <thead><tr>
+                <th>{{ 'employe.col.photo'|trans }}</th>
+                <th class="sortable {{ tri=='id'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'id',direction:(tri=='id' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">QR</a></th>
+                <th class="sortable {{ tri=='id'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'id',direction:(tri=='id' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">ID</a></th>
+                <th class="sortable {{ tri=='nom'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'nom',direction:(tri=='nom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.nom'|trans }}</a></th>
+                <th class="sortable {{ tri=='prenom'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'prenom',direction:(tri=='prenom' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.prenom'|trans }}</a></th>
+                <th class="sortable {{ tri=='email'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'email',direction:(tri=='email' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.email'|trans }}</a></th>
+                <th class="sortable {{ tri=='poste'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'poste',direction:(tri=='poste' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.poste'|trans }}</a></th>
+                <th class="sortable {{ tri=='telephone'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'telephone',direction:(tri=='telephone' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.telephone'|trans }}</a></th>
+                <th class="sortable {{ tri=='actif'?(direction=='asc'?'sorted-asc':'sorted-desc'):'' }}">
+                    <a href="{{ path('employe_index',{tri:'actif',direction:(tri=='actif' and direction=='asc')?'desc':'asc',search:search}) }}" style="color:white;text-decoration:none">{{ 'employe.col.actif'|trans }}</a></th>
+                {# ✅ COLONNE PERFORMANCE — identique à colPerformance Java #}
+                <th style="text-align:center">{{ 'employe.performance'|trans }}</th>
+                <th class="text-center">{{ 'common.actions'|trans }}</th>
+            </tr></thead>
             <tbody>
             {% for emp in employes %}
-            {# Chercher la perf de cet employé dans le top3 (affichage rapide) #}
-            {% set empPerf = null %}
-            {% if top3 is defined %}
-                {% for p in top3 %}
-                    {% if p.idEmploye == emp.id %}
-                        {% set empPerf = p %}
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-
+            {% set perf = performanceMap[emp.id] ?? null %}
             <tr id="row-{{ emp.id }}">
-
-                {# Photo / Avatar #}
                 <td>
                     {% if emp.hasPhoto %}
                         <img src="{{ emp.photoPath }}" class="emp-photo" alt="{{ emp.nomComplet }}">
                     {% else %}
                         {% set colors = ['#1abc9c','#3498db','#9b59b6','#e67e22','#e74c3c','#27ae60'] %}
-                        <div class="emp-avatar" style="background:{{ colors[emp.id % 6] }}">
-                            {{ emp.initiales }}
-                        </div>
+                        <div class="emp-avatar" style="background:{{ colors[emp.id % 6] }}">{{ emp.initiales }}</div>
                     {% endif %}
                 </td>
-
-                {# QR #}
                 <td>
-                    <a href="{{ path('employe_fiche_pdf', {id: emp.id}) }}" target="_blank"
-                       title="Fiche PDF de {{ emp.prenom }} {{ emp.nom }}">
-                        <img src="{{ path('employe_qr_image', {id: emp.id}) }}" alt="QR"
+                    <a href="{{ path('employe_fiche_pdf',{id:emp.id}) }}" target="_blank" title="{{ 'common.export_pdf'|trans }}">
+                        <img src="{{ path('employe_qr_image',{id:emp.id}) }}" alt="{{ 'employe.col.qr'|trans }}"
                              style="width:50px;height:50px;border-radius:4px;border:1px solid #ddd;transition:opacity .2s"
                              onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
                     </a>
                 </td>
-
                 <td><strong>{{ emp.id }}</strong></td>
                 <td>{{ emp.nom }}</td>
                 <td>{{ emp.prenom }}</td>
-                <td>
-                    <a href="mailto:{{ emp.email }}" class="text-primary text-decoration-none" style="font-style:italic">
-                        {{ emp.email }}
-                    </a>
-                </td>
+                <td><a href="mailto:{{ emp.email }}" class="text-primary text-decoration-none" style="font-style:italic">{{ emp.email }}</a></td>
                 <td>{{ emp.poste ?? '—' }}</td>
                 <td>{{ emp.telephone ?? '—' }}</td>
                 <td>
-                    {% if emp.actif %}
-                        <span class="st-actif">✓ Actif</span>
-                    {% else %}
-                        <span class="st-inactif">✗ Inactif</span>
-                    {% endif %}
+                    {% if emp.actif %}<span class="st-actif">✓ {{ 'common.active'|trans }}</span>
+                    {% else %}<span class="st-inactif">✗ {{ 'common.inactive'|trans }}</span>{% endif %}
                 </td>
 
-                {# ✅ NOUVELLE COLONNE — Score mini (identique à colPerformance Java : cercle coloré + score) #}
+                {# ✅ CERCLE PERFORMANCE — clic ouvre la modal identique au desktop Java #}
                 <td style="text-align:center">
-                    {% if empPerf is not null %}
-                        {# Employé dans le Top 3 → afficher score complet #}
-                        <div class="perf-mini">
-                            <div class="perf-mini-bar">
-                                <div class="perf-mini-fill"
-                                     style="width:{{ empPerf.score }}%;background:{{ empPerf.couleur }}">
-                                </div>
-                            </div>
-                            <span class="perf-mini-val" style="color:{{ empPerf.couleur }}">
-                                {{ empPerf.score }}
-                            </span>
-                        </div>
-                    {% else %}
-                        {# Autres employés → lien vers détails #}
-                        <a href="{{ path('employe_performance') }}" class="btn-perf" title="Voir performance">
-                            <i class="bi bi-graph-up"></i>
-                        </a>
-                    {% endif %}
+                    <button class="perf-circle"
+                            style="background:{{ perf ? perf.couleur : '#aaa' }};box-shadow:0 3px 10px {{ perf ? perf.couleur ~ '55' : '#aaa5' }}"
+                            onclick="event.stopPropagation();ouvrirPerf({{ emp.id }},'{{ emp.nomComplet|e('js') }}')"
+                            title="{{ 'employe.performance'|trans }} : {{ emp.nomComplet }}">
+                        {{ perf ? perf.score|round : '—' }}
+                    </button>
                 </td>
-
-                {# Actions inline #}
                 <td>
                     <div class="d-flex gap-1 justify-content-center">
-                        <a href="{{ path('employe_show', {id: emp.id}) }}" class="btn-voir" title="Voir">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="{{ path('employe_edit', {id: emp.id}) }}" class="btn-modif" title="Modifier">
-                            <i class="bi bi-pencil-square"></i>
-                        </a>
-                        <form method="POST" action="{{ path('employe_toggle', {id: emp.id}) }}" style="margin:0">
+                        <a href="{{ path('employe_show',{id:emp.id}) }}" class="btn-voir" title="{{ 'common.view'|trans }}"><i class="bi bi-eye"></i></a>
+                        <a href="{{ path('employe_edit',{id:emp.id}) }}" class="btn-modif" title="{{ 'common.edit'|trans }}"><i class="bi bi-pencil-square"></i></a>
+                        <form method="POST" action="{{ path('employe_toggle',{id:emp.id}) }}" style="margin:0">
                             <button type="submit" class="{{ emp.actif ? 'btn-tog-on' : 'btn-tog-off' }}"
-                                    title="{{ emp.actif ? 'Désactiver' : 'Activer' }}">
+                                    title="{{ emp.actif ? 'common.inactive'|trans : 'common.active'|trans }}">
                                 <i class="bi bi-toggle-{{ emp.actif ? 'on' : 'off' }}"></i>
                             </button>
                         </form>
-                        <form method="POST" action="{{ path('employe_delete', {id: emp.id}) }}"
-                              onsubmit="return confirmDelete('{{ emp.nomComplet }}')" style="margin:0">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ emp.id) }}">
-                            <button type="submit" class="btn-suppr" title="Supprimer">
-                                <i class="bi bi-trash3"></i>
-                            </button>
+                        <form method="POST" action="{{ path('employe_delete',{id:emp.id}) }}"
+                               onsubmit="return confirmDelete('{{ emp.nomComplet }}')" style="margin:0">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete'~emp.id) }}">
+                            <button type="submit" class="btn-suppr" title="{{ 'common.delete'|trans }}"><i class="bi bi-trash3"></i></button>
                         </form>
                     </div>
                 </td>
@@ -415,99 +294,150 @@
         <div class="emp-empty">
             <i class="bi bi-people"></i>
             {% if search %}
-                <h5>Aucun résultat pour "{{ search }}"</h5>
-                <a href="{{ path('employe_index') }}" class="btn btn-outline-success mt-2">Voir tous les employés</a>
+                <h5>{{ 'common.no_selection'|trans }} "{{ search }}"</h5>
+                <a href="{{ path('employe_index') }}" class="btn btn-outline-success mt-2">{{ 'common.back'|trans }}</a>
             {% else %}
-                <h5>Aucun employé pour le moment</h5>
+                <h5>{{ 'employe.empty'|trans }}</h5>
+                <p>{{ 'employe.empty_hint'|trans }}</p>
             {% endif %}
         </div>
         {% endif %}
     </div>
 
-    {# ── Barre du bas ────────────────────────────────────────────── #}
     <div class="emp-bottombar">
-        <a href="{{ path('employe_new') }}" class="btn-add">
-            <i class="bi bi-plus-lg"></i> Ajouter un Employé
-        </a>
-        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled>
-            <i class="bi bi-pencil-square"></i> Modifier
-        </button>
-        <button class="btn-red" id="btnSupprimer" onclick="supprimerSelectionne()" disabled>
-            <i class="bi bi-trash3"></i> Supprimer
-        </button>
-        <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()">
-            <i class="bi bi-file-earmark-text"></i> Attestation de Travail
-        </a>
-        {# ✅ NOUVEAU — Bouton Performance dans la barre du bas (identique au bouton "Top Performeurs" Java) #}
-        <a href="{{ path('employe_performance') }}" class="btn-purple">
-            <i class="bi bi-graph-up-arrow"></i> 📊 Performance
-        </a>
-        <span class="bottom-info" id="selectionInfo">Aucune sélection</span>
+        <a href="{{ path('employe_new') }}" class="btn-add"><i class="bi bi-plus-lg"></i> {{ 'common.add'|trans }}</a>
+        <button class="btn-orange" id="btnModifier" onclick="modifierSelectionne()" disabled><i class="bi bi-pencil-square"></i> {{ 'common.edit'|trans }}</button>
+        <button class="btn-red"    id="btnSupprimer" onclick="supprimerSelectionne()" disabled><i class="bi bi-trash3"></i> {{ 'common.delete'|trans }}</button>
+        <a href="#" class="btn-dark" id="btnAttestation" onclick="return attestationSelectionne()"><i class="bi bi-file-earmark-text"></i> {{ 'employe.attestation'|trans }}</a>
+        <span class="bottom-info" id="selectionInfo">{{ 'common.no_selection'|trans }}</span>
     </div>
 
 </div>
 </div>
 
-{# Formulaire caché pour delete via bouton du bas #}
 <form id="formDeleteBottom" method="POST" style="display:none">
     <input type="hidden" name="_token" id="tokenDeleteBottom">
 </form>
+
+{# ═══════════════════════════════════════════════════════════════
+   MODAL PERFORMANCE — identique à la fenêtre desktop Java
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="perf-overlay" id="perfOverlay" onclick="fermerPerf(event)">
+    <div class="perf-modal">
+        <div id="perfContent">
+            <div class="perf-modal-body"><div class="perf-spinner"></div></div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
 <script>
-function setDir(d) {
-    document.getElementById('directionInput').value = d;
+const PERF_URL = "{{ path('employe_performance_detail', {id: '__ID__'}) }}";
+
+function ouvrirPerf(id, nom) {
+    const overlay = document.getElementById('perfOverlay');
+    document.getElementById('perfContent').innerHTML =
+        `<div class="perf-modal-header">
+            <div class="perf-score-circle" style="background:rgba(255,255,255,.2)">…</div>
+            <div><div class="perf-modal-name">${nom}</div>
+                 <div class="perf-modal-apprec">Chargement…</div></div>
+         </div>
+         <div class="perf-modal-body"><div class="perf-spinner"></div></div>
+         <div class="perf-modal-footer"><button class="btn-fermer" onclick="fermerPerf()">Fermer</button></div>`;
+    overlay.classList.add('active');
+
+    fetch(PERF_URL.replace('__ID__', id))
+        .then(r => r.json())
+        .then(p  => { document.getElementById('perfContent').innerHTML = buildModal(p); })
+        .catch(() => {
+            document.getElementById('perfContent').innerHTML =
+                `<div class="perf-modal-header"><div><div class="perf-modal-name">${nom}</div></div></div>
+                 <div class="perf-modal-body" style="text-align:center;padding:40px;color:#e74c3c">❌ Erreur</div>
+                 <div class="perf-modal-footer"><button class="btn-fermer" onclick="fermerPerf()">Fermer</button></div>`;
+        });
 }
 
-let selId = null, selNom = null, selEdit = null, selDel = null, selTok = null;
+function buildModal(p) {
+    const c = p.score >= 75 ? '#27ae60' : p.score >= 50 ? '#fdf100' : '#e74c3c';
+    const trans = {
+        stats: "{{ 'employe.stats'|trans|e('js') }}",
+        total: "{{ 'common.total'|trans|e('js') }}",
+        completed: "{{ 'tache.stats.completed'|trans|e('js') }}",
+        in_progress: "{{ 'tache.stats.in_progress'|trans|e('js') }}",
+        delayed: "{{ 'common.warning'|trans|e('js') }}",
+        canceled: "{{ 'tache.stats.pending'|trans|e('js') }}", // Simple mapping
+        duration: "⏱ {{ 'meteo.wind'|trans|replace({'Vent': 'Durée', 'Wind': 'Duration', 'رياح': 'المدة'})|e('js') }}",
+        avg: "📅 {{ 'meteo.temp'|trans|replace({'Température': 'Moyenne', 'Temperature': 'Average', 'حرارة': 'المعدل'})|e('js') }}",
+        close: "{{ 'common.close'|trans|e('js') }}"
+    };
 
+    return `
+    <div class="perf-modal-header">
+        <div class="perf-score-circle" style="background:${c}">${Math.round(p.score)}</div>
+        <div>
+            <div class="perf-modal-name">${p.nomEmploye}</div>
+            <div class="perf-modal-apprec">${p.emoji} ${p.appreciation}</div>
+            <div class="perf-modal-taux">Taux de réussite : ${p.tauxReussite}%</div>
+        </div>
+    </div>
+    <div class="perf-modal-body">
+        <div class="perf-section-title">📋 ${trans.stats}</div>
+        <div class="perf-stat-row"><span class="perf-stat-label">📊 ${trans.total}</span><span class="perf-stat-value">${p.totalTaches}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">✅ ${trans.completed}</span><span class="perf-stat-value" style="color:#27ae60">${p.tachesTerminees}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">🔄 ${trans.in_progress}</span><span class="perf-stat-value" style="color:#3498db">${p.tachesEnCours}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">⏰ ${trans.delayed}</span><span class="perf-stat-value" style="color:#e74c3c">${p.tachesEnRetard}</span></div>
+        <div class="perf-stat-row"><span class="perf-stat-label">❌ ${trans.canceled}</span><span class="perf-stat-value" style="color:#95a5a6">${p.tachesAnnulees}</span></div>
+        <div class="perf-section-title">📈 Score</div>
+        <div class="perf-bar-wrap">
+            <div class="perf-bar"><div class="perf-bar-fill" style="width:${p.score}%;background:${c}"></div></div>
+            <div class="perf-bar-labels"><span>0</span><span style="color:${c};font-weight:800">${p.score}/100</span><span>100</span></div>
+        </div>
+        <div class="perf-section-title">${trans.duration}</div>
+        <div class="perf-stat-row">
+            <span class="perf-stat-label">${trans.avg}</span>
+            <span class="perf-stat-value">${p.tempsRealisationMoyen > 0 ? p.tempsRealisationMoyen : '—'}</span>
+        </div>
+    </div>
+    <div class="perf-modal-footer"><button class="btn-fermer" onclick="fermerPerf()">${trans.close}</button></div>`;
+}
+
+function fermerPerf(e) {
+    if (!e || e.target === document.getElementById('perfOverlay'))
+        document.getElementById('perfOverlay').classList.remove('active');
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') fermerPerf(); });
+
+function setDir(d) { document.getElementById('directionInput').value = d; }
+let selId=null,selNom=null,selEdit=null,selDel=null,selTok=null;
 document.querySelectorAll('.emp-table tbody tr').forEach(row => {
     row.addEventListener('click', function(e) {
-        if (e.target.closest('a, button, form')) return;
-
-        document.querySelectorAll('.emp-table tbody tr').forEach(r => r.classList.remove('selected'));
+        if (e.target.closest('a,button,form')) return;
+        document.querySelectorAll('.emp-table tbody tr').forEach(r=>r.classList.remove('selected'));
         this.classList.add('selected');
-
-        selId  = this.id.replace('row-', '');
+        selId = this.id.replace('row-','');
         const tds = this.querySelectorAll('td');
-        selNom = (tds[3]?.textContent.trim() ?? '') + ' ' + (tds[4]?.textContent.trim() ?? '');
-
-        const editBtn = this.querySelector('a.btn-modif');
-        const delForm = this.querySelector('form:has(button.btn-suppr)');
-        if (editBtn) selEdit = editBtn.href;
-        if (delForm) {
-            selDel = delForm.action;
-            selTok = delForm.querySelector('input[name="_token"]')?.value;
-        }
-
-        document.getElementById('btnModifier').disabled  = false;
-        document.getElementById('btnSupprimer').disabled = false;
-        document.getElementById('selectionInfo').textContent = '✔ Sélectionné : ' + selNom.trim();
+        selNom = (tds[3]?.textContent.trim()??'')+' '+(tds[4]?.textContent.trim()??'');
+        const eb=this.querySelector('a.btn-modif'), df=this.querySelector('form:has(button.btn-suppr)');
+        if(eb) selEdit=eb.href;
+        if(df){ selDel=df.action; selTok=df.querySelector('input[name="_token"]')?.value; }
+        document.getElementById('btnModifier').disabled=false;
+        document.getElementById('btnSupprimer').disabled=false;
+        document.getElementById('selectionInfo').textContent='✔ Sélectionné : '+selNom.trim();
     });
 });
-
-function modifierSelectionne() {
-    if (selEdit) window.location.href = selEdit;
-}
-
+function modifierSelectionne()  { if(selEdit) window.location.href=selEdit; }
 function supprimerSelectionne() {
-    if (!selId) return;
-    if (!confirm('Supprimer ' + selNom.trim() + ' ?\n\nCette action est irréversible.')) return;
-    const form = document.getElementById('formDeleteBottom');
-    form.action = selDel;
-    document.getElementById('tokenDeleteBottom').value = selTok;
-    form.submit();
+    if(!selId) return;
+    if(!confirm('Supprimer '+selNom.trim()+' ?\n\nCette action est irréversible.')) return;
+    const f=document.getElementById('formDeleteBottom');
+    f.action=selDel; document.getElementById('tokenDeleteBottom').value=selTok; f.submit();
 }
-
 function attestationSelectionne() {
-    if (!selId) { alert('Veuillez sélectionner un employé dans la liste.'); return false; }
-    window.location.href = '/employes/' + selId + '/attestation';
-    return false;
+    if(!selId){alert('Veuillez sélectionner un employé.');return false;}
+    window.location.href='/employes/'+selId+'/attestation'; return false;
 }
-
-function confirmDelete(nom) {
-    return confirm('Supprimer ' + nom + ' ?\n\nCette action est irréversible.');
-}
+function confirmDelete(nom) { return confirm('Supprimer '+nom+' ?\n\nCette action est irréversible.'); }
 </script>
+    {% include 'EmployeTache/_i18n_support.html.twig' %}
 {% endblock %}

@@ -26,18 +26,19 @@ class QrCodeService
      */
     public function generateFicheUrl(int $employeId): string
     {
-        // 1. Récupérer l'IP locale (LAN) de la machine serveur
-        $ip = gethostbyname(gethostname());
+        // 1. Récupérer l'IP locale (LAN) - Utiliser l'env APP_LAN_IP si défini, sinon détecter.
+        $ip = $_ENV['APP_LAN_IP'] ?? gethostbyname(gethostname());
         
-        // 2. Générer l'URL absolue canonique via Symfony (gère le port et les sous-dossiers XAMPP)
+        // 2. Générer l'URL absolue canonique via Symfony
         $url = $this->router->generate('employe_fiche', ['id' => $employeId], UrlGeneratorInterface::ABSOLUTE_URL);
         
-        // 3. Remplacer le domaine local (localhost, 127.0.0.1) par l'IP réseau.
+        // 3. Remplacer localhost par l'IP réseau
         $request = $this->requestStack->getCurrentRequest();
-        $host = $request ? $request->getHost() : 'localhost';
+        $httpHost = $request ? $request->getHttpHost() : 'localhost';
         
         if ($ip !== '127.0.0.1' && $ip !== false) {
-            $url = str_replace('://' . $host, '://' . $ip, $url);
+            $newHttpHost = str_replace($request ? $request->getHost() : 'localhost', $ip, $httpHost);
+            $url = str_replace('://' . $httpHost, '://' . $newHttpHost, $url);
         }
 
         return $url;

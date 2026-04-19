@@ -1,115 +1,472 @@
-common.back: "← Retour"
-common.add: "➕ Ajouter"
-common.edit: "✏️ Modifier"
-common.delete: "🗑️ Supprimer"
-common.refresh: "🔄 Actualiser"
-common.search: "🔍 Rechercher"
-common.export.pdf: "📄 PDF"
-common.statistics: "📊 Statistiques"
-common.sort.asc: "⬆"
-common.sort.desc: "⬇"
-common.sort.by: "Trier par :"
-common.total: "Total"
-common.active: "Actifs"
-common.status: "Statut"
-common.priority: "Priorité"
-common.category: "Catégorie"
-common.employee: "Employé"
-common.loading.time: "Chargé en %time%ms"
-common.no.selection: "Aucune sélection"
-common.confirm: "Confirmer"
-common.cancel: "Annuler"
-common.save: "Enregistrer"
-common.close: "Fermer"
-common.yes: "Oui"
-common.no: "Non"
-common.error: "Erreur"
-common.success: "Succès"
-common.warning: "Attention"
-common.info: "Information"
-common.language: "Langue"
+common:
+    back: '← Retour'
+    add: '➕ Ajouter'
+    edit: '✏️ Modifier'
+    delete: '🗑️ Supprimer'
+    refresh: '🔄 Actualiser'
+    search: '🔍 Rechercher'
+    export_pdf: '📄 PDF'
+    statistics: '📊 Statistiques'
+    sort:
+        asc: ⬆
+        desc: ⬇
+        by: 'Trier par :'
+    language: Langue
+    actions: Actions
+    save_changes: 'Enregistrer les modifications'
+    total: Total
+    success: 'Opération réussie'
+    error: Erreur
+    todo: 'à faire'
+    active: Activé
+    inactive: Désactivé
+    view: Voir
+    loading_time: 'Chargé en %ms%ms'
+    high: Haute
+    medium: Moyenne
+    low: Faible
+    none: Nulle
+    moderate: Modérée
+    high_load: Élevée
+    id: ID
+    generated_by: 'Document généré par %name% le %date%'
+    cancel: Annuler
+    status: Statut
+    priority: Priorité
+    category: Catégorie
+    reset: Réinitialiser
+    all: Tous
+    all_f: Toutes
+    ascending: Croissant
+    descending: Décroissant
+    close: Fermer
+dashboard:
+    title: 'Gérez vos Employés et Tâches'
+    subtitle: "Gérez vos employés et suivez leurs tâches en temps réel. Optimisez l'organisation de votre exploitation agricole."
+    manage_employees: 'Gérer mes employés'
+    home: '← Accueil'
+    services: 'Services Disponibles'
+    role: 'Gestion Employés'
+    logout: Déconnexion
+    card:
+        employees: Employés
+        employees_desc: 'Gérer votre équipe'
+        tasks: Tâches
+        tasks_desc: 'Suivre les activités'
+        diagnostic: 'Diagnostic IA'
+        diagnostic_desc: 'Analyse de maladies'
+        marketplace: Marketplace
+        marketplace_desc: 'Vente et achat'
+        events: Évènements
+        events_desc: 'Agenda agricole'
+        cultures: Cultures
+        cultures_desc: 'Suivi parcellaire'
+        maintenance: Maintenance
+        maintenance_desc: 'Gestion matériel'
+        notifications: Notifications
+        notifications_desc: 'Alertes et messages'
+    nav:
+        diagnostic: 'Diagnostic IA'
+        marketplace: Marketplace
+        maintenance: Maintenance
+        cultures: Cultures
+        events: Évènements
+        employees: Employés
+    bienvenue: 'Bienvenue, %name%'
+    rh_label: 'ARDHI GESTION RH'
+navbar:
+    diagnostic: 'Diagnostic IA'
+    marketplace: Marketplace
+    maintenance: 'Matériel & Maintenance'
+    cultures: Cultures
+    events: Évènements
+    employees: Employés
+    profile: 'Mon Profil'
+    logout: Déconnexion
+    login: 'Se connecter'
+employe:
+    title: 'Gestion des Employés'
+    search_prompt: '🔍 Rechercher par nom, prénom, email, poste...'
+    add: '➕ Ajouter un Employé'
+    search:
+        prompt: '🔍 Rechercher par nom, prénom, email, poste...'
+    top_performance: 'Top Performance'
+    col:
+        id: ID
+        nom: Nom
+        prenom: Prénom
+        email: Email
+        poste: Poste
+        telephone: Téléphone
+        actif: Actif
+        photo: Photo
+        qr: QR
+    empty: '📨 Aucun employé trouvé'
+    empty_hint: "Cliquez sur 'Ajouter' pour créer un nouvel employé"
+    go_tasks: '📋 Gestion Tâches'
+    go_tasks_tooltip: 'Gérer les tâches des employés'
+    attestation: 'Attestation de travail'
+    attestation_success: 'Attestation envoyée avec succès'
+    stats: '📊 Statistiques'
+    ia_matching: '🧠 Correspondance IA'
+    performance: '📈 Performance'
+    fiche_title: 'FICHE EMPLOYÉ'
+    scan_mobile: 'Scannez pour la fiche mobile'
+    stats_page:
+        title: 'Statistiques des Employés'
+        back: 'Retour aux employés'
+        export_pdf: 'Exporter PDF'
+        total_employees: 'Total employés'
+        active: Actifs
+        inactive: Inactifs
+        active_vs_inactive: 'Employés Actifs vs Inactifs'
+        status: Statut
+        count: Nombre
+        percentage: '%'
+        job_distribution: 'Répartition par Poste'
+        job: Poste
+        bar: Barre
+        no_job_data: 'Aucune donnée de poste disponible'
+        employees: Employés
+        employee_count_label: "Nombre d'employés"
+    perf_page:
+        title: 'Performance des Employés'
+        subtitle: 'Classement basé sur les tâches terminées, les retards et le taux de réussite'
+        back: 'Retour aux employés'
+        avg_score: 'Score moyen'
+        evaluated: 'Employés évalués'
+        total_tasks: 'Total tâches'
+        best_employee: 'Meilleur employé'
+        top_performers: 'Top Performeurs'
+        pts: pts
+        full_ranking: 'Classement complet'
+        employees_count_label: employé(s)
+        no_active: 'Aucun employé actif trouvé.'
+        empty_hint: 'Ajoutez des employés et assignez-leur des tâches pour voir leurs performances.'
+        employee: Employé
+        total: Total
+        completed: Terminées
+        delayed: Retard
+        score: Score
+        appreciation: Appréciation
+        tasks: Tâches
+        action: Action
+        details: Détails
+        success_rate: 'Taux de réussite :'
+        task_stats: 'Statistiques des Tâches'
+        tasks_count: tâche(s)
+        in_progress: 'En cours'
+        canceled: Annulées
+        pending: 'En attente'
+        perf_score: 'Score de Performance'
+        completion_time: 'Temps de Réalisation'
+        avg_duration: 'Durée moyenne par tâche'
+        days: jours
+        no_completed: 'Aucune tâche terminée'
+        close: Fermer
+        error_loading: 'Erreur de chargement'
+    form:
+        add_title: '➕ Ajouter un Employé'
+        edit_title: "✏️ Modifier l'Employé"
+        photo: Photo
+        photo_keep: 'Laisser vide pour garder la photo actuelle'
+        identity: Identité
+        last_name: Nom
+        last_name_ph: 'Entrez le nom'
+        first_name: Prénom
+        first_name_ph: 'Entrez le prénom'
+        job: Poste
+        job_ph: 'Ex: Ouvrier, Technicien...'
+        status: 'Compte actif'
+        contact: Coordonnées
+        email: Email
+        email_ph: exemple@ardhi.tn
+        phone: Téléphone
+        phone_ph: '8 chiffres'
+tache:
+    title: '📋 Gestion des Tâches'
+    search_prompt: '🔍 Rechercher une tâche (titre, description, employé...)'
+    add: '➕ Ajouter une Tâche'
+    stats:
+        total: 'Total tâches'
+        in_progress: 'En cours'
+        completed: Terminées
+        pending: 'En attente'
+        cancelled: Annulées
+        detailed: '📊 Statistiques détaillées'
+        completion_rate: 'Taux complétion'
+        overdue: 'En retard'
+        unassigned: 'Non assignées'
+    col:
+        id: ID
+        title: Titre
+        description: Description
+        status: Statut
+        priority: Priorité
+        category: Catégorie
+        start_date: 'Date Début'
+        end_date: 'Date Fin'
+        employee: Employé
+        retard: Retard
+    empty: 'Aucune tâche trouvée'
+    empty_hint: "Cliquez sur 'Ajouter une Tâche' pour commencer"
+    empty_filters: 'Aucune tâche trouvée avec ces filtres'
+    empty_none: 'Aucune tâche pour le moment'
+    reset_filters: 'Réinitialiser les filtres'
+    no_selection: 'Aucune tâche sélectionnée'
+    selected: '✔ Sélectionnée :'
+    advanced_filters: '⚡ Filtres avancés'
+    analyse_ia: 'Analyse IA'
+    filter:
+        priority: 'Priorité :'
+        category: 'Catégorie :'
+        employee: 'Employé :'
+        start_date: 'Date début :'
+        end_date: 'Date fin :'
+    sort:
+        id: ID
+        title: Titre
+        status: Statut
+        priority: Priorité
+        start_date: 'Date Début'
+        end_date: 'Date Fin'
+        category: Catégorie
+    form:
+        add_title: '➕ Ajouter une Tâche'
+        edit_title: '✏️ Modifier la Tâche'
+        main_info: '📋 INFORMATIONS PRINCIPALES'
+        title_label: Titre
+        title_ph: 'Ex : Arroser les plants de tomates'
+        description_label: Description
+        description_ph: 'Décrivez la tâche en détail...'
+        status_priority: '🔖 STATUT & PRIORITÉ'
+        status_label: Statut
+        priority_label: Priorité
+        category_label: Catégorie
+        dates: '📅 DATES'
+        start_date: 'Date de début'
+        end_date: 'Date de fin'
+        date_warning: 'Date fin < date début'
+        assignment: '👷 AFFECTATION'
+        employee_label: Employé
+        not_assigned: 'Non assigné'
+        ia_recommend: Recomm...
+        ia_recommend_title: 'Recommandation IA'
+        save: 'Enregistrer les modifications'
+        add_btn: '+ Ajouter'
+        cancel: Annuler
+        errors_title: '%count% erreur(s) à corriger :'
+        priority_low: Basse
+        priority_medium: Moyenne
+        priority_high: Haute
+        priority_critical: Critique
+    stats_page:
+        title: 'Statistiques des Tâches'
+        back: 'Retour aux tâches'
+        export_pdf: 'Exporter PDF'
+        tab_resume: Résumé
+        tab_statuts: Statuts
+        tab_priorites: Priorités
+        tab_employes: Employés
+        tab_evolution: Évolution
+        tab_categories: Catégories
+        total_tasks: 'Total tâches'
+        completion_rate: 'Taux complétion'
+        overdue: 'En retard'
+        unassigned: 'Non assignées'
+        by_status: 'Répartition par Statut'
+        status_detail: 'Détail des statuts'
+        status: Statut
+        count: Nombre
+        proportion: Proportion
+        details: Détails
+        percent: '%'
+        by_priority: 'Tâches par Priorité'
+        priority: Priorité
+        bar: Barre
+        by_employee: 'Tâches par Employé'
+        employee: Employé
+        tasks: Tâches
+        no_employee_data: 'Aucune donnée par employé'
+        evolution_title: 'Évolution des tâches dans le temps'
+        no_evolution: "Aucune donnée d'évolution disponible"
+        by_category: 'Répartition par Catégorie'
+        category_detail: 'Détails par Catégorie'
+        category: Catégorie
+        no_category_data: 'Aucune donnée de catégorie'
+        chart_tasks: Tâches
+        chart_assigned: 'Tâches assignées'
+        chart_new_tasks: 'Nouvelles tâches'
+        chart_count: Nombre
+        chart_date: Date
+        chart_task_count: 'Nombre de tâches'
+    pdf:
+        title: 'LISTE DES TÂCHES'
+        generated: 'Généré le :'
+        total: 'Total tâches'
+        in_progress: 'En cours'
+        completed: Terminées
+        pending: 'En attente'
+        overdue: 'En retard'
+        col_id: ID
+        col_title: Titre
+        col_description: Description
+        col_status: Statut
+        col_priority: Priorité
+        col_category: Catégorie
+        col_start: Début
+        col_end: Fin
+        col_employee: Employé
+        col_overdue: Retard
+        'yes': OUI
+        footer: 'Ardhi - Gestion Agricole Intelligente'
+    status:
+        en_attente: 'En attente'
+        en_cours: 'En cours'
+        termine: Terminé
+        valide: Validé
+        annule: Annulé
+    category:
+        plantation: Plantation
+        recolte: Récolte
+        irrigation: Irrigation
+        fertilisation: Fertilisation
+        maintenance: Maintenance
+        administratif: Administratif
+        autre: Autre
+        nettoyage: Nettoyage
+        logistique: Logistique
+        formation: Formation
+        analyse: Analyse
+        gestion: Gestion
+        energie: Énergie
+        planification: Planification
+notification:
+    title: '🔔 Notifications'
+    subtitle: 'Restez informé de vos activités agricoles'
+    total: Total
+    unread: 'Non lues'
+    mark_all_read: '✓ Tout marquer comme lu'
+    refresh: '🔄 Actualiser'
+    empty: 'Aucune notification pour le moment.'
+    types:
+        task_overdue: '⏰ Tâche en retard : %title%'
+        task_blocked: '🔒 Tâche bloquée : %title%'
+        meteo_alert: '⚠️ Alerte Météo : %title%'
+    messages:
+        overdue_detail: 'Date limite : %date% | Retard : %days% jour(s)'
+        blocked_detail: 'Tâche en cours sans modification depuis plus de 2 jours. Un suivi est recommandé.'
+    mark_read: 'Marquer comme lu'
+status:
+    online: 'En ligne'
+    available:  'Disponible'
+    moderate:   'Modéré'
+    overloaded: 'Surchargé'
+meteo:
+    widget_title: 'Météo Agricole'
+    temp: Température
+    humidity: Humidité
+    wind: Vent
+    pressure: Pression
+    recommendation: Recommandation
+    alerts:
+        good: '✅ Conditions idéales pour : %task%'
+        caution: '⚠️ Attention : %reason% pour %task%'
+        danger: '🚫 Déconseillé : %reason% pour %task%'
+    conditions:
+        too_windy: 'Vent trop fort'
+        too_wet: 'Humidité élevée'
+        too_dry: 'Sécheresse extrême'
+        too_hot: 'Chaleur excessive'
+        too_cold: 'Gel risqué'
+    advice:
+        ideal: '✨ Conditions idéales pour tout type de travaux et plantations.'
+        wind_ok: '🚜 Vent calme : parfait pour les traitements et la pulvérisation.'
+        wind_bad: '💨 Vent fort : évitez les traitements et sécurisez les installations.'
+        heat: '☀️ Forte chaleur : privilégiez une irrigation tôt le matin ou soir.'
+        rain: "🌧️ Pluie prévue : évitez les traitements pulvérisés."
+        generic_good: "✅ Journée favorable aux activités agricoles."
+chatbot:
+    greet_help: "Comment puis-je vous aider aujourd'hui ?"
+    welcome: "Bonjour ! Je suis votre assistant RH propulsé par Gemini AI. <br>Que puis-je faire pour vous aujourd'hui?"
+    input_placeholder: 'Écrivez votre message...'
+    suggestion:
+        reco: Recommander
+        perf: Performances
+        dispo: Disponibilités
+        help: Aide
+    chips:
+        employees: '👥 Liste employés'
+        tasks: '📋 Tâches en cours'
+        stats: '📊 Voir statistiques'
+        reco: '🧠 Recommandation IA'
+    understanding:
+        no_key: '🤔 Je ne suis pas sûr de comprendre. Tapez **aide** pour voir mes capacités.'
+        error: 'Une erreur est survenue lors du traitement de votre demande.'
+    reco:
+        need_task: |-
+            🤔 Pour quelle tâche voulez-vous une recommandation ?
 
-dashboard.title: "Gérez vos Employés et Tâches"
-dashboard.subtitle: "Gérez vos employés et suivez leurs tâches en temps réel. Optimisez l'organisation de votre exploitation agricole."
-dashboard.manage.employees: "Gérer mes employés"
-dashboard.manage.tasks: "Gérer les tâches"
-dashboard.home: "← Accueil"
-dashboard.services: "Services Disponibles"
-dashboard.role: "Gestion Employés"
-dashboard.logout: "Déconnexion"
-dashboard.card.employees: "Employés"
-dashboard.card.employees_desc: "Gérer votre équipe"
-dashboard.card.tasks: "Tâches"
-dashboard.card.tasks_desc: "Suivre les activités"
-dashboard.card.diagnostic: "Diagnostic IA"
-dashboard.card.diagnostic_desc: "Analyse de maladies"
-dashboard.card.marketplace: "Marketplace"
-dashboard.card.marketplace_desc: "Vente et achat"
-dashboard.card.events: "Évènements"
-dashboard.card.events_desc: "Agenda agricole"
-dashboard.card.cultures: "Cultures"
-dashboard.card.cultures_desc: "Suivi parcellaire"
-dashboard.card.maintenance: "Maintenance"
-dashboard.card.maintenance_desc: "Gestion matériel"
-dashboard.card.notifications: "Notifications"
-dashboard.card.notifications_desc: "Alertes et messages"
-dashboard.nav.diagnostic: "Diagnostic IA"
-dashboard.nav.marketplace: "Marketplace"
-dashboard.nav.maintenance: "Maintenance"
-dashboard.nav.cultures: "Cultures"
-dashboard.nav.events: "Évènements"
-dashboard.nav.employees: "Employés"
-dashboard.nav.tasks: "Tâches"
-dashboard.bienvenue: "Bienvenue, %name%"
+            📌 **Tâches disponibles :**
+            %list%
+            💡 Dites par exemple : "Recommande pour la tâche REMISE"
+        analysis_done: '🤖 **Analyse IA terminée pour "%title%"**'
+        no_match: '😕 Aucun employé actif ne correspond à cette tâche pour le moment.'
+        task_not_found: '❌ Tâche introuvable.'
+        already_assigned_reason: 'Déjà assigné à cette tâche.'
+        already_assigned: '✅ Employé(s) déjà assigné(s) à \"%task%\"'
+    compare:
+        need_task: |-
+            🤔 Pour comparer les 3 meilleurs, précisez la tâche.
+            💡 Ex: "Compare les 3 meilleurs pour la tâche Récolte"
+        not_enough_employees: '😕 Moins de 2 employés disponibles pour cette tâche.'
+        title: '🏆 **Comparaison Top 3 pour \"%task%\"**'
+    skills:
+        not_found: '😕 Aucun employé trouvé avec la compétence "%comp%".'
+        prompt: |-
+            🤔 Quelle compétence recherchez-vous ?
+            💡 Ex: "Qui maîtrise l'irrigation ?"
+        found_title: '🔍 **%count% employé(s) avec \"%comp%\" :**'
+    performance:
+        no_data: '📊 Aucune donnée de performance disponible.'
+        score_line: '💼 Score: %score%/100 — %appreciation%'
+        title: '📊 **Classement des Top Performeurs :**'
+    help:
+        text: |-
+            👋 **Je suis votre Assistant RH !**
 
-employe.title: "👥 Gestion des Employés"
-employe.search.prompt: "🔍 Rechercher par nom, prénom, email, poste..."
-employe.add: "➕ Ajouter un Employé"
-employe.col.id: "ID"
-employe.col.nom: "Nom"
-employe.col.prenom: "Prénom"
-employe.col.email: "Email"
-employe.col.poste: "Poste"
-employe.col.telephone: "Téléphone"
-employe.col.actif: "Actif"
-employe.empty: "📭 Aucun employé trouvé"
-employe.empty_hint: "Cliquez sur 'Ajouter' pour créer un nouvel employé"
-employe.go.tasks: "📋 Gestion Tâches"
-employe.go.tasks_tooltip: "Gérer les tâches des employés"
-employe.stats: "📊 Statistiques"
-
-tache.title: "📋 Gestion des Tâches"
-tache.search.prompt: "🔍 Rechercher une tâche (titre, description, employé...)"
-tache.add: "➕ Ajouter une Tâche"
-tache.stats.total: "Total tâches"
-tache.stats.in_progress: "En cours"
-tache.stats.completed: "Terminées"
-tache.stats.pending: "En attente"
-tache.stats.detailed: "📊 Statistiques détaillées"
-tache.col.id: "ID"
-tache.col.title: "Titre"
-tache.col.description: "Description"
-tache.col.status: "Statut"
-tache.col.priority: "Priorité"
-tache.col.category: "Catégorie"
-tache.col.start_date: "Date Début"
-tache.col.end_date: "Date Fin"
-tache.col.employee: "Employé"
-tache.empty: "Aucune tâche trouvée"
-tache.empty_hint: "Cliquez sur 'Ajouter une Tâche' pour commencer"
-tache.no_selection: "Aucune tâche sélectionnée"
-tache.advanced_filters: "⚡ Filtres avancés"
-tache.filter.priority: "Priorité :"
-tache.filter.category: "Catégorie :"
-tache.filter.employee: "Employé :"
-tache.filter.start_date: "Date début :"
-tache.filter.end_date: "Date fin :"
-
-notification.title: "🔔 Notifications"
-notification.subtitle: "Restez informé de vos activités agricoles"
-notification.total: "Total"
-notification.unread: "Non lues"
-notification.mark_all_read: "✓ Tout marquer comme lu"
-notification.refresh: "🔄 Actualiser"
-
-chatbot.greet: "👋 Bonjour ! Je suis votre assistant RH Ardhi."
+            🎯 "Recommande pour la tâche RÉCOLTE"
+            🔍 "Qui maîtrise l'irrigation ?"
+            📊 "Montre les performances"
+            📅 "Qui est disponible ?"
+            🏆 "Compare les 3 meilleurs"
+    availability:
+        title_with_modes: |-
+            📅 **Disponibilité des %count% employés actifs :**
+            🟢 Disponible • 🟡 Modéré • 🔴 Surchargé
+        no_info: '📅 Aucune information de disponibilité.'
+    error:
+        server_returned_error: "Désolé, j'ai rencontré une erreur : "
+        network: "Oups ! Je n'arrive pas à joindre le serveur."
+ai:
+    matching:
+        perfect: 'Correspondance idéale'
+        good: 'Bon profile'
+        fair: 'Bonne correspondance'
+        poor: 'Non recommandé'
+        reason_detail: "L'IA a sélectionné %name% car il a %relevance%%% de pertinence de compétences, d'excellentes évaluations (%perf%/100) et est disponible (charge %charge%)."
+        reason:
+            skills: 'Compétences adaptées'
+            availability: 'Disponible immédiatement'
+            proximity: 'Proximité géographique'
+    performance:
+        excellent: Excellent
+        tres_bien: 'Très bien'
+        bien: Bien
+        moyen: Moyen
+        faible: Faible
+time:
+    days: j
+    hours: h
+    mins: min
+    just_now: "À l'instant"

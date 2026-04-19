@@ -5,7 +5,9 @@ namespace App\Service\EmployeTache;
 use App\Entity\EmployeTache\Notification;
 use App\Repository\EmployeTache\NotificationRepository;
 use App\Repository\EmployeTache\TacheRepository;
+use App\Repository\EmployeTache\EmployeRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Service de notifications — port PHP du NotificationService.java
@@ -22,6 +24,8 @@ class NotificationService
         private NotificationRepository  $notifRepo,
         private TacheRepository         $tacheRepo,
         private MeteoService            $meteoService,
+        private TranslatorInterface     $translator,
+        private EmployeRepository       $employeRepo,
     ) {}
 
     // ── Analyse principale ───────────────────────────────────────────────
@@ -65,12 +69,11 @@ class NotificationService
                     $this->creer(
                         Notification::TYPE_TACHE_RETARD,
                         Notification::PRIORITE_CRITICAL,
-                        '⏰ Tâche en retard : ' . $tache->getTitre(),
-                        sprintf(
-                            'Date limite : %s | Retard : %d jour(s)',
-                            $finDate->format('d/m/Y'),
-                            $jours
-                        ),
+                        $this->translator->trans('notification.types.task_overdue', ['%title%' => $tache->getTitre()]),
+                        $this->translator->trans('notification.messages.overdue_detail', [
+                            '%date%' => $finDate->format('d/m/Y'),
+                            '%days%' => $jours
+                        ]),
                         $idAgriculteur,
                         $tache->getId(),
                         $tache->getIdEmploye()
@@ -88,8 +91,8 @@ class NotificationService
                     $this->creer(
                         Notification::TYPE_TACHE_BLOQUEE,
                         Notification::PRIORITE_WARNING,
-                        '🔒 Tâche bloquée : ' . $tache->getTitre(),
-                        'Tâche en cours sans modification depuis plus de 2 jours. Un suivi est recommandé.',
+                        $this->translator->trans('notification.types.task_blocked', ['%title%' => $tache->getTitre()]),
+                        $this->translator->trans('notification.messages.blocked_detail'),
                         $idAgriculteur,
                         $tache->getId(),
                         $tache->getIdEmploye()
@@ -122,16 +125,16 @@ class NotificationService
                         $idAgriculteur
                     )) continue;
 
-                    [$priorite, $titre] = match ($reco->getNiveau()) {
-                        'POSITIVE' => [Notification::PRIORITE_INFO,     '✅ Recommandé : '   . $tache->getTitre()],
-                        'DANGER'   => [Notification::PRIORITE_CRITICAL, '🚫 Déconseillé : '  . $tache->getTitre()],
-                        default    => [Notification::PRIORITE_WARNING,  '⚠️ Attention : '    . $tache->getTitre()],
+                    [$priorite, $transKey] = match ($reco->getNiveau()) {
+                        'POSITIVE' => [Notification::PRIORITE_INFO,     'meteo.alerts.good'],
+                        'DANGER'   => [Notification::PRIORITE_CRITICAL, 'meteo.alerts.danger'],
+                        default    => [Notification::PRIORITE_WARNING,  'meteo.alerts.caution'],
                     };
 
                     $this->creer(
                         $reco->getNotifType(),
                         $priorite,
-                        $titre,
+                        $this->translator->trans($transKey, ['%task%' => $tache->getTitre(), '%reason%' => '']),
                         $reco->getMessage(),
                         $idAgriculteur,
                         $tache->getId(),
@@ -235,6 +238,11 @@ class NotificationService
         ?int    $idTache   = null,
         ?int    $idEmploye = null
     ): void {
+        // Précautions : si l'employé a été supprimé mais reste attaché à la tâche
+        if ($idEmploye !== null && !$this->employeRepo->find($idEmploye)) {
+            $idEmploye = null;
+        }
+
         $notif = new Notification();
         $notif->setType($type)
               ->setPriorite($priorite)
