@@ -78,6 +78,53 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
+            // Email MX + SMTP mailbox verification — block non-existent emails
+            $emailDomain = substr(strrchr($email, '@'), 1);
+            $emailInvalid = false;
+            $emailError = '';
+
+            if (!checkdnsrr($emailDomain, 'MX')) {
+                $emailInvalid = true;
+                $emailError = 'Le domaine "' . $emailDomain . '" n\'existe pas ou n\'accepte pas les emails.';
+            } else {
+                // SMTP probe to check if the specific mailbox exists
+                $mxHosts = [];
+                getmxrr($emailDomain, $mxHosts);
+                if (!empty($mxHosts)) {
+                    $socket = @fsockopen($mxHosts[0], 25, $errno, $errstr, 5);
+                    if ($socket) {
+                        fgets($socket, 1024);
+                        fputs($socket, "HELO ardhi.local\r\n");
+                        fgets($socket, 1024);
+                        fputs($socket, "MAIL FROM:<verify@ardhi.local>\r\n");
+                        fgets($socket, 1024);
+                        fputs($socket, "RCPT TO:<{$email}>\r\n");
+                        $rcptResponse = fgets($socket, 1024);
+                        fputs($socket, "QUIT\r\n");
+                        fclose($socket);
+
+                        $smtpCode = (int) substr(trim($rcptResponse), 0, 3);
+                        if ($smtpCode === 550 || $smtpCode === 551 || $smtpCode === 553) {
+                            $emailInvalid = true;
+                            $emailError = 'Cette adresse email n\'existe pas.';
+                        }
+                    }
+                }
+            }
+
+            if ($emailInvalid) {
+                return $this->render('UserAndDiag/register.html.twig', [
+                    'last_nom' => $nom,
+                    'last_prenom' => $prenom,
+                    'last_email' => $email,
+                    'last_role' => $role,
+                    'last_phone' => $phone,
+                    'last_location' => $location,
+                    'last_bio' => $bio,
+                    'errors' => ['email' => $emailError],
+                ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
+            }
+
             // Create user object for validation
             $user = new User();
             $user->setNom($nom);
