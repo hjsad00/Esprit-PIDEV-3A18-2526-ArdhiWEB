@@ -139,6 +139,63 @@ class RegistrationController extends AbstractController
         ]);
     }
 
+    // ──── Email Verification: MX + SMTP Probe ────
+    #[Route('/register/verify-email', name: 'app_register_verify_email', methods: ['POST'])]
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = trim($data['email'] ?? '');
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['valid' => false, 'reason' => 'Format email invalide.']);
+        }
+
+        $domain = substr(strrchr($email, '@'), 1);
+
+        // Check MX records
+        if (!checkdnsrr($domain, 'MX')) {
+            return $this->json(['valid' => false, 'reason' => 'Le domaine "' . $domain . '" n\'accepte pas les emails.']);
+        }
+
+        // Get MX host
+        $mxHosts = [];
+        getmxrr($domain, $mxHosts);
+        if (empty($mxHosts)) {
+            return $this->json(['valid' => false, 'reason' => 'Aucun serveur de messagerie trouvé pour ce domaine.']);
+        }
+
+        // Try SMTP probe
+        $mxHost = $mxHosts[0];
+        $socket = @fsockopen($mxHost, 25, $errno, $errstr, 5);
+
+        if (!$socket) {
+            // Port 25 blocked (common on Windows/ISPs) — but MX exists so domain is valid
+            return $this->json(['valid' => true, 'reason' => 'Domaine email valide (serveur MX trouvé).']);
+        }
+
+        $response = fgets($socket, 1024);
+        fputs($socket, "HELO ardhi.local\r\n");
+        $response = fgets($socket, 1024);
+        fputs($socket, "MAIL FROM:<verify@ardhi.local>\r\n");
+        $response = fgets($socket, 1024);
+        fputs($socket, "RCPT TO:<{$email}>\r\n");
+        $rcptResponse = fgets($socket, 1024);
+        fputs($socket, "QUIT\r\n");
+        fclose($socket);
+
+        // 250 = accepted, 550 = mailbox doesn't exist
+        $code = (int) substr(trim($rcptResponse), 0, 3);
+
+        if ($code === 250) {
+            return $this->json(['valid' => true, 'reason' => 'Email vérifié et valide !']);
+        } elseif ($code === 550 || $code === 551 || $code === 553) {
+            return $this->json(['valid' => false, 'reason' => 'Cette boîte mail n\'existe pas.']);
+        } else {
+            // Some servers don't allow RCPT probing but MX exists
+            return $this->json(['valid' => true, 'reason' => 'Domaine email valide (vérification avancée bloquée par le serveur).']);
+        }
+    }
+
     // ──── Twilio SMS: Send OTP ────
     #[Route('/register/send-sms', name: 'app_register_send_sms', methods: ['POST'])]
     public function sendSms(Request $request): JsonResponse

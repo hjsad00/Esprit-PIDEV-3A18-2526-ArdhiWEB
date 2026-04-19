@@ -259,14 +259,13 @@
         }
     });
 
-    // ─── Email Verification (Disify ─ Free, No API Key) ───
+    // ─── Email Verification (Backend MX + SMTP Probe) ───
     function verifyEmail() {
         const email = document.getElementById('inputEmail').value.trim();
         const fb = document.getElementById('emailFeedback');
         const btn = document.getElementById('btnVerifyEmail');
         if (!email) { fb.innerHTML = '<span style="color:#dc3545;">Veuillez entrer un email.</span>'; return; }
 
-        // Basic format check
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             fb.innerHTML = '<span style="color:#dc3545; font-weight:500;">❌ Format email invalide.</span>';
@@ -277,24 +276,26 @@
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
         fb.innerHTML = '<span style="color:#6c757d;">⏳ Vérification en cours...</span>';
 
-        fetch(`https://disify.com/api/email/${encodeURIComponent(email)}`)
+        fetch('/register/verify-email', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: email })
+        })
             .then(r => r.json())
             .then(data => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-patch-check"></i> Vérifier';
 
-                if (data.format === true && data.disposable === false) {
-                    fb.innerHTML = '<span style="color:#198754; font-weight:500;">✅ Email valide !</span>';
-                } else if (data.disposable === true) {
-                    fb.innerHTML = '<span style="color:#dc3545; font-weight:500;">❌ Email jetable détecté (non autorisé).</span>';
+                if (data.valid) {
+                    fb.innerHTML = '<span style="color:#198754; font-weight:500;">✅ ' + data.reason + '</span>';
                 } else {
-                    fb.innerHTML = '<span style="color:#dc3545; font-weight:500;">❌ Email invalide.</span>';
+                    fb.innerHTML = '<span style="color:#dc3545; font-weight:500;">❌ ' + data.reason + '</span>';
                 }
             })
             .catch(() => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-patch-check"></i> Vérifier';
-                fb.innerHTML = '<span style="color:#fd7e14; font-weight:500;">⚠️ Service indisponible. Vérification impossible.</span>';
+                fb.innerHTML = '<span style="color:#fd7e14; font-weight:500;">⚠️ Service indisponible.</span>';
             });
     }
 
