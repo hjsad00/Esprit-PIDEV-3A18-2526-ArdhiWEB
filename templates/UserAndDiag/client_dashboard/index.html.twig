@@ -50,9 +50,9 @@
             </div>
             
             <div class="badges-container">
-                <div style="font-size: 0.6rem; color: rgba(180,210,190,0.5); font-weight: bold; margin-bottom: 4px; margin-left: 10px;">BADGES RÉCENTS</div>
+                <div style="font-size: 0.6rem; color: rgba(180,210,190,0.5); font-weight: bold; margin-bottom: 4px; margin-left: 10px;">MES BADGES</div>
                 <div class="badges-list" data-user-and-diag--dashboard-refresh-target="badges">
-                    {% for badge in badges|slice(0, 3) %}
+                    {% for badge in badges %}
                     <div class="badge-item" title="{{ badge.description }}">
                         <div class="icon">{{ badge.icon }}</div>
                         <div class="name">{{ badge.name }}</div>
@@ -182,16 +182,6 @@
                 <p>Réseau d'entraide entre agriculteurs</p>
             </a>
 
-            <a href="{{ path('app_user_and_diag_treatment_plan_list') }}" class="action-card card-treat">
-                <div class="action-icon">📋</div>
-                <h3>Plans de Traitement</h3>
-                <p>Suivez vos plans de traitement générés par l'IA</p>
-            </a>
-            <a href="{{ path('app_user_and_diag_prevention_plan_list') }}" class="action-card card-prevent">
-                <div class="action-icon">🛡️</div>
-                <h3>Plans de Prévention</h3>
-                <p>Suivez vos plans de prévention pour protéger vos cultures</p>
-            </a>
             <a href="{{ path('app_health_scan_new') }}" class="action-card card-scan">
                 <div class="action-icon">🛡️</div>
                 <h3>Scan de Santé</h3>
@@ -203,9 +193,18 @@
                 <h3>Historique Scans</h3>
                 <p>Consulter les anciens rapports de santé</p>
             </a>
-
+            <a href="{{ path('app_user_and_diag_treatment_plan_list') }}" class="action-card card-treat">
+                <div class="action-icon">📋</div>
+                <h3>Plans de Traitement</h3>
+                <p>Suivez vos plans de traitement générés par l'IA</p>
+            </a>
+            <a href="{{ path('app_user_and_diag_prevention_plan_list') }}" class="action-card card-prevent">
+                <div class="action-icon">☂️</div>
+                <h3>Plans de Prévention</h3>
+                <p>Suivez vos plans de prévention pour protéger vos cultures</p>
+            </a>
             <a href="{{ path('app_user_and_diag_soil_analysis') }}" class="action-card card-soil">
-                <div class="action-icon">🌍</div>
+                <div class="action-icon">⛰️</div>
                 <h3>Profil de Sol 3D</h3>
                 <p>Analyse virtuelle du sol avec données SoilGrids</p>
             </a>

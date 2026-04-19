@@ -30,7 +30,8 @@
         or (current_route starts with 'admin_abonnement') 
         or (current_route starts with 'admin_badge') 
         or (current_route starts with 'admin_community') 
-        or (current_route starts with 'admin_offre') %}
+        or (current_route starts with 'admin_offre')
+        or (current_route starts with 'admin_moderation_audit') %}
 
     {% set is_diags_context = (dashboard_context|default('') == 'diags') 
         or (current_route starts with 'admin_diagnostic') 
@@ -38,7 +39,9 @@
         or (current_route starts with 'admin_farm_health') 
         or (current_route starts with 'admin_prevention') 
         or (current_route starts with 'admin_treatment') 
-        or (current_route starts with 'admin_vulnerability') %}
+        or (current_route starts with 'admin_vulnerability')
+        or (current_route starts with 'admin_review')
+        or (current_route starts with 'admin_diag_notification') %}
 
     <nav class="sidebar-nav">
       <div class="nav-section-title">Navigation</div>
@@ -93,6 +96,21 @@
               <i class="bi bi-tag-fill text-success"></i><span>Offres</span>
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route starts with 'admin_community_report' ? 'active' : '' }}" href="{{ path('admin_community_report_index') }}">
+              <i class="bi bi-flag-fill text-success"></i><span>Signalements</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route starts with 'admin_user_block' ? 'active' : '' }}" href="{{ path('admin_user_block_index') }}">
+              <i class="bi bi-slash-circle-fill text-success"></i><span>Blocages</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route starts with 'admin_moderation_audit' ? 'active' : '' }}" href="{{ path('admin_moderation_audit_index') }}">
+              <i class="bi bi-shield-shaded text-success"></i><span>Audit Modé.</span>
+            </a>
+          </li>
         </ul>
       {% endif %}
 
@@ -142,6 +160,16 @@
           <li class="nav-item">
             <a class="nav-link {{ current_route starts with 'admin_vulnerability' ? 'active' : '' }}" href="{{ path('admin_vulnerability_index') }}">
               <i class="bi bi-bug-fill text-primary"></i><span>Vulnérabilités</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route starts with 'admin_review' ? 'active' : '' }}" href="{{ path('admin_review_index') }}">
+              <i class="bi bi-star-fill text-primary"></i><span>Avis & Reviews</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route starts with 'admin_diag_notification' ? 'active' : '' }}" href="{{ path('admin_diag_notification_index') }}">
+              <i class="bi bi-bell-fill text-primary"></i><span>Notifications</span>
             </a>
           </li>
         </ul>
@@ -204,6 +232,15 @@
     if (toggle) toggle.addEventListener('click', openSidebar);
     if (close) close.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    // Auto-scroll sidebar to active element
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeLink = document.querySelector('.admin-sidebar .nav-link.active');
+        if (activeLink) {
+            // Un petit délai au cas où le rendu CSS retarde la hauteur
+            setTimeout(() => activeLink.scrollIntoView({ block: 'center' }), 10);
+        }
+    });
   </script>
   {% block javascripts %}{% endblock %}
 </body>
