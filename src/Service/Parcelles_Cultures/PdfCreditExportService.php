@@ -20,19 +20,25 @@ class PdfCreditExportService
 
     /**
      * Exporte un dossier de crédit en PDF
-     * Utilise DomPDF pour la génération PDF (pur PHP, sans dépendances externes)
      */
     public function exporterDossierCreditPdf(CreditDossier $dossier, string $outputPath = null, string $locale = 'fr'): string
+    {
+        // 🌡️ Pour l'Arabe, on utilise impérativement TCPDF (meilleure gestion RTL/Shaping)
+        if ($locale === 'ar') {
+            return $this->exporterAvecTCPDF($dossier, $outputPath, $locale);
+        }
+
+        // Pour les autres langues, on peut rester sur Dompdf
+        return $this->exporterAvecDompdf($dossier, $outputPath, $locale);
+    }
+
+    private function exporterAvecDompdf(CreditDossier $dossier, string $outputPath = null, string $locale = 'fr'): string
     {
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
         $options->set('chroot', realpath('.'));
-        $options->set('enablePhp', false);
-        $options->set('tempDir', sys_get_temp_dir());
-        $options->set('fontDir', sys_get_temp_dir());
-        $options->set('logOutputFile', sys_get_temp_dir() . '/dompdf.log');
-
+        
         $dompdf = new Dompdf($options);
         $html = $this->genererHtmlDossier($dossier, $locale);
         
@@ -41,6 +47,47 @@ class PdfCreditExportService
         $dompdf->render();
 
         $pdfContent = $dompdf->output();
+
+        if ($outputPath) {
+            file_put_contents($outputPath, $pdfContent);
+        }
+
+        return $pdfContent;
+    }
+
+    private function exporterAvecTCPDF(CreditDossier $dossier, string $outputPath = null, string $locale = 'ar'): string
+    {
+        // Initialiser TCPDF
+        // orientation, unit, format, unicode, encoding, diskcache
+        $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+        // Metadata
+        $pdf->SetCreator('Ardhi');
+        $pdf->SetAuthor('Ardhi AI');
+        $pdf->SetTitle('Dossier de Crédit - ' . $dossier->getParcelle()->getLocalisation());
+
+        // Configuration minimale
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(TRUE, 15);
+
+        // 🛡️ Polices pour l'Arabe
+        // dejavusans supporte parfaitement l'Arabe et est présent par défaut
+        $pdf->SetFont('dejavusans', '', 12);
+
+        // 🔄 Activer le mode RTL (Right-To-Left)
+        $pdf->setRTL(true);
+
+        $pdf->AddPage();
+
+        // Générer le HTML
+        $html = $this->genererHtmlDossier($dossier, $locale);
+        
+        // Écrire le HTML (TCPDF gère le shaping et l'alignement RTL automatiquement)
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $pdfContent = $pdf->Output('', 'S');
 
         if ($outputPath) {
             file_put_contents($outputPath, $pdfContent);
@@ -69,45 +116,12 @@ class PdfCreditExportService
             default => '#6c757d'
         };
 
-        // Charger les traductions manuellement depuis le fichier YAML
+        // Charger les traductions manuellement depuis le fichier YAML si nécessaire
         $translationFile = $this->projectDir . '/translations/messages.' . $locale . '.yaml';
         $translations = [];
         
-        // Traductions arabes en dur pour tester
-        $arabicTranslations = [
-            'pdf.credit.title' => 'طلب قرض زراعي',
-            'pdf.credit.subtitle' => 'تحليل الجدوى المالية وتقييم درجة المخاطرة',
-            'pdf.credit.generated' => 'وثيقة رسمية - تاريخ الإصدار:',
-            'pdf.credit.section1' => '١. معلومات مقدم الطلب',
-            'pdf.credit.section2' => '٢. تقييم الجدارة الائتمانية (درجة المخاطرة)',
-            'pdf.credit.section3' => '٣. تحليل القدرة على السداد',
-            'pdf.credit.section4' => '٤. توصيات أردهي',
-            'pdf.credit.farmer' => 'المزارع:',
-            'pdf.credit.email' => 'البريد الإلكتروني للتواصل:',
-            'pdf.credit.location' => 'موقع الأرض:',
-            'pdf.credit.duration' => 'مدة القرض المطلوبة:',
-            'pdf.credit.years' => 'سنة',
-            'pdf.credit.global_risk' => 'مؤشر درجة المخاطرة العام',
-            'pdf.credit.level' => 'المستوى:',
-            'pdf.credit.criteria' => 'معايير التحليل',
-            'pdf.credit.score' => 'النقاط / ١٠',
-            'pdf.credit.weight' => 'النسبة المئوية',
-            'pdf.credit.economic_profitability' => 'الربحية الاقتصادية',
-            'pdf.credit.climate_stability' => 'استقرار الإنتاج (العوامل المناخية)',
-            'pdf.credit.diversification' => 'تنويع أنواع المحاصيل',
-            'pdf.credit.experience' => 'الخبرة والسجل التاريخي',
-            'pdf.credit.repayment_capacity' => 'الحد الأدنى للقدرة على السداد السنوي:',
-            'pdf.credit.max_loan' => 'الحد الأقصى المقترح للقرض:',
-            'pdf.credit.dt' => 'دينار',
-            'pdf.credit.recommendations' => 'يتم إنشاء هذا التقرير بواسطة محرك تحليل أردهي بناءً على البيانات المقدمة.',
-            'pdf.credit.dossier_id' => 'معرف ملف الدعوة:',
-            'pdf.credit.creation_date' => 'تاريخ الإنشاء:',
-        ];
-        
-        // Si c'est l'arabe, utiliser les traductions en dur
-        if ($locale === 'ar') {
-            $translations = $arabicTranslations;
-        } elseif (file_exists($translationFile)) {
+        // Supprimer les traductions en dur si on veut utiliser uniquement le bundle
+        if (file_exists($translationFile)) {
             $yaml = Yaml::parseFile($translationFile);
             if (is_array($yaml)) {
                 // Aplatir les clés imbriquées
@@ -160,257 +174,206 @@ class PdfCreditExportService
 <html dir="{($locale === 'ar' ? 'rtl' : 'ltr')}" lang="{$locale}">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <style>
-        * { margin: 0; padding: 0; }
         body { 
-            font-family: 'Arial', 'DejaVu Sans', sans-serif; 
-            line-height: 1.8; 
+            font-family: 'dejavusans', 'Arial', sans-serif; 
+            line-height: 1.6; 
             color: #333; 
-            background: #ffffff;
-            padding: 0;
-            font-size: 14px;
         }
-        body[dir="rtl"] { text-align: right; direction: rtl; }
-        body[dir="ltr"] { text-align: left; direction: ltr; }
-        .content { margin: 0; padding: 20px; }
-        .page-break { page-break-after: always; }
-        .header { 
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
+        .header-table {
+            width: 100%;
             border-bottom: 3px solid #116530;
-            flex-direction: row;
+            margin-bottom: 20px;
         }
-        html[dir="rtl"] .header { flex-direction: row-reverse; justify-content: flex-end; }
-        .header img { 
-            max-height: 80px; 
-            max-width: 120px; 
-            flex-shrink: 0;
+        .header-logo {
+            width: 120px;
+            padding: 10px;
         }
-        .header-text { 
-            flex: 1; 
+        .header-text {
+            padding: 10px;
+            vertical-align: middle;
         }
         .header-text h1 { 
             margin: 0; 
-            font-size: 26px; 
-            font-weight: bold;
+            font-size: 24px; 
             color: #116530;
-            text-align: left;
         }
-        html[dir="rtl"] .header-text h1 { text-align: right; }
         .header-text p { 
-            margin: 5px 0 0 0; 
-            font-size: 12px; 
-            color: #666;
-            text-align: left;
-        }
-        html[dir="rtl"] .header-text p { text-align: right; }
-        .section { 
-            margin-bottom: 30px; 
-            page-break-inside: avoid;
-        }
-        .section h2 { 
-            background: #116530;
-            color: white; 
-            padding: 12px 15px; 
-            margin: 0 0 15px 0; 
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 3px;
-            text-align: left;
-        }
-        html[dir="rtl"] .section h2 { text-align: right; }
-        .info-row { 
-            border-bottom: 1px solid #eee; 
-            padding: 10px 0; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-direction: row-reverse;
-        }
-        html[dir="ltr"] .info-row { flex-direction: row; }
-        html[dir="rtl"] .info-row { flex-direction: row-reverse; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { 
-            font-weight: 600; 
-            width: 40%;
-            color: #116530;
-            font-size: 12px;
-        }
-        .info-value { 
-            width: 55%; 
-            text-align: right;
-            color: #333;
-            font-size: 12px;
-        }
-        html[dir="rtl"] .info-value { text-align: left; }
-        .score-box { 
-            background: #f0f9f0;
-            border: 2px solid {$niveauRisqueColor};
-            border-left: 8px solid {$niveauRisqueColor};
-            color: {$niveauRisqueColor};
-            padding: 30px; 
-            border-radius: 5px; 
-            text-align: center; 
-            margin: 25px 0;
-        }
-        html[dir="rtl"] .score-box { border-left: none; border-right: 8px solid {$niveauRisqueColor}; }
-        .score-box .label { 
+            margin: 2px 0; 
             font-size: 11px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            font-weight: 600;
-            color: #116530;
+            color: #666;
         }
-        .score-box .value { 
-            font-size: 42px; 
-            font-weight: bold; 
-            margin: 12px 0;
-            color: {$niveauRisqueColor};
+        .section { 
+            margin-bottom: 25px; 
         }
-        .table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 20px 0;
-            border: 1px solid #ddd;
+        .section-title { 
+            background-color: #116530;
+            color: #ffffff; 
+            padding: 8px 12px; 
+            font-size: 14px;
+            font-weight: bold;
         }
-        .table th { 
-            background: #116530;
-            color: white;
-            padding: 12px; 
-            text-align: left; 
-            font-weight: 600;
-            font-size: 12px;
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        html[dir="rtl"] .table th { text-align: right; }
-        .table td { 
-            padding: 10px 12px; 
+        .info-table td {
+            padding: 8px;
             border-bottom: 1px solid #eee;
             font-size: 12px;
         }
-        html[dir="rtl"] .table td { text-align: right; }
-        .table tr:nth-child(even) { background: #f9f9f9; }
+        .info-label {
+            font-weight: bold;
+            color: #116530;
+            width: 40%;
+        }
+        .score-box { 
+            background-color: #f0f9f0;
+            border: 2px solid {$niveauRisqueColor};
+            padding: 20px; 
+            text-align: center; 
+            margin: 15px 0;
+        }
+        .score-value { 
+            font-size: 36px; 
+            font-weight: bold; 
+            color: {$niveauRisqueColor};
+        }
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0;
+        }
+        .data-table th { 
+            background-color: #116530;
+            color: #ffffff;
+            padding: 10px; 
+            font-size: 12px;
+            text-align: center;
+        }
+        .data-table td { 
+            padding: 8px; 
+            border: 1px solid #ddd;
+            font-size: 12px;
+            text-align: center;
+        }
         .recommendations { 
-            background: #f0f9f0;
-            border-left: 5px solid #116530; 
-            padding: 15px 20px; 
-            margin: 20px 0;
+            background-color: #f8fff8;
+            border-right: 5px solid #116530; 
+            padding: 15px; 
+            margin: 15px 0;
             font-size: 12px;
             color: #333;
-            border-radius: 3px;
         }
-        html[dir="rtl"] .recommendations { border-left: none; border-right: 5px solid #116530; }
-        .recommendations strong { color: #116530; }
         .footer { 
             text-align: center; 
-            margin-top: 40px; 
-            font-size: 10px; 
+            margin-top: 30px; 
+            font-size: 9px; 
             color: #999; 
             border-top: 1px solid #ddd; 
-            padding-top: 15px;
+            padding-top: 10px;
         }
-        .content { margin: 0 20px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        {$logoHtml}
-        <div class="header-text">
-            <h1>{$t('pdf.credit.title')}</h1>
-            <p>{$t('pdf.credit.subtitle')}</p>
-            <p>{$t('pdf.credit.generated')} {$dateGenerer}</p>
+    <table class="header-table">
+        <tr>
+            <td class="header-logo">{$logoHtml}</td>
+            <td class="header-text">
+                <h1>{$t('pdf.credit.title')}</h1>
+                <p>{$t('pdf.credit.subtitle')}</p>
+                <p>{$t('pdf.credit.generated')} {$dateGenerer}</p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section">
+        <div class="section-title">{$t('pdf.credit.section1')}</div>
+        <table class="info-table">
+            <tr>
+                <td class="info-label">{$t('pdf.credit.farmer')}</td>
+                <td>{$nomAgriculteur}</td>
+            </tr>
+            <tr>
+                <td class="info-label">{$t('pdf.credit.email')}</td>
+                <td>{$emailAgriculteur}</td>
+            </tr>
+            <tr>
+                <td class="info-label">{$t('pdf.credit.location')}</td>
+                <td>{$locParcelle} ({$surfParcelle} ha)</td>
+            </tr>
+            <tr>
+                <td class="info-label">{$t('pdf.credit.duration')}</td>
+                <td>{$duree} {$t('pdf.credit.years')}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">{$t('pdf.credit.section2')}</div>
+        <div class="score-box">
+            <div style="font-size: 10px; text-transform: uppercase;">{$t('pdf.credit.global_risk')}</div>
+            <div class="score-value">{$scoreRisque} / 10</div>
+            <div style="font-weight: bold; color: {$niveauRisqueColor}">{$t('pdf.credit.level')} {$niveauRisqueStr}</div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>{$t('pdf.credit.criteria')}</th>
+                    <th>{$t('pdf.credit.score')}</th>
+                    <th>{$t('pdf.credit.weight')}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: right;">{$t('pdf.credit.economic_profitability')}</td>
+                    <td>{$scoreRentabilite}</td>
+                    <td>40%</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">{$t('pdf.credit.climate_stability')}</td>
+                    <td>{$scoreClimat}</td>
+                    <td>30%</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">{$t('pdf.credit.diversification')}</td>
+                    <td>{$scoreDiversification}</td>
+                    <td>20%</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">{$t('pdf.credit.experience')}</td>
+                    <td>{$scoreHistorique}</td>
+                    <td>10%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">{$t('pdf.credit.section3')}</div>
+        <table class="info-table">
+            <tr>
+                <td class="info-label">{$t('pdf.credit.repayment_capacity')}</td>
+                <td><strong>{$capacite} {$t('pdf.credit.dt')}</strong></td>
+            </tr>
+            <tr>
+                <td class="info-label">{$t('pdf.credit.max_loan')}</td>
+                <td><strong>{$montantMax} {$t('pdf.credit.dt')}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">{$t('pdf.credit.section4')}</div>
+        <div class="recommendations">
+            {$recommandationsHtml}
         </div>
     </div>
 
-    <div class="content">
-        <div class="section">
-            <h2>{$t('pdf.credit.section1')}</h2>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.farmer')}</span>
-                <span class="info-value">{$nomAgriculteur}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.email')}</span>
-                <span class="info-value">{$emailAgriculteur}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.location')}</span>
-                <span class="info-value">{$locParcelle} ({$surfParcelle} ha)</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.duration')}</span>
-                <span class="info-value">{$duree} {$t('pdf.credit.years')}</span>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>{$t('pdf.credit.section2')}</h2>
-            <div class="score-box">
-                <div class="label">{$t('pdf.credit.global_risk')}</div>
-                <div class="value">{$scoreRisque} / 10</div>
-                <div class="label" style="font-weight: bold;">{$t('pdf.credit.level')} {$niveauRisqueStr}</div>
-            </div>
-
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>{$t('pdf.credit.criteria')}</th>
-                        <th style="text-align: center;">{$t('pdf.credit.score')}</th>
-                        <th style="text-align: center;">{$t('pdf.credit.weight')}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>{$t('pdf.credit.economic_profitability')}</td>
-                        <td style="text-align: center;">{$scoreRentabilite}</td>
-                        <td style="text-align: center;">40%</td>
-                    </tr>
-                    <tr>
-                        <td>{$t('pdf.credit.climate_stability')}</td>
-                        <td style="text-align: center;">{$scoreClimat}</td>
-                        <td style="text-align: center;">30%</td>
-                    </tr>
-                    <tr>
-                        <td>{$t('pdf.credit.diversification')}</td>
-                        <td style="text-align: center;">{$scoreDiversification}</td>
-                        <td style="text-align: center;">20%</td>
-                    </tr>
-                    <tr>
-                        <td>{$t('pdf.credit.experience')}</td>
-                        <td style="text-align: center;">{$scoreHistorique}</td>
-                        <td style="text-align: center;">10%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>{$t('pdf.credit.section3')}</h2>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.repayment_capacity')}</span>
-                <span class="info-value"><strong>{$capacite} {$t('pdf.credit.dt')}</strong></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">{$t('pdf.credit.max_loan')}</span>
-                <span class="info-value"><strong>{$montantMax} {$t('pdf.credit.dt')}</strong></span>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>{$t('pdf.credit.section4')}</h2>
-            <div class="recommendations">
-                {$recommandationsHtml}
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>{$t('pdf.credit.recommendations')}</p>
-            <p>{$t('pdf.credit.dossier_id')} #{$idDossier} | {$t('pdf.credit.creation_date')} {$dateCreation}</p>
-        </div>
+    <div class="footer">
+        <p>{$t('pdf.credit.recommendations')}</p>
+        <p>{$t('pdf.credit.dossier_id')} #{$idDossier} | {$t('pdf.credit.creation_date')} {$dateCreation}</p>
     </div>
 </body>
 </html>
