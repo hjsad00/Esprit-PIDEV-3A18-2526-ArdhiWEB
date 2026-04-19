@@ -40,3 +40,14 @@ services:
             $geminiApiKey: '%env(GEMINI_API_KEY)%'
 
     App\Service\ExternalAPI\WeatherService: ~
+
+    # New Culture AI Services
+    App\Service\WeatherService:
+        arguments:
+            $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+
+    App\Service\GeminiService:
+        arguments:
+            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+
+    App\Service\CultureAdvisorService: ~
