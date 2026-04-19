@@ -1,13 +1,14 @@
 {# ═══════════════════════════════════════════════════════════════
-   WIDGET CHATBOT RH — Style LinkedIn Premium
+   WIDGET CHATBOT RH — Thème Vert Ardhi & Miaou 🐱
    Améliorations visuelles :
-     • Layout style messagerie LinkedIn (bulles + avatars + timestamps)
+     • Layout style messagerie Premium (bulles + avatars + timestamps)
      • Cartes employé enrichies (photo, barres de score animées, badge confiance)
      • Cartes disponibilité avec jauge de charge de travail
      • Suggestions chips contextuelles après chaque réponse
      • Historique persistant dans sessionStorage
      • Animations fluides (entrée des messages, loader dots)
-     • Header avec status en ligne + menu actions
+     • Header avec status en ligne + menu actions + glassmorphism
+     • Icône Chat/IA (jeu de mot Chatbot → Chat 🐱)
    Améliorations logiques :
      • Contexte de conversation (mémorise le dernier intent)
      • Gestion d'erreur enrichie
@@ -18,15 +19,18 @@
 <style>
 /* ─── Variables ──────────────────────────────────────────────── */
 :root {
-  --cb-green:       #0a66c2; /* LinkedIn blue principal */
-  --cb-green-light: #e8f0fe;
+  --cb-green:       #116530; /* Vert Ardhi Forest */
+  --cb-green-dark:  #0d4f26; /* Vert foncé hover */
+  --cb-green-light: #e8f5e9; /* Vert pâle fond */
+  --cb-green-glow:  rgba(17,101,48,.45); /* Glow vert */
   --cb-bot-bg:      #ffffff;
-  --cb-user-bg:     #0a66c2;
+  --cb-user-bg:     #27ae60; /* Vert émeraude vibrant */
   --cb-user-color:  #ffffff;
-  --cb-msg-bg:      #f3f2ef; /* fond LinkedIn */
+  --cb-msg-bg:      #f5f7f5; /* Fond légèrement teinté vert */
   --cb-radius:      18px;
-  --cb-shadow:      0 8px 30px rgba(0,0,0,.18);
+  --cb-shadow:      0 8px 30px rgba(17,101,48,.22);
   --cb-font:        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --cb-accent:      #2ecc71; /* Accent secondaire */
 }
 
 /* ─── Conteneur principal ────────────────────────────────────── */
@@ -40,12 +44,12 @@
 
 /* ─── Launcher ────────────────────────────────────────────────── */
 #rh-cb-launch {
-  width: 60px;
-  height: 60px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
-  background: var(--cb-green);
+  background: linear-gradient(135deg, #116530 0%, #27ae60 100%);
   border: none;
-  box-shadow: 0 4px 20px rgba(10,102,194,.45);
+  box-shadow: 0 4px 24px var(--cb-green-glow), 0 0 0 0 rgba(17,101,48,.3);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -54,20 +58,39 @@
   color: white;
   transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
   position: relative;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 #rh-cb-launch:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 28px rgba(10,102,194,.55);
+  transform: scale(1.12);
+  box-shadow: 0 6px 32px rgba(17,101,48,.55), 0 0 0 4px rgba(46,204,113,.2);
 }
 #rh-cb-launch .cb-notif-dot {
   position: absolute;
-  top: 4px; right: 4px;
-  width: 12px; height: 12px;
+  top: 2px; right: 2px;
+  width: 14px; height: 14px;
   background: #e74c3c;
   border: 2px solid white;
   border-radius: 50%;
   animation: cbPulse 2s infinite;
 }
+/* Cat ear decorations on launcher */
+#rh-cb-launch::before,
+#rh-cb-launch::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #116530 0%, #27ae60 100%);
+  border-radius: 2px 8px 0 0;
+  transition: transform .3s;
+}
+#rh-cb-launch::before { left: 6px; transform: rotate(-20deg); }
+#rh-cb-launch::after  { right: 6px; transform: rotate(20deg); }
+#rh-cb-launch:hover::before { transform: rotate(-30deg) scale(1.1); }
+#rh-cb-launch:hover::after  { transform: rotate(30deg) scale(1.1); }
+
 @keyframes cbPulse {
   0%,100%{transform:scale(1);opacity:1}
   50%{transform:scale(1.3);opacity:.7}
@@ -87,52 +110,58 @@
   display: none;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,.08);
+  border: 1px solid rgba(17,101,48,.12);
   transform-origin: bottom right;
 }
 #rh-cb-window.cb-open {
   display: flex;
-  animation: cbWindowIn .28s cubic-bezier(.34,1.56,.64,1);
+  animation: cbWindowIn .32s cubic-bezier(.34,1.56,.64,1);
 }
 @keyframes cbWindowIn {
   from{opacity:0;transform:scale(.85) translateY(16px)}
   to  {opacity:1;transform:scale(1)   translateY(0)}
 }
 
-/* ─── Header ─────────────────────────────────────────────────── */
+/* ─── Header (Glassmorphism Premium) ─────────────────────────── */
 #rh-cb-header {
-  background: var(--cb-green);
+  background: linear-gradient(135deg, rgba(17,101,48,.92) 0%, rgba(13,79,38,.95) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,.1);
 }
 .cb-bot-avatar {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  background: rgba(255,255,255,.2);
-  border: 2px solid rgba(255,255,255,.4);
+  background: rgba(255,255,255,.18);
+  border: 2px solid rgba(255,255,255,.35);
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; color: white; flex-shrink: 0; position: relative;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .cb-online-dot {
   position: absolute; bottom: 1px; right: 1px;
   width: 10px; height: 10px;
   background: #2ecc71;
   border: 2px solid white; border-radius: 50%;
+  box-shadow: 0 0 6px rgba(46,204,113,.6);
 }
 .cb-header-info { flex: 1; }
-.cb-header-name { color: white; font-size: 14px; font-weight: 700; line-height: 1.2; }
+.cb-header-name { color: white; font-size: 15px; font-weight: 700; line-height: 1.2; letter-spacing: .3px; }
 .cb-header-status { color: rgba(255,255,255,.8); font-size: 11px; margin-top: 2px; }
 .cb-header-actions { display: flex; gap: 4px; }
 .cb-header-btn {
   width: 32px; height: 32px; border-radius: 50%;
-  background: rgba(255,255,255,.15); border: none; color: white;
+  background: rgba(255,255,255,.12); border: none; color: white;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-size: 14px; transition: background .2s;
+  font-size: 14px; transition: background .2s, transform .2s;
 }
-.cb-header-btn:hover { background: rgba(255,255,255,.3); }
+.cb-header-btn:hover { background: rgba(255,255,255,.25); transform: scale(1.08); }
 
 /* ─── Zone messages ──────────────────────────────────────────── */
 #rh-cb-messages {
@@ -169,11 +198,11 @@
 
 .cb-msg-avatar {
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--cb-green);
+  background: linear-gradient(135deg, #116530, #27ae60);
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; color: white; flex-shrink: 0;
 }
-.cb-msg-avatar.user-av { background: #666; }
+.cb-msg-avatar.user-av { background: linear-gradient(135deg, #555, #888); }
 .cb-sender-label { font-size: 11px; font-weight: 600; color: #555; }
 .cb-timestamp    { font-size: 10px; color: #aaa; margin-left: 4px; }
 
@@ -237,7 +266,7 @@
   animation: cbMsgIn .25s ease;
 }
 .cb-emp-card-top {
-  background: linear-gradient(135deg, #0a66c2 0%, #0e77de 100%);
+  background: linear-gradient(135deg, #116530 0%, #27ae60 100%);
   height: 44px;
   position: relative;
 }
@@ -310,7 +339,7 @@
   background: white; color: var(--cb-green);
   border-color: var(--cb-green);
 }
-.cb-card-btn:hover.primary { background: #1f6a1f; }
+.cb-card-btn:hover.primary { background: var(--cb-green-dark); }
 .cb-card-btn:hover.secondary { background: var(--cb-green-light); }
 
 /* ─── CARTE DISPONIBILITÉ ─────────────────────────────────────── */
@@ -362,12 +391,12 @@
   padding: 6px 13px;
   background: var(--cb-green-light);
   color: var(--cb-green);
-  border: 1px solid #c8d8f0;
+  border: 1px solid #b2dfb5;
   border-radius: 20px;
   font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: .15s; flex-shrink: 0;
+  cursor: pointer; transition: .2s; flex-shrink: 0;
 }
-.cb-chip:hover { background: var(--cb-green); color: white; border-color: var(--cb-green); }
+.cb-chip:hover { background: var(--cb-green); color: white; border-color: var(--cb-green); box-shadow: 0 2px 8px var(--cb-green-glow); }
 
 /* ─── Zone de saisie ─────────────────────────────────────────── */
 #rh-cb-input-area {
@@ -397,14 +426,14 @@
 #rh-cb-input:focus { border-color: var(--cb-green); }
 #rh-cb-send {
   width: 40px; height: 40px; border-radius: 50%;
-  background: var(--cb-green);
+  background: linear-gradient(135deg, #116530, #27ae60);
   color: white; border: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; cursor: pointer; flex-shrink: 0;
-  transition: transform .2s, background .2s;
+  transition: transform .2s, background .2s, box-shadow .2s;
 }
-#rh-cb-send:hover { transform: scale(1.08); background: #084fa8; }
-#rh-cb-send:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+#rh-cb-send:hover { transform: scale(1.08); background: linear-gradient(135deg, #0d4f26, #219a52); box-shadow: 0 2px 12px var(--cb-green-glow); }
+#rh-cb-send:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 </style>
 
 {# ─── HTML ─────────────────────────────────────────────────────── #}
@@ -413,14 +442,24 @@
   {# Fenêtre #}
   <div id="rh-cb-window">
 
-    {# Header #}
+    {# Header — Glassmorphism Vert Ardhi #}
     <div id="rh-cb-header">
-      <div class="cb-bot-avatar" style="background:#e8f0fe; color:#1a73e8; font-size: 20px;">
-        ✨
+      <div class="cb-bot-avatar">
+        {# SVG Chat IA stylisé #}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4.5 3L6.5 8.5H4C3.17 8.5 2.5 9.17 2.5 10V18C2.5 18.83 3.17 19.5 4 19.5H8L12 22.5L16 19.5H20C20.83 19.5 21.5 18.83 21.5 18V10C21.5 9.17 20.83 8.5 20 8.5H17.5L19.5 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,.15)"/>
+          <circle cx="8.5" cy="13" r="1.5" fill="#2ecc71"/>
+          <circle cx="15.5" cy="13" r="1.5" fill="#2ecc71"/>
+          <path d="M10 16.5C10.5 17 11.2 17.3 12 17.3C12.8 17.3 13.5 17 14 16.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="5" y1="15" x2="2" y2="14.5" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="5" y1="13" x2="1.5" y2="13" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="19" y1="15" x2="22" y2="14.5" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="19" y1="13" x2="22.5" y2="13" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round"/>
+        </svg>
         <span class="cb-online-dot"></span>
       </div>
       <div class="cb-header-info">
-        <div class="cb-header-name">SmartFarm AI</div>
+        <div class="cb-header-name">🐱 SmartFarm AI</div>
         <div class="cb-header-status" id="rh-cb-status">● {{ 'status.online'|trans|default('En ligne') }}</div>
       </div>
       <div class="cb-header-actions">
@@ -457,9 +496,9 @@
 
   </div>
 
-  {# Bouton launcher #}
+  {# Bouton launcher — Chat avec oreilles #}
   <button id="rh-cb-launch" title="{{ 'chatbot.title'|trans|default('SmartFarm AI Assistant') }}">
-    <i class="bi bi-stars"></i>
+    <i class="bi bi-chat-dots-fill"></i>
     <span class="cb-notif-dot" id="rh-cb-notif"></span>
   </button>
 
@@ -569,9 +608,9 @@ async function send(text, action = '') {
       addBotBubble('❌ ' + data.error);
     } else {
       if (data.reponse) {
-        // Badge Gemini si réponse générée par l'IA
+        // Badge IA si réponse générée par Gemini
         const geminiPrefix = data.intention === 'GEMINI_FALLBACK'
-          ? '<span style="font-size:10px;background:#e8f0fe;color:#1a73e8;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">✨ Gemini AI</span><br>'
+          ? '<span style="font-size:10px;background:#e8f5e9;color:#116530;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">🐱 Miaou AI</span><br>'
           : '';
         addBotBubble(geminiPrefix + formatText(data.reponse));
       }
@@ -653,7 +692,7 @@ function getOrCreateGroup(sender) {
   const time = nowTime();
   g.innerHTML = `
     <div class="cb-group-header">
-      <div class="cb-msg-avatar" style="background:#e8f0fe; color:#1a73e8; display:flex; align-items:center; justify-content:center; font-size:12px;">✨</div>
+      <div class="cb-msg-avatar" style="display:flex; align-items:center; justify-content:center; font-size:14px;">🐱</div>
       <div class="cb-sender-label">SmartFarm AI</div>
       <span class="cb-timestamp">${time}</span>
     </div>`;
@@ -725,7 +764,7 @@ function renderEmpCard(rec, rank) {
       </div>
 
       <div class="cb-scores">
-        ${scoreBar('{{ "ai.matching.reason.skills"|trans|default("Compétences")|e("js") }}',      scoreComp,  '#0a66c2')}
+        ${scoreBar('{{ "ai.matching.reason.skills"|trans|default("Compétences")|e("js") }}',      scoreComp,  '#116530')}
         ${scoreBar('{{ "employe.performance"|trans|default("Performance")|e("js") }}',             scorePerf,  '#27ae60')}
         ${scoreBar('{{ "ai.matching.reason.availability"|trans|default("Disponibilité")|e("js") }}', scoreDispo, '#f39c12')}
       </div>
@@ -890,20 +929,20 @@ function renderSuggestions(suggestions) {
     btn.innerHTML = `<i class="bi bi-tag"></i> ${escHtml(s.text)}`;
     btn.style.cssText = `
       background: white;
-      border: 1px solid #e0e0e0;
+      border: 1px solid #b2dfb5;
       border-radius: 20px;
       padding: 6px 14px;
       font-size: 13px;
-      color: #1a73e8;
+      color: #116530;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 4px rgba(17,101,48,0.08);
       display: flex;
       align-items: center;
       gap: 6px;
     `;
-    btn.onmouseover = () => { btn.style.background = '#f1f7fe'; btn.style.borderColor = '#1a73e8'; };
-    btn.onmouseout  = () => { btn.style.background = 'white';   btn.style.borderColor = '#e0e0e0'; };
+    btn.onmouseover = () => { btn.style.background = '#e8f5e9'; btn.style.borderColor = '#116530'; };
+    btn.onmouseout  = () => { btn.style.background = 'white';   btn.style.borderColor = '#b2dfb5'; };
     
     btn.onclick = () => {
       // Désactiver tous les boutons du groupe pour éviter le double clic

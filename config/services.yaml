@@ -22,6 +22,7 @@ services:
             string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
             string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
             string $twilioFrom: '%env(MATERIEL_TWILIO_FROM)%'
+            string $geminiApiKey: '%env(GEMINI_API_KEY)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
