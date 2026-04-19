@@ -15,11 +15,11 @@ class ModerationAudit
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'moderator_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'moderator_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $moderator = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'target_user_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'target_user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $targetUser = null;
 
     #[ORM\Column(length: 50)]

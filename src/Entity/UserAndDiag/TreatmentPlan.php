@@ -18,7 +18,7 @@ class TreatmentPlan
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Diagnostic::class)]
-    #[ORM\JoinColumn(name: 'diagnostic_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'diagnostic_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Diagnostic $diagnostic = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

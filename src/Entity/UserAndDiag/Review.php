@@ -16,15 +16,15 @@ class Review
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Diagnostic::class)]
-    #[ORM\JoinColumn(name: 'diagnostic_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'diagnostic_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Diagnostic $diagnostic = null;
 
     #[ORM\ManyToOne(targetEntity: TreatmentPlan::class)]
-    #[ORM\JoinColumn(name: 'treatment_plan_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'treatment_plan_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?TreatmentPlan $treatment_plan = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'expert_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'expert_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?User $expert = null;
 
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('DIAGNOSIS','PROGRESS','PREVENTION') NOT NULL")]
@@ -61,7 +61,7 @@ class Review
     private ?string $ai_proposed_plan = null;
 
     #[ORM\ManyToOne(targetEntity: PreventionPlan::class)]
-    #[ORM\JoinColumn(name: 'prevention_plan_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'prevention_plan_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?PreventionPlan $prevention_plan = null;
 
     public function __construct()

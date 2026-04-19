@@ -6,7 +6,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link href="{{ asset('assets/css/UserAndDiag/dashboard.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/UserAndDiag/dashboard.css') }}?v=2" rel="stylesheet">
 {% endblock %}
 
 
@@ -24,33 +24,44 @@
         
         <!-- Hero Section -->
         <div class="hero-panel fade-up">
-            <div class="avatar-circle">
-                <i class="bi bi-person-fill"></i>
-            </div>
-            <div class="welcome-text">
-                <h1>Bonjour, {{ user.prenom|default('Agriculteur') }}</h1>
-                <p>Gérez votre exploitation intelligemment avec Ardhi</p>
-            </div>
-            
-            <div class="gamification-stats">
-                <div class="level-info">
-                    <div class="level-text" data-user-and-diag--dashboard-refresh-target="level">Niveau {{ gamification.level }}</div>
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" 
-                             style="width: {{ gamification.progress }}%" 
-                             aria-valuenow="{{ gamification.progress }}" 
-                             aria-valuemin="0" aria-valuemax="100"
-                             data-user-and-diag--dashboard-refresh-target="progress"></div>
+            <div class="hero-panel-main">
+                <div class="avatar-circle">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="welcome-text">
+                    <h1>Bonjour, {{ user.prenom|default('Agriculteur') }}</h1>
+                    <p>Gérez votre exploitation intelligemment avec Ardhi</p>
+                </div>
+                
+                <div class="gamification-stats">
+                    <div class="level-info">
+                        <div class="level-text" data-user-and-diag--dashboard-refresh-target="level">Niveau {{ gamification.level }}</div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ gamification.progress }}%" 
+                                 aria-valuenow="{{ gamification.progress }}" 
+                                 aria-valuemin="0" aria-valuemax="100"
+                                 data-user-and-diag--dashboard-refresh-target="progress"></div>
+                        </div>
+                    </div>
+                    <div class="points-info">
+                        <div class="points-val" data-user-and-diag--dashboard-refresh-target="points">{{ gamification.points }} pts</div>
+                        <div class="points-lbl">points</div>
                     </div>
                 </div>
-                <div class="points-info">
-                    <div class="points-val" data-user-and-diag--dashboard-refresh-target="points">{{ gamification.points }} pts</div>
-                    <div class="points-lbl">points</div>
-                </div>
+
+                {% if badges|length > 0 %}
+                <button class="badges-toggle-btn" id="badgesToggleBtn" type="button" title="Voir mes badges">
+                    <i class="bi bi-award-fill"></i>
+                    <span class="badges-count">{{ badges|length }}</span>
+                    <i class="bi bi-chevron-down badges-chevron"></i>
+                </button>
+                {% endif %}
             </div>
-            
-            <div class="badges-container">
-                <div style="font-size: 0.6rem; color: rgba(180,210,190,0.5); font-weight: bold; margin-bottom: 4px; margin-left: 10px;">MES BADGES</div>
+
+            {% if badges|length > 0 %}
+            <div class="badges-drawer" id="badgesDrawer">
+                <div class="badges-drawer-label">MES BADGES</div>
                 <div class="badges-list" data-user-and-diag--dashboard-refresh-target="badges">
                     {% for badge in badges %}
                     <div class="badge-item" title="{{ badge.description }}">
@@ -60,6 +71,7 @@
                     {% endfor %}
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- Intelligence Row -->
@@ -241,6 +253,7 @@
 {{ parent() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Intelligence card collapse
     document.querySelectorAll('.intell-card .header').forEach(function(header) {
         header.addEventListener('click', function() {
             var card = header.closest('.intell-card');
@@ -254,6 +267,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Badges drawer toggle
+    var badgesBtn = document.getElementById('badgesToggleBtn');
+    var badgesDrawer = document.getElementById('badgesDrawer');
+    if (badgesBtn && badgesDrawer) {
+        badgesBtn.addEventListener('click', function() {
+            badgesBtn.classList.toggle('active');
+            badgesDrawer.classList.toggle('open');
+        });
+    }
 });
 </script>
 {% endblock %}

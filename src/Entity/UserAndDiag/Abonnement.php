@@ -4,7 +4,7 @@ namespace App\Entity\UserAndDiag;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\UserAndDiag\User; 
+use App\Entity\UserAndDiag\User;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\AbonnementRepository::class)]
 class Abonnement
@@ -30,11 +30,11 @@ class Abonnement
     private ?string $statut = 'ACTIF';
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\ManyToOne(targetEntity: Offre::class)]
-    #[ORM\JoinColumn(name: 'offre_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'offre_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Offre $offre = null;
 
     public function getId(): ?int

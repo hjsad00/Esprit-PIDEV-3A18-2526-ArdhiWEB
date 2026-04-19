@@ -15,7 +15,7 @@ class CommunityReport
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'reporter_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'reporter_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $reporter = null;
 
     #[ORM\ManyToOne(targetEntity: CommunityPost::class)]

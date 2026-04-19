@@ -13,12 +13,12 @@ class UserBadge
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Badge::class)]
-    #[ORM\JoinColumn(name: 'badge_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'badge_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Badge $badge = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
