@@ -6,7 +6,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link href="{{ asset('assets/css/UserAndDiag/dashboard.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('assets/css/UserAndDiag/dashboard.css') }}?v=8" rel="stylesheet">
 {% endblock %}
 
 
@@ -78,14 +78,14 @@
         <div class="intelligence-row">
             <!-- Weather Widget -->
             <div class="intell-card weather-card fade-up is-collapsed" style="transition-delay: 100ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>MÉTÉO DIRECT</h3>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <p class="cond">{{ weather.condition }}</p>
                 </div>
-                <div class="weather-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="weatherBody">
+                <div class="weather-body" data-user-and-diag--dashboard-refresh-target="weatherBody">
                     <div class="weather-main">
                         <div class="icon" data-user-and-diag--dashboard-refresh-target="weatherIcon">{{ weather.icon }}</div>
                         <div class="temp" data-user-and-diag--dashboard-refresh-target="weatherTemp">{{ weather.temperature }}°</div>
@@ -101,14 +101,14 @@
 
             <!-- Regional Alerts Widget -->
             <div class="intell-card alerts-card fade-up is-collapsed" style="transition-delay: 200ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>🚨 ALERTES RÉGIONALES</h3>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div style="font-size: 0.6rem; color: rgba(255,200,190,0.6);">Rayon: 25km</div>
                 </div>
-                <div class="alerts-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="alertsBody">
+                <div class="alerts-body" data-user-and-diag--dashboard-refresh-target="alertsBody">
                     <div id="epidemic-stats-summary" style="font-size: 0.65rem; color: rgba(255,255,255,0.6); margin-bottom: 5px;">
                         {% if epidemic_stats.reports > 0 %}
                             📊 {{ epidemic_stats.diseases_detected }} maladies | {{ epidemic_stats.reports }} signalements (25km)
@@ -134,14 +134,14 @@
 
             <!-- Predictive Risks Widget -->
             <div class="intell-card predictive-card fade-up is-collapsed" style="transition-delay: 300ms;">
-                <div class="header" data-action="click->user-and-diag--dashboard-refresh#toggleCollapse">
+                <div class="header">
                     <div class="d-flex align-items-center gap-2">
                         <h3>🌡️ PRÉVISIONS & RISQUES</h3>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div style="font-size: 0.6rem; color: rgba(220,200,255,0.6);">Prochaines 72h</div>
                 </div>
-                <div class="predict-body" style="display: none;" data-user-and-diag--dashboard-refresh-target="predictiveBody">
+                <div class="predict-body" data-user-and-diag--dashboard-refresh-target="predictiveBody">
                     <div data-user-and-diag--dashboard-refresh-target="predictiveRisks">
                         {% for r in predictive_risks %}
                         <div class="risk-item">
@@ -255,15 +255,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Intelligence card collapse
     document.querySelectorAll('.intell-card .header').forEach(function(header) {
-        header.addEventListener('click', function() {
+        header.addEventListener('click', function(e) {
+            e.stopPropagation(); // Avoid bubbling up just in case
             var card = header.closest('.intell-card');
-            var icon = header.querySelector('.toggle-icon');
-            var body = card.querySelector('.weather-body, .alerts-body, .predict-body');
-            if (body) {
-                var isHidden = body.style.display === 'none';
-                body.style.display = isHidden ? '' : 'none';
-                if (icon) icon.textContent = isHidden ? '▲' : '▼';
-                card.classList.toggle('is-collapsed', !isHidden);
+            if (card) {
+                card.classList.toggle('is-collapsed');
             }
         });
     });
