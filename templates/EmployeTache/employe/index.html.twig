@@ -121,7 +121,7 @@
         <span class="emp-badge badge-actif">{{ total_actifs }} {{ 'common.active'|trans }}</span>
         <span class="emp-badge badge-inactif">{{ total - total_actifs }} {{ 'employe.empty'|trans|split(' ')|last }}</span>
     </div>
-    {% endif %}
+    
 
     <form method="GET" action="{{ path('employe_index') }}">
     <div class="emp-toolbar">
