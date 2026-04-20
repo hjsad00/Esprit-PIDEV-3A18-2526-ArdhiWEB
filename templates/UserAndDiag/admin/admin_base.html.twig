@@ -111,6 +111,11 @@
               <i class="bi bi-shield-shaded text-success"></i><span>Audit Modé.</span>
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link {{ current_route == 'app_user_and_diag_moderation_dashboard' ? 'active' : '' }}" href="{{ path('app_user_and_diag_moderation_dashboard') }}">
+              <i class="bi bi-shield-lock-fill text-success"></i><span>Modération Communauté</span>
+            </a>
+          </li>
         </ul>
       {% endif %}
 

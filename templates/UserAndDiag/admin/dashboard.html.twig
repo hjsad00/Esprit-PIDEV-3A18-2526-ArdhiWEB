@@ -4,6 +4,24 @@
 {% block page_title %}{{ title ?? 'Tableau de bord' }}{% endblock %}
 
 {% block body %}
+{% if dashboard_context|default('') == 'users' %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #116530 0%, #1a4d2e 100%);">
+      <div class="card-body p-4 d-flex align-items-center justify-content-between text-white">
+        <div>
+          <h4 class="mb-1 fw-bold">Gestion de la Communauté</h4>
+          <p class="mb-0 opacity-75">Gérez les signalements, les bannissements et le silence des utilisateurs.</p>
+        </div>
+        <a href="{{ path('app_user_and_diag_moderation_dashboard') }}" class="btn btn-light btn-lg px-4 fw-bold">
+          <i class="bi bi-shield-lock-fill me-2"></i>Dashboard Modération
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="row g-4">
   {% for stat in stats %}
   <div class="col-xl-3 col-lg-4 col-md-6">
