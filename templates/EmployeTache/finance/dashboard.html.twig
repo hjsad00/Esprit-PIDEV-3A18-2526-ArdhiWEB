@@ -1,733 +1,405 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Finance RH — Ardhi{% endblock %}
 {% block body_class %}finance-rh-page{% endblock %}
 
 {% block stylesheets %}
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════════════════
-   ARDHI FINANCE RH — Design système premium
-   Palette : obsidian + gold + sage + white
-══════════════════════════════════════════════════ */
-:root {
-  --obsidian: #0f1117;
-  --obsidian-2: #171c27;
-  --obsidian-3: #1e2535;
-  --gold: #c9a84c;
-  --gold-light: #e8c96a;
-  --gold-pale: rgba(201,168,76,.12);
-  --sage: #4a7c59;
-  --sage-light: #5d9e72;
-  --danger: #e05454;
-  --danger-pale: rgba(224,84,84,.12);
-  --success-pale: rgba(93,158,114,.12);
-  --text-1: #f0ede8;
-  --text-2: #a09a8e;
-  --text-3: #5a5550;
-  --border: rgba(255,255,255,.07);
-  --border-gold: rgba(201,168,76,.3);
+:root{
+  --g900:#0a1a0f;--g800:#0f2a18;--g700:#163821;--g600:#1e4d2e;
+  --g500:#2a6b3f;--g400:#3d8f56;--g300:#5dae74;--g200:#8ecfa0;
+  --g100:#c2e8cb;--g50:#eaf6ec;
+  --gold:#c9a84c;--gold2:#e8c96a;--gold-bg:rgba(201,168,76,.1);
+  --red:#e05454;--red-bg:rgba(224,84,84,.1);
+  --text1:#f0f7f1;--text2:#8ab598;--text3:#4a6b52;
+  --border:rgba(93,174,116,.12);--border2:rgba(93,174,116,.22);
+  --card:#0f2218;--page:#0a1a0f;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus Jakarta Sans',sans-serif}
+.frh{min-height:100vh;padding-bottom:80px}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* HEADER */
+.frh-header{background:var(--g800);border-bottom:1px solid var(--border);padding:2rem 2.5rem 1.75rem;position:relative;overflow:hidden}
+.frh-header::after{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;background:radial-gradient(circle,rgba(93,174,116,.06) 0%,transparent 65%);pointer-events:none}
+.frh-bc{font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+.frh-bc a{color:var(--g300);text-decoration:none}
+.frh-bc a:hover{color:var(--g200)}
+.frh-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,46px);font-weight:600;line-height:1.05;color:var(--text1)}
+.frh-h1 em{color:var(--g300);font-style:normal}
+.frh-h1 strong{color:var(--gold);font-style:normal}
+.frh-desc{font-size:13px;color:var(--text2);margin-top:.5rem}
+.frh-actions{display:flex;gap:10px;margin-top:1.5rem;flex-wrap:wrap}
+.btn-g{font-size:13px;padding:8px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:all .2s;font-weight:500}
+.btn-primary-g{background:var(--g400);color:#fff;border:none}
+.btn-primary-g:hover{background:var(--g300)}
+.btn-outline-g{background:transparent;color:var(--g300);border:1px solid var(--border2)}
+.btn-outline-g:hover{background:rgba(93,174,116,.08)}
 
-.frh-page {
-  background: var(--obsidian);
-  min-height: 100vh;
-  font-family: 'DM Sans', sans-serif;
-  color: var(--text-1);
-  padding-bottom: 80px;
-}
+/* KPI STRIP */
+.frh-kpis{display:grid;grid-template-columns:repeat(6,1fr);background:var(--g800);border-bottom:1px solid var(--border)}
+@media(max-width:1100px){.frh-kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.frh-kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:1.25rem 1.5rem;border-right:1px solid var(--border);opacity:0;transform:translateY(10px);animation:up .4s ease forwards}
+.kpi:last-child{border-right:none}
+.kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.10s}
+.kpi:nth-child(3){animation-delay:.15s}.kpi:nth-child(4){animation-delay:.20s}
+.kpi:nth-child(5){animation-delay:.25s}.kpi:nth-child(6){animation-delay:.30s}
+.kpi-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.kpi-n{font-size:20px;font-weight:600;line-height:1}
+.kpi-n.green{color:var(--g300)}.kpi-n.gold{color:var(--gold)}.kpi-n.red{color:var(--red)}
+.kpi-unit{font-size:10px;color:var(--text3);margin-top:3px}
 
-/* ── HERO HEADER ── */
-.frh-hero {
-  background: var(--obsidian-2);
-  border-bottom: 1px solid var(--border);
-  padding: 2.5rem 2rem 2rem;
-  position: relative;
-  overflow: hidden;
-}
-.frh-hero::before {
-  content: '';
-  position: absolute;
-  top: -80px; right: -80px;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(201,168,76,.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-.frh-breadcrumb {
-  font-size: 12px;
-  color: var(--text-3);
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-.frh-breadcrumb a { color: var(--gold); text-decoration: none; }
-.frh-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(28px, 4vw, 42px);
-  font-weight: 600;
-  color: var(--text-1);
-  line-height: 1.1;
-  margin-bottom: .5rem;
-}
-.frh-title span { color: var(--gold); }
-.frh-subtitle { font-size: 14px; color: var(--text-2); }
+/* BODY */
+.frh-body{max-width:1440px;margin:0 auto;padding:2rem 2.5rem}
+.frh-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+@media(max-width:1000px){.frh-grid{grid-template-columns:1fr}}
 
-/* ── KPI STRIP ── */
-.frh-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1px;
-  background: var(--border);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.kpi-cell {
-  background: var(--obsidian-2);
-  padding: 1.5rem 1.25rem;
-  opacity: 0;
-  transform: translateY(12px);
-  animation: fadeUp .5s ease forwards;
-}
-.kpi-cell:nth-child(1) { animation-delay: .05s }
-.kpi-cell:nth-child(2) { animation-delay: .10s }
-.kpi-cell:nth-child(3) { animation-delay: .15s }
-.kpi-cell:nth-child(4) { animation-delay: .20s }
-.kpi-cell:nth-child(5) { animation-delay: .25s }
-.kpi-cell:nth-child(6) { animation-delay: .30s }
-.kpi-label {
-  font-size: 11px;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  margin-bottom: .5rem;
-}
-.kpi-value {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--text-1);
-  line-height: 1;
-}
-.kpi-value.gold { color: var(--gold); }
-.kpi-value.sage { color: var(--sage-light); }
-.kpi-value.danger { color: var(--danger); }
-.kpi-unit {
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 4px;
-}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;opacity:0;transform:translateY(14px);animation:up .55s ease forwards}
+.card:nth-child(1){animation-delay:.35s}.card:nth-child(2){animation-delay:.45s}
+.card:nth-child(3){animation-delay:.40s}.card:nth-child(4){animation-delay:.50s}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.5rem;border-bottom:1px solid var(--border)}
+.card-hd-t{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+.badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-g{background:rgba(61,143,86,.18);color:var(--g300);border:1px solid rgba(61,143,86,.3)}
+.badge-gold{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
+.badge-r{background:var(--red-bg);color:var(--red)}
 
-/* ── LAYOUT ── */
-.frh-body {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-.frh-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-@media(max-width: 900px) { .frh-grid-2 { grid-template-columns: 1fr; } }
+/* TABLE */
+.ft{width:100%;border-collapse:collapse}
+.ft th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:.65rem 1.25rem;text-align:left;border-bottom:1px solid var(--border)}
+.ft td{padding:.85rem 1.25rem;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.ft tr:last-child td{border-bottom:none}
+.ft tbody tr{transition:background .15s;cursor:pointer}
+.ft tbody tr:hover td{background:rgba(93,174,116,.04)}
+.av{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(93,174,116,.3)}
+.av-i{width:34px;height:34px;border-radius:50%;background:rgba(61,143,86,.15);border:1.5px solid rgba(93,174,116,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--g300);flex-shrink:0}
+.emp-cell{display:flex;align-items:center;gap:9px}
+.emp-nm{font-weight:500;color:var(--text1);font-size:13px}
+.emp-ps{font-size:11px;color:var(--text3)}
+.num-g{color:var(--g300);font-weight:500}.num-gold{color:var(--gold)}.num-r{color:var(--red)}
+.cp{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600}
+.cp-cdi{background:rgba(61,143,86,.18);color:var(--g300)}
+.cp-sais{background:rgba(186,117,23,.18);color:#ef9f27}
+.salaire-input{background:transparent;border:none;color:var(--gold);font-family:inherit;font-size:13px;font-weight:500;width:80px;text-align:right;cursor:pointer;border-bottom:1px dashed rgba(201,168,76,.3);padding:2px 4px}
+.salaire-input:focus{outline:none;border-bottom-color:var(--gold);background:rgba(201,168,76,.05)}
+.btn-sm{font-size:11px;padding:4px 12px;border:1px solid rgba(93,174,116,.3);border-radius:8px;background:transparent;color:var(--g300);cursor:pointer;transition:all .2s}
+.btn-sm:hover{background:rgba(93,174,116,.1)}
 
-/* ── CARDS ── */
-.frh-card {
-  background: var(--obsidian-2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(16px);
-  animation: fadeUp .6s ease forwards;
-}
-.frh-card:nth-child(1) { animation-delay: .35s }
-.frh-card:nth-child(2) { animation-delay: .45s }
-.frh-card:nth-child(3) { animation-delay: .40s }
-.frh-card:nth-child(4) { animation-delay: .50s }
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-.card-head-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-}
-.card-head-badge {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-weight: 500;
-}
-.badge-gold { background: var(--gold-pale); color: var(--gold); border: 1px solid var(--border-gold); }
-.badge-sage { background: var(--success-pale); color: var(--sage-light); }
-.badge-danger { background: var(--danger-pale); color: var(--danger); }
+/* CNSS */
+.cnss-g{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.cnss-c{background:var(--card);padding:1.5rem;text-align:center}
+.cnss-pct{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;color:var(--g300);line-height:1;margin-bottom:.2rem}
+.cnss-who{font-size:11px;color:var(--text3);margin-bottom:.75rem}
+.cnss-amt{font-size:20px;font-weight:600;color:var(--text1)}
+.cnss-lbl{font-size:10px;color:var(--text3);margin-top:3px}
 
-/* ── TABLE EMPLOYÉS ── */
-.frh-table { width: 100%; border-collapse: collapse; }
-.frh-table th {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  padding: .75rem 1.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-.frh-table td {
-  padding: .9rem 1.5rem;
-  font-size: 13px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.frh-table tr:last-child td { border-bottom: none; }
-.frh-table tr {
-  transition: background .15s;
-  cursor: pointer;
-}
-.frh-table tr:hover td { background: rgba(255,255,255,.03); }
-.emp-avatar-sm {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1.5px solid var(--border-gold);
-}
-.emp-init-sm {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--gold-pale);
-  border: 1.5px solid var(--border-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--gold);
-  flex-shrink: 0;
-}
-.emp-info-cell { display: flex; align-items: center; gap: 10px; }
-.emp-name { font-weight: 500; color: var(--text-1); font-size: 13px; }
-.emp-poste { font-size: 11px; color: var(--text-3); }
-.num-pos { color: var(--sage-light); font-weight: 500; }
-.num-neg { color: var(--danger); font-weight: 500; }
-.num-neutral { color: var(--text-2); }
-.contrat-pill {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 500;
-}
-.c-cdi { background: rgba(74,124,89,.2); color: var(--sage-light); }
-.c-sais { background: rgba(186,117,23,.2); color: #ef9f27; }
-.btn-small {
-  font-size: 11px;
-  padding: 5px 12px;
-  border: 1px solid var(--border-gold);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--gold);
-  cursor: pointer;
-  transition: all .2s;
-  white-space: nowrap;
-}
-.btn-small:hover { background: var(--gold-pale); }
+/* CATÉGORIES */
+.cat-r{display:flex;align-items:center;gap:10px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)}
+.cat-r:last-child{border-bottom:none}
+.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cat-nm{font-size:13px;color:var(--text2);flex:1}
+.cat-sub{font-size:10px;color:var(--text3)}
+.bar-t{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;max-width:100px}
+.bar-f{height:100%;border-radius:2px;transition:width 1.3s cubic-bezier(.4,0,.2,1)}
+.cat-amt{font-size:12px;font-weight:500;color:var(--text1);min-width:85px;text-align:right}
 
-/* ── BARRE DE PROGRESSION BUDGÉTAIRE ── */
-.budget-row {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-  opacity: 0;
-  animation: fadeUp .5s ease forwards;
-}
-.budget-row:last-child { border-bottom: none; }
-.budget-row-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: .5rem;
-}
-.budget-task-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
-.budget-task-cat { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.budget-amounts { font-size: 12px; color: var(--text-2); text-align: right; }
-.budget-bar-track {
-  height: 4px;
-  background: var(--obsidian-3);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.budget-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s cubic-bezier(.4,0,.2,1);
-}
-.bar-ok { background: var(--sage-light); }
-.bar-warn { background: var(--gold); }
-.bar-over { background: var(--danger); }
-.budget-ecart {
-  font-size: 11px;
-  margin-top: 4px;
-  text-align: right;
-}
+/* TÂCHES BUDGET */
+.tb-r{padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+.tb-r:last-child{border-bottom:none}
+.tb-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem}
+.tb-nm{font-size:13px;font-weight:500;color:var(--text1)}
+.tb-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.tb-amts{font-size:12px;text-align:right}
+.bar-tr{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bar-ok{background:var(--g400)}.bar-warn{background:var(--gold)}.bar-over{background:var(--red)}
+.tb-ecart{font-size:11px;margin-top:4px;text-align:right}
+.tb-detail{font-size:11px;color:var(--text3);margin-top:4px}
 
-/* ── CNSS BLOCK ── */
-.cnss-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--border);
-}
-.cnss-cell {
-  background: var(--obsidian-2);
-  padding: 1.5rem;
-  text-align: center;
-}
-.cnss-pct {
-  font-size: 32px;
-  font-weight: 600;
-  color: var(--gold);
-  font-family: 'Playfair Display', serif;
-  line-height: 1;
-  margin-bottom: .25rem;
-}
-.cnss-who { font-size: 12px; color: var(--text-3); margin-bottom: .75rem; }
-.cnss-amount { font-size: 18px; font-weight: 600; color: var(--text-1); }
-.cnss-amount-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.on{display:flex}
+.modal{background:var(--g800);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:520px;animation:slideUp .3s ease;overflow:hidden}
+.modal-hd{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.modal-t{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text1)}
+.modal-s{font-size:11px;color:var(--text3);margin-top:2px}
+.modal-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;transition:color .2s;line-height:1}
+.modal-x:hover{color:var(--text1)}
+.modal-body{padding:1.5rem}
+.ms{display:flex;gap:8px;margin-bottom:1.25rem}
+.ms select{background:var(--g700);border:1px solid var(--border);color:var(--text1);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;flex:1;font-family:inherit}
+.bl-r{display:flex;justify-content:space-between;padding:.6rem 0;font-size:13px;border-bottom:1px solid var(--border)}
+.bl-r:last-child{border-bottom:none}
+.bl-r.tot{font-weight:600;font-size:14px;padding-top:1rem;margin-top:.5rem;border-top:1px solid var(--border2);border-bottom:none}
+.bl-lbl{color:var(--text2)}.bl-v{color:var(--text1);font-weight:500}
+.bl-v.minus{color:var(--red)}.bl-v.net{color:var(--g300);font-size:18px}
+.btn-main{width:100%;padding:12px;background:var(--g500);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:1rem;font-family:inherit}
+.btn-main:hover{background:var(--g400);transform:translateY(-1px)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 
-/* ── RÉPARTITION PAR CATÉGORIE ── */
-.cat-list { padding: .75rem 0; }
-.cat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: .75rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-  transition: background .15s;
-}
-.cat-item:last-child { border-bottom: none; }
-.cat-item:hover { background: rgba(255,255,255,.02); }
-.cat-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.cat-name { font-size: 13px; color: var(--text-2); flex: 1; }
-.cat-bar-wrap { width: 100px; }
-.cat-bar-track { height: 3px; background: var(--obsidian-3); border-radius: 2px; overflow: hidden; }
-.cat-bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
-.cat-budget { font-size: 12px; font-weight: 500; color: var(--text-1); text-align: right; min-width: 80px; }
-
-/* ── MODAL BULLETIN ── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.7);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-.modal-overlay.active { display: flex; }
-.modal-box {
-  background: var(--obsidian-2);
-  border: 1px solid var(--border-gold);
-  border-radius: 20px;
-  width: 100%;
-  max-width: 540px;
-  animation: slideUp .3s ease;
-  overflow: hidden;
-}
-.modal-header {
-  background: linear-gradient(135deg, var(--obsidian-3), var(--obsidian-2));
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.modal-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 18px;
-  color: var(--text-1);
-}
-.modal-subtitle { font-size: 12px; color: var(--text-3); margin-top: 3px; }
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--text-3);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  transition: color .2s;
-}
-.modal-close:hover { color: var(--text-1); }
-.modal-body { padding: 1.5rem; }
-.bulletin-row {
-  display: flex;
-  justify-content: space-between;
-  padding: .6rem 0;
-  font-size: 13px;
-  border-bottom: 1px solid var(--border);
-}
-.bulletin-row:last-child { border-bottom: none; }
-.bulletin-row.total {
-  font-weight: 600;
-  font-size: 14px;
-  padding-top: 1rem;
-  margin-top: .5rem;
-  border-top: 1px solid var(--border-gold);
-  border-bottom: none;
-}
-.bulletin-label { color: var(--text-2); }
-.bulletin-val { color: var(--text-1); font-weight: 500; }
-.bulletin-val.deduct { color: var(--danger); }
-.bulletin-val.net { color: var(--sage-light); font-size: 18px; }
-.month-selector {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 1.25rem;
-}
-.month-selector select {
-  background: var(--obsidian-3);
-  border: 1px solid var(--border);
-  color: var(--text-1);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  flex: 1;
-}
-.btn-primary {
-  width: 100%;
-  padding: 12px;
-  background: var(--gold);
-  color: var(--obsidian);
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .2s;
-  margin-top: 1rem;
-  font-family: 'DM Sans', sans-serif;
-}
-.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
-.loading-dot { display: inline-block; animation: blink 1s infinite; }
-
-/* ── ANIMATIONS ── */
-@keyframes fadeUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; } 50% { opacity: .3; }
-}
-
-/* ── FULL WIDTH CARD ── */
-.frh-card-full { margin-bottom: 1.5rem; }
+/* ANIMS */
+@keyframes up{to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="frh-page">
+<div class="frh">
 
-  {# ── HERO ── #}
-  <div class="frh-hero">
-    <div style="max-width:1400px;margin:0 auto;padding:0 2rem">
-      <div class="frh-breadcrumb">
-        <a href="{{ path('employe_index') }}">Employés</a>
-        &nbsp;›&nbsp; Finance RH
-      </div>
-      <div class="frh-title">
-        Module <span>Finance</span> RH
-      </div>
-      <div class="frh-subtitle">
-        Masse salariale · CNSS Tunisie · Coût de revient des tâches
-      </div>
+{# ─── HEADER ─── #}
+<div class="frh-header">
+  <div style="max-width:1440px;margin:0 auto">
+    <div class="frh-bc">
+      <a href="{{ path('employe_index') }}">Employés</a> › Finance RH
+    </div>
+    <div class="frh-h1"><em>Finance</em> <strong>RH</strong></div>
+    <div class="frh-desc">Masse salariale · CNSS Tunisie · Coût de revient · Bulletins de paie</div>
+    <div class="frh-actions">
+      <a href="{{ path('pointage_dashboard') }}" class="btn-g btn-outline-g">Pointage GPS</a>
     </div>
   </div>
+</div>
 
-  {# ── KPI STRIP ── #}
-  <div class="frh-kpis">
-    <div class="kpi-cell">
-      <div class="kpi-label">Masse salariale mensuelle</div>
-      <div class="kpi-value gold">{{ masseSalarialeMensuelle|number_format(0, '.', ' ') }}</div>
-      <div class="kpi-unit">TND / mois</div>
-    </div>
-    <div class="kpi-cell">
-      <div class="kpi-label">Charge CNSS employeur</div>
-      <div class="kpi-value">{{ coutCNSSEmployeur|number_format(0, '.', ' ') }}</div>
-      <div class="kpi-unit">TND / mois (16.57%)</div>
-    </div>
-    <div class="kpi-cell">
-      <div class="kpi-label">Coût total mensuel</div>
-      <div class="kpi-value gold">{{ coutTotalMensuel|number_format(0, '.', ' ') }}</div>
-      <div class="kpi-unit">TND tout compris</div>
-    </div>
-    <div class="kpi-cell">
-      <div class="kpi-label">Projection annuelle</div>
-      <div class="kpi-value">{{ chargesAnnuelles|number_format(0, '.', ' ') }}</div>
-      <div class="kpi-unit">TND charges RH/an</div>
-    </div>
-    <div class="kpi-cell">
-      <div class="kpi-label">Budget tâches prévu</div>
-      <div class="kpi-value sage">{{ budgetTaches|number_format(0, '.', ' ') }}</div>
-      <div class="kpi-unit">TND planifié</div>
-    </div>
-    <div class="kpi-cell">
-      <div class="kpi-label">Écart budget / réel</div>
-      <div class="kpi-value {% if ecartBudget > 0 %}danger{% else %}sage{% endif %}">
-        {% if ecartBudget > 0 %}+{% endif %}{{ ecartBudget|number_format(0, '.', ' ') }}
-      </div>
-      <div class="kpi-unit">TND ({% if ecartBudget > 0 %}surcoût{% else %}économie{% endif %})</div>
-    </div>
+{# ─── KPI STRIP ─── #}
+<div class="frh-kpis">
+  <div class="kpi">
+    <div class="kpi-lbl">Masse salariale / mois</div>
+    <div class="kpi-n green">{{ masseSalarialeMensuelle|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-unit">TND</div>
   </div>
+  <div class="kpi">
+    <div class="kpi-lbl">CNSS employeur</div>
+    <div class="kpi-n">{{ coutCNSSEmployeur|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-unit">TND / mois (16.57%)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Coût total mensuel</div>
+    <div class="kpi-n gold">{{ coutTotalMensuel|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-unit">TND tout compris</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Projection annuelle</div>
+    <div class="kpi-n">{{ chargesAnnuelles|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-unit">TND / an</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Budget tâches</div>
+    <div class="kpi-n green">{{ budgetTaches|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-unit">TND planifié</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Écart budget / réel</div>
+    <div class="kpi-n {{ ecartBudget > 0 ? 'red' : 'green' }}">
+      {{ ecartBudget > 0 ? '+' : '' }}{{ ecartBudget|number_format(0,'.','\u{202F}') }}
+    </div>
+    <div class="kpi-unit">{{ ecartBudget > 0 ? 'Surcoût' : 'Économie' }}</div>
+  </div>
+</div>
 
-  {# ── BODY ── #}
-  <div class="frh-body">
+{# ─── BODY ─── #}
+<div class="frh-body">
+<div class="frh-grid">
 
-    {# ── GRILLE 2 colonnes ── #}
-    <div class="frh-grid-2">
-
-      {# BLOC EMPLOYÉS + BULLETINS #}
-      <div class="frh-card">
-        <div class="card-head">
-          <div class="card-head-title">Masse salariale par employé</div>
-          <div class="card-head-badge badge-gold">{{ nbEmployesActifs }} actifs</div>
-        </div>
-        <table class="frh-table">
-          <thead>
-            <tr>
-              <th>Employé</th>
-              <th>Contrat</th>
-              <th>Brut/mois</th>
-              <th>Net</th>
-              <th>Coût réel</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ed in employes %}
-            <tr onclick="ouvrirBulletin({{ ed.employe.id }}, '{{ ed.employe.nomComplet }}')"
-                title="Cliquez pour voir le bulletin de paie">
-              <td>
-                <div class="emp-info-cell">
-                  {% if ed.employe.photoPath %}
-                    <img src="{{ ed.employe.photoPath }}" class="emp-avatar-sm" alt="">
-                  {% else %}
-                    <div class="emp-init-sm">
-                      {{ ed.employe.prenom|first }}{{ ed.employe.nom|first }}
-                    </div>
-                  {% endif %}
-                  <div>
-                    <div class="emp-name">{{ ed.employe.prenom }} {{ ed.employe.nom }}</div>
-                    <div class="emp-poste">{{ ed.employe.poste }}</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="contrat-pill {% if ed.typeContrat == 'Saisonnier' %}c-sais{% else %}c-cdi{% endif %}">
-                  {{ ed.typeContrat }}
-                </span>
-              </td>
-              <td class="num-neutral">{{ ed.salaireBrut|number_format(0, '.', ' ') }} TND</td>
-              <td class="num-pos">{{ ed.salaireNet|number_format(0, '.', ' ') }}</td>
-              <td class="num-neutral">{{ ed.coutTotal|number_format(0, '.', ' ') }}</td>
-              <td>
-                <button class="btn-small"
-                        onclick="event.stopPropagation();ouvrirBulletin({{ ed.employe.id }}, '{{ ed.employe.nomComplet }}')">
-                  Bulletin
-                </button>
-              </td>
-            </tr>
+{# ─── TABLEAU EMPLOYÉS + SALAIRE ─── #}
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-t">Masse salariale par employé</div>
+    <div class="badge badge-g">{{ nbEmployesActifs }} actifs</div>
+  </div>
+  <table class="ft">
+    <thead>
+      <tr>
+        <th>Employé</th>
+        <th>Contrat</th>
+        <th title="Cliquez pour modifier">Sal. jour.</th>
+        <th>Brut/mois</th>
+        <th>Net</th>
+        <th>Coût réel</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ed in employes %}
+      <tr>
+        <td>
+          <div class="emp-cell">
+            {% if ed.employe.photoPath %}
+              <img src="{{ ed.employe.photoPath }}" class="av" alt="">
             {% else %}
-            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-3)">
-              Aucun employé actif trouvé.
-            </td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      {# BLOC CNSS #}
-      <div>
-        <div class="frh-card" style="margin-bottom:1.5rem">
-          <div class="card-head">
-            <div class="card-head-title">Cotisations CNSS — Taux 2024</div>
-            <div class="card-head-badge badge-gold">Officiel Tunisie</div>
-          </div>
-          <div class="cnss-grid">
-            <div class="cnss-cell">
-              <div class="cnss-pct">9.18%</div>
-              <div class="cnss-who">Part employé</div>
-              <div class="cnss-amount">{{ coutTotalMensuel|number_format(0) }}</div>
-              <div class="cnss-amount-label">Total masse salariale TND</div>
-            </div>
-            <div class="cnss-cell">
-              <div class="cnss-pct">16.57%</div>
-              <div class="cnss-who">Part employeur</div>
-              <div class="cnss-amount">{{ coutCNSSEmployeur|number_format(0) }}</div>
-              <div class="cnss-amount-label">Charge mensuelle TND</div>
-            </div>
-          </div>
-          <div style="padding:1.25rem 1.5rem;font-size:12px;color:var(--text-3);line-height:1.6;border-top:1px solid var(--border)">
-            Décret n°2024 — Base : salaire brut mensuel.<br>
-            CNSS couvre retraite, maladie, accidents travail, allocations familiales.
-          </div>
-        </div>
-
-        {# RÉPARTITION PAR CATÉGORIE #}
-        <div class="frh-card">
-          <div class="card-head">
-            <div class="card-head-title">Budget par catégorie</div>
-          </div>
-          <div class="cat-list">
-            {% set catColors = {'Récolte':'#c9a84c','Irrigation':'#378add','Fertilisation':'#5dcaa5','Maintenance':'#888780','Plantation':'#97c459','Autre':'#5f5e5a','Administratif':'#7f77dd'} %}
-            {% set maxBudget = 1 %}
-            {% for cat, vals in parCategorie %}
-              {% if vals.budget > maxBudget %}{% set maxBudget = vals.budget %}{% endif %}
-            {% endfor %}
-            {% for cat, vals in parCategorie %}
-            <div class="cat-item">
-              <div class="cat-dot" style="background:{{ catColors[cat] ?? '#888' }}"></div>
-              <div>
-                <div class="cat-name">{{ cat }}</div>
-                <div style="font-size:11px;color:var(--text-3)">{{ vals.nb }} tâche(s)</div>
-              </div>
-              <div class="cat-bar-wrap">
-                <div class="cat-bar-track">
-                  <div class="cat-bar-fill"
-                       style="width:{{ ((vals.budget / maxBudget) * 100)|round }}%;background:{{ catColors[cat] ?? '#888' }}"></div>
-                </div>
-              </div>
-              <div class="cat-budget">
-                {{ vals.budget|number_format(0, '.', ' ') }} TND
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {# ── COÛT DE REVIENT DES TÂCHES (full width) ── #}
-    <div class="frh-card frh-card-full">
-      <div class="card-head">
-        <div class="card-head-title">Analyse budgétaire des tâches</div>
-        <div style="display:flex;gap:8px">
-          <div class="card-head-badge badge-sage">
-            Sous budget : {{ taches|filter(t => not t.enSurbudget)|length }}
-          </div>
-          <div class="card-head-badge badge-danger">
-            Dépassement : {{ taches|filter(t => t.enSurbudget and t.budgetPrevu > 0)|length }}
-          </div>
-        </div>
-      </div>
-
-      {% for td in taches %}
-      {% if td.budgetPrevu > 0 or td.coutReel > 0 %}
-      <div class="budget-row" style="animation-delay:{{ loop.index * 0.05 + 0.6 }}s">
-        <div class="budget-row-head">
-          <div>
-            <div class="budget-task-name">{{ td.tache.titre }}</div>
-            <div class="budget-task-cat">
-              {{ td.categorie }} · {{ td.nomEmploye }} · {{ td.nbJours }} j
-              · <span class="contrat-pill {% if td.statut == 'Terminé' or td.statut == 'Validé' %}c-cdi{% elseif td.statut == 'En cours' %}c-sais{% endif %}"
-                      style="font-size:10px">
-                  {{ td.statut }}
-                </span>
-            </div>
-          </div>
-          <div class="budget-amounts">
-            <div>
-              Réel : <strong style="color:{{ td.enSurbudget ? 'var(--danger)' : 'var(--sage-light)' }}">
-                {{ td.coutReel|number_format(0, '.', ' ') }} TND
-              </strong>
-            </div>
-            {% if td.budgetPrevu > 0 %}
-            <div style="color:var(--text-3)">Prévu : {{ td.budgetPrevu|number_format(0, '.', ' ') }} TND</div>
+              <div class="av-i">{{ ed.employe.prenom|first }}{{ ed.employe.nom|first }}</div>
             {% endif %}
+            <div>
+              <div class="emp-nm">{{ ed.employe.prenom }} {{ ed.employe.nom }}</div>
+              <div class="emp-ps">{{ ed.employe.poste }}</div>
+            </div>
           </div>
-        </div>
-
-        {% if td.budgetPrevu > 0 %}
-        {% set pct = min(100, (td.coutReel / td.budgetPrevu * 100)|round) %}
-        <div class="budget-bar-track">
-          <div class="budget-bar-fill {{ pct > 100 ? 'bar-over' : (pct > 80 ? 'bar-warn' : 'bar-ok') }}"
-               style="width:{{ pct }}%"></div>
-        </div>
-        <div class="budget-ecart {{ td.enSurbudget ? 'num-neg' : 'num-pos' }}">
-          {% if td.enSurbudget %}
-            +{{ td.ecart|number_format(0, '.', ' ') }} TND de dépassement
-            ({{ td.pctEcart|abs }}% au-dessus)
-          {% else %}
-            Économie de {{ td.ecart|abs|number_format(0, '.', ' ') }} TND ({{ td.pctEcart|abs }}%)
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <div style="font-size:11px;color:var(--text-3);margin-top:6px">
-          Salaire ({{ td.salaireJ }} TND/j × {{ td.nbJours }} j) = {{ td.coutSalaire|number_format(0) }} TND
-          {% if td.coutMateriel > 0 %}
-          · Matériaux = {{ td.coutMateriel|number_format(0) }} TND
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
+        </td>
+        <td>
+          <span class="cp {{ ed.typeContrat == 'Saisonnier' ? 'cp-sais' : 'cp-cdi' }}">
+            {{ ed.typeContrat }}
+          </span>
+        </td>
+        <td>
+          {# ✅ Colonne salaire éditable inline #}
+          <input class="salaire-input"
+                 type="number"
+                 step="0.001"
+                 min="0"
+                 value="{{ ed.salaireJ }}"
+                 title="Cliquez pour modifier le salaire journalier"
+                 onchange="updateSalaire({{ ed.employe.id }}, this.value, this)"
+                 data-emp="{{ ed.employe.id }}">
+          <span style="font-size:10px;color:var(--text3)"> TND</span>
+        </td>
+        <td class="num-gold">{{ ed.salaireBrut|number_format(0,'.','\u{202F}') }}</td>
+        <td class="num-g">{{ ed.salaireNet|number_format(0,'.','\u{202F}') }}</td>
+        <td style="color:var(--text2)">{{ ed.coutTotal|number_format(0,'.','\u{202F}') }}</td>
+        <td>
+          <button class="btn-sm"
+                  onclick="ouvrirBulletin({{ ed.employe.id }},'{{ ed.employe.prenom }} {{ ed.employe.nom }}')">
+            Bulletin
+          </button>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align:center;padding:3rem;color:var(--text3)">
+          Aucun employé actif. Vérifiez que la migration SQL a été exécutée.
+        </td>
+      </tr>
       {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ─── COLONNE DROITE ─── #}
+<div>
+
+  {# CNSS #}
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-hd">
+      <div class="card-hd-t">Cotisations CNSS — Tunisie 2024</div>
+      <div class="badge badge-gold">Officiel</div>
     </div>
-
-  </div>{# /frh-body #}
-</div>{# /frh-page #}
-
-{# ══════════════════════════════════════════
-   MODAL BULLETIN DE PAIE
-══════════════════════════════════════════ #}
-<div class="modal-overlay" id="bulletinModal" onclick="fermerModal(event)">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="modalNom">Bulletin de paie</div>
-        <div class="modal-subtitle" id="modalSub">Calcul CNSS Tunisie 2024</div>
+    <div class="cnss-g">
+      <div class="cnss-c">
+        <div class="cnss-pct">9.18%</div>
+        <div class="cnss-who">Part employé</div>
+        <div class="cnss-amt">{{ (masseSalarialeMensuelle * 0.0918)|number_format(0) }}</div>
+        <div class="cnss-lbl">TND / mois retenu</div>
       </div>
-      <button class="modal-close" onclick="fermerModal()">✕</button>
+      <div class="cnss-c">
+        <div class="cnss-pct">16.57%</div>
+        <div class="cnss-who">Part employeur</div>
+        <div class="cnss-amt">{{ coutCNSSEmployeur|number_format(0) }}</div>
+        <div class="cnss-lbl">TND / mois à payer</div>
+      </div>
+    </div>
+    <div style="padding:1rem 1.5rem;font-size:11px;color:var(--text3);line-height:1.6;border-top:1px solid var(--border)">
+      Décret 2024 · Retraite + Maladie + Accidents travail + Allocations familiales
+    </div>
+  </div>
+
+  {# CATÉGORIES #}
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-hd-t">Budget par catégorie</div>
+    </div>
+    {% set catCols={'Récolte':'#c9a84c','Irrigation':'#378add','Fertilisation':'#5dcaa5','Maintenance':'#888780','Plantation':'#97c459','Administratif':'#7f77dd','Autre':'#4a6b52'} %}
+    {% set mx=1 %}{% for cat,v in parCategorie %}{% if v.budget>mx %}{% set mx=v.budget %}{% endif %}{% endfor %}
+    {% for cat,v in parCategorie %}
+    <div class="cat-r">
+      <div class="cat-dot" style="background:{{ catCols[cat]??'#888' }}"></div>
+      <div><div class="cat-nm">{{ cat }}</div><div class="cat-sub">{{ v.nb }} tâche(s)</div></div>
+      <div class="bar-t">
+        <div class="bar-f" style="width:{{ ((v.budget/mx)*100)|round }}%;background:{{ catCols[cat]??'#888' }}"></div>
+      </div>
+      <div class="cat-amt">{{ v.budget|number_format(0,'.','\u{202F}') }} TND</div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+</div>{# /grid #}
+
+{# ─── TÂCHES BUDGET FULL WIDTH ─── #}
+<div class="card" style="margin-bottom:1.5rem;animation-delay:.55s">
+  <div class="card-hd">
+    <div class="card-hd-t">Analyse budgétaire des tâches</div>
+    <div style="display:flex;gap:8px">
+      <div class="badge badge-g">Sous budget : {{ taches|filter(t=>not t.enSurbudget and t.budgetPrevu>0)|length }}</div>
+      <div class="badge badge-r">Dépassement : {{ taches|filter(t=>t.enSurbudget and t.budgetPrevu>0)|length }}</div>
+    </div>
+  </div>
+  {% for td in taches %}{% if td.budgetPrevu>0 or td.coutReel>0 %}
+  <div class="tb-r">
+    <div class="tb-hd">
+      <div>
+        <div class="tb-nm">{{ td.tache.titre }}</div>
+        <div class="tb-sub">{{ td.categorie }} · {{ td.nomEmploye }} · {{ td.nbJours }} j
+          · <span class="cp {{ td.statut in ['Terminé','Validé'] ? 'cp-cdi' : 'cp-sais' }}" style="font-size:10px">{{ td.statut }}</span>
+        </div>
+      </div>
+      <div class="tb-amts">
+        <div style="color:{{ td.enSurbudget ? 'var(--red)' : 'var(--g300)' }};font-weight:500">
+          Réel : {{ td.coutReel|number_format(0,'.','\u{202F}') }} TND
+        </div>
+        {% if td.budgetPrevu>0 %}
+        <div style="color:var(--text3);font-size:11px">Prévu : {{ td.budgetPrevu|number_format(0,'.','\u{202F}') }} TND</div>
+        {% endif %}
+      </div>
+    </div>
+    {% if td.budgetPrevu>0 %}
+    {% set pct=min(100,(td.coutReel/td.budgetPrevu*100)|round) %}
+    <div class="bar-tr">
+      <div class="{{ pct>100?'bar-over':(pct>80?'bar-warn':'bar-ok') }}" style="width:{{ pct }}%;height:100%;border-radius:2px;transition:width 1.2s ease"></div>
+    </div>
+    <div class="tb-ecart {{ td.enSurbudget ? 'num-r' : 'num-g' }}">
+      {% if td.enSurbudget %}+{{ td.ecart|number_format(0,'.','\u{202F}') }} TND dépassement ({{ td.pctEcart|abs }}%)
+      {% else %}Économie {{ td.ecart|abs|number_format(0,'.','\u{202F}') }} TND ({{ td.pctEcart|abs }}%){% endif %}
+    </div>
+    {% endif %}
+    <div class="tb-detail">
+      {{ td.salaireJ }} TND/j × {{ td.nbJours }} j = {{ td.coutSalaire|number_format(0) }} TND
+      {% if td.coutMateriel>0 %} · Matériaux {{ td.coutMateriel|number_format(0) }} TND{% endif %}
+    </div>
+  </div>
+  {% endif %}{% endfor %}
+</div>
+
+</div>{# /body #}
+</div>{# /frh #}
+
+{# ─── MODAL BULLETIN ─── #}
+<div class="modal-bg" id="mBulletin" onclick="closeMod(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-t" id="mNom">Bulletin de paie</div>
+        <div class="modal-s">CNSS Tunisie 2024 · Calcul automatique</div>
+      </div>
+      <button class="modal-x" onclick="closeMod()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="month-selector">
-        <select id="selMois">
+      <div class="ms">
+        <select id="sMois">
           {% for m in 1..12 %}
-          <option value="{{ m }}" {% if m == 'now'|date('n') %}selected{% endif %}>
+          <option value="{{ m }}" {{ m == "now"|date('n') ? 'selected' : '' }}>
             {{ ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][m] }}
           </option>
           {% endfor %}
         </select>
-        <select id="selAnnee">
+        <select id="sAnnee">
           {% for y in [2023,2024,2025,2026] %}
-          <option value="{{ y }}" {% if y == 'now'|date('Y') %}selected{% endif %}>{{ y }}</option>
+          <option value="{{ y }}" {{ y == "now"|date('Y') ? 'selected' : '' }}>{{ y }}</option>
           {% endfor %}
         </select>
-        <button class="btn-small" onclick="chargerBulletin()">Calculer</button>
+        <button class="btn-sm" onclick="loadBulletin()">Calculer</button>
       </div>
-
-      <div id="bulletinContent" style="min-height:200px">
-        <div style="text-align:center;padding:3rem;color:var(--text-3)">
-          Sélectionnez le mois et cliquez sur Calculer
-        </div>
+      <div id="mContent" style="min-height:180px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px">
+        Sélectionnez le mois puis cliquez sur Calculer
       </div>
     </div>
   </div>
@@ -737,79 +409,67 @@
 
 {% block javascripts %}
 <script>
-let currentEmpId = null;
+let curEmp = null;
 
 function ouvrirBulletin(id, nom) {
-  currentEmpId = id;
-  document.getElementById('modalNom').textContent = nom;
-  document.getElementById('modalSub').textContent = 'Bulletin de paie — CNSS Tunisie 2024';
-  document.getElementById('bulletinContent').innerHTML =
-    '<div style="text-align:center;padding:3rem;color:var(--text-3)">Sélectionnez le mois et cliquez sur Calculer</div>';
-  document.getElementById('bulletinModal').classList.add('active');
+  curEmp = id;
+  document.getElementById('mNom').textContent = nom;
+  document.getElementById('mContent').innerHTML =
+    '<span style="color:var(--text3)">Sélectionnez le mois puis cliquez sur Calculer</span>';
+  document.getElementById('mBulletin').classList.add('on');
 }
 
-function fermerModal(e) {
-  if (!e || e.target === document.getElementById('bulletinModal')) {
-    document.getElementById('bulletinModal').classList.remove('active');
-  }
+function closeMod(e) {
+  if (!e || e.target === document.getElementById('mBulletin'))
+    document.getElementById('mBulletin').classList.remove('on');
 }
 
-function chargerBulletin() {
-  if (!currentEmpId) return;
-  const mois  = document.getElementById('selMois').value;
-  const annee = document.getElementById('selAnnee').value;
-  const content = document.getElementById('bulletinContent');
+function loadBulletin() {
+  if (!curEmp) return;
+  const mois  = document.getElementById('sMois').value;
+  const annee = document.getElementById('sAnnee').value;
+  const mc = document.getElementById('mContent');
+  mc.innerHTML = '<span class="spinner"></span> Calcul en cours…';
 
-  content.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--gold)"><span class="loading-dot">●</span></div>';
-
-  fetch(`/finance-rh/bulletin/${currentEmpId}?mois=${mois}&annee=${annee}`)
+  fetch(`/finance-rh/bulletin/${curEmp}?mois=${mois}&annee=${annee}`)
     .then(r => r.json())
     .then(d => {
-      if (d.error) {
-        content.innerHTML = `<div style="text-align:center;color:var(--danger);padding:2rem">${d.error}</div>`;
-        return;
-      }
-      const f = v => parseFloat(v).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-      content.innerHTML = `
-        <div style="margin-bottom:.75rem;padding:.75rem 1rem;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:10px;font-size:13px">
-          <span style="color:var(--text-3)">Période :</span> <strong style="color:var(--gold)">${d.mois} ${d.annee}</strong>
-          &nbsp;·&nbsp; <span style="color:var(--text-3)">Jours ouvrables :</span> <strong>${d.nbJoursTravailles}</strong>
-          &nbsp;·&nbsp; <span class="contrat-pill ${d.typeContrat === 'CDI' ? 'c-cdi' : 'c-sais'}" style="font-size:10px">${d.typeContrat}</span>
+      if (d.error) { mc.innerHTML = `<span style="color:var(--red)">${d.error}</span>`; return; }
+      const f = v => parseFloat(v).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
+      mc.innerHTML = `
+        <div style="background:rgba(61,143,86,.08);border:1px solid rgba(93,174,116,.2);border-radius:10px;padding:.75rem 1rem;font-size:12px;margin-bottom:1rem">
+          Période : <strong style="color:var(--g300)">${d.mois} ${d.annee}</strong>
+          · Jours : <strong>${d.nbJoursTravailles}</strong>
+          · <span class="cp ${d.typeContrat==='CDI'?'cp-cdi':'cp-sais'}">${d.typeContrat}</span>
         </div>
-        <div class="bulletin-row">
-          <span class="bulletin-label">Salaire journalier</span>
-          <span class="bulletin-val">${f(d.salaireJournalier)} TND</span>
-        </div>
-        <div class="bulletin-row">
-          <span class="bulletin-label">Salaire brut (${d.nbJoursTravailles} j)</span>
-          <span class="bulletin-val">${f(d.salaireBrut)} TND</span>
-        </div>
-        <div class="bulletin-row">
-          <span class="bulletin-label">CNSS employé (${d.tauxCNSSEmp.toFixed(2)}%)</span>
-          <span class="bulletin-val deduct">− ${f(d.cnssEmploye)} TND</span>
-        </div>
-        <div class="bulletin-row">
-          <span class="bulletin-label">IRPP (barème mensuel)</span>
-          <span class="bulletin-val deduct">− ${f(d.irpp)} TND</span>
-        </div>
-        <div class="bulletin-row total">
-          <span class="bulletin-label" style="color:var(--sage-light)">Salaire net à payer</span>
-          <span class="bulletin-val net">${f(d.salaireNet)} TND</span>
-        </div>
-        <div style="margin-top:1rem;padding:1rem;background:var(--danger-pale);border-radius:8px;font-size:12px;color:var(--text-2)">
-          <strong style="color:var(--text-1)">Charge employeur totale :</strong>
-          ${f(d.coutTotalEmpl)} TND
-          <span style="color:var(--text-3)">(brut + CNSS employeur ${d.tauxCNSSEmpr.toFixed(2)}% = ${f(d.cnssEmployeur)} TND)</span>
-        </div>
-      `;
+        <div class="bl-r"><span class="bl-lbl">Salaire journalier</span><span class="bl-v">${f(d.salaireJournalier)} TND</span></div>
+        <div class="bl-r"><span class="bl-lbl">Salaire brut (${d.nbJoursTravailles} j)</span><span class="bl-v">${f(d.salaireBrut)} TND</span></div>
+        <div class="bl-r"><span class="bl-lbl">CNSS employé (${parseFloat(d.tauxCNSSEmp).toFixed(2)}%)</span><span class="bl-v minus">− ${f(d.cnssEmploye)} TND</span></div>
+        <div class="bl-r"><span class="bl-lbl">IRPP (barème mensuel)</span><span class="bl-v minus">− ${f(d.irpp)} TND</span></div>
+        <div class="bl-r tot"><span class="bl-lbl" style="color:var(--g300)">Salaire net à payer</span><span class="bl-v net">${f(d.salaireNet)} TND</span></div>
+        <div style="margin-top:1rem;padding:.85rem 1rem;background:rgba(224,84,84,.08);border-radius:8px;font-size:12px;color:var(--text2)">
+          Charge totale employeur : <strong style="color:var(--text1)">${f(d.coutTotalEmpl)} TND</strong>
+          <span style="color:var(--text3)"> (CNSS employeur ${parseFloat(d.tauxCNSSEmpr).toFixed(2)}% = ${f(d.cnssEmployeur)} TND)</span>
+        </div>`;
     })
-    .catch(() => {
-      content.innerHTML = '<div style="text-align:center;color:var(--danger);padding:2rem">Erreur de connexion</div>';
-    });
+    .catch(() => mc.innerHTML = '<span style="color:var(--red)">Erreur de connexion.</span>');
 }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') fermerModal();
-});
+function updateSalaire(idEmp, val, input) {
+  // Envoie le nouveau salaire au serveur
+  fetch(`/finance-rh/salaire/${idEmp}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ salaire: parseFloat(val) })
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      input.style.borderBottomColor = 'var(--g300)';
+      setTimeout(() => input.style.borderBottomColor = '', 1500);
+      location.reload(); // Recalcule les totaux
+    }
+  }).catch(() => {});
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeMod(); });
 </script>
 {% endblock %}

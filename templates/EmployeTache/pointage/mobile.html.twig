@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pointage GPS — {{ employe.prenom }} {{ employe.nom }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g900:#0a1a0f;--g800:#0f2218;--g700:#163821;--g600:#1e4d2e;
+  --g500:#2a6b3f;--g400:#3d8f56;--g300:#5dae74;--g200:#8ecfa0;
+  --g100:#c2e8cb;--g50:#eaf6ec;
+  --gold:#c9a84c;--red:#e05454;--red-bg:rgba(224,84,84,.1);
+  --text1:#f0f7f1;--text2:#8ab598;--text3:#4a6b52;
+  --border:rgba(93,174,116,.14);--card:#0f2218;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--g900);font-family:'Plus Jakarta Sans',sans-serif;color:var(--text1);overflow-x:hidden}
+
+.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:1.5rem 1rem 2rem;max-width:420px;margin:0 auto}
+
+/* ─── HEADER ─── */
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--g300);margin-bottom:2rem;text-align:center}
+.logo span{color:var(--text1)}
+
+/* ─── AVATAR ─── */
+.emp-card{background:var(--g800);border:1px solid var(--border);border-radius:20px;padding:1.5rem;text-align:center;width:100%;margin-bottom:1.5rem}
+.emp-av{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--g400);margin:0 auto .75rem;display:block}
+.emp-av-i{width:72px;height:72px;border-radius:50%;background:rgba(61,143,86,.18);border:2px solid var(--g400);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--g300);margin:0 auto .75rem}
+.emp-name{font-size:18px;font-weight:600;color:var(--text1)}
+.emp-poste{font-size:13px;color:var(--text2);margin-top:3px}
+
+/* ─── GPS RADAR ─── */
+.radar-wrap{width:100%;display:flex;justify-content:center;margin-bottom:1.5rem;position:relative}
+.radar{width:180px;height:180px;border-radius:50%;background:var(--g800);border:2px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(93,174,116,.15)}
+.radar-ring:nth-child(1){width:60%;height:60%}
+.radar-ring:nth-child(2){width:80%;height:80%}
+.radar-ring:nth-child(3){width:100%;height:100%;border-color:rgba(93,174,116,.25)}
+.radar-sweep{position:absolute;width:50%;height:2px;background:linear-gradient(to right,transparent,var(--g300));top:50%;left:50%;transform-origin:left center;animation:sweep 3s linear infinite;display:none}
+.radar-sweep.active{display:block}
+.radar-dot{width:10px;height:10px;border-radius:50%;background:var(--g300);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(93,174,116,.2)}
+.radar-pulse{width:10px;height:10px;border-radius:50%;background:transparent;border:2px solid var(--g300);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse 1.5s ease-out infinite;display:none}
+.radar-pulse.active{display:block}
+
+/* ─── STATUS ─── */
+.status-card{background:var(--g800);border:1px solid var(--border);border-radius:16px;padding:1.25rem;width:100%;margin-bottom:1.5rem;text-align:center}
+.status-ico{font-size:32px;margin-bottom:.5rem}
+.status-title{font-size:16px;font-weight:600;color:var(--text1);margin-bottom:.25rem}
+.status-sub{font-size:13px;color:var(--text2);line-height:1.5}
+.status-dist{font-size:22px;font-weight:600;margin-top:.75rem}
+.status-dist.ok{color:var(--g300)}.status-dist.nok{color:var(--red)}
+.status-dist.waiting{color:var(--text2)}
+
+/* ─── BOUTONS ─── */
+.btns{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
+.btn-point{padding:1.1rem;border:none;border-radius:14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.btn-arr{background:var(--g500);color:#fff}
+.btn-arr:hover:not(:disabled){background:var(--g400);transform:translateY(-2px)}
+.btn-dep{background:rgba(224,84,84,.15);color:var(--red);border:1px solid rgba(224,84,84,.3)}
+.btn-dep:hover:not(:disabled){background:rgba(224,84,84,.25);transform:translateY(-2px)}
+.btn-point:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn-icon{font-size:20px}
+.btn-label{font-size:12px;opacity:.8}
+.btn-gps{width:100%;padding:1rem;background:var(--g700);color:var(--g300);border:1px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;margin-bottom:.75rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-gps:hover{background:rgba(93,174,116,.1)}
+
+/* ─── HISTORIQUE ─── */
+.hist{width:100%;background:var(--g800);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.hist-hd{padding:.85rem 1.25rem;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em}
+.hist-item{display:flex;align-items:center;gap:12px;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)}
+.hist-item:last-child{border-bottom:none}
+.hist-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.hist-ico.arr{background:rgba(61,143,86,.18);color:var(--g300)}
+.hist-ico.dep{background:rgba(224,84,84,.1);color:var(--red)}
+.hist-t{font-size:13px;font-weight:500;color:var(--text1)}
+.hist-s{font-size:11px;color:var(--text3);margin-top:1px}
+.hist-dist{font-size:11px;font-weight:500;margin-left:auto}
+.hist-dist.ok{color:var(--g300)}.hist-dist.nok{color:var(--red)}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--g700);border:1px solid var(--border);border-radius:12px;padding:.85rem 1.25rem;font-size:13px;color:var(--text1);min-width:260px;text-align:center;transition:transform .3s ease;z-index:999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(93,174,116,.4);background:rgba(15,42,24,.95)}
+.toast.fail{border-color:rgba(224,84,84,.4);background:rgba(40,10,10,.95)}
+
+/* ANIMS */
+@keyframes sweep{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="logo"><span>ARDHI</span> GPS</div>
+
+  {# ─── PROFIL EMPLOYÉ ─── #}
+  <div class="emp-card">
+    {% if employe.photoPath %}
+      <img src="{{ employe.photoPath }}" class="emp-av" alt="">
+    {% else %}
+      <div class="emp-av-i">{{ employe.prenom|first }}{{ employe.nom|first }}</div>
+    {% endif %}
+    <div class="emp-name">{{ employe.prenom }} {{ employe.nom }}</div>
+    <div class="emp-poste">{{ employe.poste ?? 'Employé' }}</div>
+  </div>
+
+  {# ─── RADAR GPS ─── #}
+  <div class="radar-wrap">
+    <div class="radar">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-sweep" id="rSweep"></div>
+      <div class="radar-pulse" id="rPulse"></div>
+      <div class="radar-dot"></div>
+    </div>
+  </div>
+
+  {# ─── STATUS ─── #}
+  <div class="status-card" id="statusCard">
+    <div class="status-ico" id="statusIco">📍</div>
+    <div class="status-title" id="statusTitle">Position non détectée</div>
+    <div class="status-sub" id="statusSub">Appuyez sur "Obtenir ma position" pour démarrer</div>
+    <div class="status-dist waiting" id="statusDist">—</div>
+  </div>
+
+  {# ─── BOUTON GPS ─── #}
+  <button class="btn-gps" id="btnGps" onclick="obtenirPosition()">
+    <span id="gpsIcon">📡</span>
+    <span id="gpsLabel">Obtenir ma position GPS</span>
+  </button>
+
+  {# ─── BOUTONS POINTAGE ─── #}
+  <div class="btns">
+    <button class="btn-point btn-arr" id="btnArr" disabled onclick="pointer('ARRIVEE')">
+      <span class="btn-icon">→</span>
+      <span class="btn-label">Arrivée</span>
+    </button>
+    <button class="btn-point btn-dep" id="btnDep" disabled onclick="pointer('DEPART')">
+      <span class="btn-icon">←</span>
+      <span class="btn-label">Départ</span>
+    </button>
+  </div>
+
+  {# ─── HISTORIQUE ─── #}
+  <div class="hist" id="histZone">
+    <div class="hist-hd">Pointages aujourd'hui</div>
+    <div id="histList" style="font-size:13px;color:var(--text3);text-align:center;padding:1.25rem">
+      Aucun pointage encore enregistré
+    </div>
+  </div>
+
+</div>
+
+{# ─── TOAST ─── #}
+<div class="toast" id="toast"></div>
+
+<script>
+const EMP_ID  = {{ employe.id }};
+const AGRI_ID = {{ employe.idAgriculteur }};
+let curLat = null, curLng = null;
+let historique = [];
+
+function obtenirPosition() {
+  const btn = document.getElementById('btnGps');
+  document.getElementById('gpsLabel').textContent = 'Localisation…';
+  document.getElementById('gpsIcon').textContent = '🔄';
+  document.getElementById('rSweep').classList.add('active');
+  document.getElementById('rPulse').classList.add('active');
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    afficherErreurGPS('Géolocalisation non supportée sur cet appareil.');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      curLat = pos.coords.latitude;
+      curLng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+
+      document.getElementById('gpsLabel').textContent = 'Position détectée — Précision ' + acc + 'm';
+      document.getElementById('gpsIcon').textContent = '✅';
+      document.getElementById('rSweep').classList.remove('active');
+
+      document.getElementById('statusTitle').textContent = 'Position GPS obtenue';
+      document.getElementById('statusSub').textContent = `Lat ${curLat.toFixed(5)} · Lng ${curLng.toFixed(5)}`;
+      document.getElementById('statusDist').textContent = 'Prêt à pointer';
+      document.getElementById('statusDist').className = 'status-dist waiting';
+      document.getElementById('statusIco').textContent = '✅';
+
+      document.getElementById('btnArr').disabled = false;
+      document.getElementById('btnDep').disabled = false;
+      btn.disabled = false;
+    },
+    err => {
+      afficherErreurGPS(msgErrGPS(err.code));
+      btn.disabled = false;
+      document.getElementById('gpsLabel').textContent = 'Obtenir ma position GPS';
+      document.getElementById('gpsIcon').textContent = '📡';
+      document.getElementById('rSweep').classList.remove('active');
+      document.getElementById('rPulse').classList.remove('active');
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+  );
+}
+
+function pointer(type) {
+  if (!curLat || !curLng) { toast('Position GPS requise.', false); return; }
+
+  const btnA = document.getElementById('btnArr');
+  const btnD = document.getElementById('btnDep');
+  btnA.disabled = btnD.disabled = true;
+
+  const icon = type === 'ARRIVEE' ? '→' : '←';
+  const label = type === 'ARRIVEE' ? 'Arrivée…' : 'Départ…';
+  if (type === 'ARRIVEE') { btnA.querySelector('.btn-icon').textContent = '⏳'; btnA.querySelector('.btn-label').textContent = label; }
+  else { btnD.querySelector('.btn-icon').textContent = '⏳'; btnD.querySelector('.btn-label').textContent = label; }
+
+  fetch('/pointage/api/pointer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      idEmploye: EMP_ID,
+      idAgriculteur: AGRI_ID,
+      type: type,
+      latitude: curLat,
+      longitude: curLng,
+      source: 'GPS'
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const dist = d.distance ?? 0;
+    const valide = d.valide ?? false;
+
+    document.getElementById('statusIco').textContent = valide ? '✅' : '⚠️';
+    document.getElementById('statusTitle').textContent = valide
+      ? (type === 'ARRIVEE' ? 'Arrivée enregistrée' : 'Départ enregistré')
+      : 'Hors périmètre de la ferme';
+    document.getElementById('statusSub').textContent = d.message ?? '';
+    document.getElementById('statusDist').textContent = dist + ' m de la ferme';
+    document.getElementById('statusDist').className = 'status-dist ' + (valide ? 'ok' : 'nok');
+
+    toast(d.message ?? (valide ? 'Pointage enregistré ✓' : 'Hors site — pointage refusé'), valide);
+
+    // Historique local
+    const now = new Date();
+    historique.unshift({ type, heure: now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0'), dist, valide });
+    renderHistorique();
+
+    document.getElementById('rPulse').classList.remove('active');
+    if (type === 'ARRIVEE') { btnA.querySelector('.btn-icon').textContent = '→'; btnA.querySelector('.btn-label').textContent = 'Arrivée'; }
+    else { btnD.querySelector('.btn-icon').textContent = '←'; btnD.querySelector('.btn-label').textContent = 'Départ'; }
+    btnA.disabled = btnD.disabled = false;
+  })
+  .catch(() => {
+    toast('Erreur de connexion au serveur.', false);
+    btnA.disabled = btnD.disabled = false;
+  });
+}
+
+function renderHistorique() {
+  const el = document.getElementById('histList');
+  if (historique.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);text-align:center;padding:1.25rem">Aucun pointage encore enregistré</div>';
+    return;
+  }
+  el.innerHTML = historique.map(h => `
+    <div class="hist-item">
+      <div class="hist-ico ${h.type === 'ARRIVEE' ? 'arr' : 'dep'}">${h.type === 'ARRIVEE' ? '→' : '←'}</div>
+      <div>
+        <div class="hist-t">${h.type === 'ARRIVEE' ? 'Arrivée' : 'Départ'} — ${h.heure}</div>
+        <div class="hist-s">${h.valide ? 'Sur site validé' : 'Hors site'}</div>
+      </div>
+      <div class="hist-dist ${h.valide ? 'ok' : 'nok'}">${h.dist} m</div>
+    </div>`).join('');
+}
+
+function toast(msg, ok) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (ok ? 'ok' : 'fail');
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function afficherErreurGPS(msg) {
+  document.getElementById('statusIco').textContent = '⚠️';
+  document.getElementById('statusTitle').textContent = 'Erreur GPS';
+  document.getElementById('statusSub').textContent = msg;
+  document.getElementById('rPulse').classList.remove('active');
+  toast(msg, false);
+}
+
+function msgErrGPS(code) {
+  switch(code) {
+    case 1: return 'Accès à la position refusé. Activez la géolocalisation.';
+    case 2: return 'Position indisponible. Vérifiez le GPS.';
+    case 3: return 'Délai dépassé. Réessayez.';
+    default: return 'Erreur GPS inconnue.';
+  }
+}
+</script>
+</body>
+</html>
