@@ -149,11 +149,12 @@
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">{{ 'employe.form.phone'|trans }}</label>
+                        <label class="form-label">{{ 'employe.form.phone'|trans }} <span class="req">*</span></label>
                         <input type="text" name="telephone"
                                class="form-control {{ errors.telephone is defined ? 'is-invalid' : '' }}"
                                value="{{ old.telephone ?? (employe ? employe.telephone : '') }}"
-                               placeholder="{{ 'employe.form.phone_ph'|trans }}" maxlength="20">
+                               placeholder="{{ 'employe.form.phone_ph'|trans }}" maxlength="8"
+                               pattern="[0-9]{8}" required>
                         {% if errors.telephone is defined %}
                             <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ errors.telephone }}</div>
                         {% endif %}

@@ -28,6 +28,8 @@ class TacheController extends AbstractController
         private GoogleCalendarService      $gcal,
         private EmployeAutoInactifService  $autoInactif,
         private TranslatorInterface        $translator,
+        private \App\Service\EmployeTache\UrgentNotificationService $urgentNotif,
+        private \App\Service\EmployeTache\TacheRiskService $riskService,
     ) {}
 
     private function checkAccess(): int|Response
@@ -137,6 +139,21 @@ class TacheController extends AbstractController
                 // ✅ Réactiver l'employé si besoin (il vient d'être assigné)
                 if ($data['idEmploye']) {
                     $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+
+                    // ✅ ALERTE URGENTE Twilio (Priorité Critique ou Risque ML > 75%)
+                    $employe = $empRepo->find($data['idEmploye']);
+                    if ($employe && $employe->isActif()) {
+                        if ($tache->getPriorite() === 4) {
+                            $msg = "⚠️ ALERTE ARDHI: La tâche critique '{$tache->getTitre()}' vous a été assignée. Action immédiate requise.";
+                            $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                        } else {
+                            $resultatRisk = $this->riskService->analyser($tache, $employe->getNomComplet());
+                            if (isset($resultatRisk['riskScore']) && $resultatRisk['riskScore'] > 75) {
+                                $msg = "🚨 ALERTE RISQUE ARDHI: La tâche '{$tache->getTitre()}' évaluée à haut risque d'échec (" . $resultatRisk['riskScore'] . "%). Vérifiez-la.";
+                                $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                            }
+                        }
+                    }
                 }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" créée.');
@@ -177,8 +194,9 @@ class TacheController extends AbstractController
         // Tous les employés (actifs ET inactifs) — idem new()
         $employes = $empRepo->findByAgriculteur($idAgriculteur);
 
-        // ✅ Mémoriser l'ancien employé AVANT modification
+        // ✅ Mémoriser l'ancien employé AVANT modification et son statut critique
         $ancienEmployeId = $tache->getIdEmploye();
+        $etaitCritique = ($tache->getPriorite() === 4);
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
@@ -200,6 +218,26 @@ class TacheController extends AbstractController
                 }
                 if ($data['idEmploye'] && $data['idEmploye'] !== $ancienEmployeId) {
                     $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+                }
+
+                // ✅ ALERTE URGENTE Twilio - Seulement si la tâche passe Critique ou si on assigne un nouvel employé en priorité très risquée
+                if ($data['idEmploye']) {
+                    $employe = $empRepo->find($data['idEmploye']);
+                    if ($employe && $employe->isActif()) {
+                        // Si ça vient d'être mis à 4 OU qu'on vient de changer l'assignation
+                        $estNouveauCritique = ($tache->getPriorite() === 4 && (!$etaitCritique || $data['idEmploye'] !== $ancienEmployeId));
+                        
+                        if ($estNouveauCritique) {
+                            $msg = "⚠️ ALERTE ARDHI: La tâche critique '{$tache->getTitre()}' vous a été assignée ou updatée en Critique.";
+                            $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                        } elseif ($data['idEmploye'] !== $ancienEmployeId || !$etaitCritique) {
+                            $resultatRisk = $this->riskService->analyser($tache, $employe->getNomComplet());
+                            if (isset($resultatRisk['riskScore']) && $resultatRisk['riskScore'] > 75) {
+                                $msg = "🚨 ALERTE RISQUE ARDHI: La tâche '{$tache->getTitre()}' est évaluée à haut risque d'échec (" . $resultatRisk['riskScore'] . "%).";
+                                $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                            }
+                        }
+                    }
                 }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" modifiée.');

@@ -36,7 +36,9 @@ class Employe
     #[ORM\Column(name: 'poste', length: 100, nullable: true)]
     private ?string $poste = null;
 
-    #[ORM\Column(name: 'telephone', length: 20, nullable: true)]
+    #[ORM\Column(name: 'telephone', length: 20)]
+    #[Assert\NotBlank(message: 'Le numéro de téléphone est obligatoire pour les notifications urgentes.')]
+    #[Assert\Regex(pattern: '/^[0-9]{8}$/', message: 'Le téléphone doit contenir exactement 8 chiffres.')]
     private ?string $telephone = null;
 
     #[ORM\Column(name: 'actif', options: ['default' => true])] //au niveau bdd

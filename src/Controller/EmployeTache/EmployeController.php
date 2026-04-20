@@ -556,16 +556,11 @@ class EmployeController extends AbstractController
             if (count($v)) $errors['poste'] = $v[0]->getMessage();
         }
 
-        if ($data['telephone'] !== null) {
-            $v = $validator->validate($data['telephone'], [
-                new Assert\Length(min: 8, max: 20,
-                    minMessage: 'Le téléphone doit contenir au moins {{ limit }} chiffres.',
-                    maxMessage: 'Le téléphone ne peut pas dépasser {{ limit }} caractères.'),
-                new Assert\Regex(pattern: '/^[0-9\s\+\-\(\)]+$/',
-                    message: 'Le téléphone ne peut contenir que des chiffres, espaces, +, - et parenthèses.'),
-            ]);
-            if (count($v)) $errors['telephone'] = $v[0]->getMessage();
-        }
+        $v = $validator->validate($data['telephone'], [
+            new Assert\NotBlank(message: 'Le numéro de téléphone est obligatoire pour les notifications urgentes.'),
+            new Assert\Regex(pattern: '/^[0-9]{8}$/', message: 'Le téléphone doit contenir exactement 8 chiffres.'),
+        ]);
+        if (count($v)) $errors['telephone'] = $v[0]->getMessage();
 
         return $errors;
     }

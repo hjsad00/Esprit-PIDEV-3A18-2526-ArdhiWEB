@@ -21,7 +21,8 @@ services:
             string $projectDir: '%kernel.project_dir%'
             string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
             string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
-            string $twilioFrom: '%env(MATERIEL_TWILIO_FROM)%'
+            string $twilioFrom: '%env(resolve:TWILIO_FROM)%'
+            string $twilioWhatsAppFrom: '%env(resolve:TWILIO_WHATSAPP_FROM)%'
             string $geminiApiKey: '%env(GEMINI_API_KEY)%'
 
     # makes classes in src/ available to be used as services
@@ -40,6 +41,13 @@ services:
             $sid: '%app.twilio_sid%'
             $token: '%app.twilio_token%'
             $from: '%app.twilio_whatsapp_number%'
+
+    App\Service\EmployeTache\UrgentNotificationService:
+        arguments:
+            $twilioSid: '%env(TWILIO_SID)%'
+            $twilioToken: '%env(TWILIO_TOKEN)%'
+            $twilioFrom: '%env(TWILIO_FROM)%'
+            $twilioWhatsAppFrom: '%env(TWILIO_WHATSAPP_FROM)%'
 
     App\Service\EmployeTache\GoogleCalendarService:
         arguments:
