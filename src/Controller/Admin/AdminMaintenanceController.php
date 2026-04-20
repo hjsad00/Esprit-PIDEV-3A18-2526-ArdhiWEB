@@ -241,6 +241,18 @@ class AdminMaintenanceController extends AbstractController
             // --- Envoi E-mail ---
             $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
 
+            // --- Envoi WhatsApp (uniquement pour décision urgente) ---
+            $phone = $user->getPhone();
+            if (!empty($phone)) {
+                $whatsApp->envoyer($phone, $msgNotif);
+            } else {
+                $logger->warning('Envoi WhatsApp urgent ignoré: numéro manquant pour le propriétaire du matériel.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'reponse_type' => $type,
+                    'user_id' => $user->getId(),
+                ]);
+            }
+
         } elseif ($type === 'non_urgent_planifier') {
             $maintenance->setDecisionAdmin('planification_demandee');
             $maintenance->setStatutMaintenance('en_cours');
@@ -266,18 +278,6 @@ class AdminMaintenanceController extends AbstractController
         } else {
             $this->addFlash('danger', 'Type de réponse invalide.');
             return $this->redirectToRoute('admin_maintenance_urgente');
-        }
-
-        // --- Envoi WhatsApp commun (urgent + non urgent) ---
-        $phone = $user->getPhone();
-        if (!empty($phone)) {
-            $whatsApp->envoyer($phone, $msgNotif);
-        } else {
-            $logger->warning('Envoi WhatsApp ignoré: numéro manquant pour le propriétaire du matériel.', [
-                'maintenance_id' => $maintenance->getIdMaintenance(),
-                'reponse_type' => $type,
-                'user_id' => $user->getId(),
-            ]);
         }
 
         // On persiste et on flush tout explicitement

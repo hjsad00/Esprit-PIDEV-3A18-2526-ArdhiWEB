@@ -75,6 +75,16 @@ class WhatsAppService
         // Garde uniquement les chiffres et le + éventuel.
         $numero = preg_replace('/[^\d+]/', '', $numero) ?? '';
 
+        // Convertit un préfixe international 00 en +
+        if (str_starts_with($numero, '00')) {
+            $numero = '+' . substr($numero, 2);
+        }
+
+        // Si le numéro est local tunisien (8 chiffres), on ajoute +216
+        if (preg_match('/^\d{8}$/', $numero)) {
+            $numero = '+216' . $numero;
+        }
+
         // N'autorise le + qu'en première position.
         if (str_contains(substr($numero, 1), '+')) {
             return null;

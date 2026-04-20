@@ -52,7 +52,7 @@
                                             {% for m in item.maintenances %}
                                                 <tr>
                                                     <td class="ps-4 fw-bold">
-                                                        {{ m.dateMaintenance ? m.dateMaintenance|date('d/m/Y à H:i') : 'Non définie' }}
+                                                        {{ m.dateMaintenance ? m.dateMaintenance|date('d/m/Y') : 'Non définie' }}
                                                     </td>
                                                     <td>
                                                         {% if m.typeMaintenance == 'preventive' %}
