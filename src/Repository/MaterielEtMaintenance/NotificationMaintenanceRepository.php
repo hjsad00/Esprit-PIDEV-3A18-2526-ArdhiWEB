@@ -15,4 +15,20 @@ class NotificationMaintenanceRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, NotificationMaintenance::class);
     }
+
+    public function countUnreadForUser(?object $user): int
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        return (int) $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->andWhere('n.user = :user')
+            ->andWhere('n.isRead = :isRead')
+            ->setParameter('user', $user)
+            ->setParameter('isRead', false)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
