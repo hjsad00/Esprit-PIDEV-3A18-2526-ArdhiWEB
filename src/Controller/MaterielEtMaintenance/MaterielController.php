@@ -16,6 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Workflow\WorkflowInterface;
+use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Service\MaterielEtMaintenance\QrCodeService;
@@ -246,7 +247,11 @@ class MaterielController extends AbstractController
         if ($transition === 'mettre_en_maintenance') {
             $description = trim($request->request->get('description', ''));
             $errors = $validator->validate($description, [
-                new NotBlank(['message' => 'La description doit être remplie pour signaler une urgence.'])
+                new NotBlank(['message' => 'La description doit être remplie pour signaler une urgence.']),
+                new Length([
+                    'min' => 10,
+                    'minMessage' => 'La description doit contenir au moins {{ limit }} caractères.'
+                ])
             ]);
 
             if (count($errors) > 0) {
@@ -265,13 +270,17 @@ class MaterielController extends AbstractController
                 $maintenance->setStatutMaintenance('en_attente');
                 $maintenance->setTypeMaintenance('urgente');
                 $maintenance->setDateMaintenance(new \DateTime());
-                $maintenance->setDescription($request->request->get('description'));
+                $maintenance->setDescription(trim((string) $request->request->get('description')));
                 
                 $em->persist($maintenance);
             }
 
             $em->flush();
-            $this->addFlash('success', 'Action effectuée avec succès.');
+            if ($transition === 'mettre_en_maintenance') {
+                $this->addFlash('success', 'Demande urgente envoyée avec succès. L\'administrateur a été notifié.');
+            } else {
+                $this->addFlash('success', 'Action effectuée avec succès.');
+            }
         } else {
             $this->addFlash('danger', 'Impossible d\'appliquer cette transition.');
         }
@@ -360,8 +369,8 @@ class MaterielController extends AbstractController
     {
         $materiel = $this->getMaterielOwnedByUser($id, $repo);
 
-        // Sécurité : Ne pas autoriser la mise à jour si en vente ou réformé
-        if (in_array($materiel->getStatut(), ['en_vente', 'reforme'])) {
+        // Sécurité : Ne pas autoriser la mise à jour si en vente, vendu ou réformé
+        if (in_array($materiel->getStatut(), ['en_vente', 'vendu', 'reforme'])) {
             $this->addFlash('danger', 'Le compteur d\'heures est gelé pour ce matériel.');
             return $this->redirectToRoute('app_materiel_show', ['id' => $id]);
         }

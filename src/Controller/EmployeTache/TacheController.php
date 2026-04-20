@@ -390,6 +390,15 @@ class TacheController extends AbstractController
             $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre(), 0, 28, '...'), 1, 0, 'L', true);
             $pdf->Cell(50, 7, mb_strimwidth($tache->getDescription() ?? '-', 0, 35, '...'), 1, 0, 'L', true);
 
+            $statusKey = match($tache->getStatut()) {
+                'En attente' => 'tache.status.en_attente',
+                'En cours'   => 'tache.status.en_cours',
+                'Terminé'    => 'tache.status.termine',
+                'Validé'     => 'tache.status.valide',
+                'Annulé'     => 'tache.status.annule',
+                default      => 'tache.status.en_attente',
+            };
+            
             $stColor = match($tache->getStatut()) {
                 'En attente' => [100, 160, 120], 'En cours'  => [46, 139, 87],
                 'Terminé'    => [34, 120, 60],   'Validé'    => [26, 188, 156],
@@ -397,12 +406,23 @@ class TacheController extends AbstractController
             };
             $pdf->SetTextColor($stColor[0], $stColor[1], $stColor[2]);
             $pdf->SetFont('dejavusans', 'B', 8);
-            $pdf->Cell(25, 7, $tache->getStatut(), 1, 0, 'C', true);
+            $pdf->Cell(25, 7, $this->translator->trans($statusKey), 1, 0, 'C', true);
             $pdf->SetTextColor(30, 30, 30);
             $pdf->SetFont('dejavusans', '', 8);
 
-            $pdf->Cell(22, 7, Tache::PRIORITES[$tache->getPriorite()] ?? 'Moyenne', 1, 0, 'C', true);
-            $pdf->Cell(28, 7, $tache->getCategorie() ?? '-', 1, 0, 'C', true);
+            $priorityKey = match($tache->getPriorite()) {
+                1 => 'tache.form.priority_low',
+                2 => 'tache.form.priority_medium',
+                3 => 'tache.form.priority_high',
+                4 => 'tache.form.priority_critical',
+                default => 'tache.form.priority_medium',
+            };
+            $pdf->Cell(22, 7, $this->translator->trans($priorityKey), 1, 0, 'C', true);
+            
+            $categoryKey = 'tache.category.' . strtolower($tache->getCategorie() ?? 'autre');
+            // Gérer les accents pour la clé si nécessaire
+            $categoryKey = str_replace(['é', 'è', 'ê'], 'e', $categoryKey);
+            $pdf->Cell(28, 7, $this->translator->trans($categoryKey), 1, 0, 'C', true);
             $pdf->Cell(25, 7, $tache->getDateDebut() ? $tache->getDateDebut()->format('d/m/Y') : '-', 1, 0, 'C', true);
             $pdf->Cell(25, 7, $tache->getDateFin()   ? $tache->getDateFin()->format('d/m/Y')   : '-', 1, 0, 'C', true);
             $pdf->Cell(38, 7, $mapEmployes[$tache->getIdEmploye()] ?? '-', 1, 0, 'L', true);

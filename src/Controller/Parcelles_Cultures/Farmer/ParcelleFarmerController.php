@@ -36,6 +36,12 @@ class ParcelleFarmerController extends AbstractController
         $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
         $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
 
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('parcelles_cultures/farmer/parcelles/_list.html.twig', [
+                'parcelles' => $parcelles,
+            ]);
+        }
+
         return $this->render('parcelles_cultures/farmer/parcelles/index.html.twig', [
             'parcelles' => $parcelles,
             'stats' => $stats,
@@ -52,6 +58,15 @@ class ParcelleFarmerController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $parcelle->setAgriculteur($this->getUser());
+            
+            // Sauvegarder le GeoJSON du polygone
+            if ($request->request->has('polygon_geojson_data')) {
+                $geojsonData = $request->request->get('polygon_geojson_data');
+                if ($geojsonData) {
+                    $parcelle->setPolygonGeojson(json_decode($geojsonData, true));
+                }
+            }
+            
             $this->em->persist($parcelle);
             $this->em->flush();
 
@@ -78,6 +93,14 @@ class ParcelleFarmerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Sauvegarder le GeoJSON du polygone
+            if ($request->request->has('polygon_geojson_data')) {
+                $geojsonData = $request->request->get('polygon_geojson_data');
+                if ($geojsonData) {
+                    $parcelle->setPolygonGeojson(json_decode($geojsonData, true));
+                }
+            }
+            
             $parcelle->setUpdatedAt(new \DateTimeImmutable());
             $this->em->flush();
             $this->addFlash('success', 'Parcelle modifiée avec succès.');

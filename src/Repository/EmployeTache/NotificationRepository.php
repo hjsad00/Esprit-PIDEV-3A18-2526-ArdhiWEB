@@ -60,28 +60,49 @@ class NotificationRepository extends ServiceEntityRepository
     /**
      * Anti-spam : vérifie si une notif du même type pour la même tâche existe déjà aujourd'hui.
      */
-    public function existsTodayForTache(string $type, int $idTache, int $idAgriculteur): bool
-    {
-        $today = new \DateTime('today');
-        $tomorrow = new \DateTime('tomorrow');
-
-        $count = (int) $this->createQueryBuilder('n')
-            ->select('COUNT(n.id)')
-            ->where('n.type = :type')
-            ->andWhere('n.idTache = :tache')
-            ->andWhere('n.idAgriculteur = :agri')
-            ->andWhere('n.dateCreation >= :today')
-            ->andWhere('n.dateCreation < :tomorrow')
-            ->setParameter('type', $type)
-            ->setParameter('tache', $idTache)
-            ->setParameter('agri', $idAgriculteur)
-            ->setParameter('today', $today)
-            ->setParameter('tomorrow', $tomorrow)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return $count > 0;
-    }
+  public function existsTodayForTache(string $type, int $idTache, int $idAgriculteur): bool
+{
+    $today = new \DateTime('today');
+    $tomorrow = (clone $today)->modify('+1 day');
+ 
+    $count = $this->createQueryBuilder('n')
+        ->select('COUNT(n.id)')
+        ->where('n.type = :type')
+        ->andWhere('n.idTache = :tache')
+        ->andWhere('n.idAgriculteur = :agri')
+        ->andWhere('n.dateCreation >= :today')
+        ->andWhere('n.dateCreation < :tomorrow')
+        ->setParameter('type', $type)
+        ->setParameter('tache', $idTache)
+        ->setParameter('agri', $idAgriculteur)
+        ->setParameter('today', $today)
+        ->setParameter('tomorrow', $tomorrow)
+        ->getQuery()
+        ->getSingleScalarResult();
+ 
+    return $count > 0;
+}
+public function existsTodayGlobal(string $type, int $idAgriculteur): bool
+{
+    $today    = new \DateTime('today');
+    $tomorrow = (clone $today)->modify('+1 day');
+ 
+    $count = $this->createQueryBuilder('n')
+        ->select('COUNT(n.id)')
+        ->where('n.type = :type')
+        ->andWhere('n.idAgriculteur = :agri')
+        ->andWhere('n.idTache IS NULL')   // Notification générale (sans tâche)
+        ->andWhere('n.dateCreation >= :today')
+        ->andWhere('n.dateCreation < :tomorrow')
+        ->setParameter('type', $type)
+        ->setParameter('agri', $idAgriculteur)
+        ->setParameter('today', $today)
+        ->setParameter('tomorrow', $tomorrow)
+        ->getQuery()
+        ->getSingleScalarResult();
+ 
+    return $count > 0;
+}
 
     /**
      * Anti-spam général (sans filtre par tâche) — pour les alertes globales.
@@ -105,6 +126,22 @@ class NotificationRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return $count > 0;
+    }
+    public function findTachesDuJour(int $idAgriculteur): array
+    {
+        $today = new \DateTime('today');
+    
+        return $this->createQueryBuilder('t')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.statut IN (:statuts)')
+            ->andWhere('t.dateDebut <= :today OR t.dateDebut IS NULL')
+            ->andWhere('t.dateFin >= :today OR t.dateFin IS NULL')
+            ->setParameter('agri', $idAgriculteur)
+            ->setParameter('statuts', ['En cours', 'En attente'])
+            ->setParameter('today', $today)
+            ->orderBy('t.priorite', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**

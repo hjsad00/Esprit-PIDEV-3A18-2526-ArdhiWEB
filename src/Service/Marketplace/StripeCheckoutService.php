@@ -9,7 +9,7 @@ class StripeCheckoutService
 {
     private const CURRENCY_API_URL = 'https://api.exchangerate-api.com/v4/latest/TND';
     private const EUR_FALLBACK_RATE = 0.30;
-    private const MIN_AMOUNT_EUR_CENTS = 50;
+    private const MIN_AMOUNT_EUR_CENTS = 100;
 
     private string $stripeSecretKey;
 

@@ -50,6 +50,9 @@ class Parcelle
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $updated_at = null;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $polygon_geojson = null;
+
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'parcelles')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $agriculteur = null;
@@ -274,6 +277,17 @@ class Parcelle
                 $creditDossier->setParcelle(null);
             }
         }
+        return $this;
+    }
+
+    public function getPolygonGeojson(): ?array
+    {
+        return $this->polygon_geojson;
+    }
+
+    public function setPolygonGeojson(?array $polygon_geojson): static
+    {
+        $this->polygon_geojson = $polygon_geojson;
         return $this;
     }
 }

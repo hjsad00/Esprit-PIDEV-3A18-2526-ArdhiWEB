@@ -31,21 +31,59 @@ class WhatsAppService
      */
     public function envoyer(string $numero, string $message): void
     {
-        // On s'assure que le numéro ne contient pas déjà le préfixe whatsapp:
-        $to = str_starts_with($numero, 'whatsapp:') ? $numero : 'whatsapp:' . $numero;
+        $numeroNormalise = $this->normalizePhoneNumber($numero);
+        if ($numeroNormalise === null) {
+            $this->logger->warning('Envoi WhatsApp ignoré: numéro invalide.', [
+                'numero_brut' => $numero,
+            ]);
+
+            return;
+        }
+
+        $to = 'whatsapp:' . $numeroNormalise;
+        $from = str_starts_with($this->from, 'whatsapp:') ? $this->from : 'whatsapp:' . $this->from;
 
         try {
             $client = new Client($this->sid, $this->token);
             
             $client->messages->create($to, [
-                'from' => $this->from,
+                'from' => $from,
                 'body' => $message
             ]);
 
-            $this->logger->info("Message WhatsApp envoyé avec succès à : " . $numero);
+            $this->logger->info('Message WhatsApp envoyé avec succès.', [
+                'to' => $to,
+                'from' => $from,
+            ]);
         } catch (\Exception $e) {
             // Le message WhatsApp ne doit pas bloquer le reste du processus
-            $this->logger->error("Erreur lors de l'envoi du message WhatsApp Twilio : " . $e->getMessage());
+            $this->logger->error('Erreur lors de l\'envoi du message WhatsApp Twilio.', [
+                'to' => $to,
+                'from' => $from,
+                'error' => $e->getMessage(),
+            ]);
         }
+    }
+
+    private function normalizePhoneNumber(string $numero): ?string
+    {
+        $numero = trim($numero);
+        if ($numero === '') {
+            return null;
+        }
+
+        // Garde uniquement les chiffres et le + éventuel.
+        $numero = preg_replace('/[^\d+]/', '', $numero) ?? '';
+
+        // N'autorise le + qu'en première position.
+        if (str_contains(substr($numero, 1), '+')) {
+            return null;
+        }
+
+        if (!preg_match('/^\+\d{8,15}$/', $numero)) {
+            return null;
+        }
+
+        return $numero;
     }
 }

@@ -106,8 +106,16 @@ class PdfCreditExportService
         
         $dateGenerer = date('d/m/Y H:i');
         $dateCreation = $dossier->getCreatedAt()->format('d/m/Y H:i');
-        $niveauRisqueStr = strtoupper($dossier->getNiveauRisque());
-        $recommandationsHtml = nl2br(htmlspecialchars($dossier->getRecommandations()));
+        
+        $niveauRisqueKey = match ($dossier->getNiveauRisque()) {
+            'faible' => 'pdf.credit.risk_low',
+            'modere' => 'pdf.credit.risk_moderate',
+            'eleve' => 'pdf.credit.risk_high',
+            default => 'pdf.credit.risk_moderate'
+        };
+        
+        $recommandationsRaw = $dossier->getRecommandations();
+        $recommandationsHtml = nl2br(htmlspecialchars($recommandationsRaw));
 
         $niveauRisqueColor = match ($dossier->getNiveauRisque()) {
             'faible' => '#28a745',
@@ -142,6 +150,32 @@ class PdfCreditExportService
             return $this->translator->trans($key, $params, 'messages', $locale);
         };
 
+        // 🔄 Traduire les recommandations dynamiquement (gestion des anciens textes et des nouveaux)
+        $recommandationsTranslated = [];
+        $lines = explode("\n", $recommandationsRaw);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            $translatedLine = match($line) {
+                // Match des textes en français (pour les anciens dossiers)
+                "⚠️ RISQUE ÉLEVÉ: Il est recommandé de réduire le montant du crédit demandé." => $t('pdf.credit.reco_high_risk'),
+                "⚠️ RISQUE MODÉRÉ: À surveiller étroitement." => $t('pdf.credit.reco_moderate_risk'),
+                "✅ RISQUE FAIBLE: Bon candidat pour le crédit." => $t('pdf.credit.reco_low_risk'),
+                "📊 Améliorer la rentabilité : considérez l'optimisation des coûts de production." => $t('pdf.credit.reco_improve_profitability'),
+                // Match des clés (pour les futurs dossiers)
+                "pdf.credit.reco_high_risk" => $t('pdf.credit.reco_high_risk'),
+                "pdf.credit.reco_moderate_risk" => $t('pdf.credit.reco_moderate_risk'),
+                "pdf.credit.reco_low_risk" => $t('pdf.credit.reco_low_risk'),
+                "pdf.credit.reco_improve_profitability" => $t('pdf.credit.reco_improve_profitability'),
+                default => $line
+            };
+            $recommandationsTranslated[] = $translatedLine;
+        }
+        $recommandationsHtml = nl2br(htmlspecialchars(implode("\n", $recommandationsTranslated)));
+
+        $niveauRisqueStr = strtoupper($t($niveauRisqueKey));
+
         $scoreRisque = $dossier->getScoreRisque();
         $scoreRentabilite = $dossier->getScoreRentabilite();
         $scoreClimat = $dossier->getScoreStabiliteClimat();
@@ -169,9 +203,10 @@ class PdfCreditExportService
             }
         }
 
+        $dir = $locale === 'ar' ? 'rtl' : 'ltr';
         $html = <<<HTML
 <!DOCTYPE html>
-<html dir="{($locale === 'ar' ? 'rtl' : 'ltr')}" lang="{$locale}">
+<html dir="{$dir}" lang="{$locale}">
 <head>
     <meta charset="UTF-8">
     <style>

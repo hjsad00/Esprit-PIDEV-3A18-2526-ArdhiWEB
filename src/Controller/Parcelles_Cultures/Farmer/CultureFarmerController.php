@@ -44,6 +44,12 @@ class CultureFarmerController extends AbstractController
 
         $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
 
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('parcelles_cultures/farmer/cultures/_list.html.twig', [
+                'cultures' => $cultures,
+            ]);
+        }
+
         // Quick Stats for the header
         $stats = $this->cultureRepository->createQueryBuilder('c')
             ->join('c.parcelle', 'p')

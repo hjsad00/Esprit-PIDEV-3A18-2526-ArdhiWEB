@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
 
 <head>
   <meta charset="utf-8">
@@ -74,10 +74,47 @@
       color: #116530 !important; /* Vert Ardhi au survol */
       background: #f8f9fa !important;
     }
+    /* Styles Sélecteur de Langue Natif */
+    .lang-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    .lang-btn:hover, .lang-btn.active {
+        background: rgba(17, 101, 48, 0.85); /* Vert Ardhi */
+        border-color: #116530;
+        transform: translateY(-2px);
+    }
+
+    /* Support RTL Dynamique Global */
+    [dir="rtl"] {
+        text-align: right;
+    }
+    [dir="rtl"] .hero-inner, [dir="rtl"] .row, [dir="rtl"] .d-flex {
+        flex-direction: row-reverse;
+    }
+    [dir="rtl"] .ms-auto {
+        margin-right: auto !important;
+        margin-left: 0 !important;
+    }
+    [dir="rtl"] .me-auto {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
   </style>
 </head>
 
-<body class="{% block body_class %}index-page{% endblock %} premium-header-active">
+<body class="{% block body_class %}index-page{% endblock %} premium-header-active {{ app.request.locale == 'ar' ? 'rtl-mode' : '' }}">
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
@@ -117,49 +154,49 @@
           {% endif %}
           <li>
             {% if is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_diags_dashboard') }}" class="{{ app.request.get('_route') == 'admin_diags_dashboard' ? 'active' : '' }}">Diagnostic IA</a>
+              <a href="{{ path('admin_diags_dashboard') }}" class="{{ app.request.get('_route') == 'admin_diags_dashboard' ? 'active' : '' }}">{{ 'navbar.diagnostic'|trans }}</a>
             {% else %}
-              <a href="{{ path('app_user_and_diag_hub') }}" class="{{ app.request.get('_route') == 'app_user_and_diag_hub' ? 'active' : '' }}">Diagnostic IA</a>
+              <a href="{{ path('app_user_and_diag_hub') }}" class="{{ app.request.get('_route') == 'app_user_and_diag_hub' ? 'active' : '' }}">{{ 'navbar.diagnostic'|trans }}</a>
             {% endif %}
           </li>
           <li>
             {% if is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_marketplace_accueil') }}" class="{{ app.request.get('_route') == 'admin_marketplace_accueil' ? 'active' : '' }}">Marketplace</a>
+              <a href="{{ path('admin_marketplace_accueil') }}" class="{{ app.request.get('_route') == 'admin_marketplace_accueil' ? 'active' : '' }}">{{ 'navbar.marketplace'|trans }}</a>
             {% else %}
-              <a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">Marketplace</a>
+              <a href="{{ path('app_marketplace') }}" class="{{ app.request.get('_route') == 'app_marketplace' ? 'active' : '' }}">{{ 'navbar.marketplace'|trans }}</a>
             {% endif %}
           </li>
           <li>
             {% if is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_materiel_index') }}" class="{{ app.request.get('_route') == 'admin_materiel_index' ? 'active' : '' }}">Matériel & Maintenance</a>
+              <a href="{{ path('admin_materiel_index') }}" class="{{ app.request.get('_route') == 'admin_materiel_index' ? 'active' : '' }}">{{ 'navbar.maintenance'|trans }}</a>
             {% else %}
-              <a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">Matériel & Maintenance</a>
+              <a href="{{ path('app_materiel_et_maintenance') }}" class="{{ (app.request.get('_route') == 'app_materiel_et_maintenance') or (app.request.get('_route') starts with 'app_materiel_') or (app.request.get('_route') starts with 'app_maintenance_') ? 'active' : '' }}">{{ 'navbar.maintenance'|trans }}</a>
             {% endif %}
           </li>
           <li>
             {% if is_granted('ROLE_AGRICULTEUR') %}
-              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">Cultures</a>
+              <a href="{{ path('farmer_agriculture_index') }}" class="{{ app.request.get('_route') == 'farmer_agriculture_index' ? 'active' : '' }}">{{ 'navbar.cultures'|trans }}</a>
             {% elseif is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">Cultures</a>
+              <a href="{{ path('admin_parcelle_index') }}" class="{{ app.request.get('_route') == 'admin_parcelle_index' ? 'active' : '' }}">{{ 'navbar.cultures'|trans }}</a>
             {% else %}
-              <a href="#">Cultures</a>
+              <a href="#">{{ 'navbar.cultures'|trans }}</a>
             {% endif %}
           </li>
           <li>
             {% if is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('app_evenement_admin_dashboard') }}" class="{{ app.request.get('_route') starts with 'app_evenement_admin' ? 'active' : '' }}">Évènements</a>
+              <a href="{{ path('app_evenement_admin_dashboard') }}" class="{{ app.request.get('_route') starts with 'app_evenement_admin' ? 'active' : '' }}">{{ 'navbar.events'|trans }}</a>
             {% else %}
-              <a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">Évènements</a>
+              <a href="{{ path('app_evenement_index') }}" class="{{ app.request.get('_route') starts with 'app_evenement' ? 'active' : '' }}">{{ 'navbar.events'|trans }}</a>
             {% endif %}
           </li>
           {% if app.user %}
           <li>
             {% if is_granted('ROLE_ADMIN') %}
-              <a href="{{ path('admin_agriculteurs_employe') }}" class="{{ app.request.get('_route') == 'admin_agriculteurs_employe' ? 'active' : '' }}">Employés</a>
+              <a href="{{ path('admin_agriculteurs_employe') }}" class="{{ app.request.get('_route') == 'admin_agriculteurs_employe' ? 'active' : '' }}">{{ 'navbar.employees'|trans }}</a>
             {% elseif is_granted('ROLE_AGRICULTEUR') %}
-              <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">Employés</a>
+              <a href="{{ path('app_employe_dashboard') }}" class="{{ app.request.get('_route') == 'app_employe_dashboard' ? 'active' : '' }}">{{ 'navbar.employees'|trans }}</a>
             {% else %}
-              <a href="javascript:void(0)" style="cursor:default;opacity:0.7" title="Module Agriculteur / Réservé aux agriculteurs et gérants d'exploitation">Employés <i class="bi bi-lock-fill" style="font-size:0.75rem;margin-left:3px"></i></a>
+              <a href="javascript:void(0)" style="cursor:default;opacity:0.7" title="Module Agriculteur / Réservé aux agriculteurs et gérants d'exploitation">{{ 'navbar.employees'|trans }} <i class="bi bi-lock-fill" style="font-size:0.75rem;margin-left:3px"></i></a>
             {% endif %}
           </li>
           {% endif %}
@@ -199,6 +236,13 @@
           {% else %}
             <li><a href="{{ path('app_login') }}" class="nav-cta-btn">Se connecter</a></li>
           {% endif %}
+          
+          <!-- SÉLECTEUR DE LANGUE NATIF -->
+          <li class="d-flex align-items-center gap-2 px-2 ms-lg-2 language-switcher-li">
+            <a href="{{ path('app_change_locale', {locale: 'fr'}) }}" class="lang-btn {{ app.request.locale == 'fr' ? 'active' : '' }}">Fr</a>
+            <a href="{{ path('app_change_locale', {locale: 'en'}) }}" class="lang-btn {{ app.request.locale == 'en' ? 'active' : '' }}">En</a>
+            <a href="{{ path('app_change_locale', {locale: 'ar'}) }}" class="lang-btn {{ app.request.locale == 'ar' ? 'active' : '' }}">Tn</a>
+          </li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>

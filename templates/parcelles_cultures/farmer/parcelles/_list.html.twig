@@ -1,0 +1,61 @@
+{% if parcelles.getTotalItemCount > 0 %}
+    <div class="row g-4">
+        {% for parcelle in parcelles %}
+            <div class="col-md-6 col-lg-6 col-xl-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="parcel-card">
+                    <div class="parcel-header">
+                        <span class="parcel-id">Parcelle #{{ parcelle.id }}</span>
+                        <span class="badge rounded-pill bg-success">{{ parcelle.cultures|length }} cultures</span>
+                    </div>
+                    <div class="parcel-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Surface</span>
+                                <span class="info-value"><i class="bi bi-aspect-ratio"></i> {{ parcelle.surface }} ha</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Type de sol</span>
+                                <span class="info-value"><i class="bi bi-layers"></i> {{ parcelle.typeSol }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Localisation</span>
+                                <span class="info-value"><i class="bi bi-geo-alt"></i> {{ parcelle.localisation }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Irrigation</span>
+                                <span class="info-value"><i class="bi bi-droplet"></i> {{ parcelle.systemeIrrigation|replace({'_': ' '})|capitalize }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parcel-footer">
+                        <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-action btn-view">
+                            <i class="bi bi-eye"></i> Voir
+                        </a>
+                        <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn-action btn-edit">
+                            <i class="bi bi-pencil"></i> Modif.
+                        </a>
+                        <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" class="flex-grow-1" 
+                              onsubmit="return confirm('Confirmer la suppression ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
+                            <button type="submit" class="btn-action btn-delete w-100">
+                                <i class="bi bi-trash"></i> Suppr.
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# Pagination #}
+    <div class="mt-5 d-flex justify-content-center" data-aos="fade-up">
+        {{ knp_pagination_render(parcelles) }}
+    </div>
+{% else %}
+    <div class="text-center py-5 bg-white rounded-4 shadow-sm" data-aos="zoom-in">
+        <i class="bi bi-map text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h3 class="mt-3">Aucune parcelle trouvée</h3>
+        <p class="text-muted">Commencez par ajouter votre première parcelle de terrain.</p>
+        <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-premium-add mt-2">Créer ma première parcelle</a>
+    </div>
+{% endif %}

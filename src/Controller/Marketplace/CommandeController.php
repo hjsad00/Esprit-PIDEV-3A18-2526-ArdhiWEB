@@ -406,6 +406,13 @@ class CommandeController extends AbstractController
         }
 
         if ($paymentMethod === 'stripe') {
+            if ($prepared['totalFinalGlobal'] < 3) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Le montant minimum de commande est de 3.00 DT.',
+                ], 400);
+            }
+
             $metadata = [
                 'module' => 'marketplace',
                 'user_id' => (string) $user->getId(),
@@ -420,9 +427,17 @@ class CommandeController extends AbstractController
             );
 
             if (!$checkout['success']) {
+                $checkoutError = (string) ($checkout['error'] ?? 'Inconnue');
+                if (str_contains($checkoutError, 'Montant trop faible pour Stripe')) {
+                    return $this->json([
+                        'success' => false,
+                        'message' => 'Le montant minimum de commande est de 3.00 DT.',
+                    ], 400);
+                }
+
                 return $this->json([
                     'success' => false,
-                    'message' => 'Erreur Stripe: ' . ($checkout['error'] ?? 'Inconnue'),
+                    'message' => 'Erreur Stripe: ' . $checkoutError,
                 ], 500);
             }
 

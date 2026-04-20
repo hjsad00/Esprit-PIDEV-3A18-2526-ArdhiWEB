@@ -198,7 +198,7 @@
 <div class="container pb-4">
 
   <!-- Filters -->
-  <form id="filter-form" method="GET" action="{{ path('app_materiel_index') }}" class="filter-bar">
+  <form id="filter-form" method="GET" action="{{ path('app_materiel_index') }}" class="filter-bar" novalidate>
     <div>
       <label class="form-label fw-semibold small mb-1">Rechercher</label>
       <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Nom du matériel..." style="min-width:200px;" id="filter-search">
@@ -296,7 +296,7 @@
          <div class="mat-card-footer mt-4 d-flex align-items-center gap-2">
              <a href="{{ path('app_materiel_show', {id: m.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 50px; padding: 10px 0;" title="Voir"><i class="bi bi-eye fs-5"></i></a>
              <a href="{{ path('app_materiel_edit', {id: m.id}) }}" class="btn-mat-outline d-flex align-items-center justify-content-center" style="width: 50px; padding: 10px 0;" title="Modifier"><i class="bi bi-pencil fs-5"></i></a>
-             <form method="POST" action="{{ path('app_materiel_delete', {id: m.id}) }}" style="display:flex; flex:1;"
+             <form method="POST" action="{{ path('app_materiel_delete', {id: m.id}) }}" style="display:flex; flex:1;" novalidate
                    onsubmit="return confirm('Confirmer la suppression de cet équipement ?')">
                <input type="hidden" name="_token" value="{{ csrf_token('delete_materiel_' ~ m.id) }}">
                <button type="submit" class="btn-mat-action w-100 d-flex align-items-center justify-content-center gap-2 text-danger" style="border-color: #ffcccc; background: #fff5f5;" title="Supprimer">

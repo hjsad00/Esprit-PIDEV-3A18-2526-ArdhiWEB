@@ -156,7 +156,7 @@
                 <span class="card-label"><i class="bi bi-lightbulb-fill"></i> Recommandations</span>
                 {% for line in dossier.recommandations|split('\n') %}
                     {% if line %}
-                        <div class="recommendation-line">{{ line }}</div>
+                        <div class="recommendation-line">{{ line|trans }}</div>
                     {% endif %}
                 {% endfor %}
             </div>
