@@ -87,6 +87,29 @@
         <h1 class="sitename">ARDHI</h1>
       </a>
 
+      {% set currentRoute = app.request.get('_route') %}
+      {% set isUserAndDiagRoute = currentRoute starts with 'app_user_and_diag_' 
+          or currentRoute starts with 'app_client_dashboard'
+          or currentRoute starts with 'app_expert_dashboard'
+          or currentRoute starts with 'app_login'
+          or currentRoute starts with 'app_register'
+          or currentRoute starts with 'app_profile'
+          or currentRoute starts with 'app_logout'
+          or currentRoute starts with 'admin_diags_'
+          or currentRoute starts with 'admin_users_'
+          or currentRoute starts with 'admin_abonnement_'
+          or currentRoute starts with 'admin_badge_'
+          or currentRoute starts with 'admin_community_'
+          or currentRoute starts with 'admin_offre_'
+          or currentRoute starts with 'admin_traitement_'
+          or currentRoute starts with 'admin_farm_health_'
+          or currentRoute starts with 'admin_prevention_'
+          or currentRoute starts with 'admin_treatment_'
+          or currentRoute starts with 'admin_vulnerability_'
+          or currentRoute starts with 'admin_review_'
+          or currentRoute starts with 'admin_diag_notification_'
+      %}
+
       <nav id="navmenu" class="navmenu">
         <ul>
           {% if app.request.get('_route') == 'app_employe_dashboard' %}
@@ -142,37 +165,39 @@
           {% endif %}
           
           {% if app.user %}
-          <!-- NOTIFICATIONS BELL -->
-          <li class="dropdown" id="notificationDropdownContainer" onmouseenter="onBellHover()">
-            <a href="#" class="d-flex align-items-center px-2">
-              <div style="position: relative;">
-                <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: white;"></i>
-                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.55rem; padding: 0.25em 0.4em;">
-                  0
-                </span>
-              </div>
-            </a>
-            <ul id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; left: auto; padding: 0;">
-              <li><div style="padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 0.9rem; color: #333;">Notifications</div></li>
-              <li id="emptyNotificationMsg" class="text-center text-muted" style="font-size: 0.85rem; padding: 20px;">Aucune nouvelle notification.</li>
-            </ul>
-          </li>
+            {% if isUserAndDiagRoute %}
+              <!-- NOTIFICATIONS BELL (UserAndDiag Only) -->
+              <li class="dropdown" id="notificationDropdownContainer" onmouseenter="onBellHover()">
+                <a href="#" class="d-flex align-items-center px-2">
+                  <div style="position: relative;">
+                    <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: white;"></i>
+                    <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.55rem; padding: 0.25em 0.4em;">
+                      0
+                    </span>
+                  </div>
+                </a>
+                <ul id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; left: auto; padding: 0;">
+                  <li><div style="padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; font-size: 0.9rem; color: #333;">Notifications</div></li>
+                  <li id="emptyNotificationMsg" class="text-center text-muted" style="font-size: 0.85rem; padding: 20px;">Aucune nouvelle notification.</li>
+                </ul>
+              </li>
+            {% endif %}
 
-          <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
-            <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-              {% if app.user.avatar %}
-                  <img src="{{ app.user.avatar }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
-              {% else %}
-                  <i class="bi bi-person-fill" style="font-size: 1.1rem; color: white;"></i>
-              {% endif %}
-            </div></a>
-            <ul>
-              <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
-              <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
-            </ul>
-          </li>
+            <li class="dropdown"><a href="#" class="d-flex align-items-center px-2">
+              <div class="nav-user-circle" style="background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                {% if app.user.avatar %}
+                    <img src="{{ app.user.avatar }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <i class="bi bi-person-fill" style="font-size: 1.1rem; color: white;"></i>
+                {% endif %}
+              </div></a>
+              <ul>
+                <li><a href="{{ path('app_profile') }}">Mon Profil {{ app.user.prenom ? ('(' ~ app.user.prenom ~ ')') : '' }}</a></li>
+                <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
+              </ul>
+            </li>
           {% else %}
-          <li><a href="{{ path('app_login') }}" class="nav-cta-btn">Se connecter</a></li>
+            <li><a href="{{ path('app_login') }}" class="nav-cta-btn">Se connecter</a></li>
           {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -263,8 +288,8 @@
         }
     });
 
-    {% if app.user %}
-    // --- Notification System ---
+    {% if app.user and isUserAndDiagRoute %}
+    // --- Notification System (UserAndDiag Only) ---
     function fetchNotifications() {
         fetch('{{ path("app_user_and_diag_notifications_unread") }}', {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }

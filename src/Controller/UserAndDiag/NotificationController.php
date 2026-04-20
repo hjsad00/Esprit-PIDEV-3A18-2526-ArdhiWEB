@@ -50,7 +50,7 @@ class NotificationController extends AbstractController
     public function readAndRedirect(\App\Entity\UserAndDiag\DiagNotification $notif, EntityManagerInterface $em): Response
     {
         if ($notif->getUser() === $this->getUser()) {
-            $notif->setRead(true);
+            $notif->setIsRead(true);
             $em->flush();
         }
 
