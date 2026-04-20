@@ -777,20 +777,25 @@
 /* --- Wishlist Heart Button --- */
 .wishlist-btn {
     position: absolute;
-    top: 52px; /* Sous l'indicateur de stock */
+    top: 52px;
+    /* Sous l'indicateur de stock */
     right: 12px;
-    width: 40px; /* Plus grand */
+    width: 40px;
+    /* Plus grand */
     height: 40px;
     border-radius: 50%;
-    background: #ffffff; /* Fond blanc pur */
+    background: #ffffff;
+    /* Fond blanc pur */
     border: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #b2bec3;
-    font-size: 20px; /* Plus grand */
+    font-size: 20px;
+    /* Plus grand */
     cursor: pointer;
-    z-index: 100; /* Z-index plus élevé */
+    z-index: 100;
+    /* Z-index plus élevé */
     transition: var(--transition-smooth);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     padding: 0;
@@ -1415,6 +1420,36 @@
     color: var(--ardhi-green);
 }
 
+.mp-form-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mp-form-reset-danger {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    font-size: 15px;
+    background: #ffeaea;
+    color: #d63031;
+}
+
+.mp-form-reset-danger:hover {
+    background: #d63031;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(214, 48, 49, 0.3);
+}
+
+
+
 .mp-form-close {
     width: 36px;
     height: 36px;
@@ -1673,6 +1708,23 @@
     .mp-form-grid {
         grid-template-columns: 1fr;
         gap: 0;
+    }
+
+    .mp-form-submit {
+        padding: 0 18px 18px;
+    }
+
+    .mp-btn-submit {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mp-form-header {
+        padding: 16px 18px;
+    }
+
+    .mp-form-header-actions {
+        gap: 8px;
     }
 
     .mp-table-wrapper {
@@ -2342,6 +2394,7 @@
     color: #b2bec3;
     font-size: 14px;
 }
+
 /* ================================================================
    TOAST NOTIFICATION — AJAX Cart
    ================================================================ */
@@ -2424,13 +2477,27 @@
 }
 
 @keyframes toastIn {
-    from { opacity: 0; transform: translateX(60px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes toastOut {
-    from { opacity: 1; transform: translateX(0); }
-    to   { opacity: 0; transform: translateX(60px); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(60px);
+    }
 }
 
 
@@ -2508,7 +2575,7 @@
 
 .sidebar-mobile-close {
     display: none;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     color: #fff;
     width: 30px;
@@ -2523,7 +2590,7 @@
 }
 
 .sidebar-mobile-close:hover {
-    background: rgba(255,255,255,0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
 
 /* ── Groupes ── */
@@ -2796,8 +2863,8 @@
 .active-filters-badge {
     margin: 4px 22px 0;
     padding: 10px 14px;
-    background: linear-gradient(135deg, rgba(74,140,63,0.08), rgba(94,168,81,0.05));
-    border: 1px solid rgba(74,140,63,0.2);
+    background: linear-gradient(135deg, rgba(74, 140, 63, 0.08), rgba(94, 168, 81, 0.05));
+    border: 1px solid rgba(74, 140, 63, 0.2);
     border-radius: 10px;
     font-family: 'Inter', sans-serif;
     font-size: 12px;
@@ -2815,7 +2882,8 @@
    PRODUCT CONTENT AREA
    ================================================================ */
 .product-content {
-    min-width: 0; /* évite le débordement dans grid */
+    min-width: 0;
+    /* évite le débordement dans grid */
 }
 
 /* Bouton mobile - caché par défaut sur desktop */
@@ -2835,7 +2903,7 @@
     margin-bottom: 16px;
     transition: all 0.25s;
     position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .filter-mobile-toggle:hover {
@@ -2851,7 +2919,7 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    box-shadow: 0 0 6px rgba(74,140,63,0.5);
+    box-shadow: 0 0 6px rgba(74, 140, 63, 0.5);
 }
 
 /* Résumé résultats */
@@ -2871,8 +2939,8 @@
     align-items: center;
     gap: 5px;
     padding: 4px 10px;
-    background: rgba(74,140,63,0.08);
-    border: 1px solid rgba(74,140,63,0.2);
+    background: rgba(74, 140, 63, 0.08);
+    border: 1px solid rgba(74, 140, 63, 0.2);
     border-radius: 20px;
     color: var(--ardhi-green-dark);
     font-size: 12px;
@@ -2886,8 +2954,8 @@
     padding: 60px 20px;
     background: #fff;
     border-radius: 20px;
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .cat-empty-icon {
@@ -2943,7 +3011,7 @@
         z-index: 9998;
         border-radius: 0 20px 20px 0;
         overflow-y: auto;
-        box-shadow: 4px 0 40px rgba(0,0,0,0.18);
+        box-shadow: 4px 0 40px rgba(0, 0, 0, 0.18);
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translateX(-100%);
     }
@@ -2959,7 +3027,7 @@
         content: '';
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0, 0, 0, 0.4);
         z-index: 9997;
         backdrop-filter: blur(2px);
     }
@@ -2994,6 +3062,13 @@
 }
 
 @keyframes sidebarSlideIn {
-    from { transform: translateX(-100%); opacity: 0.5; }
-    to   { transform: translateX(0);    opacity: 1; }
-}
+    from {
+        transform: translateX(-100%);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
