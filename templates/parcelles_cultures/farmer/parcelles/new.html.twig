@@ -57,6 +57,11 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .btn-ia-loading { opacity: 0.7; pointer-events: none; }
+        
+        /* IA Field Highlight */
+        .field-ia-filled { background-color: #e8f5e9 !important; border-color: #4caf50 !important; }
+        .ia-notification { position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; animation: slideInRight 0.3s ease; }
+        @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 {% endblock %}
 
@@ -554,14 +559,54 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
+                let filledCount = 0;
+
                 // Auto-fill form with IA recommendations
                 if (data.type_sol && typeSolInput) {
-                    typeSolInput.value = data.type_sol;
-                    console.log('✅ Type sol changé à:', data.type_sol);
+                    // Chercher la bonne valeur dans les options
+                    let found = false;
+                    for (let option of typeSolInput.options) {
+                        if (option.value === data.type_sol || option.text === data.type_sol) {
+                            typeSolInput.value = option.value;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        typeSolInput.classList.add('field-ia-filled');
+                        console.log('✅ Type sol changé à:', data.type_sol);
+                        filledCount++;
+                    } else {
+                        console.warn('⚠️ Type sol non trouvé:', data.type_sol);
+                    }
                 }
+
                 if (data.systeme_irrigation && systIrrInput) {
-                    systIrrInput.value = data.systeme_irrigation;
-                    console.log('✅ Système irrigation changé à:', data.systeme_irrigation);
+                    // Chercher la bonne valeur dans les options
+                    let found = false;
+                    for (let option of systIrrInput.options) {
+                        if (option.value === data.systeme_irrigation || option.text === data.systeme_irrigation) {
+                            systIrrInput.value = option.value;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        systIrrInput.classList.add('field-ia-filled');
+                        console.log('✅ Système irrigation changé à:', data.systeme_irrigation);
+                        filledCount++;
+                    } else {
+                        console.warn('⚠️ Système irrigation non trouvé:', data.systeme_irrigation);
+                    }
+                }
+
+                // Show notification
+                if (filledCount > 0) {
+                    const notification = document.createElement('div');
+                    notification.className = 'ia-notification';
+                    notification.innerHTML = `✅ Champs auto-remplis: ${filledCount} champ(s)`;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
                 }
 
                 // Show explanation
