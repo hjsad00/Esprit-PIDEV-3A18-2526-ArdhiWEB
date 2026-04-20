@@ -40,6 +40,7 @@ common:
     ascending: تصاعدي
     descending: تنازلي
     close: إغلاق
+    info: 'معلومة'
 dashboard:
     title: 'إدارة الموظفين والمهام'
     subtitle: 'قم بإدارة موظفيك وتتبع مهامهم في الوقت الفعلي. حسّن تنظيم مزرعتك.'
@@ -358,6 +359,13 @@ notification:
         overdue_detail: 'تاريخ الاستحقاق: %date% | التأخير: %days% يوم (أيام)'
         blocked_detail: 'المهمة قيد التنفيذ بدون تغيير لأكثر من يومين. يوصى بالمتابعة.'
     mark_read: 'تحديد كمقروء'
+    meteo:
+        general_good: '✅ ظروف مثالية لأنشطتك الزراعية.'
+        task_good: '✅ ظروف مثالية لـ: %task%.'
+        general_warning: '⚠️ ينصح بتوخي الحذر بسبب الطقس.'
+        task_warning: '⚠️ يرجى الحذر عند إنجاز: %task%.'
+        general_danger: '🚨 ظروف خطيرة! تجنب العمل في الخارج.'
+        task_danger: '🚨 خطر على المهمة: %task%.'
 status:
     online: متصل
     available:  متاح

@@ -41,6 +41,7 @@ common:
     ascending: Ascending
     descending: Descending
     close: Close
+    info: 'Information'
 dashboard:
     title: 'Manage your Employees and Tasks'
     subtitle: 'Manage your employees and track their tasks in real time. Optimize the organization of your farm.'
@@ -358,6 +359,13 @@ notification:
         overdue_detail: 'Deadline: %date% | Delay: %days% day(s)'
         blocked_detail: 'In-progress task with no changes for more than 2 days. Follow-up recommended.'
     mark_read: 'Mark as read'
+    meteo:
+        general_good: '✅ Ideal conditions for your agricultural activities.'
+        task_good: '✅ Ideal conditions for : %task%.'
+        general_warning: '⚠️ Caution advised due to weather.'
+        task_warning: '⚠️ Caution advised for : %task%.'
+        general_danger: '🚨 Dangerous conditions ! Avoid outdoor work.'
+        task_danger: '🚨 Danger for task : %task%.'
 status:
     online: Online
     available:  "Available"
