@@ -109,15 +109,15 @@ class CreditAnalysisService
         $recommandations = [];
 
         if ($niveauRisque === 'eleve') {
-            $recommandations[] = "⚠️ RISQUE ÉLEVÉ: Il est recommandé de réduire le montant du crédit demandé.";
+            $recommandations[] = "pdf.credit.reco_high_risk";
         } elseif ($niveauRisque === 'modere') {
-            $recommandations[] = "⚠️ RISQUE MODÉRÉ: À surveiller étroitement.";
+            $recommandations[] = "pdf.credit.reco_moderate_risk";
         } else {
-            $recommandations[] = "✅ RISQUE FAIBLE: Bon candidat pour le crédit.";
+            $recommandations[] = "pdf.credit.reco_low_risk";
         }
-
+ 
         if ($scoreRentabilite < 10) {
-            $recommandations[] = "📊 Améliorer la rentabilité : considérez l'optimisation des coûts de production.";
+            $recommandations[] = "pdf.credit.reco_improve_profitability";
         }
 
         return implode("\n", $recommandations);
