@@ -169,14 +169,14 @@
             {# === Search & Filter Section === #}
             <div class="premium-card mb-4" data-aos="fade-up">
                 <form id="filterForm" action="{{ path('farmer_parcelle_index') }}" method="GET" class="row g-3 align-items-end">
-                    <div class="col-md-5">
+                    <div class="col-md-7">
                         <label class="info-label mb-2">Rechercher</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
                             <input type="text" name="q" class="form-control bg-light border-0" placeholder="ID, Localisation, Type..." value="{{ filters.q|default('') }}">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="info-label mb-2">Type de sol</label>
                         <select name="typeSol" class="form-select bg-light border-0">
                             <option value="">Tous les types</option>
@@ -186,80 +186,19 @@
                             <option value="Humifère" {{ filters.typeSol|default('') == 'Humifère' ? 'selected' : '' }}>Humifère</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex gap-2">
-                        <button type="submit" class="btn btn-premium-add flex-grow-1">
-                            <i class="bi bi-filter me-2"></i> Filtrer
-                        </button>
+                    <div class="col-md-1">
                         {% if filters.q|default('') or filters.typeSol|default('') %}
-                            <a href="{{ path('farmer_parcelle_index') }}" class="btn btn-premium-outline">
-                                <i class="bi bi-x-lg"></i>
+                            <a href="{{ path('farmer_parcelle_index') }}" class="btn btn-premium-outline w-100" title="Réinitialiser">
+                                <i class="bi bi-arrow-counterclockwise"></i>
                             </a>
                         {% endif %}
                     </div>
                 </form>
             </div>
 
-            {% if parcelles.getTotalItemCount > 0 %}
-                <div class="row g-4">
-                    {% for parcelle in parcelles %}
-                        <div class="col-md-6 col-lg-6 col-xl-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                            <div class="parcel-card">
-                                <div class="parcel-header">
-                                    <span class="parcel-id">Parcelle #{{ parcelle.id }}</span>
-                                    <span class="badge rounded-pill bg-success">{{ parcelle.cultures|length }} cultures</span>
-                                </div>
-                                <div class="parcel-body">
-                                    <div class="info-grid">
-                                        <div class="info-item">
-                                            <span class="info-label">Surface</span>
-                                            <span class="info-value"><i class="bi bi-aspect-ratio"></i> {{ parcelle.surface }} ha</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">Type de sol</span>
-                                            <span class="info-value"><i class="bi bi-layers"></i> {{ parcelle.typeSol }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">Localisation</span>
-                                            <span class="info-value"><i class="bi bi-geo-alt"></i> {{ parcelle.localisation }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">Irrigation</span>
-                                            <span class="info-value"><i class="bi bi-droplet"></i> {{ parcelle.systemeIrrigation|replace({'_': ' '})|capitalize }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="parcel-footer">
-                                    <a href="{{ path('farmer_parcelle_show', {id: parcelle.id}) }}" class="btn-action btn-view">
-                                        <i class="bi bi-eye"></i> Voir
-                                    </a>
-                                    <a href="{{ path('farmer_parcelle_edit', {id: parcelle.id}) }}" class="btn-action btn-edit">
-                                        <i class="bi bi-pencil"></i> Modif.
-                                    </a>
-                                    <form method="POST" action="{{ path('farmer_parcelle_delete', {id: parcelle.id}) }}" class="flex-grow-1" 
-                                          onsubmit="return confirm('Confirmer la suppression ?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ parcelle.id) }}">
-                                        <button type="submit" class="btn-action btn-delete w-100">
-                                            <i class="bi bi-trash"></i> Suppr.
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                {# Pagination #}
-                <div class="mt-5 d-flex justify-content-center" data-aos="fade-up">
-                    {{ knp_pagination_render(parcelles) }}
-                </div>
-            {% else %}
-                <div class="text-center py-5 bg-white rounded-4 shadow-sm" data-aos="zoom-in">
-                    <i class="bi bi-map text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <h3 class="mt-3">Aucune parcelle trouvée</h3>
-                    <p class="text-muted">Commencez par ajouter votre première parcelle de terrain.</p>
-                    <a href="{{ path('farmer_parcelle_new') }}" class="btn btn-premium-add mt-2">Créer ma première parcelle</a>
-                </div>
-            {% endif %}
+            <div id="parcelListContainer">
+                {% include 'parcelles_cultures/farmer/parcelles/_list.html.twig' %}
+            </div>
         </div>
     </div>
 </div>
@@ -267,38 +206,55 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterForm = document.getElementById('filterForm');
-        if (!filterForm) return;
+        const container = document.getElementById('parcelListContainer');
+        if (!filterForm || !container) return;
 
         const inputs = filterForm.querySelectorAll('input, select');
         let timeout = null;
+
+        const updateList = () => {
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData);
+            const url = `${filterForm.action}?${params.toString()}`;
+
+            // Add visual feedback
+            container.style.opacity = '0.5';
+            container.style.pointerEvents = 'none';
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                
+                // Re-init AOS if used for the new content
+                if (typeof AOS !== 'undefined') {
+                    AOS.refresh();
+                }
+
+                // Update URL in browser without reload
+                window.history.pushState({}, '', url);
+            });
+        };
 
         inputs.forEach(input => {
             const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
             
             input.addEventListener(eventType, function() {
                 clearTimeout(timeout);
-                const delay = input.tagName === 'SELECT' ? 0 : 600;
-                
-                timeout = setTimeout(() => {
-                    // Update search icon to spinner for feedback
-                    const searchIcon = filterForm.querySelector('.bi-search');
-                    if (searchIcon) {
-                        searchIcon.classList.remove('bi-search');
-                        searchIcon.classList.add('spinner-border', 'spinner-border-sm', 'text-success');
-                    }
-                    filterForm.submit();
-                }, delay);
+                timeout = setTimeout(updateList, 500);
             });
         });
 
-        // Ensure cursor stays at the end of input after reload
-        const qInput = filterForm.querySelector('input[name="q"]');
-        if (qInput && qInput.value) {
-            qInput.focus();
-            const val = qInput.value;
-            qInput.value = '';
-            qInput.value = val;
-        }
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateList();
+        });
     });
 </script>
 {% endblock %}
