@@ -36,6 +36,12 @@ class ParcelleFarmerController extends AbstractController
         $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
         $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
 
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('parcelles_cultures/farmer/parcelles/_list.html.twig', [
+                'parcelles' => $parcelles,
+            ]);
+        }
+
         return $this->render('parcelles_cultures/farmer/parcelles/index.html.twig', [
             'parcelles' => $parcelles,
             'stats' => $stats,
