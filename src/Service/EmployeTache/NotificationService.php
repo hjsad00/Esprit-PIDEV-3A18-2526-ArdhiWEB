@@ -30,12 +30,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class NotificationService
 {
     public function __construct(
-        private EntityManagerInterface  $em,
-        private NotificationRepository  $notifRepo,
-        private TacheRepository         $tacheRepo,
-        private MeteoService            $meteoService,
-        private TranslatorInterface     $translator,
-        private EmployeRepository       $employeRepo,
+        private EntityManagerInterface      $em,
+        private NotificationRepository      $notifRepo,
+        private TacheRepository             $tacheRepo,
+        private MeteoService                $meteoService,
+        private TranslatorInterface         $translator,
+        private EmployeRepository           $employeRepo,
+        private UrgentNotificationService   $urgentNotifService,
     ) {}
 
     // ══════════════════════════════════════════════════════════════════
@@ -80,18 +81,30 @@ class NotificationService
                     $idAgriculteur
                 )) {
                     $jours = (int) $today->diff($finDate)->days;
+                    $titre = $this->translator->trans('notification.types.task_overdue', ['%title%' => $tache->getTitre()]);
+                    $message = $this->translator->trans('notification.messages.overdue_detail', [
+                        '%date%' => $finDate->format('d/m/Y'),
+                        '%days%' => $jours,
+                    ]);
+
                     $this->creer(
                         Notification::TYPE_TACHE_RETARD,
                         Notification::PRIORITE_CRITICAL,
-                        $this->translator->trans('notification.types.task_overdue', ['%title%' => $tache->getTitre()]),
-                        $this->translator->trans('notification.messages.overdue_detail', [
-                            '%date%' => $finDate->format('d/m/Y'),
-                            '%days%' => $jours,
-                        ]),
+                        $titre,
+                        $message,
                         $idAgriculteur,
                         $tache->getId(),
                         $tache->getIdEmploye()
                     );
+
+                    // ✅ ALERTE URGENTE Twilio si retard de plus de 48h (2 jours)
+                    if ($jours > 2 && $tache->getIdEmploye()) {
+                        $employe = $this->employeRepo->find($tache->getIdEmploye());
+                        if ($employe && $employe->isActif()) {
+                            $msgUrgent = "⚠️ ALERTE ARDHI: Votre tâche '{$tache->getTitre()}' a un retard critique de $jours jours. Merci de la traiter immédiatement.";
+                            $this->urgentNotifService->sendUrgentNotification($employe, $msgUrgent, 'both');
+                        }
+                    }
                 }
             }
 
