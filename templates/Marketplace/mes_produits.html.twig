@@ -518,6 +518,16 @@
                     <i class="bi bi-camera"></i> Choisir une image
                   </button>
 
+                  <div style="margin-top:12px; padding:12px; border:1px solid #dbe7d7; border-radius:10px; background:#f8faf7;">
+                    <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
+                      <input type="checkbox" id="form-ai-enabled" checked style="width:18px; height:18px; cursor:pointer;">
+                      <div>
+                        <strong style="display:block; font-size:13px; color:#2d3436;">Activer les recommandations IA</strong>
+                        <small style="color:#636e72; font-weight:400;">Si activé, l'image est analysée automatiquement pour pré-remplir le nom, la description, la catégorie et l'unité.</small>
+                      </div>
+                    </label>
+                  </div>
+
                   {# ── BANDEAU IA ── #}
                   <div id="ai-analysis-banner" style="display:none; margin-top:12px; padding:12px 16px; border-radius:10px; font-size:13px; font-weight:500; animation: flashIn .35s ease;">
                   </div>
@@ -538,6 +548,9 @@
             </div>
 
             <div class="mp-form-submit">
+              <button type="button" class="mp-btn-back" onclick="resetForm()" style="margin-right:10px;">
+                <i class="bi bi-eraser"></i> Vider le formulaire
+              </button>
               <button type="submit" class="mp-btn-submit" id="form-submit-btn">
                 {% if formProduit and formProduit.id %}
                   <i class="bi bi-check-lg"></i> Enregistrer les modifications
@@ -576,7 +589,9 @@ function resetForm() {
   document.getElementById('form-remise').value = '';
   document.getElementById('remise-value-group').style.display = 'none';
     document.getElementById('form-visible').checked = true;
+    document.getElementById('form-ai-enabled').checked = true;
   document.getElementById('form-image').value = '';
+    document.getElementById('ai-analysis-banner').style.display = 'none';
   document.getElementById('upload-preview').innerHTML =
     '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
   document.getElementById('form-title').innerHTML =
@@ -641,8 +656,11 @@ function previewImage(input) {
 
     // Lancer l'analyse IA seulement en mode ajout (pas d'ID = nouveau produit)
     const formId = document.getElementById('form-id').value;
-    if (!formId) {
+    const aiEnabled = document.getElementById('form-ai-enabled')?.checked;
+    if (!formId && aiEnabled) {
       analyzeWithAI(file);
+    } else {
+      document.getElementById('ai-analysis-banner').style.display = 'none';
     }
   }
 }
@@ -865,6 +883,15 @@ window.addEventListener('load', function () {
   console.log('FORM FOUND:', form); // debug — à retirer après confirmation
 
   if (form) {
+    const aiToggle = document.getElementById('form-ai-enabled');
+    if (aiToggle) {
+      aiToggle.addEventListener('change', function () {
+        if (!aiToggle.checked) {
+          document.getElementById('ai-analysis-banner').style.display = 'none';
+        }
+      });
+    }
+
     form.querySelectorAll('input, select, textarea').forEach(field => {
       field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', function () {
         const group = field.closest('.mp-form-group');
