@@ -27,10 +27,12 @@ class GroqService
     public function getFieldRecommendations(float $latitude, float $longitude, string $localisation): array
     {
         try {
-            $prompt = "Je suis à {$localisation} (lat: {$latitude}, lon: {$longitude}). "
-                . "Recommande le type de sol, le système d'irrigation, la surface et donne une explication. "
-                . "Réponds STRICTEMENT en JSON : "
-                . "{\"type_sol\": \"\", \"systeme_irrigation\": \"\", \"surface_recommandee\": \"\", \"explication\": \"\"}";
+            $prompt = "Tu es un expert en agriculture à {$localisation} (lat: {$latitude}, lon: {$longitude}). "
+                . "Recommande EXACTEMENT UNE seule option parmi : "
+                . "Type de sol: Argileux, Sableux, Limoneux, Calcaire, Argilo-sableux, Argilo-limoneux, Tourbeux. "
+                . "Système d'irrigation: Goutte-à-goutte, Aspersion, Gravitaire, Pivot, Micro-aspersion, Pluvial. "
+                . "Réponds STRICTEMENT en JSON valide (pas d'autres caractères, juste le JSON) : "
+                . "{\"type_sol\": \"valeur_exacte\", \"systeme_irrigation\": \"valeur_exacte\", \"explication\": \"Justification courte\"}";
 
             $response = $this->httpClient->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
                 'headers' => [
@@ -45,8 +47,8 @@ class GroqService
                             'content' => $prompt,
                         ],
                     ],
-                    'temperature' => 0.7,
-                    'max_tokens' => 1000,
+                    'temperature' => 0.3,
+                    'max_tokens' => 500,
                 ],
             ]);
 
@@ -58,7 +60,20 @@ class GroqService
                 // Extraire le JSON de la réponse
                 preg_match('/\{.*\}/s', $content, $matches);
                 if (!empty($matches)) {
-                    return json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
+                    $result = json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
+                    
+                    // Valider que les valeurs retournées sont dans les options autorisées
+                    $typeSolOptions = ['Argileux', 'Sableux', 'Limoneux', 'Calcaire', 'Argilo-sableux', 'Argilo-limoneux', 'Tourbeux'];
+                    $irrigationOptions = ['Goutte-à-goutte', 'Aspersion', 'Gravitaire', 'Pivot', 'Micro-aspersion', 'Pluvial'];
+                    
+                    if (!in_array($result['type_sol'] ?? '', $typeSolOptions)) {
+                        $result['type_sol'] = $typeSolOptions[0]; // Défaut
+                    }
+                    if (!in_array($result['systeme_irrigation'] ?? '', $irrigationOptions)) {
+                        $result['systeme_irrigation'] = $irrigationOptions[0]; // Défaut
+                    }
+                    
+                    return $result;
                 }
             }
 
