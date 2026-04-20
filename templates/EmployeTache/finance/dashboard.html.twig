@@ -1,0 +1,815 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Finance RH — Ardhi{% endblock %}
+{% block body_class %}finance-rh-page{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   ARDHI FINANCE RH — Design système premium
+   Palette : obsidian + gold + sage + white
+══════════════════════════════════════════════════ */
+:root {
+  --obsidian: #0f1117;
+  --obsidian-2: #171c27;
+  --obsidian-3: #1e2535;
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-pale: rgba(201,168,76,.12);
+  --sage: #4a7c59;
+  --sage-light: #5d9e72;
+  --danger: #e05454;
+  --danger-pale: rgba(224,84,84,.12);
+  --success-pale: rgba(93,158,114,.12);
+  --text-1: #f0ede8;
+  --text-2: #a09a8e;
+  --text-3: #5a5550;
+  --border: rgba(255,255,255,.07);
+  --border-gold: rgba(201,168,76,.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.frh-page {
+  background: var(--obsidian);
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-1);
+  padding-bottom: 80px;
+}
+
+/* ── HERO HEADER ── */
+.frh-hero {
+  background: var(--obsidian-2);
+  border-bottom: 1px solid var(--border);
+  padding: 2.5rem 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.frh-hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(201,168,76,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.frh-breadcrumb {
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.frh-breadcrumb a { color: var(--gold); text-decoration: none; }
+.frh-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.1;
+  margin-bottom: .5rem;
+}
+.frh-title span { color: var(--gold); }
+.frh-subtitle { font-size: 14px; color: var(--text-2); }
+
+/* ── KPI STRIP ── */
+.frh-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.kpi-cell {
+  background: var(--obsidian-2);
+  padding: 1.5rem 1.25rem;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeUp .5s ease forwards;
+}
+.kpi-cell:nth-child(1) { animation-delay: .05s }
+.kpi-cell:nth-child(2) { animation-delay: .10s }
+.kpi-cell:nth-child(3) { animation-delay: .15s }
+.kpi-cell:nth-child(4) { animation-delay: .20s }
+.kpi-cell:nth-child(5) { animation-delay: .25s }
+.kpi-cell:nth-child(6) { animation-delay: .30s }
+.kpi-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: .5rem;
+}
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1;
+}
+.kpi-value.gold { color: var(--gold); }
+.kpi-value.sage { color: var(--sage-light); }
+.kpi-value.danger { color: var(--danger); }
+.kpi-unit {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+/* ── LAYOUT ── */
+.frh-body {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+.frh-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+@media(max-width: 900px) { .frh-grid-2 { grid-template-columns: 1fr; } }
+
+/* ── CARDS ── */
+.frh-card {
+  background: var(--obsidian-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeUp .6s ease forwards;
+}
+.frh-card:nth-child(1) { animation-delay: .35s }
+.frh-card:nth-child(2) { animation-delay: .45s }
+.frh-card:nth-child(3) { animation-delay: .40s }
+.frh-card:nth-child(4) { animation-delay: .50s }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.card-head-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.card-head-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.badge-gold { background: var(--gold-pale); color: var(--gold); border: 1px solid var(--border-gold); }
+.badge-sage { background: var(--success-pale); color: var(--sage-light); }
+.badge-danger { background: var(--danger-pale); color: var(--danger); }
+
+/* ── TABLE EMPLOYÉS ── */
+.frh-table { width: 100%; border-collapse: collapse; }
+.frh-table th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .75rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.frh-table td {
+  padding: .9rem 1.5rem;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.frh-table tr:last-child td { border-bottom: none; }
+.frh-table tr {
+  transition: background .15s;
+  cursor: pointer;
+}
+.frh-table tr:hover td { background: rgba(255,255,255,.03); }
+.emp-avatar-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--border-gold);
+}
+.emp-init-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gold-pale);
+  border: 1.5px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.emp-info-cell { display: flex; align-items: center; gap: 10px; }
+.emp-name { font-weight: 500; color: var(--text-1); font-size: 13px; }
+.emp-poste { font-size: 11px; color: var(--text-3); }
+.num-pos { color: var(--sage-light); font-weight: 500; }
+.num-neg { color: var(--danger); font-weight: 500; }
+.num-neutral { color: var(--text-2); }
+.contrat-pill {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+.c-cdi { background: rgba(74,124,89,.2); color: var(--sage-light); }
+.c-sais { background: rgba(186,117,23,.2); color: #ef9f27; }
+.btn-small {
+  font-size: 11px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-gold);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.btn-small:hover { background: var(--gold-pale); }
+
+/* ── BARRE DE PROGRESSION BUDGÉTAIRE ── */
+.budget-row {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  animation: fadeUp .5s ease forwards;
+}
+.budget-row:last-child { border-bottom: none; }
+.budget-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: .5rem;
+}
+.budget-task-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
+.budget-task-cat { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.budget-amounts { font-size: 12px; color: var(--text-2); text-align: right; }
+.budget-bar-track {
+  height: 4px;
+  background: var(--obsidian-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.budget-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+.bar-ok { background: var(--sage-light); }
+.bar-warn { background: var(--gold); }
+.bar-over { background: var(--danger); }
+.budget-ecart {
+  font-size: 11px;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ── CNSS BLOCK ── */
+.cnss-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+.cnss-cell {
+  background: var(--obsidian-2);
+  padding: 1.5rem;
+  text-align: center;
+}
+.cnss-pct {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--gold);
+  font-family: 'Playfair Display', serif;
+  line-height: 1;
+  margin-bottom: .25rem;
+}
+.cnss-who { font-size: 12px; color: var(--text-3); margin-bottom: .75rem; }
+.cnss-amount { font-size: 18px; font-weight: 600; color: var(--text-1); }
+.cnss-amount-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+/* ── RÉPARTITION PAR CATÉGORIE ── */
+.cat-list { padding: .75rem 0; }
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: .75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.cat-item:last-child { border-bottom: none; }
+.cat-item:hover { background: rgba(255,255,255,.02); }
+.cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cat-name { font-size: 13px; color: var(--text-2); flex: 1; }
+.cat-bar-wrap { width: 100px; }
+.cat-bar-track { height: 3px; background: var(--obsidian-3); border-radius: 2px; overflow: hidden; }
+.cat-bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+.cat-budget { font-size: 12px; font-weight: 500; color: var(--text-1); text-align: right; min-width: 80px; }
+
+/* ── MODAL BULLETIN ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: var(--obsidian-2);
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  animation: slideUp .3s ease;
+  overflow: hidden;
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--obsidian-3), var(--obsidian-2));
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--text-1);
+}
+.modal-subtitle { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color .2s;
+}
+.modal-close:hover { color: var(--text-1); }
+.modal-body { padding: 1.5rem; }
+.bulletin-row {
+  display: flex;
+  justify-content: space-between;
+  padding: .6rem 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.bulletin-row:last-child { border-bottom: none; }
+.bulletin-row.total {
+  font-weight: 600;
+  font-size: 14px;
+  padding-top: 1rem;
+  margin-top: .5rem;
+  border-top: 1px solid var(--border-gold);
+  border-bottom: none;
+}
+.bulletin-label { color: var(--text-2); }
+.bulletin-val { color: var(--text-1); font-weight: 500; }
+.bulletin-val.deduct { color: var(--danger); }
+.bulletin-val.net { color: var(--sage-light); font-size: 18px; }
+.month-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.month-selector select {
+  background: var(--obsidian-3);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--gold);
+  color: var(--obsidian);
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 1rem;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+.loading-dot { display: inline-block; animation: blink 1s infinite; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; } 50% { opacity: .3; }
+}
+
+/* ── FULL WIDTH CARD ── */
+.frh-card-full { margin-bottom: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="frh-page">
+
+  {# ── HERO ── #}
+  <div class="frh-hero">
+    <div style="max-width:1400px;margin:0 auto;padding:0 2rem">
+      <div class="frh-breadcrumb">
+        <a href="{{ path('employe_index') }}">Employés</a>
+        &nbsp;›&nbsp; Finance RH
+      </div>
+      <div class="frh-title">
+        Module <span>Finance</span> RH
+      </div>
+      <div class="frh-subtitle">
+        Masse salariale · CNSS Tunisie · Coût de revient des tâches
+      </div>
+    </div>
+  </div>
+
+  {# ── KPI STRIP ── #}
+  <div class="frh-kpis">
+    <div class="kpi-cell">
+      <div class="kpi-label">Masse salariale mensuelle</div>
+      <div class="kpi-value gold">{{ masseSalarialeMensuelle|number_format(0, '.', ' ') }}</div>
+      <div class="kpi-unit">TND / mois</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Charge CNSS employeur</div>
+      <div class="kpi-value">{{ coutCNSSEmployeur|number_format(0, '.', ' ') }}</div>
+      <div class="kpi-unit">TND / mois (16.57%)</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Coût total mensuel</div>
+      <div class="kpi-value gold">{{ coutTotalMensuel|number_format(0, '.', ' ') }}</div>
+      <div class="kpi-unit">TND tout compris</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Projection annuelle</div>
+      <div class="kpi-value">{{ chargesAnnuelles|number_format(0, '.', ' ') }}</div>
+      <div class="kpi-unit">TND charges RH/an</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Budget tâches prévu</div>
+      <div class="kpi-value sage">{{ budgetTaches|number_format(0, '.', ' ') }}</div>
+      <div class="kpi-unit">TND planifié</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Écart budget / réel</div>
+      <div class="kpi-value {% if ecartBudget > 0 %}danger{% else %}sage{% endif %}">
+        {% if ecartBudget > 0 %}+{% endif %}{{ ecartBudget|number_format(0, '.', ' ') }}
+      </div>
+      <div class="kpi-unit">TND ({% if ecartBudget > 0 %}surcoût{% else %}économie{% endif %})</div>
+    </div>
+  </div>
+
+  {# ── BODY ── #}
+  <div class="frh-body">
+
+    {# ── GRILLE 2 colonnes ── #}
+    <div class="frh-grid-2">
+
+      {# BLOC EMPLOYÉS + BULLETINS #}
+      <div class="frh-card">
+        <div class="card-head">
+          <div class="card-head-title">Masse salariale par employé</div>
+          <div class="card-head-badge badge-gold">{{ nbEmployesActifs }} actifs</div>
+        </div>
+        <table class="frh-table">
+          <thead>
+            <tr>
+              <th>Employé</th>
+              <th>Contrat</th>
+              <th>Brut/mois</th>
+              <th>Net</th>
+              <th>Coût réel</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ed in employes %}
+            <tr onclick="ouvrirBulletin({{ ed.employe.id }}, '{{ ed.employe.nomComplet }}')"
+                title="Cliquez pour voir le bulletin de paie">
+              <td>
+                <div class="emp-info-cell">
+                  {% if ed.employe.photoPath %}
+                    <img src="{{ ed.employe.photoPath }}" class="emp-avatar-sm" alt="">
+                  {% else %}
+                    <div class="emp-init-sm">
+                      {{ ed.employe.prenom|first }}{{ ed.employe.nom|first }}
+                    </div>
+                  {% endif %}
+                  <div>
+                    <div class="emp-name">{{ ed.employe.prenom }} {{ ed.employe.nom }}</div>
+                    <div class="emp-poste">{{ ed.employe.poste }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="contrat-pill {% if ed.typeContrat == 'Saisonnier' %}c-sais{% else %}c-cdi{% endif %}">
+                  {{ ed.typeContrat }}
+                </span>
+              </td>
+              <td class="num-neutral">{{ ed.salaireBrut|number_format(0, '.', ' ') }} TND</td>
+              <td class="num-pos">{{ ed.salaireNet|number_format(0, '.', ' ') }}</td>
+              <td class="num-neutral">{{ ed.coutTotal|number_format(0, '.', ' ') }}</td>
+              <td>
+                <button class="btn-small"
+                        onclick="event.stopPropagation();ouvrirBulletin({{ ed.employe.id }}, '{{ ed.employe.nomComplet }}')">
+                  Bulletin
+                </button>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-3)">
+              Aucun employé actif trouvé.
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# BLOC CNSS #}
+      <div>
+        <div class="frh-card" style="margin-bottom:1.5rem">
+          <div class="card-head">
+            <div class="card-head-title">Cotisations CNSS — Taux 2024</div>
+            <div class="card-head-badge badge-gold">Officiel Tunisie</div>
+          </div>
+          <div class="cnss-grid">
+            <div class="cnss-cell">
+              <div class="cnss-pct">9.18%</div>
+              <div class="cnss-who">Part employé</div>
+              <div class="cnss-amount">{{ coutTotalMensuel|number_format(0) }}</div>
+              <div class="cnss-amount-label">Total masse salariale TND</div>
+            </div>
+            <div class="cnss-cell">
+              <div class="cnss-pct">16.57%</div>
+              <div class="cnss-who">Part employeur</div>
+              <div class="cnss-amount">{{ coutCNSSEmployeur|number_format(0) }}</div>
+              <div class="cnss-amount-label">Charge mensuelle TND</div>
+            </div>
+          </div>
+          <div style="padding:1.25rem 1.5rem;font-size:12px;color:var(--text-3);line-height:1.6;border-top:1px solid var(--border)">
+            Décret n°2024 — Base : salaire brut mensuel.<br>
+            CNSS couvre retraite, maladie, accidents travail, allocations familiales.
+          </div>
+        </div>
+
+        {# RÉPARTITION PAR CATÉGORIE #}
+        <div class="frh-card">
+          <div class="card-head">
+            <div class="card-head-title">Budget par catégorie</div>
+          </div>
+          <div class="cat-list">
+            {% set catColors = {'Récolte':'#c9a84c','Irrigation':'#378add','Fertilisation':'#5dcaa5','Maintenance':'#888780','Plantation':'#97c459','Autre':'#5f5e5a','Administratif':'#7f77dd'} %}
+            {% set maxBudget = 1 %}
+            {% for cat, vals in parCategorie %}
+              {% if vals.budget > maxBudget %}{% set maxBudget = vals.budget %}{% endif %}
+            {% endfor %}
+            {% for cat, vals in parCategorie %}
+            <div class="cat-item">
+              <div class="cat-dot" style="background:{{ catColors[cat] ?? '#888' }}"></div>
+              <div>
+                <div class="cat-name">{{ cat }}</div>
+                <div style="font-size:11px;color:var(--text-3)">{{ vals.nb }} tâche(s)</div>
+              </div>
+              <div class="cat-bar-wrap">
+                <div class="cat-bar-track">
+                  <div class="cat-bar-fill"
+                       style="width:{{ ((vals.budget / maxBudget) * 100)|round }}%;background:{{ catColors[cat] ?? '#888' }}"></div>
+                </div>
+              </div>
+              <div class="cat-budget">
+                {{ vals.budget|number_format(0, '.', ' ') }} TND
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── COÛT DE REVIENT DES TÂCHES (full width) ── #}
+    <div class="frh-card frh-card-full">
+      <div class="card-head">
+        <div class="card-head-title">Analyse budgétaire des tâches</div>
+        <div style="display:flex;gap:8px">
+          <div class="card-head-badge badge-sage">
+            Sous budget : {{ taches|filter(t => not t.enSurbudget)|length }}
+          </div>
+          <div class="card-head-badge badge-danger">
+            Dépassement : {{ taches|filter(t => t.enSurbudget and t.budgetPrevu > 0)|length }}
+          </div>
+        </div>
+      </div>
+
+      {% for td in taches %}
+      {% if td.budgetPrevu > 0 or td.coutReel > 0 %}
+      <div class="budget-row" style="animation-delay:{{ loop.index * 0.05 + 0.6 }}s">
+        <div class="budget-row-head">
+          <div>
+            <div class="budget-task-name">{{ td.tache.titre }}</div>
+            <div class="budget-task-cat">
+              {{ td.categorie }} · {{ td.nomEmploye }} · {{ td.nbJours }} j
+              · <span class="contrat-pill {% if td.statut == 'Terminé' or td.statut == 'Validé' %}c-cdi{% elseif td.statut == 'En cours' %}c-sais{% endif %}"
+                      style="font-size:10px">
+                  {{ td.statut }}
+                </span>
+            </div>
+          </div>
+          <div class="budget-amounts">
+            <div>
+              Réel : <strong style="color:{{ td.enSurbudget ? 'var(--danger)' : 'var(--sage-light)' }}">
+                {{ td.coutReel|number_format(0, '.', ' ') }} TND
+              </strong>
+            </div>
+            {% if td.budgetPrevu > 0 %}
+            <div style="color:var(--text-3)">Prévu : {{ td.budgetPrevu|number_format(0, '.', ' ') }} TND</div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if td.budgetPrevu > 0 %}
+        {% set pct = min(100, (td.coutReel / td.budgetPrevu * 100)|round) %}
+        <div class="budget-bar-track">
+          <div class="budget-bar-fill {{ pct > 100 ? 'bar-over' : (pct > 80 ? 'bar-warn' : 'bar-ok') }}"
+               style="width:{{ pct }}%"></div>
+        </div>
+        <div class="budget-ecart {{ td.enSurbudget ? 'num-neg' : 'num-pos' }}">
+          {% if td.enSurbudget %}
+            +{{ td.ecart|number_format(0, '.', ' ') }} TND de dépassement
+            ({{ td.pctEcart|abs }}% au-dessus)
+          {% else %}
+            Économie de {{ td.ecart|abs|number_format(0, '.', ' ') }} TND ({{ td.pctEcart|abs }}%)
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="font-size:11px;color:var(--text-3);margin-top:6px">
+          Salaire ({{ td.salaireJ }} TND/j × {{ td.nbJours }} j) = {{ td.coutSalaire|number_format(0) }} TND
+          {% if td.coutMateriel > 0 %}
+          · Matériaux = {{ td.coutMateriel|number_format(0) }} TND
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+  </div>{# /frh-body #}
+</div>{# /frh-page #}
+
+{# ══════════════════════════════════════════
+   MODAL BULLETIN DE PAIE
+══════════════════════════════════════════ #}
+<div class="modal-overlay" id="bulletinModal" onclick="fermerModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalNom">Bulletin de paie</div>
+        <div class="modal-subtitle" id="modalSub">Calcul CNSS Tunisie 2024</div>
+      </div>
+      <button class="modal-close" onclick="fermerModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="month-selector">
+        <select id="selMois">
+          {% for m in 1..12 %}
+          <option value="{{ m }}" {% if m == 'now'|date('n') %}selected{% endif %}>
+            {{ ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][m] }}
+          </option>
+          {% endfor %}
+        </select>
+        <select id="selAnnee">
+          {% for y in [2023,2024,2025,2026] %}
+          <option value="{{ y }}" {% if y == 'now'|date('Y') %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn-small" onclick="chargerBulletin()">Calculer</button>
+      </div>
+
+      <div id="bulletinContent" style="min-height:200px">
+        <div style="text-align:center;padding:3rem;color:var(--text-3)">
+          Sélectionnez le mois et cliquez sur Calculer
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+let currentEmpId = null;
+
+function ouvrirBulletin(id, nom) {
+  currentEmpId = id;
+  document.getElementById('modalNom').textContent = nom;
+  document.getElementById('modalSub').textContent = 'Bulletin de paie — CNSS Tunisie 2024';
+  document.getElementById('bulletinContent').innerHTML =
+    '<div style="text-align:center;padding:3rem;color:var(--text-3)">Sélectionnez le mois et cliquez sur Calculer</div>';
+  document.getElementById('bulletinModal').classList.add('active');
+}
+
+function fermerModal(e) {
+  if (!e || e.target === document.getElementById('bulletinModal')) {
+    document.getElementById('bulletinModal').classList.remove('active');
+  }
+}
+
+function chargerBulletin() {
+  if (!currentEmpId) return;
+  const mois  = document.getElementById('selMois').value;
+  const annee = document.getElementById('selAnnee').value;
+  const content = document.getElementById('bulletinContent');
+
+  content.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--gold)"><span class="loading-dot">●</span></div>';
+
+  fetch(`/finance-rh/bulletin/${currentEmpId}?mois=${mois}&annee=${annee}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) {
+        content.innerHTML = `<div style="text-align:center;color:var(--danger);padding:2rem">${d.error}</div>`;
+        return;
+      }
+      const f = v => parseFloat(v).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      content.innerHTML = `
+        <div style="margin-bottom:.75rem;padding:.75rem 1rem;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:10px;font-size:13px">
+          <span style="color:var(--text-3)">Période :</span> <strong style="color:var(--gold)">${d.mois} ${d.annee}</strong>
+          &nbsp;·&nbsp; <span style="color:var(--text-3)">Jours ouvrables :</span> <strong>${d.nbJoursTravailles}</strong>
+          &nbsp;·&nbsp; <span class="contrat-pill ${d.typeContrat === 'CDI' ? 'c-cdi' : 'c-sais'}" style="font-size:10px">${d.typeContrat}</span>
+        </div>
+        <div class="bulletin-row">
+          <span class="bulletin-label">Salaire journalier</span>
+          <span class="bulletin-val">${f(d.salaireJournalier)} TND</span>
+        </div>
+        <div class="bulletin-row">
+          <span class="bulletin-label">Salaire brut (${d.nbJoursTravailles} j)</span>
+          <span class="bulletin-val">${f(d.salaireBrut)} TND</span>
+        </div>
+        <div class="bulletin-row">
+          <span class="bulletin-label">CNSS employé (${d.tauxCNSSEmp.toFixed(2)}%)</span>
+          <span class="bulletin-val deduct">− ${f(d.cnssEmploye)} TND</span>
+        </div>
+        <div class="bulletin-row">
+          <span class="bulletin-label">IRPP (barème mensuel)</span>
+          <span class="bulletin-val deduct">− ${f(d.irpp)} TND</span>
+        </div>
+        <div class="bulletin-row total">
+          <span class="bulletin-label" style="color:var(--sage-light)">Salaire net à payer</span>
+          <span class="bulletin-val net">${f(d.salaireNet)} TND</span>
+        </div>
+        <div style="margin-top:1rem;padding:1rem;background:var(--danger-pale);border-radius:8px;font-size:12px;color:var(--text-2)">
+          <strong style="color:var(--text-1)">Charge employeur totale :</strong>
+          ${f(d.coutTotalEmpl)} TND
+          <span style="color:var(--text-3)">(brut + CNSS employeur ${d.tauxCNSSEmpr.toFixed(2)}% = ${f(d.cnssEmployeur)} TND)</span>
+        </div>
+      `;
+    })
+    .catch(() => {
+      content.innerHTML = '<div style="text-align:center;color:var(--danger);padding:2rem">Erreur de connexion</div>';
+    });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fermerModal();
+});
+</script>
+{% endblock %}

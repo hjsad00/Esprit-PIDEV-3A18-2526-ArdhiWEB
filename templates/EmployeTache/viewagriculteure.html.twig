@@ -22,6 +22,7 @@
             padding: 0 4px;
             vertical-align: middle;
             animation: pulse-badge 1.5s ease-in-out infinite;
+
         }
         @keyframes pulse-badge {
             0%, 100% { transform: scale(1); }
@@ -85,6 +86,14 @@
             margin-left: 8px;
             margin-right: 0;
         }
+        .category-item--finance:hover {
+          border-left-color: #c9a84c !important;
+        }
+        .category-item--finance:hover .category-icon {
+          transform: scale(1.05);
+          transition: transform .2s;
+        }
+
     </style>
 {% endblock %}
 
@@ -147,6 +156,16 @@
               </a>
 
               {# GESTION EMPLOYES — FIN DE LISTE #}
+              <a href="{{ path('finance_rh_dashboard') }}" class="category-item category-item--finance">
+                <div class="category-icon" style="background:rgba(201,168,76,.15);color:#c9a84c">
+                  <i class="bi bi-currency-exchange"></i>
+                </div>
+                <div class="category-text">
+                  <h4>Finance RH</h4>
+                  <span>Paie · CNSS · Coûts</span>
+                </div>
+              </a>
+
             </div>
 
           </div>
