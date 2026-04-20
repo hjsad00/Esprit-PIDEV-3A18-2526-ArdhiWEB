@@ -52,6 +52,15 @@ class ParcelleFarmerController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $parcelle->setAgriculteur($this->getUser());
+            
+            // Sauvegarder le GeoJSON du polygone
+            if ($request->request->has('polygon_geojson_data')) {
+                $geojsonData = $request->request->get('polygon_geojson_data');
+                if ($geojsonData) {
+                    $parcelle->setPolygonGeojson(json_decode($geojsonData, true));
+                }
+            }
+            
             $this->em->persist($parcelle);
             $this->em->flush();
 
@@ -78,6 +87,14 @@ class ParcelleFarmerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Sauvegarder le GeoJSON du polygone
+            if ($request->request->has('polygon_geojson_data')) {
+                $geojsonData = $request->request->get('polygon_geojson_data');
+                if ($geojsonData) {
+                    $parcelle->setPolygonGeojson(json_decode($geojsonData, true));
+                }
+            }
+            
             $parcelle->setUpdatedAt(new \DateTimeImmutable());
             $this->em->flush();
             $this->addFlash('success', 'Parcelle modifiée avec succès.');
