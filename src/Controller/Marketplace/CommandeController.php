@@ -9,6 +9,7 @@ use App\Repository\Marketplace\NotifMarketRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
+use App\Service\Marketplace\CommandeInvoicePdfGenerator;
 use App\Service\Marketplace\WishlistNotificationService;
 use App\Service\Marketplace\OrderEmailService;
 use App\Service\Marketplace\StripeCheckoutService;
@@ -22,8 +23,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use Karser\Recaptcha3Bundle\Validator\Constraints\Recaptcha3;
 
 /**
@@ -755,7 +754,11 @@ class CommandeController extends AbstractController
      * Génère et télécharge la facture PDF d'une commande
      */
     #[Route('/marketplace/commande/{id}/facture-pdf', name: 'app_marketplace_commande_pdf')]
-    public function facturePdf(Commande $commande, MarketplaceQrService $marketplaceQrService, EntityManagerInterface $em): Response
+    public function facturePdf(
+        Commande $commande,
+        MarketplaceQrService $marketplaceQrService,
+        CommandeInvoicePdfGenerator $commandeInvoicePdfGenerator
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -788,33 +791,11 @@ class CommandeController extends AbstractController
             }
         }
 
-        // Options PDF
-        $pdfOptions = new Options();
-        $pdfOptions->set('defaultFont', 'Arial');
-        $pdfOptions->set('isRemoteEnabled', true); // Pour autoriser les images externes / liées
-        $pdfOptions->set('isPhpEnabled', true);    // Requis pour <script type="text/php"> (numérotation des pages)
-
-        // Instanciation de Dompdf
-        $dompdf = new Dompdf($pdfOptions);
-
-        // Récupérer le HTML depuis Twig
-        $html = $this->renderView('Marketplace/pdf_facture.html.twig', [
-            'commande' => $commande,
-            'productQrCodes' => $productQrCodes
-        ]);
-
-        // Charger le HTML en Dompdf
-        $dompdf->loadHtml($html);
-
-        // (Optionnel) Format de papier et orientation
-        $dompdf->setPaper('A4', 'portrait');
-
-        // Générer le PDF (en mémoire)
-        $dompdf->render();
+        $pdfContent = $commandeInvoicePdfGenerator->generate($commande, $productQrCodes);
 
         // Renvoyer le PDF pour le saut vers le téléchargement
         return new Response(
-            $dompdf->output(),
+            $pdfContent,
             200,
             array(
                 'Content-Type' => 'application/pdf',
