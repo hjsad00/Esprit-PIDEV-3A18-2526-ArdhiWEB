@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Attestation de Présence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f7faf5;
+            width: 595px;
+            height: 842px;
+            position: relative;
+        }
+
+        .certificate-border {
+            position: absolute;
+            top: 28px;
+            left: 28px;
+            right: 28px;
+            bottom: 28px;
+            background-color: #1f7054;
+            border-radius: 4px;
+        }
+
+        .certificate-inner {
+            position: absolute;
+            top: 42px;
+            left: 42px;
+            right: 42px;
+            bottom: 42px;
+            background-color: #fcfcfa;
+            border-radius: 2px;
+            padding: 30px 50px;
+        }
+
+        .logo {
+            text-align: center;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            color: #47705a;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+
+        .header-block {
+            background-color: #e0edde;
+            border-radius: 6px;
+            padding: 24px 30px;
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header-title {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 26px;
+            color: #1c4a38;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header-subtitle {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #577364;
+        }
+
+        .body-section {
+            margin-bottom: 30px;
+        }
+
+        .certify-text {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            color: #4d6158;
+            margin-bottom: 12px;
+        }
+
+        .participant-name {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 24px;
+            color: #1f3d33;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .participated-text {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            color: #365245;
+            margin-bottom: 18px;
+        }
+
+        .event-title {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 20px;
+            color: #214770;
+            margin-bottom: 28px;
+        }
+
+        .details-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 30px 0;
+        }
+
+        .details-list li {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            color: #40524a;
+            padding: 6px 0;
+            line-height: 1.6;
+        }
+
+        .details-list li strong {
+            color: #2c3e36;
+        }
+
+        .footer-block {
+            background-color: #f2e6c9;
+            border-radius: 6px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+        }
+
+        .reference {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 15px;
+            color: #735421;
+            margin-bottom: 10px;
+        }
+
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-row .date,
+        .footer-row .signature {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #6b5c3a;
+        }
+
+        .closing {
+            margin-top: 20px;
+        }
+
+        .closing p {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #577364;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-border"></div>
+    <div class="certificate-inner">
+        <div class="logo">ARDHI</div>
+
+        <div class="header-block">
+            <div class="header-title">ATTESTATION DE PRÉSENCE</div>
+            <div class="header-subtitle">Document officiel de participation aux événements Ardhi</div>
+        </div>
+
+        <div class="body-section">
+            <p class="certify-text">Cette attestation certifie que</p>
+            <p class="participant-name">{{ participantName }}</p>
+            <p class="participated-text">a effectivement participé à l'événement suivant :</p>
+            <p class="event-title">{{ eventTitle }}</p>
+
+            <ul class="details-list">
+                <li><strong>Lieu :</strong> {{ location }}</li>
+                <li><strong>Dates :</strong> {{ dates }}</li>
+                <li><strong>Organisateur :</strong> {{ organizer }}</li>
+            </ul>
+        </div>
+
+        <div class="footer-block">
+            <div class="reference">Référence : {{ reference }}</div>
+            <div class="footer-row">
+                <span class="date">Date d'émission : {{ issuedAt }}</span>
+                <span class="signature">Signature : Ardhi Événements</span>
+            </div>
+        </div>
+
+        <div class="closing">
+            <p>Merci pour votre engagement et votre présence.</p>
+            <p>Cette attestation a été générée automatiquement par la plateforme Ardhi.</p>
+        </div>
+    </div>
+</body>
+</html>
