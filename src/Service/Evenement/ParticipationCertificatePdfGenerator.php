@@ -3,13 +3,13 @@
 namespace App\Service\Evenement;
 
 use App\Entity\Evenement\Participation;
-use Knp\Snappy\Pdf;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Twig\Environment;
 
 class ParticipationCertificatePdfGenerator
 {
     public function __construct(
-        private Pdf $snappy,
         private Environment $twig,
     ) {}
 
@@ -40,15 +40,16 @@ class ParticipationCertificatePdfGenerator
             'reference' => $reference,
         ]);
 
-        return $this->snappy->getOutputFromHtml($html, [
-            'page-size' => 'A4',
-            'orientation' => 'Portrait',
-            'encoding' => 'UTF-8',
-            'no-outline' => true,
-            'margin-top' => '0',
-            'margin-right' => '0',
-            'margin-bottom' => '0',
-            'margin-left' => '0',
-        ]);
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return $dompdf->output();
     }
 }
