@@ -66,6 +66,8 @@ dashboard:
         maintenance_desc: 'إدارة المعدات'
         notifications: الإشعارات
         notifications_desc: 'التنبيهات والرسائل'
+        finance: 'المالية والموارد البشرية'
+        finance_desc: 'الرواتب · الضمان · التكاليف'
     nav:
         diagnostic: 'تشخيص IA'
         marketplace: السوق

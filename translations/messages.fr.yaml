@@ -66,6 +66,8 @@ dashboard:
         maintenance_desc: 'Gestion matériel'
         notifications: Notifications
         notifications_desc: 'Alertes et messages'
+        finance: 'Finance RH'
+        finance_desc: 'Paie · CNSS · Coûts'
     nav:
         diagnostic: 'Diagnostic IA'
         marketplace: Marketplace
