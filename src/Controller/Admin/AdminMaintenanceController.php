@@ -239,7 +239,16 @@ class AdminMaintenanceController extends AbstractController
             $notif->setNouveauStatut('en_attente');
 
             // --- Envoi E-mail ---
-            $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            try {
+                $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            } catch (\Throwable $e) {
+                $logger->error('Erreur lors de l\'envoi email maintenance urgente.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'user_id' => $user->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+                $this->addFlash('warning', 'Décision enregistrée, mais l\'e-mail n\'a pas pu être envoyé.');
+            }
 
             // --- Envoi WhatsApp (uniquement pour décision urgente) ---
             $phone = $user->getPhone();
@@ -273,7 +282,16 @@ class AdminMaintenanceController extends AbstractController
             $notif->setNouveauStatut('en_cours');
 
             // --- Envoi E-mail ---
-            $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            try {
+                $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            } catch (\Throwable $e) {
+                $logger->error('Erreur lors de l\'envoi email planification maintenance.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'user_id' => $user->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+                $this->addFlash('warning', 'Décision enregistrée, mais l\'e-mail n\'a pas pu être envoyé.');
+            }
 
         } else {
             $this->addFlash('danger', 'Type de réponse invalide.');

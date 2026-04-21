@@ -42,6 +42,12 @@ services:
             $token: '%app.twilio_token%'
             $from: '%app.twilio_whatsapp_number%'
 
+    App\Service\MaterielEtMaintenance\WhatsAppService:
+        arguments:
+            $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
+            $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
+            $twilioFrom: '%env(resolve:MATERIEL_TWILIO_FROM)%'
+
     App\Service\EmployeTache\UrgentNotificationService:
         arguments:
             $twilioSid: '%env(TWILIO_SID)%'
