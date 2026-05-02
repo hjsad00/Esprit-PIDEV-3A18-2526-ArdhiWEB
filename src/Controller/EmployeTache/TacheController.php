@@ -63,12 +63,12 @@ class TacheController extends AbstractController
         // ✅ Synchronisation automatique à chaque affichage de la liste
         $this->autoInactif->synchroniserStatuts($idAgriculteur);
 
-        $search    = $request->query->get('search', '');
-        $statut    = $request->query->get('statut', 'Tous');
-        $priorite  = $request->query->get('priorite', 'Toutes');
-        $categorie = $request->query->get('categorie', 'Toutes');
-        $tri       = $request->query->get('tri', 'dateDebut');
-        $direction = $request->query->get('direction', 'asc');
+        $search    = (string) $request->query->get('search', '');
+        $statut    = (string) $request->query->get('statut', 'Tous');
+        $priorite  = (string) $request->query->get('priorite', 'Toutes');
+        $categorie = (string) $request->query->get('categorie', 'Toutes');
+        $tri       = (string) $request->query->get('tri', 'dateDebut');
+        $direction = (string) $request->query->get('direction', 'asc');
 
         if (!in_array($tri, self::TRIS_VALIDES, true)) $tri = 'dateDebut';
         $direction = $direction === 'desc' ? 'desc' : 'asc';
@@ -119,7 +119,7 @@ class TacheController extends AbstractController
         $employes = $empRepo->findByAgriculteur($idAgriculteur);
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('tache_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('tache_new');
             }
@@ -199,7 +199,7 @@ class TacheController extends AbstractController
         $etaitCritique = ($tache->getPriorite() === 4);
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('tache_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('tache_edit', ['id' => $id]);
             }
@@ -269,7 +269,7 @@ class TacheController extends AbstractController
 
         $tache = $repo->find($id);
         if ($tache && $tache->getIdAgriculteur() === $idAgriculteur
-            && $this->isCsrfTokenValid('delete' . $id, $request->request->get('_token'))) {
+            && $this->isCsrfTokenValid('delete' . $id, (string) $request->request->get('_token'))) {
 
             $titre     = $tache->getTitre();
             $employeId = $tache->getIdEmploye(); // ✅ Mémoriser avant suppression
@@ -666,6 +666,10 @@ class TacheController extends AbstractController
 
     // ── Validation ────────────────────────────────────────────────────
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, string>
+     */
     private function validerDonnees(array $data, ValidatorInterface $validator): array
     {
         $errors = [];
@@ -674,24 +678,24 @@ class TacheController extends AbstractController
             new Assert\NotBlank(message: 'Le titre est obligatoire.'),
             new Assert\Length(max: 200, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.'),
         ]);
-        if (count($v)) $errors['titre'] = $v[0]->getMessage();
+        if (count($v)) $errors['titre'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['description'], [
             new Assert\NotBlank(message: 'La description est obligatoire.'),
         ]);
-        if (count($v)) $errors['description'] = $v[0]->getMessage();
+        if (count($v)) $errors['description'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['statut'], [
             new Assert\NotBlank(message: 'Le statut est obligatoire.'),
             new Assert\Choice(choices: Tache::STATUTS, message: 'Statut invalide.'),
         ]);
-        if (count($v)) $errors['statut'] = $v[0]->getMessage();
+        if (count($v)) $errors['statut'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['priorite'], [
             new Assert\NotBlank(message: 'La priorité est obligatoire.'),
             new Assert\Choice(choices: [1, 2, 3, 4], message: 'Priorité invalide.'),
         ]);
-        if (count($v)) $errors['priorite'] = $v[0]->getMessage();
+        if (count($v)) $errors['priorite'] = (string) $v[0]?->getMessage();
 
         if ($data['dateDebut'] === null) {
             $errors['dateDebut'] = 'La date de début est obligatoire.';
@@ -709,20 +713,23 @@ class TacheController extends AbstractController
         return $errors;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function extractFormData(Request $r): array
     {
         $dateDebut = null;
         $dateFin   = null;
         if ($r->request->get('dateDebut')) {
-            try { $dateDebut = new \DateTime($r->request->get('dateDebut')); } catch (\Exception) {}
+            try { $dateDebut = new \DateTime((string) $r->request->get('dateDebut')); } catch (\Exception) {}
         }
         if ($r->request->get('dateFin')) {
-            try { $dateFin = new \DateTime($r->request->get('dateFin')); } catch (\Exception) {}
+            try { $dateFin = new \DateTime((string) $r->request->get('dateFin')); } catch (\Exception) {}
         }
 
         return [
-            'titre'       => trim($r->request->get('titre', '')),
-            'description' => trim($r->request->get('description', '')),
+            'titre'       => trim((string) $r->request->get('titre', '')),
+            'description' => trim((string) $r->request->get('description', '')),
             'statut'      => $r->request->get('statut', Tache::STATUT_EN_ATTENTE),
             'priorite'    => $r->request->get('priorite') ? (int)$r->request->get('priorite') : null,
             'categorie'   => $r->request->get('categorie') ?: 'Plantation',
@@ -732,6 +739,9 @@ class TacheController extends AbstractController
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function hydraterTache(Tache $tache, array $data): void
     {
         $tache->setTitre($data['titre']);
