@@ -52,7 +52,7 @@ class ChatbotService
 
     public function traiterMessage(string $messageUtilisateur, int $idAgriculteur, ?string $lastIntent = null): ChatbotResponse
     {
-        $normalized = $this->mlClassifier->normalize($messageUtilisateur ?? '');
+        $normalized = $this->mlClassifier->normalize($messageUtilisateur);
         $lang       = $this->detecterLangue($messageUtilisateur, $normalized);
         $intention  = $this->mlClassifier->predict($normalized);
 
@@ -161,7 +161,7 @@ class ChatbotService
             $actives = $this->findTachesActives($idAgriculteur);
             foreach ($actives as $t) {
                 $response->suggestions[] = [
-                    'text'   => $t->getTitre(),
+                    'text'   => $t->getTitre() ?? '',
                     'msg'    => "Tâche #" . $t->getId(),
                     'action' => 'RECOMMANDER_EMPLOYE'
                 ];
@@ -548,7 +548,7 @@ class ChatbotService
         $dispos   = [];
 
         foreach ($employes as $emp) {
-            $nb = $this->tacheRepository->countTachesActivesParEmploye($emp->getId(), $idAgriculteur);
+            $nb = $this->tacheRepository->countTachesActivesParEmploye((int) $emp->getId(), $idAgriculteur);
 
             [$statut, $color, $dot] = match (true) {
                 $nb === 0   => [$this->translator->trans('status.available', [], null, $lang), '#27ae60', '🟢'],

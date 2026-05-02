@@ -109,7 +109,7 @@ class PerformanceService
         $classement = [];
 
         foreach ($employes as $employe) {
-            $perf               = $this->calculatePerformance($employe->getId());
+            $perf               = $this->calculatePerformance((int) $employe->getId());
             $perf['nomEmploye'] = $employe->getNomComplet();
             $classement[]       = $perf;
         }

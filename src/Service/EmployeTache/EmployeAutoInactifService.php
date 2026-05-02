@@ -38,7 +38,7 @@ class EmployeAutoInactifService
         $desactives = 0;
 
         foreach ($employes as $employe) {
-            $aTacheActive = $this->aTacheActive($employe->getId(), $idAgriculteur);
+            $aTacheActive = $this->aTacheActive((int) $employe->getId(), $idAgriculteur);
 
             if ($aTacheActive && !$employe->isActif()) {
                 // Réactivation automatique

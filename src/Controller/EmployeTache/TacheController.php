@@ -384,7 +384,7 @@ class TacheController extends AbstractController
             $pdf->SetFont('dejavusans', 'B', 16);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->SetXY($x, $y + 1);
-            $pdf->Cell($boxW, 8, $kpi['value'], 0, 0, 'C');
+            $pdf->Cell($boxW, 8, (string) $kpi['value'], 0, 0, 'C');
             $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetXY($x, $y + 8);
             $pdf->Cell($boxW, 6, $kpi['label'], 0, 0, 'C');
@@ -424,8 +424,8 @@ class TacheController extends AbstractController
                 $rowIndex % 2 === 0 ? 250 : 255,
                 $rowIndex % 2 === 0 ? 245 : 255
             );
-            $pdf->Cell(12, 7, $tache->getId(), 1, 0, 'C', true);
-            $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre(), 0, 28, '...'), 1, 0, 'L', true);
+            $pdf->Cell(12, 7, (string) $tache->getId(), 1, 0, 'C', true);
+            $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre() ?? '', 0, 28, '...'), 1, 0, 'L', true);
             $pdf->Cell(50, 7, mb_strimwidth($tache->getDescription() ?? '-', 0, 35, '...'), 1, 0, 'L', true);
 
             $statusKey = match($tache->getStatut()) {

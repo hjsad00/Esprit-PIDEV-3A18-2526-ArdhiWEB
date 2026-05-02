@@ -64,7 +64,8 @@ class AgriculteurContextService
 
         // Agriculteur connecté → son propre ID
         if (in_array('ROLE_AGRICULTEUR', $roles, true)) {
-            return $user?->getId();
+            /** @var \App\Entity\UserAndDiag\User $user */
+            return $user->getId();
         }
 
         return null;

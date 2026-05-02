@@ -85,7 +85,7 @@ class EmployeController extends AbstractController
         $performanceMap = [];
         $perfSort = [];
         foreach ($employes as $emp) {
-            $perf = $this->performanceService->calculatePerformance($emp->getId());
+            $perf = $this->performanceService->calculatePerformance((int) $emp->getId());
             $performanceMap[$emp->getId()] = $perf;
             if ($emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
                 $perfSort[] = ['emp' => $emp, 'perf' => $perf];
@@ -365,10 +365,10 @@ class EmployeController extends AbstractController
         foreach ($employes as $i => $emp) {
             $pdf->SetFillColor($i % 2 === 0 ? 245 : 255, $i % 2 === 0 ? 250 : 255, $i % 2 === 0 ? 245 : 255);
 
-            $pdf->Cell(15, 7, $emp->getId(), 1, 0, 'C', true);
-            $pdf->Cell(40, 7, $emp->getNom(), 1, 0, 'L', true);
-            $pdf->Cell(40, 7, $emp->getPrenom(), 1, 0, 'L', true);
-            $pdf->Cell(60, 7, $emp->getEmail(), 1, 0, 'L', true);
+            $pdf->Cell(15, 7, (string) $emp->getId(), 1, 0, 'C', true);
+            $pdf->Cell(40, 7, $emp->getNom() ?? '', 1, 0, 'L', true);
+            $pdf->Cell(40, 7, $emp->getPrenom() ?? '', 1, 0, 'L', true);
+            $pdf->Cell(60, 7, $emp->getEmail() ?? '', 1, 0, 'L', true);
             $pdf->Cell(40, 7, $emp->getPoste() ?? '-', 1, 0, 'L', true);
             $pdf->Cell(35, 7, $emp->getTelephone() ?? '-', 1, 0, 'C', true);
 
@@ -497,7 +497,9 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException('Employé introuvable.');
         }
 
-        $publicDir = (string) $params->get('kernel.project_dir') . '/public';
+        /** @var string $projectDir */
+        $projectDir = $params->get('kernel.project_dir');
+        $publicDir = $projectDir . '/public';
         $pdfContent = $fichePdfService->genererFichePdf($employe, $publicDir);
 
         return new Response(
@@ -615,7 +617,9 @@ class EmployeController extends AbstractController
                                   int $idEmploye): ?string
     {
         try {
-            $dir = (string) $this->getParameter('kernel.project_dir') . '/public/uploads/employes/';
+            /** @var string $projectDir */
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $dir = $projectDir . '/public/uploads/employes/';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
             $filename = 'EMP_' . $idEmploye . '_' . time() . '.' . $file->guessExtension();
             $file->move($dir, $filename);
