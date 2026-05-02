@@ -2,6 +2,8 @@
 
 namespace App\Service\EmployeTache;
 
+use App\Entity\EmployeTache\Employe;
+use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Repository\EmployeTache\TacheRepository;
 
@@ -44,6 +46,9 @@ class FinanceRHService
     //  DASHBOARD FINANCIER GLOBAL
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getDashboardFinancier(int $idAgriculteur): array
     {
         $employes = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
@@ -135,6 +140,9 @@ class FinanceRHService
     //  BULLETIN DE PAIE D'UN EMPLOYÉ
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<string, mixed>
+     */
     public function genererBulletinPaie(int $idEmploye, int $mois, int $annee): array
     {
         $emp       = $this->employeRepo->find($idEmploye);
@@ -173,7 +181,11 @@ class FinanceRHService
     //  COÛT DE REVIENT D'UNE TÂCHE
     // ══════════════════════════════════════════════════════════════════
 
-    public function analyserCoutTache(object $tache, array $employes): array
+    /**
+     * @param Employe[] $employes
+     * @return array<string, mixed>
+     */
+    public function analyserCoutTache(Tache $tache, array $employes): array
     {
         $nbJours = 0;
         if ($tache->getDateDebut() && $tache->getDateFin()) {
@@ -220,40 +232,26 @@ class FinanceRHService
     //  HELPERS PRIVÉS
     // ══════════════════════════════════════════════════════════════════
 
-    private function getSalaireJournalier(object $emp): float
+    private function getSalaireJournalier(Employe $emp): float
     {
-        // Si colonne salaire_journalier existe et est renseignée
-        if (method_exists($emp, 'getSalaireJournalier') && $emp->getSalaireJournalier() > 0) {
-            return (float) $emp->getSalaireJournalier();
-        }
-        // Sinon : référence par poste
         $poste = $emp->getPoste() ?? '';
         return self::SALAIRES_REFERENCE[$poste] ?? 40.0;
     }
 
-    private function getTypeContrat(object $emp): string
+    private function getTypeContrat(Employe $emp): string
     {
-        if (method_exists($emp, 'getTypeContrat') && $emp->getTypeContrat()) {
-            return $emp->getTypeContrat();
-        }
         $poste = $emp->getPoste() ?? '';
-        return in_array($poste, ['Ouvrier agricole', 'Ouvrière', 'Resp. récolte'])
+        return in_array($poste, ['Ouvrier agricole', 'Ouvrière', 'Resp. récolte'], true)
             ? 'Saisonnier' : 'CDI';
     }
 
-    private function getBudgetPrevu(object $tache): float
+    private function getBudgetPrevu(Tache $tache): float
     {
-        if (method_exists($tache, 'getBudgetPrevu') && $tache->getBudgetPrevu() !== null) {
-            return (float) $tache->getBudgetPrevu();
-        }
         return 0.0;
     }
 
-    private function getCoutMateriel(object $tache): float
+    private function getCoutMateriel(Tache $tache): float
     {
-        if (method_exists($tache, 'getCoutMateriel') && $tache->getCoutMateriel() !== null) {
-            return (float) $tache->getCoutMateriel();
-        }
         return 0.0;
     }
 
@@ -282,8 +280,9 @@ class FinanceRHService
         $total = 0;
         $jours = cal_days_in_month(CAL_GREGORIAN, $mois, $annee);
         for ($j = 1; $j <= $jours; $j++) {
-            $dow = (int) date('N', mktime(0, 0, 0, $mois, $j, $annee));
-            if ($dow < 6) $total++; // Lun–Ven
+            $ts  = mktime(0, 0, 0, $mois, $j, $annee);
+            $dow = $ts !== false ? (int) date('N', $ts) : 0;
+            if ($dow >= 1 && $dow < 6) $total++; // Lun–Ven
         }
         return $total;
     }

@@ -105,11 +105,11 @@ class GeminiChatbotService
         $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
         $actives = array_filter(
             $taches,
-            fn($t) => !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
+            fn($t) => !in_array(strtolower($t->getStatut()), $statuts_termines, true)
         );
         $tacheList = '';
         foreach (array_slice($actives, 0, 8) as $t) {
-            $tacheList .= sprintf("- #%d : %s (%s)\n", $t->getId(), $t->getTitre(), $t->getStatut() ?? 'en attente');
+            $tacheList .= sprintf("- #%d : %s (%s)\n", $t->getId(), $t->getTitre(), $t->getStatut());
         }
         if (empty($tacheList)) {
             $tacheList = "- Aucune tâche active\n";

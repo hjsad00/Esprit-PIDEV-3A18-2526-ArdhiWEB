@@ -3,6 +3,7 @@
 namespace App\Service\EmployeTache;
 
 use App\Entity\EmployeTache\Notification;
+use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\NotificationRepository;
 use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
@@ -61,6 +62,7 @@ class NotificationService
     private function analyserRetards(int $idAgriculteur): void
     {
         $today  = new \DateTime('today');
+        /** @var Tache[] $taches */
         $taches = $this->tacheRepo->findByAgriculteur($idAgriculteur);
 
         foreach ($taches as $tache) {
@@ -69,15 +71,15 @@ class NotificationService
             $dateFin = $tache->getDateFin();
             if (!$dateFin) continue;
 
-            $finDate = $dateFin instanceof \DateTimeInterface
-                ? \DateTime::createFromInterface($dateFin)
-                : new \DateTime($dateFin);
+            $finDate = \DateTime::createFromInterface($dateFin);
 
             // Tâche en retard
             if ($finDate < $today) {
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
                 if (!$this->notifRepo->existsTodayForTache(
                     Notification::TYPE_TACHE_RETARD,
-                    $tache->getId(),
+                    $tacheId,
                     $idAgriculteur
                 )) {
                     $jours = (int) $today->diff($finDate)->days;
@@ -93,7 +95,7 @@ class NotificationService
                         $titre,
                         $message,
                         $idAgriculteur,
-                        $tache->getId(),
+                        $tacheId,
                         $tache->getIdEmploye()
                     );
 
@@ -110,9 +112,11 @@ class NotificationService
 
             // Tâche bloquée (En cours, non modifiée depuis > 2 jours)
             if ($this->estEnCours($tache) && !$this->modificationRecente($tache)) {
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
                 if (!$this->notifRepo->existsTodayForTache(
                     Notification::TYPE_TACHE_BLOQUEE,
-                    $tache->getId(),
+                    $tacheId,
                     $idAgriculteur
                 )) {
                     $this->creer(
@@ -121,7 +125,7 @@ class NotificationService
                         $this->translator->trans('notification.types.task_blocked', ['%title%' => $tache->getTitre()]),
                         $this->translator->trans('notification.messages.blocked_detail'),
                         $idAgriculteur,
-                        $tache->getId(),
+                        $tacheId,
                         $tache->getIdEmploye()
                     );
                 }
@@ -152,6 +156,7 @@ class NotificationService
 
         // ✅ FIX BUG 3 : findTachesDuJour() remplacé par une méthode sûre
         // On cherche les tâches actives (En cours + En attente) de l'agriculteur
+        /** @var Tache[] $taches */
         $taches = $this->getTachesActivesAujourdhui($idAgriculteur);
 
         // Étape B : notifications liées aux tâches spécifiques
@@ -170,15 +175,17 @@ class NotificationService
                 $niveau    = $reco->getNiveau();
 
                 // Anti-spam : 1 notif par type / tâche / jour
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
                 if ($this->notifRepo->existsTodayForTache(
                     $notifType,
-                    $tache->getId(),
+                    $tacheId,
                     $idAgriculteur
                 )) {
                     continue;
                 }
 
-                [$priorite, $titre] = $this->resoudreNiveau($niveau, $tache->getTitre(), $tache->getCategorie());
+                [$priorite, $titre] = $this->resoudreNiveau($niveau, $tache->getTitre() ?? '', $tache->getCategorie());
 
                 $this->creer(
                     $notifType,
@@ -186,7 +193,7 @@ class NotificationService
                     $titre,
                     $reco->getMessage(),
                     $idAgriculteur,
-                    $tache->getId(),
+                    $tacheId,
                     $tache->getIdEmploye()
                 );
             }
@@ -235,6 +242,9 @@ class NotificationService
     /**
      * Résout priorité + titre selon le niveau de risque météo.
      */
+    /**
+     * @return array{string, string}
+     */
     private function resoudreNiveau(
         string  $niveau,
         string  $titreTache,
@@ -274,23 +284,17 @@ class NotificationService
      * Priorité : tâches dont la date de début = aujourd'hui ou passée
      * ET date de fin = aujourd'hui ou future (pas encore terminées).
      */
+    /**
+     * @return Tache[]
+     */
     private function getTachesActivesAujourdhui(int $idAgriculteur): array
     {
-        // Essayer findTachesDuJour() si elle existe dans le repo
-        if (method_exists($this->tacheRepo, 'findTachesDuJour')) {
-            try {
-                return $this->tacheRepo->findTachesDuJour($idAgriculteur);
-            } catch (\Throwable $e) {
-                // Fallback ci-dessous
-            }
-        }
-
-        // Fallback universel : toutes les tâches actives
+        /** @var Tache[] $toutesLesTaches */
         $toutesLesTaches = $this->tacheRepo->findByAgriculteur($idAgriculteur);
-        return array_filter(
+        return array_values(array_filter(
             $toutesLesTaches,
-            fn($t) => in_array($t->getStatut(), ['En cours', 'En attente'], true)
-        );
+            fn(Tache $t) => in_array($t->getStatut(), ['En cours', 'En attente'], true)
+        ));
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -304,6 +308,7 @@ class NotificationService
         foreach ($notifications as $notif) {
             if (!$notif->getIdTache()) continue;
 
+            /** @var Tache|null $tache */
             $tache = $this->tacheRepo->find($notif->getIdTache());
             if (!$tache) {
                 $this->em->remove($notif);
@@ -334,6 +339,9 @@ class NotificationService
     //  CRUD PUBLIC
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<int, Notification>
+     */
     public function getByAgriculteur(int $idAgriculteur): array
     {
         return $this->notifRepo->findByAgriculteur($idAgriculteur);
@@ -404,25 +412,22 @@ class NotificationService
         $this->em->flush();
     }
 
-    private function estTerminee(object $tache): bool
+    private function estTerminee(Tache $tache): bool
     {
         return in_array($tache->getStatut(), ['Terminé', 'Validé', 'Annulé'], true);
     }
 
-    private function estEnCours(object $tache): bool
+    private function estEnCours(Tache $tache): bool
     {
         return $tache->getStatut() === 'En cours';
     }
 
-    private function modificationRecente(object $tache): bool
+    private function modificationRecente(Tache $tache): bool
     {
-        if (!method_exists($tache, 'getDateModification')) return false;
         $modif = $tache->getDateModification();
         if (!$modif) return false;
         $limit   = new \DateTime('-2 days');
-        $modifDt = $modif instanceof \DateTimeInterface
-            ? \DateTime::createFromInterface($modif)
-            : new \DateTime($modif);
+        $modifDt = \DateTime::createFromInterface($modif);
         return $modifDt > $limit;
     }
 }

@@ -101,7 +101,11 @@ class MatchingService
         }
 
         $agriculteurId = $tache->getIdAgriculteur();
-        $employes      = $this->employeRepository->findActifsByAgriculteur($agriculteurId);
+        if ($agriculteurId === null) {
+            return [];
+        }
+
+        $employes = $this->employeRepository->findActifsByAgriculteur($agriculteurId);
 
         $results = [];
         foreach ($employes as $emp) {
@@ -127,11 +131,16 @@ class MatchingService
         $rec         = new RecommandationResult();
         $rec->employe = $emp;
 
+        $empId = $emp->getId();
+        if ($empId === null) {
+            return $rec;
+        }
+
         // ── 1. Score Compétences ──────────────────────────────────────
         $rec->scoreCompetences = $this->calculerScoreCompetences($emp, $tache);
 
         // ── 2. Score Performance (issu du PerformanceService) ─────────
-        $perf                  = $this->performanceService->calculatePerformance($emp->getId());
+        $perf                  = $this->performanceService->calculatePerformance($empId);
         $rec->scorePerformance = $perf['score'];
 
         // ── 3. Score Expérience ───────────────────────────────────────
@@ -140,7 +149,7 @@ class MatchingService
 
         // ── 4. Score Disponibilité ────────────────────────────────────
         $nbEnCours             = $this->tacheRepository->countTachesActivesParEmploye(
-            $emp->getId(), $agriculteurId
+            $empId, $agriculteurId
         );
         $rec->scoreDisponibilite = $this->calculerScoreDisponibilite($nbEnCours);
 
@@ -152,7 +161,7 @@ class MatchingService
         );
 
         // Bonus si l'employé a terminé des tâches similaires → +5 pts
-        if ($this->aExperienceSurCategorie($emp->getId(), $tache->getCategorie())) {
+        if ($this->aExperienceSurCategorie($empId, $tache->getCategorie() ?? '')) {
             $rec->scoreTotal = min(100.0, $rec->scoreTotal + 5.0);
         }
 
@@ -219,11 +228,13 @@ class MatchingService
 
     /**
      * Score d'expérience : 0–100, basé sur volume + qualité
+     *
+     * @param array<string, mixed> $perf
      */
     private function calculerScoreExperience(array $perf): float
     {
-        $total   = $perf['totalTaches'];
-        $reussite = $perf['tauxReussite'];
+        $total    = (int)   ($perf['totalTaches']  ?? 0);
+        $reussite = (float) ($perf['tauxReussite'] ?? 0.0);
 
         if ($total === 0) {
             return 20.0; // nouvel employé → score faible mais non nul
@@ -252,9 +263,9 @@ class MatchingService
     /**
      * Vérifie si l'employé a déjà terminé des tâches dans cette catégorie.
      */
-    private function aExperienceSurCategorie(int $idEmploye, ?string $categorie): bool
+    private function aExperienceSurCategorie(int $idEmploye, string $categorie): bool
     {
-        if ($categorie === null) {
+        if ($categorie === '') {
             return false;
         }
 
