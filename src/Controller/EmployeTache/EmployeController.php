@@ -81,13 +81,12 @@ class EmployeController extends AbstractController
 
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
-        // ✅ Calcul du score de performance pour chaque employé
-        $performanceMap = [];
+        // ✅ Calcul du score de performance pour chaque employé avec une seule requête (Batch anti-N+1)
+        $performanceMap = $this->performanceService->calculatePerformancesBatch($employes, $idAgriculteur);
         $perfSort = [];
         foreach ($employes as $emp) {
-            $perf = $this->performanceService->calculatePerformance((int) $emp->getId());
-            $performanceMap[$emp->getId()] = $perf;
-            if ($emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
+            $perf = $performanceMap[$emp->getId()] ?? null;
+            if ($perf && $emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
                 $perfSort[] = ['emp' => $emp, 'perf' => $perf];
             }
         }

@@ -101,6 +101,24 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
+     * ✅ Batch anti-N+1 pour compter les tâches actives de TOUS les employés
+     * @return \App\DTO\EmployeTache\CountDTO[]
+     */
+    public function countTachesActivesBatch(int $idAgriculteur): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.idEmploye, COUNT(t.id))')
+            ->where('t.idAgriculteur = :agri')
+            ->andWhere('t.statut IN (:actifs)')
+            ->andWhere('t.idEmploye IS NOT NULL')
+            ->setParameter('agri', $idAgriculteur)
+            ->setParameter('actifs', ['En attente', 'En cours'])
+            ->groupBy('t.idEmploye')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Compte les tâches par statut pour les KPIs du header
      *
      * @return array{total: int, en_cours: int, terminees: int, en_attente: int, annulees: int}
@@ -108,7 +126,7 @@ class TacheRepository extends ServiceEntityRepository
     public function countByStatut(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
-            ->select('t.statut, COUNT(t.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.statut, COUNT(t.id))')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
             ->groupBy('t.statut')
@@ -123,14 +141,15 @@ class TacheRepository extends ServiceEntityRepository
             'annulees'   => 0,
         ];
 
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            $counts['total'] += $r['total'];
-            match($r['statut']) {
-                'En cours'   => $counts['en_cours']   += $r['total'],
-                'Terminé'    => $counts['terminees']  += $r['total'],
-                'Validé'     => $counts['terminees']  += $r['total'],
-                'En attente' => $counts['en_attente'] += $r['total'],
-                'Annulé'     => $counts['annulees']   += $r['total'],
+            $counts['total'] += (int) $r->total;
+            match($r->key) {
+                'En cours'   => $counts['en_cours']   += (int) $r->total,
+                'Terminé'    => $counts['terminees']  += (int) $r->total,
+                'Validé'     => $counts['terminees']  += (int) $r->total,
+                'En attente' => $counts['en_attente'] += (int) $r->total,
+                'Annulé'     => $counts['annulees']   += (int) $r->total,
                 default      => null,
             };
         }
@@ -191,7 +210,7 @@ class TacheRepository extends ServiceEntityRepository
     public function countByPriorite(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
-            ->select('t.priorite, COUNT(t.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.priorite, COUNT(t.id))')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
             ->groupBy('t.priorite')
@@ -199,19 +218,20 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
 
         $counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            $counts[(int)$r['priorite']] = (int)$r['total'];
+            $counts[(int)$r->key] = (int)$r->total;
         }
         return $counts;
     }
 
     /**
-     * @return array<int, array{idEmploye: int|null, total: int}>
+     * @return \App\DTO\EmployeTache\CountDTO[]
      */
     public function countByEmploye(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
-            ->select('t.idEmploye, COUNT(t.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.idEmploye, COUNT(t.id))')
             ->where('t.idAgriculteur = :agri')
             ->andWhere('t.idEmploye IS NOT NULL')
             ->setParameter('agri', $idAgriculteur)
@@ -221,12 +241,12 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array<int, array{dateDebut: \DateTimeInterface|string|null, total: int}>
+     * @return \App\DTO\EmployeTache\CountDTO[]
      */
     public function countByDate(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
-            ->select("t.dateDebut, COUNT(t.id) as total")
+            ->select("NEW App\DTO\EmployeTache\CountDTO(t.dateDebut, COUNT(t.id))")
             ->where('t.idAgriculteur = :agri')
             ->andWhere('t.dateDebut IS NOT NULL')
             ->setParameter('agri', $idAgriculteur)
@@ -242,7 +262,7 @@ class TacheRepository extends ServiceEntityRepository
     public function countByCategorie(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
-            ->select('t.categorie, COUNT(t.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.categorie, COUNT(t.id))')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
             ->groupBy('t.categorie')
@@ -250,8 +270,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
 
         $counts = [];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            $counts[$r['categorie'] ?? 'Autre'] = (int)$r['total'];
+            $counts[$r->key ?? 'Autre'] = (int)$r->total;
         }
         return $counts;
     }
@@ -287,7 +308,7 @@ class TacheRepository extends ServiceEntityRepository
     public function countDetailStatut(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
-            ->select('t.statut, COUNT(t.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(t.statut, COUNT(t.id))')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
             ->groupBy('t.statut')
@@ -301,9 +322,10 @@ class TacheRepository extends ServiceEntityRepository
             'Validé'     => 0,
             'Annulé'     => 0,
         ];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            if (isset($counts[$r['statut']])) {
-                $counts[$r['statut']] = (int)$r['total'];
+            if (isset($counts[$r->key])) {
+                $counts[$r->key] = (int)$r->total;
             }
         }
         return $counts;

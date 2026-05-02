@@ -34,11 +34,18 @@ class EmployeAutoInactifService
     public function synchroniserStatuts(int $idAgriculteur): array
     {
         $employes  = $this->employeRepo->findByAgriculteur($idAgriculteur);
+        
+        $actifsBatch = $this->tacheRepo->countTachesActivesBatch($idAgriculteur);
+        $mapActifs = [];
+        foreach ($actifsBatch as $dto) {
+            $mapActifs[(int) $dto->key] = $dto->total > 0;
+        }
+
         $actives   = 0;
         $desactives = 0;
 
         foreach ($employes as $employe) {
-            $aTacheActive = $this->aTacheActive((int) $employe->getId(), $idAgriculteur);
+            $aTacheActive = $mapActifs[(int) $employe->getId()] ?? false;
 
             if ($aTacheActive && !$employe->isActif()) {
                 // Réactivation automatique

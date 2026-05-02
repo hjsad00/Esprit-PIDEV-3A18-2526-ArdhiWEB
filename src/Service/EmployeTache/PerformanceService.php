@@ -22,11 +22,12 @@ class PerformanceService
     // ══════════════════════════════════════════════════════════════════
 
     /**
+     * @param \App\Entity\EmployeTache\Tache[]|null $tachesFournies
      * @return array<string, mixed>
      */
-    public function calculatePerformance(int $idEmploye): array
+    public function calculatePerformance(int $idEmploye, ?array $tachesFournies = null): array
     {
-        $taches = $this->fetchTaches($idEmploye);
+        $taches = $tachesFournies ?? $this->fetchTaches($idEmploye);
 
         $totalTaches           = 0;
         $tachesTerminees       = 0;
@@ -97,6 +98,42 @@ class PerformanceService
     }
 
     // ══════════════════════════════════════════════════════════════════
+    //  BATCH CALCULATIONS (Anti N+1)
+    // ══════════════════════════════════════════════════════════════════
+
+    /**
+     * @param \App\Entity\EmployeTache\Employe[] $employes
+     * @return array<int, array<string, mixed>>
+     */
+    public function calculatePerformancesBatch(array $employes, int $idAgriculteur): array
+    {
+        if (empty($employes)) {
+            return [];
+        }
+
+        // 1. Fetch all tasks for this farmer in ONE query (Anti N+1)
+        $allTaches = $this->tacheRepo->findBy(['idAgriculteur' => $idAgriculteur]);
+
+        // 2. Group by idEmploye
+        $tachesParEmploye = [];
+        foreach ($allTaches as $t) {
+            $idEmp = $t->getIdEmploye();
+            if ($idEmp !== null) {
+                $tachesParEmploye[$idEmp][] = $t;
+            }
+        }
+
+        // 3. Calculate all
+        $result = [];
+        foreach ($employes as $emp) {
+            $id = (int) $emp->getId();
+            $result[$id] = $this->calculatePerformance($id, $tachesParEmploye[$id] ?? []);
+        }
+
+        return $result;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     //  CLASSEMENT
     // ══════════════════════════════════════════════════════════════════
 
@@ -108,10 +145,14 @@ class PerformanceService
         $employes   = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
         $classement = [];
 
+        $performances = $this->calculatePerformancesBatch($employes, $idAgriculteur);
+
         foreach ($employes as $employe) {
-            $perf               = $this->calculatePerformance((int) $employe->getId());
-            $perf['nomEmploye'] = $employe->getNomComplet();
-            $classement[]       = $perf;
+            $perf               = $performances[(int) $employe->getId()] ?? [];
+            if (!empty($perf)) {
+                $perf['nomEmploye'] = $employe->getNomComplet();
+                $classement[]       = $perf;
+            }
         }
 
         usort($classement, fn($a, $b) => $b['score'] <=> $a['score']);

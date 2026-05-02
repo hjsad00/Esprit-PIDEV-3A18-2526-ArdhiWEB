@@ -632,8 +632,8 @@ class TacheController extends AbstractController
         $employeStats = [];
         foreach ($empData as $ed) {
             $employeStats[] = [
-                'nom'   => $mapEmployes[$ed['idEmploye']] ?? 'Inconnu',
-                'total' => $ed['total'],
+                'nom'   => $mapEmployes[(int)$ed->key] ?? 'Inconnu',
+                'total' => $ed->total,
             ];
         }
 
@@ -641,9 +641,9 @@ class TacheController extends AbstractController
         $evolution = [];
         foreach ($dateData as $dd) {
             $evolution[] = [
-                'date'  => $dd['dateDebut'] instanceof \DateTimeInterface
-                    ? $dd['dateDebut']->format('d/m/Y') : (string)$dd['dateDebut'],
-                'total' => $dd['total'],
+                'date'  => $dd->key instanceof \DateTimeInterface
+                    ? $dd->key->format('d/m/Y') : (string)$dd->key,
+                'total' => $dd->total,
             ];
         }
 

@@ -63,7 +63,9 @@ class EmployeRepository extends ServiceEntityRepository
             $qb->orderBy($champ, $dir);
         }
 
-        return $qb->getQuery()->getResult();
+        return $qb->getQuery()
+            ->setMaxResults(1000)
+            ->getResult();
     }
 
     /**
@@ -150,17 +152,18 @@ class EmployeRepository extends ServiceEntityRepository
     public function countByPoste(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('e')
-            ->select('e.poste, COUNT(e.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(e.poste, COUNT(e.id))')
             ->where('e.idAgriculteur = :id')
             ->setParameter('id', $idAgriculteur)
             ->groupBy('e.poste')
-            ->orderBy('total', 'DESC')
+            ->orderBy('e.poste', 'DESC')
             ->getQuery()
             ->getResult();
 
         $counts = [];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            $counts[$r['poste'] ?? 'Non défini'] = (int)$r['total'];
+            $counts[$r->key ?? 'Non défini'] = (int)$r->total;
         }
         return $counts;
     }
@@ -173,7 +176,7 @@ class EmployeRepository extends ServiceEntityRepository
     public function countByActif(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('e')
-            ->select('e.actif, COUNT(e.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(e.actif, COUNT(e.id))')
             ->where('e.idAgriculteur = :id')
             ->setParameter('id', $idAgriculteur)
             ->groupBy('e.actif')
@@ -181,11 +184,12 @@ class EmployeRepository extends ServiceEntityRepository
             ->getResult();
 
         $counts = ['actifs' => 0, 'inactifs' => 0];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            if ($r['actif']) {
-                $counts['actifs'] = (int)$r['total'];
+            if ($r->key) {
+                $counts['actifs'] = (int)$r->total;
             } else {
-                $counts['inactifs'] = (int)$r['total'];
+                $counts['inactifs'] = (int)$r->total;
             }
         }
         return $counts;
