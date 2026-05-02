@@ -79,7 +79,9 @@ class TacheRepository extends ServiceEntityRepository
 
         $qb->orderBy($champ, $dir);
 
-        return $qb->getQuery()->getResult();
+        return $qb->getQuery()
+            ->setMaxResults(50)
+            ->getResult();
     }
 
     /**
