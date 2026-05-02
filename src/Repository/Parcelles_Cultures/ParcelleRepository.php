@@ -23,9 +23,12 @@ class ParcelleRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->leftJoin('p.agriculteur', 'a')
             ->addSelect('a')
+            ->leftJoin('p.cultures', 'c') // Fix N+1 queries
+            ->addSelect('c')
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->orderBy('p.created_at', 'DESC')
+            ->setMaxResults(100) // Limit results to prevent full sort without limit
             ->getQuery()
             ->getResult();
     }
@@ -37,6 +40,7 @@ class ParcelleRepository extends ServiceEntityRepository
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getSingleScalarResult();
     }
 
@@ -47,6 +51,7 @@ class ParcelleRepository extends ServiceEntityRepository
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
 
         return (float) ($result['total_surface'] ?? 0);
@@ -64,13 +69,16 @@ class ParcelleRepository extends ServiceEntityRepository
                 ->setParameter('agriculteur', $user)
                 ->setParameter('statut', 'active')
                 ->getQuery()
+                ->enableResultCache(3600)
                 ->getSingleScalarResult(),
         ];
     }
 
     public function searchAndFilter(?User $user = null, ?string $query = null, ?string $typeSol = null, ?string $localisation = null)
     {
-        $qb = $this->createQueryBuilder('p');
+        $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.cultures', 'c') // Fix N+1 queries by eager loading cultures
+            ->addSelect('c');
 
         if ($user) {
             $qb->andWhere('p.agriculteur = :user')

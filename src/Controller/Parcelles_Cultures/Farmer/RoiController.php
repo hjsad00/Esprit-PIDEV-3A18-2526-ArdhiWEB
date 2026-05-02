@@ -127,9 +127,9 @@ class RoiController extends AbstractController
             $dto->cout_autres = isset($data['autres_couts']) ? (float)$data['autres_couts'] : null;
             $dto->duree_pret = isset($data['duree_pret']) ? (int)$data['duree_pret'] : 5;
 
-            // 📍 Rechercher l'entité parcelle pour la validation
+            // 📍 Utiliser getReference() au lieu de find() car on n'a besoin que de la référence pour la validation
             if (isset($data['parcelle_id'])) {
-                $dto->parcelle = $this->parcelleRepository->find($data['parcelle_id']);
+                $dto->parcelle = $this->parcelleRepository->getReference($data['parcelle_id']);
             }
 
             $errors = $validator->validate($dto);

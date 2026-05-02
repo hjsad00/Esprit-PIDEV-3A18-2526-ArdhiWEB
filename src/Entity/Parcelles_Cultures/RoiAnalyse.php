@@ -22,16 +22,16 @@ class RoiAnalyse
     private string $culture = '';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $roi = 0;
+    private string $roi = '0';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $marge = 0;
+    private string $marge = '0';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $revenu = 0;
+    private string $revenu = '0';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $cout_total = 0;
+    private string $cout_total = '0';
 
     #[ORM\Column(length: 50)]
     private string $niveau = '';
@@ -86,45 +86,45 @@ class RoiAnalyse
         return $this;
     }
 
-    public function getRoi(): float
+    public function getRoi(): string
     {
         return $this->roi;
     }
 
-    public function setRoi(float $roi): self
+    public function setRoi(string $roi): self
     {
         $this->roi = $roi;
         return $this;
     }
 
-    public function getMarge(): float
+    public function getMarge(): string
     {
         return $this->marge;
     }
 
-    public function setMarge(float $marge): self
+    public function setMarge(string $marge): self
     {
         $this->marge = $marge;
         return $this;
     }
 
-    public function getRevenu(): float
+    public function getRevenu(): string
     {
         return $this->revenu;
     }
 
-    public function setRevenu(float $revenu): self
+    public function setRevenu(string $revenu): self
     {
         $this->revenu = $revenu;
         return $this;
     }
 
-    public function getCoutTotal(): float
+    public function getCoutTotal(): string
     {
         return $this->cout_total;
     }
 
-    public function setCoutTotal(float $cout_total): self
+    public function setCoutTotal(string $cout_total): self
     {
         $this->cout_total = $cout_total;
         return $this;
