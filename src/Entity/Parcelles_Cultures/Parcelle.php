@@ -280,11 +280,17 @@ class Parcelle
         return $this;
     }
 
+    /**
+     * @return array<string,mixed>|null
+     */
     public function getPolygonGeojson(): ?array
     {
         return $this->polygon_geojson;
     }
 
+    /**
+     * @param array<string,mixed>|null $polygon_geojson
+     */
     public function setPolygonGeojson(?array $polygon_geojson): static
     {
         $this->polygon_geojson = $polygon_geojson;

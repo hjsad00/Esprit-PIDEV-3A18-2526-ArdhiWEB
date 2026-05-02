@@ -37,12 +37,12 @@ class Reclamation
     private ?string $nomProduit = null;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: 'Veuillez sélectionner un produit valide.')]
     private ?Produits $produit = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     public function __construct()

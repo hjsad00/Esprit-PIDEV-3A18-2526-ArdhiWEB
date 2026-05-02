@@ -3,6 +3,7 @@
 namespace App\Service\Parcelles_Cultures;
 
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Parcelles_Cultures\CultureRepository;
 
 class CultureService
@@ -48,8 +49,10 @@ class CultureService
 
     /**
      * Récupère les cultures prêtes à récolter pour un agriculteur
+     *
+     * @return Culture[]
      */
-    public function getCulturesPretesARecolter($agriculteur)
+    public function getCulturesPretesARecolter(User $agriculteur): array
     {
         return $this->cultureRepository->getCulturesPretesARecolter($agriculteur);
     }

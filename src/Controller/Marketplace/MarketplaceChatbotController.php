@@ -41,11 +41,11 @@ class MarketplaceChatbotController extends AbstractController
 
         $intent = $ollamaService->analyser($message);
 
-        return match ($intent['intention'] ?? 'hors_sujet') {
+        return match ($intent['intention']) {
             'achat' => $this->handleAchat($intent, $produitsRepository, $panierRepository, $panierProduitRepository, $avisRepository),
             'supprimer_produit' => $this->handleSupprimerProduit($intent, $panierRepository, $panierProduitRepository),
             'vider_panier' => $this->handleViderPanier($panierRepository),
-            'disponibilite' => $this->handleDisponibilite($intent, $produitsRepository),
+            'disponibilite' => $this->handleDisponibilite($intent, $produitsRepository, $avisRepository),
             'filtrer' => $this->handleFiltrer($intent),
             'salutation' => $this->json([
                 'success' => true,
@@ -106,7 +106,7 @@ class MarketplaceChatbotController extends AbstractController
             }
 
             $nomDemande = trim((string) ($demande['nom'] ?? ''));
-            $quantiteDemandee = max(1, (int) ($demande['quantite'] ?? 1));
+                $quantiteDemandee = (int) ($demande['quantite'] ?? 1);
 
             if ($nomDemande === '') {
                 continue;
@@ -287,7 +287,7 @@ class MarketplaceChatbotController extends AbstractController
     /**
      * @param array<string,mixed> $intent
      */
-    private function handleDisponibilite(array $intent, ProduitsRepository $produitsRepository): JsonResponse
+    private function handleDisponibilite(array $intent, ProduitsRepository $produitsRepository, AvisRepository $avisRepository): JsonResponse
     {
         $user = $this->getMarketplaceUser();
         $demandes = $intent['produits'] ?? [];
@@ -313,7 +313,7 @@ class MarketplaceChatbotController extends AbstractController
                 continue;
             }
 
-            $produit = $this->resolveProductByName($nomDemande, $produitsRepository, $user);
+            $produit = $this->resolveProductByName($nomDemande, $produitsRepository, $avisRepository, $user);
             if (!$produit) {
                 $introuvables[] = $nomDemande;
                 continue;
@@ -359,8 +359,8 @@ class MarketplaceChatbotController extends AbstractController
         $filters = [
             'nom' => (string) ($intent['recherche'] ?? ''),
             'categorie' => (string) ($intent['categorie'] ?? ''),
-            'prix_min' => isset($intent['prixMin']) && $intent['prixMin'] !== null ? (string) $intent['prixMin'] : '',
-            'prix_max' => isset($intent['prixMax']) && $intent['prixMax'] !== null ? (string) $intent['prixMax'] : '',
+            'prix_min' => isset($intent['prixMin']) ? (string) $intent['prixMin'] : '',
+            'prix_max' => isset($intent['prixMax']) ? (string) $intent['prixMax'] : '',
             'tri' => $tri,
         ];
 

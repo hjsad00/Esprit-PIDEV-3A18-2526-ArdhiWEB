@@ -39,6 +39,9 @@ class RoiAnalyse
     #[ORM\Column(length: 50)]
     private string $risque = '';
 
+    /**
+     * @var array<int,string>|null
+     */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $conseils = null;
 
@@ -152,11 +155,17 @@ class RoiAnalyse
         return $this;
     }
 
+    /**
+     * @return string[]|null
+     */
     public function getConseils(): ?array
     {
         return $this->conseils;
     }
 
+    /**
+     * @param string[]|null $conseils
+     */
     public function setConseils(?array $conseils): self
     {
         $this->conseils = $conseils;

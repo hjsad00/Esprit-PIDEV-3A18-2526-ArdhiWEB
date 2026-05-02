@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/marketplace/admin')]
@@ -45,7 +45,7 @@ class AdminCouponController extends AbstractController
         // Hydratation
         $coupon->setCode(strtoupper($data['code'] ?? ''));
         $coupon->setTypeReduction($data['typeReduction'] ?? '');
-        $coupon->setValeur(isset($data['valeur']) ? floatval($data['valeur']) : null);
+        $coupon->setValeur((float) ($data['valeur'] ?? 0));
         
         try {
             if (!empty($data['dateDebut'])) $coupon->setDateDebut(new \DateTime($data['dateDebut']));
@@ -134,8 +134,8 @@ class AdminCouponController extends AbstractController
                 'code' => $coupon->getCode(),
                 'typeReduction' => $coupon->getTypeReduction(),
                 'valeur' => $coupon->getValeur(),
-                'dateDebut' => $coupon->getDateDebut()->format('Y-m-d'),
-                'dateFin' => $coupon->getDateFin()->format('Y-m-d'),
+                'dateDebut' => $coupon->getDateDebut()?->format('Y-m-d'),
+                'dateFin' => $coupon->getDateFin()?->format('Y-m-d'),
                 'utilisationMax' => $coupon->getUtilisationMax(),
                 'montantMin' => $coupon->getMontantMin(),
                 'limiteParUser' => $coupon->getLimiteParUser(),

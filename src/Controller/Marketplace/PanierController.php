@@ -2,6 +2,7 @@
 
 namespace App\Controller\Marketplace;
 
+use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\PanierProduitRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
@@ -23,6 +24,7 @@ class PanierController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
+        assert($user instanceof User);
         $panier = $panierRepository->findPanierActif($user);
 
         if (!$panier) {
@@ -57,8 +59,9 @@ class PanierController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
-        $panierId = $panierRepository->getOrCreatePanier($user)->getId();
-        $panier = $panierRepository->findPanierWithProduits($panierId);
+        assert($user instanceof User);
+        $panierId = (int) $panierRepository->getOrCreatePanier($user)->getId();
+        $panier = $panierRepository->findPanierWithProduits($panierId) ?? $panierRepository->getOrCreatePanier($user);
 
         return $this->render('Marketplace/panier.html.twig', [
             'panier' => $panier,
@@ -78,11 +81,12 @@ public function ajouterAuPanier(
     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
     $user    = $this->getUser();
+        assert($user instanceof User);
     $produit = $produitsRepository->find($id);
     $isAjax  = $request->headers->get('X-Requested-With') === 'XMLHttpRequest'
                || $request->headers->get('Accept') === 'application/json';
 
-    if (!$produit || $produit->getUser()->getId() === $user->getId()) {
+    if (!$produit || !$produit->getUser() || $produit->getUser()->getId() === $user->getId()) {
         if ($isAjax) {
             return $this->json(['success' => false, 'message' => 'Ajout impossible.'], 400);
         }
@@ -103,7 +107,7 @@ public function ajouterAuPanier(
     $ppRepository->ajouterOuIncrementer($panier, $produit, $quantite);
 
     // Recharger le panier pour avoir les totaux à jour
-    $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+    $panierFrais = $panierRepository->findPanierWithProduits((int) $panier->getId()) ?? $panier;
 
     if ($isAjax) {
         return $this->json([
@@ -128,6 +132,7 @@ public function ajouterAuPanier(
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
+        assert($user instanceof User);
         $panier = $panierRepository->getOrCreatePanier($user);
         $produit = $produitsRepository->find($id);
 
@@ -148,7 +153,7 @@ public function ajouterAuPanier(
         $ppRepository->modifierQuantite($panier, $produit, $quantite);
 
         // Recharger pour recalculer les totaux
-        $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+        $panierFrais = $panierRepository->findPanierWithProduits((int) $panier->getId()) ?? $panier;
         $ligne = $ppRepository->findOneBy(['panier' => $panierFrais, 'produit' => $produit]);
 
         if ($isAjax) {
@@ -176,6 +181,7 @@ public function ajouterAuPanier(
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
+        assert($user instanceof User);
         $panier = $panierRepository->getOrCreatePanier($user);
         $produit = $produitsRepository->find($id);
         
@@ -186,7 +192,7 @@ public function ajouterAuPanier(
             
             if ($isAjax) {
                 // Recharger
-                $panierFrais = $panierRepository->findPanierWithProduits($panier->getId());
+                $panierFrais = $panierRepository->findPanierWithProduits((int) $panier->getId()) ?? $panier;
                 return $this->json([
                     'success'   => true,
                     'message'   => 'Produit retiré.',
@@ -209,6 +215,7 @@ public function ajouterAuPanier(
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
+        assert($user instanceof User);
         $panierRepository->viderPanierUser($user);
 
         $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';

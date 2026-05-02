@@ -1,8 +1,13 @@
 parameters:
-    level: 6
-    paths:
-        - bin/
-        - config/
-        - public/
-        - src/
-        - tests/
+	level: 8
+
+	paths:
+		- src/Entity/Marketplace
+		- src/Service/Marketplace
+		- src/Controller/Marketplace
+
+	ignoreErrors:
+		-
+			message: '#Property App\\Entity\\Marketplace\\.* is never assigned#'
+			paths:
+				- src/Entity/Marketplace

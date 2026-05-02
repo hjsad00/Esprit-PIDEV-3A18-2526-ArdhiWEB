@@ -7,6 +7,7 @@ use App\Repository\Marketplace\ProduitsRepository;
 use App\Service\Marketplace\WishlistNotificationService;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\UserAndDiag\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,9 +28,9 @@ class ProduitController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
-        $produits = $produitsRepository->findByUser($user->getId());
+        assert($user instanceof User);
+        $produits = $produitsRepository->findByUser((int) $user->getId());
         $categories = $produitsRepository->findDistinctCategories();
 
         return $this->render('Marketplace/mes_produits.html.twig', [
@@ -51,14 +52,14 @@ class ProduitController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
         $id = $request->request->get('id');
         $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
 
         if ($id) {
             $produit = $produitsRepository->find($id);
-            if (!$produit || $produit->getUser()->getId() !== $user->getId()) {
+            if (!$produit || !$produit->getUser() || $produit->getUser()->getId() !== $user->getId()) {
                 if ($isAjax)
                     return $this->json(['success' => false, 'message' => 'Non autorisé.'], 403);
                 $this->addFlash('danger', 'Produit introuvable ou non autorisé.');
@@ -79,10 +80,10 @@ class ProduitController extends AbstractController
 
         // Hydratation
         $produit->setNom((string) $request->request->get('nom'));
-        $produit->setDescription($request->request->get('description'));
+        $produit->setDescription(is_scalar($request->request->get('description')) ? (string) $request->request->get('description') : null);
         $produit->setPrix((float) $request->request->get('prix'));
         $produit->setQuantiteStock((int) $request->request->get('quantiteStock'));
-        $produit->setCategorie($request->request->get('categorie'));
+        $produit->setCategorie(is_scalar($request->request->get('categorie')) ? (string) $request->request->get('categorie') : null);
         $produit->setUniteMesure((string) $request->request->get('uniteMesure'));
 
         // Visibilité
@@ -90,7 +91,7 @@ class ProduitController extends AbstractController
         $produit->setVisible($visible);
 
         $typeRemise = $request->request->get('typeRemise');
-        if ($typeRemise && $typeRemise !== 'AUCUNE') {
+        if (is_string($typeRemise) && $typeRemise !== 'AUCUNE') {
             $produit->setTypeRemise($typeRemise);
             $produit->setRemise((float) $request->request->get('remise'));
         } else {
@@ -111,7 +112,7 @@ class ProduitController extends AbstractController
             }
 
             return $this->render('Marketplace/mes_produits.html.twig', [
-                'produits' => $produitsRepository->findByUser($user->getId()),
+                'produits' => $produitsRepository->findByUser((int) $user->getId()),
                 'categories' => $produitsRepository->findDistinctCategories(),
                 'validationErrors' => $errors,
                 'formProduit' => $produit,
@@ -120,13 +121,13 @@ class ProduitController extends AbstractController
 
         // Upload image
         $imageFile = $request->files->get('image');
-        $newFilename = $produit->getImage(); // conserve l'ancienne si pas de nouveau fichier
+        $newFilename = (string) ($produit->getImage() ?? ''); // conserve l'ancienne si pas de nouveau fichier
         if ($imageFile) {
             $safeFilename = $slugger->slug(pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME));
             $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
             try {
                 $imageFile->move(
-                    $this->getParameter('kernel.project_dir') . '/public/uploads/produits',
+                    (string) $this->getParameter('kernel.project_dir') . '/public/uploads/produits',
                     $newFilename
                 );
                 $produit->setImage($newFilename);
@@ -187,12 +188,12 @@ class ProduitController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
         $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
         $produit = $produitsRepository->find($id);
 
-        if (!$produit || $produit->getUser()->getId() !== $user->getId()) {
+        if (!$produit || !$produit->getUser() || $produit->getUser()->getId() !== $user->getId()) {
             if ($isAjax)
                 return $this->json(['success' => false, 'message' => 'Non autorisé.'], 403);
             $this->addFlash('danger', 'Produit introuvable ou non autorisé.');
@@ -264,12 +265,16 @@ class ProduitController extends AbstractController
         }
 
         // Encoder l'image en base64
-        $imageData = base64_encode(file_get_contents($imageFile->getPathname()));
+        $imageContents = file_get_contents($imageFile->getPathname());
+        if ($imageContents === false) {
+            return $this->json(['success' => false, 'message' => 'Impossible de lire l\'image.'], 500);
+        }
+        $imageData = base64_encode($imageContents);
         $mimeType = $imageFile->getMimeType();
 
         // Clé API et modèle depuis .env
-        $apiKey = $this->getParameter('app.marketplace_groq_api_key');
-        $model = $this->getParameter('app.marketplace_groq_model');
+        $apiKey = (string) $this->getParameter('app.marketplace_groq_api_key');
+        $model = (string) $this->getParameter('app.marketplace_groq_model');
 
         if (!$apiKey || $apiKey === 'votre_cle_api_ici') {
             return $this->json(['success' => false, 'message' => 'Clé API Groq non configurée.'], 500);
@@ -311,7 +316,7 @@ PROMPT;
                                 [
                                     'type' => 'image_url',
                                     'image_url' => [
-                                        'url' => 'data:' . $mimeType . ';base64,' . $imageData,
+                                        'url' => 'data:' . (string) $mimeType . ';base64,' . $imageData,
                                     ],
                                 ],
                             ],
@@ -367,7 +372,7 @@ PROMPT;
         } catch (\Throwable $e) {
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'analyse : ' . $e->getMessage(),
+                    'message' => 'Erreur lors de l\'analyse : ' . $e->getMessage(),
             ], 500);
         }
     }

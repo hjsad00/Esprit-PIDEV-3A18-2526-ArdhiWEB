@@ -46,7 +46,7 @@ class Produits
     private ?string $categorie = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false)]
     private ?User $user = null;
 
     #[ORM\Column(name: 'uniteMesure', type: Types::STRING, length: 10, columnDefinition: "ENUM('Kg','L','Piece') NOT NULL")]
@@ -280,8 +280,8 @@ class Produits
                     ->addViolation();
             } elseif ($this->prix !== null && $this->remise >= $this->prix) {
                 $context->buildViolation('La remise fixe ({{ remise }} DT) ne peut pas être supérieure ou égale au prix du produit ({{ prix }} DT).')
-                    ->setParameter('{{ remise }}', $this->remise)
-                    ->setParameter('{{ prix }}', $this->prix)
+                    ->setParameter('{{ remise }}', (string) $this->remise)
+                    ->setParameter('{{ prix }}', (string) $this->prix)
                     ->atPath('remise')
                     ->addViolation();
             }
@@ -295,15 +295,18 @@ class Produits
      */
     public function getPrixFinal(): float
     {
-        if ($this->remise <= 0 || $this->typeRemise === null) {
-            return $this->prix;
+        $prix = $this->prix ?? 0.0;
+        $remise = $this->remise ?? 0.0;
+
+        if ($remise <= 0 || $this->typeRemise === null) {
+            return (float) $prix;
         }
 
         if ($this->typeRemise === 'POURCENTAGE') {
-            return $this->prix * (1 - $this->remise / 100);
+            return (float) ($prix * (1 - $remise / 100));
         }
 
         // Remise fixe
-        return max(0, $this->prix - $this->remise);
+        return (float) max(0.0, $prix - $remise);
     }
 }

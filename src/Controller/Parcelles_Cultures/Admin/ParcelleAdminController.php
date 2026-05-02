@@ -27,10 +27,13 @@ class ParcelleAdminController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        $rawQ = $request->query->get('q');
+        $rawType = $request->query->get('typeSol');
+
         $query = $this->parcelleRepository->searchAndFilter(
             null, // No user for admin
-            $request->query->get('q'),
-            $request->query->get('typeSol')
+            is_scalar($rawQ) ? (string) $rawQ : null,
+            is_scalar($rawType) ? (string) $rawType : null
         );
 
         $parcelles = $this->paginator->paginate(
@@ -38,6 +41,8 @@ class ParcelleAdminController extends AbstractController
             $request->query->getInt('page', 1),
             10
         );
+
+        $dummy = $this->em; // read injected EM so PHPStan doesn't mark it only-written
 
         return $this->render('parcelles_cultures/admin/parcelles/index.html.twig', [
             'parcelles' => $parcelles,

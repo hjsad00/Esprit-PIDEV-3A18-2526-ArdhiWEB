@@ -26,8 +26,8 @@ class Commande
     #[ORM\Column(length: 50, options: ['default' => 'en_cours'])]
     private ?string $etat = 'en_cours';
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
-    private float $total = 0;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, options: ['default' => '0.00'])]
+    private string $total = '0.00';
 
     #[ORM\Column(name: 'frais_livraison', type: Types::FLOAT, options: ['default' => 0])]
     private float $fraisLivraison = 0;
@@ -39,7 +39,7 @@ class Commande
     private bool $payeeParPoints = false;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     /** @var Collection<int, DetailsCommande> */
@@ -47,7 +47,7 @@ class Commande
     private Collection $details;
 
     #[ORM\ManyToOne(targetEntity: Coupon::class)]
-    #[ORM\JoinColumn(name: 'idCoupon', referencedColumnName: 'idCoupon', nullable: true)]
+    #[ORM\JoinColumn(name: 'id_coupon', referencedColumnName: 'idCoupon', nullable: true)]
     private ?Coupon $coupon = null;
 
     #[ORM\Column(name: 'montantRemise', type: Types::FLOAT, options: ['default' => 0])]
@@ -98,12 +98,12 @@ class Commande
 
     public function getTotal(): float
     {
-        return $this->total;
+        return (float) $this->total;
     }
 
     public function setTotal(float $total): static
     {
-        $this->total = $total;
+        $this->total = number_format($total, 2, '.', '');
         return $this;
     }
 
@@ -241,7 +241,7 @@ class Commande
         foreach ($this->details as $detail) {
             $montant += $detail->getPrixUnitaire() * $detail->getQuantite();
         }
-        $this->total = round($montant, 2);
+        $this->setTotal(round($montant, 2));
     }
 
     /**

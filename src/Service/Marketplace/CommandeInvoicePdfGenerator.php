@@ -13,6 +13,9 @@ class CommandeInvoicePdfGenerator
         private Environment $twig,
     ) {}
 
+    /**
+     * @param array<int,string> $productQrCodes  Liste des chemins/URL des QR codes produits
+     */
     public function generate(Commande $commande, array $productQrCodes): string
     {
         $pdfOptions = new Options();

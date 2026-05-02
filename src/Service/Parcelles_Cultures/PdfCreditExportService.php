@@ -102,7 +102,10 @@ class PdfCreditExportService
     private function genererHtmlDossier(CreditDossier $dossier, string $locale = 'fr'): string
     {
         $parcelle = $dossier->getParcelle();
+        // Ensure non-null for static analysis (the DB schema requires a parcelle)
+        assert($parcelle instanceof \App\Entity\Parcelles_Cultures\Parcelle);
         $agriculteur = $parcelle->getAgriculteur();
+        assert($agriculteur instanceof \App\Entity\UserAndDiag\User);
         
         $dateGenerer = date('d/m/Y H:i');
         $dateCreation = $dossier->getCreatedAt()->format('d/m/Y H:i');

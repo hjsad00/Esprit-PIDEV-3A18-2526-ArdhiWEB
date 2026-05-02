@@ -16,11 +16,11 @@ class DetailsCommande
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'details')]
-    #[ORM\JoinColumn(name: 'idCommande', referencedColumnName: 'idCommande', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_commande', referencedColumnName: 'idCommande', nullable: false, onDelete: 'CASCADE')]
     private ?Commande $commande = null;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     private ?Produits $produit = null;
 
     #[ORM\Column(options: ['default' => 1])]

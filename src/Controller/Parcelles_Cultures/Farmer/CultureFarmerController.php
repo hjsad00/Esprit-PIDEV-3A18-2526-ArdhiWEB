@@ -37,11 +37,15 @@ class CultureFarmerController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
         
+        $rawQ = $request->query->get('q');
+        $rawType = $request->query->get('typeCulture');
+        $rawSaison = $request->query->get('saison');
+
         $query = $this->cultureRepository->searchAndFilter(
             $user,
-            $request->query->get('q'),
-            $request->query->get('typeCulture'),
-            $request->query->get('saison')
+            is_scalar($rawQ) ? (string) $rawQ : null,
+            is_scalar($rawType) ? (string) $rawType : null,
+            is_scalar($rawSaison) ? (string) $rawSaison : null
         );
 
         $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
@@ -113,13 +117,13 @@ class CultureFarmerController extends AbstractController
 
             if ($form->isValid()) {
                 $culture = new Culture();
-                $culture->setNomCulture($dto->type_culture);
-                $culture->setTypeCulture($dto->type_culture);
-                $culture->setSaison($dto->saison);
+                $culture->setNomCulture((string) $dto->type_culture);
+                $culture->setTypeCulture((string) $dto->type_culture);
+                $culture->setSaison((string) $dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);
                 $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
-                $culture->setSurfaceUtilisee($dto->surface_utilisee);
-                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setSurfaceUtilisee((float) $dto->surface_utilisee);
+                $culture->setRendementEstime((float) $dto->rendement_estime);
                 $culture->setParcelle($parcelle);
 
                 $this->cultureService->mettreAJourProductionEstimee($culture);
@@ -191,13 +195,13 @@ class CultureFarmerController extends AbstractController
             }
 
             if ($form->isValid()) {
-                $culture->setNomCulture($dto->type_culture);
-                $culture->setTypeCulture($dto->type_culture);
-                $culture->setSaison($dto->saison);
+                $culture->setNomCulture((string) $dto->type_culture);
+                $culture->setTypeCulture((string) $dto->type_culture);
+                $culture->setSaison((string) $dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);
                 $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
-                $culture->setSurfaceUtilisee($dto->surface_utilisee);
-                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setSurfaceUtilisee((float) $dto->surface_utilisee);
+                $culture->setRendementEstime((float) $dto->rendement_estime);
                 $culture->setParcelle($parcelle);
                 $culture->setUpdatedAt(new \DateTimeImmutable());
 

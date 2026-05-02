@@ -6,6 +6,7 @@ use App\Entity\Marketplace\Commande;
 use App\Entity\Marketplace\Produits;
 use App\Entity\UserAndDiag\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -26,14 +27,12 @@ class CommandeRepository extends ServiceEntityRepository
     /**
      * Récupère toutes les commandes d'un utilisateur, triées par date décroissante.
      */
-    public function findByUser(User $user): array
+    public function findByUser(User $user): QueryBuilder
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.user = :user')
             ->setParameter('user', $user)
-            ->orderBy('c.dateCommande', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('c.dateCommande', 'DESC');
     }
 
     /**
@@ -55,7 +54,7 @@ class CommandeRepository extends ServiceEntityRepository
     /**
      * Récupère les commandes contenant des produits d'un vendeur donné.
      */
-    public function findOrdersBySeller(User $seller): array
+    public function findOrdersBySeller(User $seller): QueryBuilder
     {
         return $this->createQueryBuilder('c')
             ->innerJoin('c.details', 'd')
@@ -63,9 +62,7 @@ class CommandeRepository extends ServiceEntityRepository
             ->addSelect('d', 'p')
             ->andWhere('p.user = :seller')
             ->setParameter('seller', $seller)
-            ->orderBy('c.dateCommande', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('c.dateCommande', 'DESC');
     }
 
     /**

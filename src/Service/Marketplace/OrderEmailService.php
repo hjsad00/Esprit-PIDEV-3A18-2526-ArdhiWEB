@@ -30,7 +30,17 @@ class OrderEmailService
             return;
         }
 
-        $vendeur = $details->first()->getProduit()->getUser();
+        $firstDetail = $details->first();
+        if (!$firstDetail) {
+            return;
+        }
+
+        $produit = $firstDetail->getProduit();
+        if (!$produit) {
+            return;
+        }
+
+        $vendeur = $produit->getUser();
         if (!$vendeur || !$vendeur->getEmail()) {
             return;
         }
@@ -63,7 +73,13 @@ class OrderEmailService
             ? '🚚 Votre commande Ardhi est en cours de préparation !'
             : '❌ Notification concernant votre commande Ardhi';
 
-        $vendeur = $commande->getDetails()->first()->getProduit()->getUser();
+        $firstDetail = $commande->getDetails()->first();
+        if (!$firstDetail) {
+            $vendeur = null;
+        } else {
+            $produit = $firstDetail->getProduit();
+            $vendeur = $produit ? $produit->getUser() : null;
+        }
 
         $email = (new TemplatedEmail())
             ->from(new Address($this->mailFrom, 'Ardhi Marketplace'))

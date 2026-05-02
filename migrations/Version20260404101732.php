@@ -1,4 +1,16 @@
-<?php
+-- 1) (Optionnel mais recommandé) normaliser les valeurs avant conversion
+UPDATE commande
+SET total = ROUND(COALESCE(total, 0), 2);
+
+UPDATE panier
+SET totalMontant = ROUND(COALESCE(totalMontant, 0), 2);
+
+-- 2) conversion des colonnes float -> decimal
+ALTER TABLE commande
+MODIFY COLUMN total DECIMAL(12,2) NOT NULL DEFAULT 0.00;
+
+ALTER TABLE panier
+MODIFY COLUMN totalMontant DECIMAL(12,2) NOT NULL DEFAULT 0.00;<?php
 
 declare(strict_types=1);
 
