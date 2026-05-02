@@ -27,6 +27,7 @@ class NotificationRepository extends ServiceEntityRepository
             ->where('n.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
             ->orderBy('n.dateCreation', 'DESC')
+            ->setMaxResults(50)
             ->getQuery()
             ->getResult();
     }
@@ -43,6 +44,7 @@ class NotificationRepository extends ServiceEntityRepository
             ->andWhere('n.lue = false')
             ->setParameter('agri', $idAgriculteur)
             ->orderBy('n.dateCreation', 'DESC')
+            ->setMaxResults(50)
             ->getQuery()
             ->getResult();
     }

@@ -169,7 +169,6 @@ class TacheRepository extends ServiceEntityRepository
             ->andWhere('t.idAgriculteur = :agri')
             ->setParameter('emp', $idEmploye)
             ->setParameter('agri', $idAgriculteur)
-            ->orderBy('t.dateDebut', 'DESC')
             ->getQuery()
             ->getResult();
     }
@@ -182,7 +181,6 @@ class TacheRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('t')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
-            ->orderBy('t.dateDebut', 'DESC')
             ->getQuery()
             ->getResult();
     }
