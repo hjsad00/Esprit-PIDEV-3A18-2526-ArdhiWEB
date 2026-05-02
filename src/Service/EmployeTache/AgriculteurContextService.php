@@ -18,9 +18,10 @@ class AgriculteurContextService
     private const SESSION_NOM = 'admin_supervise_agriculteur_nom';
 
     public function __construct(
-        private RequestStack          $requestStack,
+        private RequestStack $requestStack,
         private TokenStorageInterface $tokenStorage,
-    ) {}
+    ) {
+    }
 
     // ── Admin : démarrer la supervision ──────────────────────────────
 
@@ -49,15 +50,16 @@ class AgriculteurContextService
     public function getActiveAgriculteurId(): ?int
     {
         $token = $this->tokenStorage->getToken();
-        if (!$token) return null;
+        if (!$token)
+            return null;
 
-        $user  = $token->getUser();
+        $user = $token->getUser();
         $roles = $user?->getRoles() ?? [];
 
         // Admin en mode supervision → ID de l'agriculteur choisi
         if (in_array('ROLE_ADMIN', $roles, true)) {
             $id = $this->requestStack->getSession()->get(self::SESSION_KEY);
-            return $id ? (int)$id : null;
+            return $id ? (int) $id : null;
         }
 
         // Agriculteur connecté → son propre ID

@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class EmployeAutoInactifService
 {
-    // Statuts considérés comme "tâche active" — l'employé reste actif
+    /** @phpstan-ignore classConstant.unused */
     private const STATUTS_ACTIFS = ['En attente', 'En cours'];
 
     public function __construct(

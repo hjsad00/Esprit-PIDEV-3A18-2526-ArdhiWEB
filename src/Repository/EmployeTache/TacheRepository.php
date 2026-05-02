@@ -29,6 +29,8 @@ class TacheRepository extends ServiceEntityRepository
 
     /**
      * Requête principale avec filtres + tri
+     *
+     * @return Tache[]
      */
     public function findFiltreeTrie(
         int     $idAgriculteur,
@@ -100,6 +102,8 @@ class TacheRepository extends ServiceEntityRepository
 
     /**
      * Compte les tâches par statut pour les KPIs du header
+     *
+     * @return array{total: int, en_cours: int, terminees: int, en_attente: int, annulees: int}
      */
     public function countByStatut(int $idAgriculteur): array
     {
@@ -134,6 +138,9 @@ class TacheRepository extends ServiceEntityRepository
         return $counts;
     }
 
+    /**
+     * @return Tache[]
+     */
     public function findByEmploye(int $idEmploye, int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -146,6 +153,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return Tache[]
+     */
     public function findByAgriculteur(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -156,6 +166,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return Tache[]
+     */
     public function findTachesDuJour(int $idAgriculteur): array
     {
         $today = new \DateTime('today');
@@ -172,6 +185,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array<int, int>
+     */
     public function countByPriorite(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
@@ -189,6 +205,9 @@ class TacheRepository extends ServiceEntityRepository
         return $counts;
     }
 
+    /**
+     * @return array<int, array{idEmploye: int|null, total: int}>
+     */
     public function countByEmploye(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -201,6 +220,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array<int, array{dateDebut: \DateTimeInterface|string|null, total: int}>
+     */
     public function countByDate(int $idAgriculteur): array
     {
         return $this->createQueryBuilder('t')
@@ -214,6 +236,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array<string, int>
+     */
     public function countByCategorie(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
@@ -256,6 +281,9 @@ class TacheRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * @return array<string, int>
+     */
     public function countDetailStatut(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('t')
@@ -280,7 +308,10 @@ class TacheRepository extends ServiceEntityRepository
         }
         return $counts;
     }
-      public function findTachesParEmployePourPerformance(int $idEmploye): array
+    /**
+     * @return Tache[]
+     */
+    public function findTachesParEmployePourPerformance(int $idEmploye): array
     {
         return $this->createQueryBuilder('t')
             ->select('t')
@@ -292,6 +323,8 @@ class TacheRepository extends ServiceEntityRepository
 
     /**
      * ✅ Récupère les tâches terminées pour calculer l'historique de risque.
+     *
+     * @return Tache[]
      */
     public function findHistoriquePourRisque(int $idEmploye): array
     {

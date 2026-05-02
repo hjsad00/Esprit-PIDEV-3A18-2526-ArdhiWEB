@@ -43,7 +43,7 @@ class Tache
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_tache')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'titre', length: 200)]
     #[Assert\NotBlank(message: 'Le titre est obligatoire.')]

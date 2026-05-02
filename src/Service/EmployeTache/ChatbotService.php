@@ -16,9 +16,9 @@ class ChatbotResponse
     public string $intention = '';
     /** @var RecommandationResult[] */
     public array $recommandations = [];
-    /** @var array */
+    /** @var array<int, array<string, mixed>> */
     public array $disponibilites = [];
-    /** @var array */
+    /** @var array<int, array{text: string, msg: string, action: string}> */
     public array $suggestions = [];
 }
 
@@ -52,7 +52,7 @@ class ChatbotService
 
     public function traiterMessage(string $messageUtilisateur, int $idAgriculteur, ?string $lastIntent = null): ChatbotResponse
     {
-        $normalized = $this->mlClassifier->normalize($messageUtilisateur);
+        $normalized = $this->mlClassifier->normalize($messageUtilisateur ?? '');
         $lang       = $this->detecterLangue($messageUtilisateur, $normalized);
         $intention  = $this->mlClassifier->predict($normalized);
 
@@ -178,7 +178,7 @@ class ChatbotService
         // Si déjà assignée à un employé actif → afficher cet employé en premier
         $employeActif = $this->getEmployeActifDeTache($tache, $idAgriculteur);
         if ($employeActif !== null) {
-            $perf = $this->performanceService->calculatePerformance($employeActif->getId());
+            $perf = $this->performanceService->calculatePerformance((int) $employeActif->getId());
             $r = $this->buildRecommandationDepuisEmploye($employeActif, $perf, $lang, true);
             $response->reponse = $this->translator->trans(
                 'chatbot.reco.already_assigned',
@@ -286,7 +286,7 @@ class ChatbotService
         if (!empty($avecTaches)) {
             $medals = ['🥇', '🥈', '🥉', '🏅', '⭐'];
             $sb     = $this->translator->trans('chatbot.performance.title', [], null, $lang) . "\n\n";
-            foreach (array_values($avecTaches) as $i => $p) {
+            foreach ($avecTaches as $i => $p) {
                 $medal  = $medals[$i] ?? '⭐️';
                 $line   = $this->translator->trans('chatbot.performance.score_line', [
                     '%score%'        => sprintf('%.1f', $p['score']),
@@ -419,7 +419,7 @@ class ChatbotService
         $bestScore = 0.0;
 
         foreach ($taches as $tache) {
-            $titre        = $this->mlClassifier->normalize($tache->getTitre());
+            $titre        = $this->mlClassifier->normalize($tache->getTitre() ?? '');
             $similarity   = 0;
             similar_text($message, $titre, $similarity);
 
@@ -461,7 +461,7 @@ class ChatbotService
         $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
 
         return array_filter($taches, fn($t) =>
-            !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
+            !in_array(strtolower($t->getStatut()), $statuts_termines, true)
         );
     }
 
@@ -477,6 +477,9 @@ class ChatbotService
         return null;
     }
 
+    /**
+     * @param array<string, mixed> $perf
+     */
     private function buildRecommandationDepuisEmploye(
         Employe $employe,
         array   $perf,
@@ -520,6 +523,9 @@ class ChatbotService
         return null;
     }
 
+    /**
+     * @return Employe[]
+     */
     private function rechercherEmployesParCompetence(string $competence, int $idAgriculteur): array
     {
         return $this->employeRepository->createQueryBuilder('e')
@@ -533,6 +539,9 @@ class ChatbotService
             ->getResult();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function construireDisponibilites(int $idAgriculteur, string $lang): array
     {
         $employes = $this->employeRepository->findActifsByAgriculteur($idAgriculteur);

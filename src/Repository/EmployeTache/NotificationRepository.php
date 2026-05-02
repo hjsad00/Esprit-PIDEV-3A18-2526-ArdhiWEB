@@ -18,6 +18,8 @@ class NotificationRepository extends ServiceEntityRepository
 
     /**
      * Toutes les notifications d'un agriculteur, du plus récent au plus ancien.
+     *
+     * @return Notification[]
      */
     public function findByAgriculteur(int $idAgriculteur): array
     {
@@ -31,6 +33,8 @@ class NotificationRepository extends ServiceEntityRepository
 
     /**
      * Notifications non lues d'un agriculteur.
+     *
+     * @return Notification[]
      */
     public function findUnreadByAgriculteur(int $idAgriculteur): array
     {
@@ -127,6 +131,9 @@ public function existsTodayGlobal(string $type, int $idAgriculteur): bool
 
         return $count > 0;
     }
+    /**
+     * @return Notification[]
+     */
     public function findTachesDuJour(int $idAgriculteur): array
     {
         $today = new \DateTime('today');

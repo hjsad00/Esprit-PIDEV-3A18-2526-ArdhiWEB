@@ -30,6 +30,8 @@ class EmployeRepository extends ServiceEntityRepository
     /**
      * Tous les employés d'un agriculteur avec tri + recherche
      * Identique au SortedList + FilteredList du desktop JavaFX
+     *
+     * @return Employe[]
      */
     public function findByAgriculteurTrie(
         int    $idAgriculteur,
@@ -66,6 +68,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Alias simple sans tri (utilisé en interne)
+     *
+     * @return Employe[]
      */
     public function findByAgriculteur(int $idAgriculteur): array
     {
@@ -74,6 +78,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Uniquement les employés ACTIFS d'un agriculteur
+     *
+     * @return Employe[]
      */
     public function findActifsByAgriculteur(int $idAgriculteur): array
     {
@@ -88,6 +94,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Recherche par nom / prénom / email / poste / téléphone
+     *
+     * @return Employe[]
      */
     public function search(string $terme, int $idAgriculteur,
                            string $tri = 'nom', string $direction = 'asc'): array
@@ -136,6 +144,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Compte les employés par poste — pour les statistiques
+     *
+     * @return array<string, int>
      */
     public function countByPoste(int $idAgriculteur): array
     {
@@ -157,6 +167,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Compte les employés actifs/inactifs — pour les statistiques
+     *
+     * @return array{actifs: int, inactifs: int}
      */
     public function countByActif(int $idAgriculteur): array
     {

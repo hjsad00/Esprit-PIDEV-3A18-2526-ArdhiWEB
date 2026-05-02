@@ -15,7 +15,7 @@ class Employe
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_employe')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'nom', length: 100)]
     #[Assert\NotBlank]
@@ -163,7 +163,7 @@ class Employe
 
     public function getInitiales(): string
     {
-        return strtoupper(substr($this->prenom, 0, 1) . substr($this->nom, 0, 1));
+        return strtoupper(substr($this->prenom ?? '', 0, 1) . substr($this->nom ?? '', 0, 1));
     }
 
     public function genererQrCodeUnique(): string

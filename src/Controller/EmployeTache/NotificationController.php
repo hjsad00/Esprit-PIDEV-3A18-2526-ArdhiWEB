@@ -78,9 +78,7 @@ class NotificationController extends AbstractController
             return new JsonResponse(['success' => false], 403);
         }
 
-        if (!$this->isCsrfTokenValid('notif_read', $this->getRequest()?->request?->get('_token', ''))) {
-            // On accepte sans CSRF pour les appels AJAX simples (fetch avec header)
-        }
+        // CSRF check skipped for simple AJAX calls (fetch with header)
 
         $success = $this->notifService->markAsRead($id);
         return new JsonResponse(['success' => $success]);

@@ -110,6 +110,7 @@ class GoogleCalendarService
     {
         if (!$this->isConnected() || $this->calendarService === null) return null;
         try {
+            $event = $this->tacheVersEvent($tache);
             $created = $this->calendarService->events->insert($this->calendarId, $event);
 
             error_log('[GCal] ✅ Créé dans "' . $this->calendarId . '" : '
@@ -223,7 +224,7 @@ class GoogleCalendarService
             $desc .= $tache->getDescription() . "\n\n";
         }
         $desc .= "─── Ardhi ───\n";
-        $desc .= 'Statut    : ' . ($tache->getStatut() ?? '—') . "\n";
+        $desc .= 'Statut    : ' . $tache->getStatut() . "\n";
         $desc .= 'Priorité  : ' . $this->labelPrio($tache->getPriorite()) . "\n";
         $desc .= 'Catégorie : ' . ($tache->getCategorie() ?? '—') . "\n";
         if ($tache->getIdEmploye()) {

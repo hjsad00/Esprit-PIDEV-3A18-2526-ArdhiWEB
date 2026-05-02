@@ -29,7 +29,7 @@ class Notification
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_notification', type: 'integer')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(type: 'string', length: 50)]
     private string $type;
