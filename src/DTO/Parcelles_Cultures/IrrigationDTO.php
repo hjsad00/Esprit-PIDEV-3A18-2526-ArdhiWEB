@@ -18,7 +18,7 @@ class IrrigationDTO
     #[Assert\Type('numeric')]
     public ?string $temperature_max = null;
 
-    public ?string $temperature_moyenne = null;
+    public float|string|null $temperature_moyenne = null;
 
     #[Assert\Callback]
     public function validateTemperatures(\Symfony\Component\Validator\Context\ExecutionContextInterface $context): void

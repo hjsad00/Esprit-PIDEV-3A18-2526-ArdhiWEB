@@ -41,9 +41,9 @@ class CultureService
     /**
      * Obtient la surface utilisée totale pour une parcelle
      */
-    public function getSurfaceUtiliseeParParcelle(int $parcelleId): float
+    public function getSurfaceUtiliseeParParcelle(int $parcelleId, ?int $excludeCultureId = null): float
     {
-        return $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId);
+        return $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId, $excludeCultureId);
     }
 
     /**

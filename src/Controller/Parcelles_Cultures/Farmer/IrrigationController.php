@@ -3,6 +3,7 @@
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
+use App\Entity\UserAndDiag\User;
 use App\DTO\Parcelles_Cultures\IrrigationDTO;
 use App\Form\Parcelles_Cultures\Type\IrrigationFormType;
 use App\Repository\Parcelles_Cultures\IrrigationRequestRepository;
@@ -80,6 +81,7 @@ class IrrigationController extends AbstractController
         if (!$user) {
             return $this->json(['error' => 'User not authenticated'], 401);
         }
+        assert($user instanceof User);
         
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         

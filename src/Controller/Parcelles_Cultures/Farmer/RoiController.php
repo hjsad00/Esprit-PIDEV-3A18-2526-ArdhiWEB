@@ -7,6 +7,7 @@ use App\Service\PythonRoiService;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use App\Repository\Parcelles_Cultures\RoiAnalyseRepository;
 use App\Entity\Parcelles_Cultures\RoiAnalyse;
+use App\Entity\UserAndDiag\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,6 +38,7 @@ class RoiController extends AbstractController
     public function calculator(\Symfony\Component\HttpFoundation\Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
 
         $dto = new \App\DTO\Parcelles_Cultures\RoiDTO();

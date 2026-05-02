@@ -72,4 +72,31 @@ class IrrigationService
             'humidite' => $humidite,
         ];
     }
+
+    /**
+     * Calcul des besoins d'irrigation (alias pour compatibilité)
+     */
+    public function calculateIrrigationNeeds(array $weatherData, string $cultureName, float $surface): array
+    {
+        $temperatureMoyenne = $weatherData['temperature'] ?? 25;
+        $temperatureMax = $weatherData['temp_max'] ?? 30;
+        $temperatureMin = $weatherData['temp_min'] ?? 20;
+        $precipitations = $weatherData['precipitation'] ?? 0;
+        $humidite = $weatherData['humidity'] ?? 60;
+        $kc = $weatherData['kc'] ?? 0.8;
+        
+        $et0 = $this->calculerET0($temperatureMoyenne, $temperatureMax, $temperatureMin);
+        $besoinBrut = $this->calculerBesoinBrut($kc, $et0);
+        $besoinNet = $this->calculerBesoinNet($besoinBrut, $precipitations);
+        $volumeLitres = $this->calculerVolumeLitres($besoinNet, $surface);
+        
+        return [
+            'culture' => $cultureName,
+            'surface' => $surface,
+            'volume_litres' => $volumeLitres,
+            'volume_m3' => $volumeLitres / 1000,
+            'et0' => $et0,
+            'besoin_net' => $besoinNet
+        ];
+    }
 }

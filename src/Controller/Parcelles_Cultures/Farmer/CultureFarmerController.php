@@ -4,6 +4,7 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\UserAndDiag\User;
 use App\DTO\Parcelles_Cultures\CultureDTO;
 use App\Form\Parcelles_Cultures\Type\CultureFormType;
 use App\Repository\Parcelles_Cultures\CultureRepository;
@@ -34,6 +35,7 @@ class CultureFarmerController extends AbstractController
     public function index(Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         
         $query = $this->cultureRepository->searchAndFilter(
             $user,
@@ -70,6 +72,7 @@ class CultureFarmerController extends AbstractController
     public function new(Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         $remainingSurfaces = [];
         foreach ($parcelles as $p) {
@@ -158,7 +161,9 @@ class CultureFarmerController extends AbstractController
         $dto->rendement_estime = $culture->getRendementEstime();
         $dto->parcelle = $culture->getParcelle();
 
-        $parcelles = $this->parcelleRepository->findByAgriculteur($this->getUser());
+        $user = $this->getUser();
+        assert($user instanceof User);
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         $remainingSurfaces = [];
         foreach ($parcelles as $p) {
             $used = $this->cultureService->getSurfaceUtiliseeParParcelle($p->getId(), $culture->getId());

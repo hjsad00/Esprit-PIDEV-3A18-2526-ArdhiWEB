@@ -13,7 +13,7 @@ class CreditDossier
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank(message: 'La durée en années est obligatoire')]

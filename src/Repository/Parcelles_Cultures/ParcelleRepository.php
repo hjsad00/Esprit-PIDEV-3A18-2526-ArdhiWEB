@@ -19,7 +19,10 @@ class ParcelleRepository extends ServiceEntityRepository
 
     public function findByAgriculteur(User $user)
     {
+        // JOIN FETCH prevents N+1 queries on lazy-loaded associations
         return $this->createQueryBuilder('p')
+            ->leftJoin('p.agriculteur', 'a')
+            ->addSelect('a')
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->orderBy('p.created_at', 'DESC')

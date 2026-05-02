@@ -15,7 +15,7 @@ class IrrigationRequest
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(type: 'date')]
     #[Assert\NotBlank(message: 'La date est obligatoire')]
@@ -40,7 +40,7 @@ class IrrigationRequest
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
     #[Assert\NotBlank(message: 'L\'humidité est obligatoire')]
-    #[Assert\Range(min: 0, max: 100, message: 'L\'humidité doit être entre 0 et 100')]
+    #[Assert\Range(min: 0, max: 100, notInRangeMessage: 'L\'humidité doit être entre 0 et 100')]
     private ?string $humidite = null;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]

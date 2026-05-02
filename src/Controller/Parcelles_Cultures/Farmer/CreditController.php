@@ -4,6 +4,7 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\Parcelles_Cultures\CreditDossier;
+use App\Entity\UserAndDiag\User;
 use App\DTO\Parcelles_Cultures\CreditDossierDTO;
 use App\Form\Parcelles_Cultures\Type\CreditDossierFormType;
 use App\Repository\Parcelles_Cultures\CreditDossierRepository;
@@ -53,6 +54,7 @@ class CreditController extends AbstractController
     public function new(): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
 
         return $this->render('parcelles_cultures/farmer/credit/new.html.twig', [
@@ -81,9 +83,11 @@ class CreditController extends AbstractController
             // Pour l'instant on garde une simulation basée sur le DTO ou des défauts
             $margeBrute = 5000; 
             
+            $user = $this->getUser();
+            assert($user instanceof User);
             $dossier = $this->creditService->genererDossier(
                 $parcelle,
-                $this->getUser(),
+                $user,
                 $dto->duree_annees,
                 (float) ($dto->score_rentabilite ?? 7.5),
                 (float) ($dto->score_stabilite_climat ?? 8.0),

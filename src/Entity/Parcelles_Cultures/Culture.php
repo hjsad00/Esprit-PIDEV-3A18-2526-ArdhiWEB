@@ -17,7 +17,7 @@ class Culture
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Le nom de la culture est obligatoire')]
@@ -147,9 +147,9 @@ class Culture
         return $this->surface_utilisee;
     }
 
-    public function setSurfaceUtilisee(string $surface_utilisee): static
+    public function setSurfaceUtilisee(float|string|int $surface_utilisee): static
     {
-        $this->surface_utilisee = $surface_utilisee;
+        $this->surface_utilisee = (string) $surface_utilisee;
         return $this;
     }
 
@@ -158,9 +158,9 @@ class Culture
         return $this->rendement_estime;
     }
 
-    public function setRendementEstime(string $rendement_estime): static
+    public function setRendementEstime(float|string|int $rendement_estime): static
     {
-        $this->rendement_estime = $rendement_estime;
+        $this->rendement_estime = (string) $rendement_estime;
         return $this;
     }
 
