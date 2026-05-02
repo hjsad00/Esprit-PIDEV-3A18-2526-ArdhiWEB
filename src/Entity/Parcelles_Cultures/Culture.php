@@ -21,23 +21,23 @@ class Culture
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Le nom de la culture est obligatoire')]
-    private ?string $nom_culture = null;
+    private string $nom_culture;
 
     #[ORM\Column(type: 'string', length: 100)]
     #[Assert\NotBlank(message: 'Le type de culture est obligatoire')]
-    private ?string $type_culture = null;
+    private string $type_culture;
 
     #[ORM\Column(type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'La saison est obligatoire')]
-    private ?string $saison = null;
+    private string $saison;
 
     #[ORM\Column(type: 'date')]
     #[Assert\NotBlank(message: 'La date de plantation est obligatoire')]
-    private ?\DateTimeInterface $date_plantation = null;
+    private \DateTimeInterface $date_plantation;
 
     #[ORM\Column(type: 'date')]
     #[Assert\NotBlank(message: 'La date de récolte prévue est obligatoire')]
-    private ?\DateTimeInterface $date_recolte_prevue = null;
+    private \DateTimeInterface $date_recolte_prevue;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'active'])]
     private string $etat_culture = 'active';
@@ -45,21 +45,21 @@ class Culture
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'La surface utilisée est obligatoire')]
     #[Assert\GreaterThanOrEqual(value: 0, message: 'La surface utilisée doit être >= 0')]
-    private ?string $surface_utilisee = null;
+    private string $surface_utilisee;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'Le rendement estimé est obligatoire')]
     #[Assert\GreaterThan(value: 0, message: 'Le rendement estimé doit être > 0')]
-    private ?string $rendement_estime = null;
+    private string $rendement_estime;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $production_estimee = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $created_at = null;
+    private \DateTimeImmutable $created_at;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $updated_at = null;
+    private \DateTimeImmutable $updated_at;
 
     #[ORM\ManyToOne(targetEntity: Parcelle::class, inversedBy: 'cultures')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -76,7 +76,7 @@ class Culture
         return $this->id;
     }
 
-    public function getNomCulture(): ?string
+    public function getNomCulture(): string
     {
         return $this->nom_culture;
     }
@@ -87,7 +87,7 @@ class Culture
         return $this;
     }
 
-    public function getTypeCulture(): ?string
+    public function getTypeCulture(): string
     {
         return $this->type_culture;
     }
@@ -98,7 +98,7 @@ class Culture
         return $this;
     }
 
-    public function getSaison(): ?string
+    public function getSaison(): string
     {
         return $this->saison;
     }
@@ -109,7 +109,7 @@ class Culture
         return $this;
     }
 
-    public function getDatePlantation(): ?\DateTimeInterface
+    public function getDatePlantation(): \DateTimeInterface
     {
         return $this->date_plantation;
     }
@@ -120,7 +120,7 @@ class Culture
         return $this;
     }
 
-    public function getDateRecoltePrevue(): ?\DateTimeInterface
+    public function getDateRecoltePrevue(): \DateTimeInterface
     {
         return $this->date_recolte_prevue;
     }
@@ -142,7 +142,7 @@ class Culture
         return $this;
     }
 
-    public function getSurfaceUtilisee(): ?string
+    public function getSurfaceUtilisee(): string
     {
         return $this->surface_utilisee;
     }
@@ -153,7 +153,7 @@ class Culture
         return $this;
     }
 
-    public function getRendementEstime(): ?string
+    public function getRendementEstime(): string
     {
         return $this->rendement_estime;
     }
@@ -175,7 +175,7 @@ class Culture
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->created_at;
     }
@@ -186,12 +186,12 @@ class Culture
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
+    public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updated_at;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
+    public function setUpdatedAt(\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
         return $this;

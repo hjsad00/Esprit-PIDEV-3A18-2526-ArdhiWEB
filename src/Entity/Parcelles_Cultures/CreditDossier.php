@@ -18,31 +18,31 @@ class CreditDossier
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank(message: 'La durée en années est obligatoire')]
     #[Assert\GreaterThan(value: 0, message: 'La durée doit être > 0')]
-    private ?int $duree_annees = null;
+    private int $duree_annees;
 
     #[ORM\Column(type: 'decimal', precision: 12, scale: 2)]
-    private ?string $montant_pret_max = null;
+    private string $montant_pret_max;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private ?string $capacite_remboursement = null;
+    private string $capacite_remboursement;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private ?string $score_risque = null;
+    private string $score_risque;
 
     #[ORM\Column(type: 'string', length: 50)]
     private string $niveau_risque = 'modere';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private ?string $score_rentabilite = null;
+    private string $score_rentabilite;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private ?string $score_stabilite_climat = null;
+    private string $score_stabilite_climat;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private ?string $score_diversification = null;
+    private string $score_diversification;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private ?string $score_historique = null;
+    private string $score_historique;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $recommandations = null;
@@ -51,10 +51,10 @@ class CreditDossier
     private string $statut = 'draft';
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $created_at = null;
+    private \DateTimeImmutable $created_at;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $updated_at = null;
+    private \DateTimeImmutable $updated_at;
 
     #[ORM\ManyToOne(targetEntity: Parcelle::class, inversedBy: 'creditDossiers')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -71,7 +71,7 @@ class CreditDossier
         return $this->id;
     }
 
-    public function getDureeAnnees(): ?int
+    public function getDureeAnnees(): int
     {
         return $this->duree_annees;
     }
@@ -82,36 +82,36 @@ class CreditDossier
         return $this;
     }
 
-    public function getMontantPretMax(): ?string
+    public function getMontantPretMax(): string
     {
         return $this->montant_pret_max;
     }
 
-    public function setMontantPretMax(?string $montant_pret_max): static
+    public function setMontantPretMax(string|int|float $montant_pret_max): static
     {
-        $this->montant_pret_max = $montant_pret_max;
+        $this->montant_pret_max = (string) $montant_pret_max;
         return $this;
     }
 
-    public function getCapaciteRemboursement(): ?string
+    public function getCapaciteRemboursement(): string
     {
         return $this->capacite_remboursement;
     }
 
-    public function setCapaciteRemboursement(?string $capacite_remboursement): static
+    public function setCapaciteRemboursement(string|int|float $capacite_remboursement): static
     {
-        $this->capacite_remboursement = $capacite_remboursement;
+        $this->capacite_remboursement = (string) $capacite_remboursement;
         return $this;
     }
 
-    public function getScoreRisque(): ?string
+    public function getScoreRisque(): string
     {
         return $this->score_risque;
     }
 
-    public function setScoreRisque(?string $score_risque): static
+    public function setScoreRisque(string|int|float $score_risque): static
     {
-        $this->score_risque = $score_risque;
+        $this->score_risque = (string) $score_risque;
         return $this;
     }
 
@@ -126,47 +126,47 @@ class CreditDossier
         return $this;
     }
 
-    public function getScoreRentabilite(): ?string
+    public function getScoreRentabilite(): string
     {
         return $this->score_rentabilite;
     }
 
-    public function setScoreRentabilite(?string $score_rentabilite): static
+    public function setScoreRentabilite(string|int|float $score_rentabilite): static
     {
-        $this->score_rentabilite = $score_rentabilite;
+        $this->score_rentabilite = (string) $score_rentabilite;
         return $this;
     }
 
-    public function getScoreStabiliteClimat(): ?string
+    public function getScoreStabiliteClimat(): string
     {
         return $this->score_stabilite_climat;
     }
 
-    public function setScoreStabiliteClimat(?string $score_stabilite_climat): static
+    public function setScoreStabiliteClimat(string|int|float $score_stabilite_climat): static
     {
-        $this->score_stabilite_climat = $score_stabilite_climat;
+        $this->score_stabilite_climat = (string) $score_stabilite_climat;
         return $this;
     }
 
-    public function getScoreDiversification(): ?string
+    public function getScoreDiversification(): string
     {
         return $this->score_diversification;
     }
 
-    public function setScoreDiversification(?string $score_diversification): static
+    public function setScoreDiversification(string|int|float $score_diversification): static
     {
-        $this->score_diversification = $score_diversification;
+        $this->score_diversification = (string) $score_diversification;
         return $this;
     }
 
-    public function getScoreHistorique(): ?string
+    public function getScoreHistorique(): string
     {
         return $this->score_historique;
     }
 
-    public function setScoreHistorique(?string $score_historique): static
+    public function setScoreHistorique(string|int|float $score_historique): static
     {
-        $this->score_historique = $score_historique;
+        $this->score_historique = (string) $score_historique;
         return $this;
     }
 
@@ -192,7 +192,7 @@ class CreditDossier
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->created_at;
     }
@@ -203,12 +203,12 @@ class CreditDossier
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
+    public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updated_at;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
+    public function setUpdatedAt(\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
         return $this;

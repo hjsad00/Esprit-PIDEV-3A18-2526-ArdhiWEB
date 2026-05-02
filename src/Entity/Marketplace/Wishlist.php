@@ -26,7 +26,7 @@ class Wishlist
     private ?Produits $produit = null;
 
     #[ORM\Column(name: 'dateAjout', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private ?\DateTimeInterface $dateAjout = null;
+    private \DateTimeInterface $dateAjout;
 
     public function __construct()
     {
@@ -60,7 +60,7 @@ class Wishlist
         return $this;
     }
 
-    public function getDateAjout(): ?\DateTimeInterface
+    public function getDateAjout(): \DateTimeInterface
     {
         return $this->dateAjout;
     }

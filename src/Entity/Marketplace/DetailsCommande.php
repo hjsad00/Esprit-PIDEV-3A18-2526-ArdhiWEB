@@ -27,7 +27,7 @@ class DetailsCommande
     private int $quantite = 1;
 
     #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
-    private ?float $prixUnitaire = null;
+    private float $prixUnitaire;
 
     // ==================== GETTERS & SETTERS ====================
 
@@ -69,7 +69,7 @@ class DetailsCommande
         return $this;
     }
 
-    public function getPrixUnitaire(): ?float
+    public function getPrixUnitaire(): float
     {
         return $this->prixUnitaire;
     }

@@ -20,31 +20,31 @@ class Coupon
     #[ORM\Column(length: 50, unique: true)]
     #[Assert\NotBlank(message: 'Le code promo est obligatoire.')]
     #[Assert\Length(min: 3, max: 50, minMessage: 'Le code doit faire au moins {{ limit }} caractères.')]
-    private ?string $code = null;
+    private string $code;
 
     #[ORM\Column(name: 'typeReduction', type: Types::STRING, length: 20, columnDefinition: "ENUM('POURCENTAGE', 'FIXE') NOT NULL")]
     #[Assert\NotBlank(message: 'Le type de réduction est obligatoire.')]
     #[Assert\Choice(choices: ['POURCENTAGE', 'FIXE'], message: 'Type de réduction invalide.')]
-    private ?string $typeReduction = null;
+    private string $typeReduction;
 
     #[ORM\Column(type: Types::FLOAT)]
     #[Assert\NotBlank(message: 'La valeur est obligatoire.')]
     #[Assert\GreaterThan(value: 0, message: 'La valeur doit être supérieure à 0.')]
-    private ?float $valeur = null;
+    private float $valeur;
 
     #[ORM\Column(name: 'dateDebut', type: Types::DATE_MUTABLE)]
     #[Assert\NotBlank(message: 'La date de début est obligatoire.')]
-    private ?\DateTimeInterface $dateDebut = null;
+    private \DateTimeInterface $dateDebut;
 
     #[ORM\Column(name: 'dateFin', type: Types::DATE_MUTABLE)]
     #[Assert\NotBlank(message: 'La date de fin est obligatoire.')]
-    private ?\DateTimeInterface $dateFin = null;
+    private \DateTimeInterface $dateFin;
 
     #[ORM\Column(name: 'utilisationMax', options: ['default' => 0])]
-    private ?int $utilisationMax = 0;
+    private int $utilisationMax = 0;
 
     #[ORM\Column(name: 'utilisationActuelle', options: ['default' => 0])]
-    private ?int $utilisationActuelle = 0;
+    private int $utilisationActuelle = 0;
 
     #[ORM\Column(type: Types::BOOLEAN, options: ['default' => true])]
     private bool $actif = true;
@@ -53,14 +53,14 @@ class Coupon
     private float $montantMin = 0;
 
     #[ORM\Column(name: 'limiteParUser', options: ['default' => 1])]
-    private ?int $limiteParUser = 1;
+    private int $limiteParUser = 1;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getCode(): ?string
+    public function getCode(): string
     {
         return $this->code;
     }
@@ -71,7 +71,7 @@ class Coupon
         return $this;
     }
 
-    public function getTypeReduction(): ?string
+    public function getTypeReduction(): string
     {
         return $this->typeReduction;
     }
@@ -82,7 +82,7 @@ class Coupon
         return $this;
     }
 
-    public function getValeur(): ?float
+    public function getValeur(): float
     {
         return $this->valeur;
     }
@@ -93,7 +93,7 @@ class Coupon
         return $this;
     }
 
-    public function getDateDebut(): ?\DateTimeInterface
+    public function getDateDebut(): \DateTimeInterface
     {
         return $this->dateDebut;
     }
@@ -104,7 +104,7 @@ class Coupon
         return $this;
     }
 
-    public function getDateFin(): ?\DateTimeInterface
+    public function getDateFin(): \DateTimeInterface
     {
         return $this->dateFin;
     }
@@ -115,7 +115,7 @@ class Coupon
         return $this;
     }
 
-    public function getUtilisationMax(): ?int
+    public function getUtilisationMax(): int
     {
         return $this->utilisationMax;
     }
@@ -126,7 +126,7 @@ class Coupon
         return $this;
     }
 
-    public function getUtilisationActuelle(): ?int
+    public function getUtilisationActuelle(): int
     {
         return $this->utilisationActuelle;
     }
@@ -159,7 +159,7 @@ class Coupon
         return $this;
     }
 
-    public function getLimiteParUser(): ?int
+    public function getLimiteParUser(): int
     {
         return $this->limiteParUser;
     }

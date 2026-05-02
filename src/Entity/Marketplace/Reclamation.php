@@ -20,18 +20,18 @@ class Reclamation
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: 'La description détaillée est obligatoire.')]
     #[Assert\Length(min: 10, minMessage: 'La description doit faire au moins {{ limit }} caractères.')]
-    private ?string $description = null;
+    private string $description;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: 'Le type de réclamation est obligatoire.')]
     #[Assert\Choice(choices: ['QUALITE_RECOLTE', 'PRODUIT_AVARIE', 'QUANTITE_INCORRECTE', 'PRIX_NON_CONFORME', 'PRODUIT_NON_CONFORME', 'RETARD_LIVRAISON', 'AUTRE'], message: 'Type de réclamation invalide.')]
-    private ?string $type = null;
+    private string $type;
 
     #[ORM\Column(length: 50, options: ['default' => 'EN_ATTENTE'])]
-    private ?string $statut = 'EN_ATTENTE';
+    private string $statut = 'EN_ATTENTE';
 
     #[ORM\Column(name: 'date_reclamation', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private ?\DateTimeInterface $dateReclamation = null;
+    private \DateTimeInterface $dateReclamation;
 
     #[ORM\Column(name: 'nom_produit', length: 255, nullable: true)]
     private ?string $nomProduit = null;
@@ -55,7 +55,7 @@ class Reclamation
         return $this->id;
     }
 
-    public function getDescription(): ?string
+    public function getDescription(): string
     {
         return $this->description;
     }
@@ -67,7 +67,7 @@ class Reclamation
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -79,7 +79,7 @@ class Reclamation
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): string
     {
         return $this->statut;
     }
@@ -91,7 +91,7 @@ class Reclamation
         return $this;
     }
 
-    public function getDateReclamation(): ?\DateTimeInterface
+    public function getDateReclamation(): \DateTimeInterface
     {
         return $this->dateReclamation;
     }

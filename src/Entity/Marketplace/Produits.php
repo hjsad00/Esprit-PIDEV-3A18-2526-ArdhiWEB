@@ -26,7 +26,7 @@ class Produits
         minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
     )]
-    private ?string $nom = null;
+    private string $nom;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
@@ -34,12 +34,12 @@ class Produits
     #[ORM\Column(type: Types::FLOAT)]
     #[Assert\NotBlank(message: 'Le prix est obligatoire.')]
     #[Assert\GreaterThan(value: 0.1, message: 'Le prix doit être supérieur à 0.1 DT.')]
-    private ?float $prix = null;
+    private float $prix;
 
     #[ORM\Column(name: 'quantiteStock')]
     #[Assert\NotBlank(message: 'La quantité en stock est obligatoire.')]
     #[Assert\GreaterThanOrEqual(value: 1, message: 'Le stock doit être supérieur à 0.')]
-    private ?int $quantiteStock = null;
+    private int $quantiteStock;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
@@ -55,13 +55,13 @@ class Produits
         choices: ['Kg', 'L', 'Piece'],
         message: "L'unité de mesure doit être l'une des valeurs suivantes : Kg, L, Piece."
     )]
-    private ?string $uniteMesure = null;
+    private string $uniteMesure;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
     #[ORM\Column(type: Types::FLOAT, options: ["default" => 0])]
-    private ?float $remise = 0;
+    private float $remise = 0.0;
 
     #[ORM\Column(name: 'typeRemise', length: 20, nullable: true)]
     private ?string $typeRemise = null;
@@ -87,7 +87,7 @@ class Produits
         return $this->id;
     }
 
-    public function getNom(): ?string
+    public function getNom(): string
     {
         return $this->nom;
     }
@@ -109,7 +109,7 @@ class Produits
         return $this;
     }
 
-    public function getPrix(): ?float
+    public function getPrix(): float
     {
         return $this->prix;
     }
@@ -120,7 +120,7 @@ class Produits
         return $this;
     }
 
-    public function getQuantiteStock(): ?int
+    public function getQuantiteStock(): int
     {
         return $this->quantiteStock;
     }
@@ -153,7 +153,7 @@ class Produits
         return $this;
     }
 
-    public function getUniteMesure(): ?string
+    public function getUniteMesure(): string
     {
         return $this->uniteMesure;
     }
@@ -175,14 +175,14 @@ class Produits
         return $this;
     }
 
-    public function getRemise(): ?float
+    public function getRemise(): float
     {
         return $this->remise;
     }
 
     public function setRemise(?float $remise): static
     {
-        $this->remise = $remise;
+        $this->remise = $remise ?? 0.0;
         return $this;
     }
 

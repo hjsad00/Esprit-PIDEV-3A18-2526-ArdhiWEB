@@ -21,10 +21,10 @@ class Commande
     private ?int $id = null;
 
     #[ORM\Column(name: 'dateCommande', type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dateCommande = null;
+    private \DateTimeInterface $dateCommande;
 
     #[ORM\Column(length: 50, options: ['default' => 'en_cours'])]
-    private ?string $etat = 'en_cours';
+    private string $etat = 'en_cours';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, options: ['default' => '0.00'])]
     private string $total = '0.00';
@@ -74,7 +74,7 @@ class Commande
         return $this->id;
     }
 
-    public function getDateCommande(): ?\DateTimeInterface
+    public function getDateCommande(): \DateTimeInterface
     {
         return $this->dateCommande;
     }
@@ -85,7 +85,7 @@ class Commande
         return $this;
     }
 
-    public function getEtat(): ?string
+    public function getEtat(): string
     {
         return $this->etat;
     }

@@ -19,7 +19,7 @@ class Panier
     private ?int $id = null;
 
     #[ORM\Column(name: 'dateCreation', type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dateCreation = null;
+    private \DateTimeInterface $dateCreation;
 
     #[ORM\Column(name: 'totalMontant', type: Types::DECIMAL, precision: 12, scale: 2, options: ['default' => '0.00'])]
     private string $totalMontant = '0.00';
@@ -50,7 +50,7 @@ class Panier
         return $this->id;
     }
 
-    public function getDateCreation(): ?\DateTimeInterface
+    public function getDateCreation(): \DateTimeInterface
     {
         return $this->dateCreation;
     }

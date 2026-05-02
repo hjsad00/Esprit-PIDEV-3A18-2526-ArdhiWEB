@@ -25,7 +25,7 @@ class CouponUtilisation
     private ?User $user = null;
 
     #[ORM\Column(name: 'nombreUtilisation', options: ['default' => 0])]
-    private ?int $nombreUtilisation = 0;
+    private int $nombreUtilisation = 0;
 
     public function getId(): ?int
     {
@@ -54,7 +54,7 @@ class CouponUtilisation
         return $this;
     }
 
-    public function getNombreUtilisation(): ?int
+    public function getNombreUtilisation(): int
     {
         return $this->nombreUtilisation;
     }
