@@ -64,7 +64,7 @@ class EmployeRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()
-            ->setMaxResults(1000)
+            ->setMaxResults(50)
             ->getResult();
     }
 
