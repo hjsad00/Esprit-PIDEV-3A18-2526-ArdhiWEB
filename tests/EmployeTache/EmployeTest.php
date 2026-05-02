@@ -4,6 +4,7 @@ namespace App\Tests\EmployeTache;
 
 use App\Entity\EmployeTache\Employe;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Depends;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -60,9 +61,7 @@ class EmployeTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testAjouterEmploye
-     */
+    #[Depends('testAjouterEmploye')]
     public function testModifierEmploye(int $id): int
     {
         $employe = $this->entityManager->getRepository(Employe::class)->find($id);
@@ -77,9 +76,7 @@ class EmployeTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testModifierEmploye
-     */
+    #[Depends('testModifierEmploye')]
     public function testSupprimerEmploye(int $id): void
     {
         $employe = $this->entityManager->getRepository(Employe::class)->find($id);

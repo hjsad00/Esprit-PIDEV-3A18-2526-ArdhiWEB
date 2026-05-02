@@ -4,6 +4,7 @@ namespace App\Tests\EmployeTache;
 
 use App\Entity\EmployeTache\Tache;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Depends;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -52,9 +53,7 @@ class TacheTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testAjouterTache
-     */
+    #[Depends('testAjouterTache')]
     public function testModifierTache(int $id): int
     {
         $tache = $this->entityManager->getRepository(Tache::class)->find($id);
@@ -71,9 +70,7 @@ class TacheTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testModifierTache
-     */
+    #[Depends('testModifierTache')]
     public function testSupprimerTache(int $id): void
     {
         $tache = $this->entityManager->getRepository(Tache::class)->find($id);
