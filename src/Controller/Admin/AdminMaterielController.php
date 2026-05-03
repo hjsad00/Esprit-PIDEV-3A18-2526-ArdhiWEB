@@ -123,7 +123,7 @@ class AdminMaterielController extends AbstractController
         $form = $this->createForm(AdminMaterielType::class, $materiel);
         
         // Pré-remplir l'utilisateur dans le champ mapped=>false
-        $currentUser = $userRepo->find($materiel->getUserId());
+        $currentUser = $userRepo->find($materiel->getUser()?->getId());
         if ($currentUser) {
             $form->get('userEntity')->setData($currentUser);
         }

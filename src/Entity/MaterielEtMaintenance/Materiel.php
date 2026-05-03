@@ -20,10 +20,11 @@ class Materiel
     #[ORM\Column(name: 'id_materiel', type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'user_id', type: 'integer')]
-    private ?int $userId = null;
+    #[ORM\ManyToOne(targetEntity: \App\Entity\UserAndDiag\User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true)]
+    private ?\App\Entity\UserAndDiag\User $user = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: "Oups, n'oubliez pas le nom.")]
     private ?string $nom = null;
 
@@ -71,10 +72,10 @@ class Materiel
     #[ORM\Column(type: Types::INTEGER)]
     private int $derniereMaintenanceHeures = 0;
 
-    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: AlerteTechnicien::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: AlerteTechnicien::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $alerteTechniciens;
 
-    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'materiel', targetEntity: Maintenance::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $maintenances;
 
     public function __construct()
@@ -88,14 +89,14 @@ class Materiel
         return $this->id;
     }
 
-    public function getUserId(): ?int
+    public function getUser(): ?\App\Entity\UserAndDiag\User
     {
-        return $this->userId;
+        return $this->user;
     }
 
-    public function setUserId(int $userId): self
+    public function setUser(?\App\Entity\UserAndDiag\User $user): self
     {
-        $this->userId = $userId;
+        $this->user = $user;
 
         return $this;
     }
@@ -380,9 +381,6 @@ class Materiel
      */
     public function getAgriculteur(EntityManagerInterface $em): ?\App\Entity\UserAndDiag\User
     {
-        if (!$this->userId) {
-            return null;
-        }
-        return $em->getRepository(\App\Entity\UserAndDiag\User::class)->find($this->userId);
+        return $this->user;
     }
 }

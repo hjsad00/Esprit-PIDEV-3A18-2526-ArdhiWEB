@@ -35,7 +35,7 @@ class ReclamationController extends AbstractController
     {
         $materiel = $matRepo->find($materielId);
 
-        if (!$materiel || $materiel->getUserId() !== $this->getUser()->getId()) {
+        if (!$materiel || $materiel->getUser()?->getId() !== $this->getUser()->getId()) {
             throw $this->createNotFoundException('Matériel introuvable.');
         }
 

@@ -74,7 +74,7 @@ class AdminMaintenanceController extends AbstractController
                 // Notification pour le propriétaire du matériel avec message automatique
                 $materiel = $maintenance->getMateriel();
                 if ($materiel) {
-                    $userId = $materiel->getUserId();
+                    $userId = $materiel->getUser()?->getId();
                     $user = $userRepo->find($userId);
                     if ($user) {
                         $notif = new \App\Entity\MaterielEtMaintenance\NotificationMaintenance();
@@ -203,7 +203,7 @@ class AdminMaintenanceController extends AbstractController
         $materiel = $maintenance->getMateriel();
         $machineName = $materiel ? $materiel->getNom() : 'votre machine';
         
-        $userId = $materiel ? $materiel->getUserId() : null;
+        $userId = $materiel ? $materiel->getUser()?->getId() : null;
         $user = $userId ? $userRepo->find($userId) : null;
 
         if (!$user) {

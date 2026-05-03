@@ -408,7 +408,7 @@ class MaterielController extends AbstractController
     private function getMaterielOwnedByUser(int $id, MaterielRepository $repo): Materiel
     {
         $materiel = $repo->find($id);
-        if (!$materiel || $materiel->getUserId() !== $this->getUser()->getId()) {
+        if (!$materiel || $materiel->getUser()?->getId() !== $this->getUser()->getId()) {
             throw $this->createNotFoundException('Matériel introuvable.');
         }
         return $materiel;

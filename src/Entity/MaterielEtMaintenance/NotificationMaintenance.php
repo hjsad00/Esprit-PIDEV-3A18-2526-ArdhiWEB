@@ -8,7 +8,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: NotificationMaintenanceRepository::class)]
-#[ORM\Table(name: 'notificationMaintenance')]
+#[ORM\Table(name: 'notification_maintenance')]
 class NotificationMaintenance
 {
     #[ORM\Id]
@@ -37,7 +37,7 @@ class NotificationMaintenance
     private bool $isRead = false;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     public function __construct()
     {
