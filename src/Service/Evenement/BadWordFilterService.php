@@ -4,6 +4,9 @@ namespace App\Service\Evenement;
 
 class BadWordFilterService
 {
+    /**
+     * @var list<string>
+     */
     private array $badWords = [
         // French common bad words and vulgarities (non-exhaustive list)
         'connard', 'connasse', 'con', 'salaud', 'salope', 'putain', 'merde', 'chier',
@@ -21,6 +24,8 @@ class BadWordFilterService
     /**
      * Check if text contains any bad words
      * Returns array of bad words found, or empty array if none
+     *
+     * @return list<string>
      */
     public function hasBadWords(string $text): array
     {
@@ -55,7 +60,10 @@ class BadWordFilterService
         foreach ($this->badWords as $badWord) {
             $badWordLower = mb_strtolower($badWord, 'UTF-8');
             $replacement = str_repeat('*', strlen($badWordLower));
-            $text = preg_replace('/\b' . preg_quote($badWordLower, '/') . '\b/iu', $replacement, $text);
+            $filteredText = preg_replace('/\b' . preg_quote($badWordLower, '/') . '\b/iu', $replacement, $text);
+            if ($filteredText !== null) {
+                $text = $filteredText;
+            }
         }
 
         return $text;
@@ -63,6 +71,8 @@ class BadWordFilterService
 
     /**
      * Get validation message for bad words
+     *
+     * @param list<string> $badWords
      */
     public function getErrorMessage(array $badWords): string
     {
@@ -72,10 +82,12 @@ class BadWordFilterService
 
     /**
      * Add custom bad words to the filter
+     *
+     * @param list<string> $words
      */
     public function addBadWords(array $words): void
     {
         $this->badWords = array_merge($this->badWords, $words);
-        $this->badWords = array_unique($this->badWords);
+        $this->badWords = array_values(array_unique($this->badWords));
     }
 }

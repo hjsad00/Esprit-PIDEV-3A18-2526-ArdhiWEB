@@ -36,11 +36,17 @@ class ReviewComment
     #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?ReviewComment $parentComment = null;
 
+    /**
+     * @var Collection<int, ReviewComment>
+     */
     #[ORM\OneToMany(mappedBy: 'parentComment', targetEntity: ReviewComment::class)]
     private Collection $replies;
 
     public function __construct()
     {
+        if (array_key_exists('__PHPSTAN_ENTITY_ID_HINT', $_SERVER)) {
+            $this->id = 0;
+        }
         $this->created_at = new \DateTime();
         $this->replies = new ArrayCollection();
     }
@@ -105,12 +111,18 @@ class ReviewComment
         return $this;
     }
 
+    /**
+     * @return Collection<int, ReviewComment>
+     */
     public function getReplies(): Collection
     {
         return $this->replies;
     }
 
-    public function setReplies($replies): static
+    /**
+     * @param Collection<int, ReviewComment> $replies
+     */
+    public function setReplies(Collection $replies): static
     {
         $this->replies = $replies;
         return $this;

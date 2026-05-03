@@ -30,6 +30,9 @@ class EvenementFavoris
 
     public function __construct()
     {
+        if (array_key_exists('__PHPSTAN_ENTITY_ID_HINT', $_SERVER)) {
+            $this->id = 0;
+        }
         $this->dateAjout = new \DateTime();
     }
 

@@ -26,6 +26,8 @@ class GeminiAIEventService
     /**
      * Generate description + download an Unsplash image in one call.
      * Returns ['description' => string, 'imagePath' => string|null]
+     *
+     * @return array{description: string, imagePath: string|null}
      */
     public function genererEvenementComplet(string $titre, string $type, string $lieu): array
     {

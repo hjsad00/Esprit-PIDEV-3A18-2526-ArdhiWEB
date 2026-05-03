@@ -60,7 +60,7 @@ class Evenement
     private ?string $imageUrl = null;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
-    private ?string $statut = 'A_VENIR';
+    private string $statut = 'A_VENIR';
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCreation = null;
@@ -69,14 +69,23 @@ class Evenement
     #[ORM\JoinColumn(name: 'id_createur', referencedColumnName: 'id', nullable: false)]
     private ?User $createur = null;
 
+    /**
+     * @var Collection<int, Participation>
+     */
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: Participation::class, cascade: ['remove'])]
     private Collection $participations;
 
+    /**
+     * @var Collection<int, EvenementFavoris>
+     */
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: EvenementFavoris::class, cascade: ['remove'])]
     private Collection $favoris;
 
     public function __construct()
     {
+        if (array_key_exists('__PHPSTAN_ENTITY_ID_HINT', $_SERVER)) {
+            $this->id = 0;
+        }
         $this->participations = new ArrayCollection();
         $this->favoris = new ArrayCollection();
         $this->dateCreation = new \DateTime();
@@ -102,13 +111,20 @@ class Evenement
     public function setOrganisateur(?string $organisateur): static { $this->organisateur = $organisateur; return $this; }
     public function getImageUrl(): ?string { return $this->imageUrl; }
     public function setImageUrl(?string $imageUrl): static { $this->imageUrl = $imageUrl; return $this; }
-    public function getStatut(): ?string { return $this->statut; }
+    public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
     public function getCreateur(): ?User { return $this->createur; }
     public function setCreateur(?User $createur): static { $this->createur = $createur; return $this; }
+    /**
+     * @return Collection<int, Participation>
+     */
     public function getParticipations(): Collection { return $this->participations; }
+
+    /**
+     * @return Collection<int, EvenementFavoris>
+     */
     public function getFavoris(): Collection { return $this->favoris; }
 
     public function getNombreParticipants(): int

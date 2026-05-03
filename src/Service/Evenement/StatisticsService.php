@@ -2,175 +2,157 @@
 
 namespace App\Service\Evenement;
 
+use App\Entity\Evenement\Evenement;
+use App\Entity\Evenement\Participation;
+use App\Entity\UserAndDiag\User;
+use App\Repository\Evenement\EvenementFavorisRepository;
 use App\Repository\Evenement\EvenementRepository;
 use App\Repository\Evenement\ParticipationRepository;
 
 class StatisticsService
 {
     public function __construct(
-        private EvenementRepository         $evenementRepo,
-        private ParticipationRepository      $participationRepo,
-        private \App\Repository\Evenement\EvenementFavorisRepository $favorisRepo
+        private EvenementRepository $evenementRepo,
+        private ParticipationRepository $participationRepo,
+        private EvenementFavorisRepository $favorisRepo
     ) {}
 
     /**
-     * Full global stats — mirrors JavaFX getStatistiquesGlobales()
+     * @return array<string, mixed>
      */
     public function getGlobalStatistics(): array
     {
-        // Events by status (raw DQL)
         $byStatus = $this->evenementRepo->createQueryBuilder('e')
             ->select('e.statut AS statut, COUNT(e.id) AS count')
             ->groupBy('e.statut')
-            ->getQuery()->getResult();
+            ->getQuery()
+            ->getResult();
 
-        // Events by type
         $byType = $this->evenementRepo->createQueryBuilder('e')
             ->select('e.type AS type, COUNT(e.id) AS count')
             ->groupBy('e.type')
-            ->getQuery()->getResult();
+            ->getQuery()
+            ->getResult();
 
-        // Participations by status
         $partByStatus = $this->participationRepo->createQueryBuilder('p')
             ->select('p.statut AS statut, COUNT(p.id) AS count')
             ->groupBy('p.statut')
-            ->getQuery()->getResult();
+            ->getQuery()
+            ->getResult();
 
-        // Total events & participations
-        $totalEvents        = (int) $this->evenementRepo->createQueryBuilder('e')
-            ->select('COUNT(e.id)')->getQuery()->getSingleScalarResult();
+        $totalEvents = (int) $this->evenementRepo->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
         $totalParticipations = (int) $this->participationRepo->createQueryBuilder('p')
-            ->select('COUNT(p.id)')->getQuery()->getSingleScalarResult();
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        // Taux présence
-        $presents  = 0; $confirmes = 0;
-        foreach ($partByStatus as $row) {
-            if ($row['statut'] === 'PRESENT')  { $presents  += $row['count']; }
-            if (in_array($row['statut'], ['CONFIRME', 'PRESENT'])) { $confirmes += $row['count']; }
-        }
-        $tauxPresence   = $confirmes > 0 ? round($presents * 100 / $confirmes, 1) : 0;
-
-        // Taux annulation
-        $annules       = 0;
-        foreach ($partByStatus as $row) {
-            if ($row['statut'] === 'ANNULE') { $annules += $row['count']; }
-        }
-        $tauxAnnulation = $totalParticipations > 0 ? round($annules * 100 / $totalParticipations, 1) : 0;
-
-        // Global average rating
         $avgRating = $this->participationRepo->createQueryBuilder('p')
             ->select('AVG(p.note)')
             ->where('p.note > 0')
-            ->getQuery()->getSingleScalarResult();
-        $avgRating = $avgRating ? round((float)$avgRating, 1) : 0;
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        // Top 5 events by participants
-        $topEvents = $this->evenementRepo->createQueryBuilder('e')
-            ->select('e.id, e.titre, e.type, COUNT(p.id) AS participantCount')
-            ->leftJoin('e.participations', 'p', 'WITH', "p.statut IN ('CONFIRME','PRESENT')")
-            ->groupBy('e.id')
-            ->orderBy('participantCount', 'DESC')
-            ->setMaxResults(5)
-            ->getQuery()->getResult();
-
-        // Top rated events (mirrors getTopRatedEvents)
-        $topRated = $this->participationRepo->createQueryBuilder('p')
+        $topRatedRows = $this->participationRepo->createQueryBuilder('p')
             ->select('IDENTITY(p.evenement) AS id, AVG(p.note) AS avgRating, COUNT(p.id) AS cnt')
             ->where('p.note > 0')
             ->groupBy('p.evenement')
             ->orderBy('avgRating', 'DESC')
             ->setMaxResults(5)
-            ->getQuery()->getResult();
+            ->getQuery()
+            ->getResult();
 
-        // Enrich topRated with event titles
         $topRatedEvents = [];
-        foreach ($topRated as $row) {
-            $ev = $this->evenementRepo->find($row['id']);
-            if ($ev) {
+        foreach ($topRatedRows as $row) {
+            $eventId = isset($row['id']) ? (int) $row['id'] : 0;
+            $event = $this->evenementRepo->find($eventId);
+            if ($event instanceof Evenement) {
                 $topRatedEvents[] = [
-                    'titre'      => $ev->getTitre(),
-                    'type'       => $ev->getType(),
-                    'avgRating'  => round((float)$row['avgRating'], 1),
-                    'count'      => $row['cnt'],
+                    'titre' => $event->getTitre(),
+                    'type' => $event->getType(),
+                    'avgRating' => round((float) $row['avgRating'], 1),
+                    'count' => (int) $row['cnt'],
                 ];
             }
         }
 
         return [
-            'totalEvents'            => $totalEvents,
-            'totalParticipations'    => $totalParticipations,
-            'eventsByStatus'         => $byStatus,
-            'eventsByType'           => $byType,
+            'totalEvents' => $totalEvents,
+            'totalParticipations' => $totalParticipations,
+            'eventsByStatus' => $byStatus,
+            'eventsByType' => $byType,
             'participationsByStatus' => $partByStatus,
-            'tauxPresence'           => $tauxPresence,
-            'tauxAnnulation'         => $tauxAnnulation,
-            'avgRating'              => $avgRating,
-            'topEvents'              => $topEvents,
-            'topRatedEvents'         => $topRatedEvents,
+            'avgRating' => $avgRating ? round((float) $avgRating, 1) : 0.0,
+            'topRatedEvents' => $topRatedEvents,
         ];
     }
 
     /**
-     * Per-user stats — mirrors JavaFX user statistics
+     * @return array<string, mixed>
      */
-    public function getUserStatistics($user): array
+    public function getUserStatistics(User $user): array
     {
-        $allPart = $this->participationRepo->findByUserOrdered($user);
+        /** @var list<Participation> $participations */
+        $participations = $this->participationRepo->findByUserOrdered($user);
 
-        $total        = count($allPart);
-        $confirmes    = count(array_filter($allPart, fn($p) => in_array($p->getStatut(), ['CONFIRME','PRESENT'])));
-        $favorites    = $this->favorisRepo->count(['utilisateur' => $user]);
-
-        // By status
         $statusMap = [];
-        foreach ($allPart as $p) {
-            $statusMap[$p->getStatut()] = ($statusMap[$p->getStatut()] ?? 0) + 1;
+        foreach ($participations as $participation) {
+            $status = $participation->getStatut();
+            $statusMap[$status] = ($statusMap[$status] ?? 0) + 1;
         }
-        $byStatus = [];
-        foreach ($statusMap as $s => $c) { $byStatus[] = ['statut' => $s, 'count' => $c]; }
 
-        // Events created by user
-        $created = (int) $this->evenementRepo->createQueryBuilder('e')
-            ->select('COUNT(e.id)')
-            ->where('e.createur = :u')
-            ->setParameter('u', $user)
-            ->getQuery()->getSingleScalarResult();
+        $byStatus = [];
+        foreach ($statusMap as $status => $count) {
+            $byStatus[] = ['statut' => $status, 'count' => $count];
+        }
 
         return [
-            'totalInscriptions'   => $total,
-            'confirmations'       => $confirmes,
-            'totalFavorites'      => (int)$favorites,
-            'inscriptionsByStatus'=> $byStatus,
-            'createdEvents'       => $created,
+            'totalInscriptions' => count($participations),
+            'confirmations' => count(array_filter(
+                $participations,
+                static fn (Participation $participation): bool => in_array($participation->getStatut(), ['CONFIRME', 'PRESENT'], true)
+            )),
+            'totalFavorites' => (int) $this->favorisRepo->count(['utilisateur' => $user]),
+            'inscriptionsByStatus' => $byStatus,
         ];
     }
 
     /**
-     * Creator/organizer stats — mirrors JavaFX creator statistics
+     * @return array<string, mixed>
      */
-    public function getCreatorStatistics($user): array
+    public function getCreatorStatistics(User $user): array
     {
-        $parts = $this->participationRepo->findForCreator($user);
-
-        $total = count($parts);
-        $presents = count(array_filter($parts, fn($p) => $p->getStatut() === 'PRESENT'));
-
-        $notes   = array_filter($parts, fn($p) => $p->getNote() > 0);
-        $avgNote = count($notes) > 0
-            ? round(array_sum(array_map(fn($p) => $p->getNote(), $notes)) / count($notes), 1)
-            : 0;
+        /** @var list<Participation> $participations */
+        $participations = $this->participationRepo->findForCreator($user);
 
         $statusMap = [];
-        foreach ($parts as $p) {
-            $statusMap[$p->getStatut()] = ($statusMap[$p->getStatut()] ?? 0) + 1;
+        foreach ($participations as $participation) {
+            $status = $participation->getStatut();
+            $statusMap[$status] = ($statusMap[$status] ?? 0) + 1;
         }
+
         $byStatus = [];
-        foreach ($statusMap as $s => $c) { $byStatus[] = ['statut' => $s, 'count' => $c]; }
+        foreach ($statusMap as $status => $count) {
+            $byStatus[] = ['statut' => $status, 'count' => $count];
+        }
+
+        $rated = array_filter(
+            $participations,
+            static fn (Participation $participation): bool => $participation->getNote() > 0
+        );
 
         return [
-            'totalParticipants'    => $total,
-            'presents'             => $presents,
-            'avgRating'            => $avgNote,
+            'totalParticipants' => count($participations),
+            'presents' => count(array_filter(
+                $participations,
+                static fn (Participation $participation): bool => $participation->getStatut() === 'PRESENT'
+            )),
+            'avgRating' => count($rated) > 0
+                ? round(array_sum(array_map(static fn (Participation $participation): int => $participation->getNote(), $rated)) / count($rated), 1)
+                : 0.0,
             'participantsByStatus' => $byStatus,
         ];
     }

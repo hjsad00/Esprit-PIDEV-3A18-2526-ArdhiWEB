@@ -12,35 +12,20 @@ use Google\Service\Calendar\EventReminders;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-/**
- * Exports events to Google Calendar (via OAuth2 API) with .ics fallback.
- * Ported from the Java CalendarExportService.
- *
- * Requires: composer require google/apiclient
- */
 class CalendarExportService
 {
-    // ── Google OAuth2 credentials (your ardhi-evenements project) ────────────
-    private const CLIENT_ID     = '912344954797-lcmfd0q95p4enbp2lhtjllhs43563oup.apps.googleusercontent.com';
+    private const CLIENT_ID = '912344954797-lcmfd0q95p4enbp2lhtjllhs43563oup.apps.googleusercontent.com';
     private const CLIENT_SECRET = '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';
-    private const REDIRECT_URI  = 'http://localhost:8000/evenement/calendar/callback'; // adjust to your dev URL
-    private const SCOPES        = [Calendar::CALENDAR_EVENTS];
-    private const APP_NAME      = 'ARDHI - Module Événements';
+    private const REDIRECT_URI = 'http://localhost:8000/evenement/calendar/callback';
+    private const SCOPES = [Calendar::CALENDAR_EVENTS];
+    private const APP_NAME = 'ARDHI - Module Evenements';
 
     public function __construct(
         private LoggerInterface $logger,
-        private string          $projectDir,
-        private RequestStack    $requestStack
+        private string $projectDir,
+        private RequestStack $requestStack
     ) {}
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // PUBLIC API
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Build the Google OAuth2 authorization URL to redirect the user to.
-     * Store `state` in session to validate the callback.
-     */
     public function getAuthorizationUrl(string $userEmail): string
     {
         $client = $this->buildClient();
@@ -54,38 +39,31 @@ class CalendarExportService
         return $client->createAuthUrl();
     }
 
-    /**
-     * Exchange an OAuth2 authorization code for an access token and persist it.
-     * Call this from the OAuth callback controller action.
-     *
-     * @return bool  true on success
-     */
     public function handleOAuthCallback(string $code, string $userEmail): bool
     {
         try {
             $client = $this->buildClient();
-            $token  = $client->fetchAccessTokenWithAuthCode($code);
+            $token = $client->fetchAccessTokenWithAuthCode($code);
 
             if (isset($token['error'])) {
                 $this->logger->error('Google OAuth token error: {e}', ['e' => $token['error']]);
+
                 return false;
             }
 
             $this->saveToken($userEmail, $token);
             $this->logger->info('Google Calendar token saved for {email}', ['email' => $userEmail]);
-            return true;
 
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('OAuth callback failed: {msg}', ['msg' => $e->getMessage()]);
+
             return false;
         }
     }
 
     /**
-     * Add an event directly to the user's primary Google Calendar.
-     * Falls back to generating a downloadable .ics file if not authenticated.
-     *
-     * @return array  ['success' => bool, 'mode' => 'api'|'ics', 'link'|'icsContent' => string]
+     * @return array<string, mixed>
      */
     public function ajouterAuCalendrier(Evenement $evenement, string $userEmail): array
     {
@@ -93,64 +71,60 @@ class CalendarExportService
             return $this->ajouterViaAPI($evenement, $userEmail);
         }
 
-        $this->logger->info('No Google token for {email} — generating .ics fallback', ['email' => $userEmail]);
+        $this->logger->info('No Google token for {email} - generating .ics fallback', ['email' => $userEmail]);
+
         return $this->ajouterViaICS($evenement);
     }
 
-    /**
-     * Returns true if the user already has a stored (non-expired) token.
-     */
     public function isConnected(string $userEmail): bool
     {
         return $this->hasValidToken($userEmail);
     }
 
-    /**
-     * Generate and return an .ics string for the event (no Google auth needed).
-     */
     public function genererICS(Evenement $evenement): string
     {
         return $this->construireContenuICS($evenement);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // GOOGLE CALENDAR API
-    // ═══════════════════════════════════════════════════════════════════════
-
+    /**
+     * @return array<string, mixed>
+     */
     private function ajouterViaAPI(Evenement $evenement, string $userEmail): array
     {
         try {
-            $client          = $this->buildClient();
-            $token           = $this->loadToken($userEmail);
+            $client = $this->buildClient();
+            $token = $this->loadToken($userEmail);
+            if ($token === null) {
+                return $this->ajouterViaICS($evenement);
+            }
+
             $client->setAccessToken($token);
 
-            // Refresh if expired
             if ($client->isAccessTokenExpired()) {
-                if ($client->getRefreshToken()) {
-                    $newToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                $refreshToken = $client->getRefreshToken();
+                if (is_string($refreshToken) && $refreshToken !== '') {
+                    $newToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
                     $this->saveToken($userEmail, $newToken);
                     $client->setAccessToken($newToken);
                 } else {
-                    // Token expired and no refresh token → need re-auth
                     $this->deleteToken($userEmail);
+
                     return $this->ajouterViaICS($evenement);
                 }
             }
 
-            $service  = new Calendar($client);
-            $event    = $this->buildGoogleEvent($evenement);
-            $created  = $service->events->insert('primary', $event);
-
-            $this->logger->info('Event added to Google Calendar: {link}', ['link' => $created->getHtmlLink()]);
+            $service = new Calendar($client);
+            $event = $this->buildGoogleEvent($evenement);
+            $created = $service->events->insert('primary', $event);
 
             return [
                 'success' => true,
-                'mode'    => 'api',
-                'link'    => $created->getHtmlLink(),
+                'mode' => 'api',
+                'link' => $created->getHtmlLink(),
             ];
-
         } catch (\Throwable $e) {
             $this->logger->error('Google Calendar API error: {msg}', ['msg' => $e->getMessage()]);
+
             return $this->ajouterViaICS($evenement);
         }
     }
@@ -158,28 +132,24 @@ class CalendarExportService
     private function buildGoogleEvent(Evenement $evenement): Event
     {
         $event = new Event();
-        $event->setSummary('🎪 ' . $evenement->getTitre());
-        $event->setLocation($evenement->getLieu());
+        $event->setSummary('Event ' . ($evenement->getTitre() ?? 'ARDHI'));
+        $event->setLocation($evenement->getLieu() ?? '');
         $event->setDescription($this->construireDescriptionAPI($evenement));
-        $event->setColorId('10'); // green
+        $event->setColorId('10');
 
-        $tz         = 'Africa/Tunis';
-        $dateDebut  = \DateTime::createFromFormat('Y-m-d', $evenement->getDateDebut()->format('Y-m-d'));
-        $dateDebut->setTime(9, 0);
-        $dateFin    = \DateTime::createFromFormat('Y-m-d', $evenement->getDateFin()->format('Y-m-d'));
-        $dateFin->setTime(17, 0);
+        $startDate = $this->createTimedDate($this->requireDateDebut($evenement), 9, 0);
+        $endDate = $this->createTimedDate($this->requireDateFin($evenement), 17, 0);
 
         $start = new EventDateTime();
-        $start->setDateTime($dateDebut->format(\DateTime::RFC3339));
-        $start->setTimeZone($tz);
+        $start->setDateTime($startDate->format(\DateTime::RFC3339));
+        $start->setTimeZone('Africa/Tunis');
         $event->setStart($start);
 
         $end = new EventDateTime();
-        $end->setDateTime($dateFin->format(\DateTime::RFC3339));
-        $end->setTimeZone($tz);
+        $end->setDateTime($endDate->format(\DateTime::RFC3339));
+        $end->setTimeZone('Africa/Tunis');
         $event->setEnd($end);
 
-        // Reminders: 24h email + 1h popup
         $emailReminder = new EventReminder();
         $emailReminder->setMethod('email');
         $emailReminder->setMinutes(24 * 60);
@@ -196,31 +166,25 @@ class CalendarExportService
         return $event;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // ICS FALLBACK
-    // ═══════════════════════════════════════════════════════════════════════
-
+    /**
+     * @return array<string, mixed>
+     */
     private function ajouterViaICS(Evenement $evenement): array
     {
         return [
-            'success'    => true,
-            'mode'       => 'ics',
+            'success' => true,
+            'mode' => 'ics',
             'icsContent' => $this->construireContenuICS($evenement),
-            'filename'   => 'event_' . $evenement->getId() . '_' . time() . '.ics',
+            'filename' => 'event_' . ($evenement->getId() ?? 'new') . '_' . time() . '.ics',
         ];
     }
 
     private function construireContenuICS(Evenement $evenement): string
     {
-        $dateDebut = \DateTime::createFromFormat('Y-m-d', $evenement->getDateDebut()->format('Y-m-d'));
-        $dateDebut->setTime(9, 0);
-        $dateFin = \DateTime::createFromFormat('Y-m-d', $evenement->getDateFin()->format('Y-m-d'));
-        $dateFin->setTime(17, 0);
-
-        $uid     = bin2hex(random_bytes(16)) . '@ardhi.tn';
-        $dtstamp = (new \DateTime())->format('Ymd\THis');
-        $titre   = str_replace(["\n", "\r"], ' ', $evenement->getTitre());
-        $lieu    = str_replace(["\n", "\r"], ' ', $evenement->getLieu());
+        $dateDebut = $this->createTimedDate($this->requireDateDebut($evenement), 9, 0);
+        $dateFin = $this->createTimedDate($this->requireDateFin($evenement), 17, 0);
+        $titre = str_replace(["\n", "\r"], ' ', $evenement->getTitre() ?? '');
+        $lieu = str_replace(["\n", "\r"], ' ', $evenement->getLieu() ?? '');
 
         return implode("\r\n", [
             'BEGIN:VCALENDAR',
@@ -229,10 +193,10 @@ class CalendarExportService
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
             'BEGIN:VEVENT',
-            'UID:' . $uid,
-            'DTSTAMP:' . $dtstamp,
+            'UID:' . bin2hex(random_bytes(16)) . '@ardhi.tn',
+            'DTSTAMP:' . (new \DateTimeImmutable())->format('Ymd\THis'),
             'DTSTART:' . $dateDebut->format('Ymd\THis'),
-            'DTEND:'   . $dateFin->format('Ymd\THis'),
+            'DTEND:' . $dateFin->format('Ymd\THis'),
             'SUMMARY:' . $titre,
             'LOCATION:' . $lieu,
             'STATUS:CONFIRMED',
@@ -248,25 +212,21 @@ class CalendarExportService
 
     private function construireDescriptionAPI(Evenement $evenement): string
     {
-        $fmt = 'd/m/Y';
+        $dateDebut = $evenement->getDateDebut();
+        $dateFin = $evenement->getDateFin();
+
         return implode("\n", [
-            '🎪 ÉVÉNEMENT AGRICOLE ARDHI',
+            'ARDHI Evenement Agricole',
             '',
-            '📅 Du ' . $evenement->getDateDebut()->format($fmt) . ' au ' . $evenement->getDateFin()->format($fmt),
-            '📍 Lieu: ' . $evenement->getLieu(),
-            '🏷️ Type: ' . $evenement->getType(),
-            '👤 Organisateur: ' . $evenement->getOrganisateur(),
-            '👥 Places: ' . $evenement->getNombrePlacesMax(),
+            'Du ' . ($dateDebut ? $dateDebut->format('d/m/Y') : 'a confirmer') . ' au ' . ($dateFin ? $dateFin->format('d/m/Y') : 'a confirmer'),
+            'Lieu: ' . ($evenement->getLieu() ?? 'A confirmer'),
+            'Type: ' . ($evenement->getType() ?? 'Non renseigne'),
+            'Organisateur: ' . ($evenement->getOrganisateur() ?? 'Non renseigne'),
+            'Places: ' . ($evenement->getNombrePlacesMax() ?? 0),
             '',
-            $evenement->getDescription() ? '📝 ' . $evenement->getDescription() : '',
-            '',
-            '🌾 Plateforme ARDHI - Événements Agricoles',
+            $evenement->getDescription() ?? '',
         ]);
     }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // TOKEN PERSISTENCE
-    // ═══════════════════════════════════════════════════════════════════════
 
     private function tokenPath(string $userEmail): string
     {
@@ -274,42 +234,83 @@ class CalendarExportService
         if (!is_dir($dir)) {
             mkdir($dir, 0700, true);
         }
+
         return $dir . '/' . preg_replace('/[^a-z0-9]/i', '_', $userEmail) . '.json';
     }
 
+    /**
+     * @param array<string, mixed> $token
+     */
     private function saveToken(string $userEmail, array $token): void
     {
         file_put_contents($this->tokenPath($userEmail), json_encode($token));
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     private function loadToken(string $userEmail): ?array
     {
         $path = $this->tokenPath($userEmail);
-        if (!file_exists($path)) return null;
-        return json_decode(file_get_contents($path), true);
+        if (!file_exists($path)) {
+            return null;
+        }
+
+        $json = file_get_contents($path);
+        if ($json === false) {
+            return null;
+        }
+
+        $decoded = json_decode($json, true);
+
+        return is_array($decoded) ? $decoded : null;
     }
 
     private function deleteToken(string $userEmail): void
     {
         $path = $this->tokenPath($userEmail);
-        if (file_exists($path)) unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
+        }
     }
 
     private function hasValidToken(string $userEmail): bool
     {
         $token = $this->loadToken($userEmail);
-        if (!$token) return false;
+        if ($token === null) {
+            return false;
+        }
 
         $client = $this->buildClient();
         $client->setAccessToken($token);
 
-        // Valid if not expired, OR if we have a refresh token to renew it
         return !$client->isAccessTokenExpired() || !empty($token['refresh_token']);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // GOOGLE CLIENT BUILDER
-    // ═══════════════════════════════════════════════════════════════════════
+    private function requireDateDebut(Evenement $evenement): \DateTimeInterface
+    {
+        $dateDebut = $evenement->getDateDebut();
+        if ($dateDebut === null) {
+            throw new \LogicException('La date de début est obligatoire pour exporter un événement.');
+        }
+
+        return $dateDebut;
+    }
+
+    private function requireDateFin(Evenement $evenement): \DateTimeInterface
+    {
+        $dateFin = $evenement->getDateFin();
+        if ($dateFin === null) {
+            throw new \LogicException('La date de fin est obligatoire pour exporter un événement.');
+        }
+
+        return $dateFin;
+    }
+
+    private function createTimedDate(\DateTimeInterface $date, int $hour, int $minute): \DateTimeImmutable
+    {
+        return \DateTimeImmutable::createFromInterface($date)->setTime($hour, $minute);
+    }
 
     private function buildClient(): Client
     {
@@ -320,7 +321,7 @@ class CalendarExportService
         $client->setRedirectUri(self::REDIRECT_URI);
         $client->setScopes(self::SCOPES);
         $client->setAccessType('offline');
-        $client->setPrompt('consent');   // force refresh_token on first auth
+        $client->setPrompt('consent');
 
         return $client;
     }

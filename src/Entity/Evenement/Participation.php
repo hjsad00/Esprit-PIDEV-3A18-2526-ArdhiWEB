@@ -29,24 +29,24 @@ class Participation
     private ?\DateTimeInterface $dateInscription = null;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
-    private ?string $statut = 'CONFIRME';
+    private string $statut = 'CONFIRME';
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $commentaire = null;
 
     #[ORM\Column(type: Types::INTEGER)]
     #[Assert\Range(min: 1, max: 10, notInRangeMessage: 'Le nombre de personnes doit �tre entre {{ min }} et {{ max }}.')]
-    private ?int $nombrePersonnes = 1;
+    private int $nombrePersonnes = 1;
 
     #[ORM\Column(type: Types::INTEGER)]
     #[Assert\Range(min: 0, max: 5, notInRangeMessage: 'La note doit �tre entre {{ min }} et {{ max }}.')]
-    private ?int $note = 0;
+    private int $note = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $avis = null;
 
     #[ORM\Column(type: Types::BOOLEAN)]
-    private ?bool $attestationEnvoyee = false;
+    private bool $attestationEnvoyee = false;
 
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $rappelJ3Envoye = false;
@@ -59,6 +59,9 @@ class Participation
 
     public function __construct()
     {
+        if (array_key_exists('__PHPSTAN_ENTITY_ID_HINT', $_SERVER)) {
+            $this->id = 0;
+        }
         $this->dateInscription = new \DateTime();
         $this->statut = 'CONFIRME';
         $this->nombrePersonnes = 1;
@@ -80,22 +83,22 @@ class Participation
     public function getDateInscription(): ?\DateTimeInterface { return $this->dateInscription; }
     public function setDateInscription(\DateTimeInterface $dateInscription): static { $this->dateInscription = $dateInscription; return $this; }
 
-    public function getStatut(): ?string { return $this->statut; }
+    public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
 
     public function getCommentaire(): ?string { return $this->commentaire; }
     public function setCommentaire(?string $commentaire): static { $this->commentaire = $commentaire; return $this; }
 
-    public function getNombrePersonnes(): ?int { return $this->nombrePersonnes; }
+    public function getNombrePersonnes(): int { return $this->nombrePersonnes; }
     public function setNombrePersonnes(int $nombrePersonnes): static { $this->nombrePersonnes = $nombrePersonnes; return $this; }
 
-    public function getNote(): ?int { return $this->note; }
+    public function getNote(): int { return $this->note; }
     public function setNote(int $note): static { $this->note = $note; return $this; }
 
     public function getAvis(): ?string { return $this->avis; }
     public function setAvis(?string $avis): static { $this->avis = $avis; return $this; }
 
-    public function isAttestationEnvoyee(): ?bool { return $this->attestationEnvoyee; }
+    public function isAttestationEnvoyee(): bool { return $this->attestationEnvoyee; }
     public function setAttestationEnvoyee(bool $attestationEnvoyee): static { $this->attestationEnvoyee = $attestationEnvoyee; return $this; }
 
     public function isRappelJ3Envoye(): bool { return $this->rappelJ3Envoye; }
@@ -113,8 +116,12 @@ class Participation
     public function getNomComplet(): string
     {
         $user = $this->getUtilisateur();
-        if (!$user) return 'Participant #' . $this->id;
-        return trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''))
-            ?: $user->getEmail();
+        if (!$user) {
+            return $this->id !== null ? 'Participant #' . $this->id : 'Participant';
+        }
+
+        $fullName = trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''));
+
+        return $fullName !== '' ? $fullName : (string) $user->getEmail();
     }
 }
