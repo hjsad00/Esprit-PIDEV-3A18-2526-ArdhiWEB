@@ -1,0 +1,687 @@
+{#
+  templates/EmployeTache/tache/_voice_blind.html.twig
+  ═══════════════════════════════════════════════════
+  Assistant vocal dédié aux non-voyants.
+  - Navigation 100% audio
+  - Aucun besoin de voir l'écran
+  - Créé par dialogue vocal étape par étape
+  - Synthèse vocale française
+
+  Inclure dans index.html.twig :
+  {{ include('EmployeTache/tache/_voice_blind.html.twig') }}
+#}
+
+{# ── Bouton d'activation (accessible clavier + écran tactile) ── #}
+<button
+    id="vb-trigger"
+    aria-label="Activer l'assistant vocal pour non-voyants. Appuyez sur Entrée ou Espace."
+    title="Assistant vocal accessibilité"
+    tabindex="0"
+>
+    <span aria-hidden="true">🎙️</span>
+    <span class="vb-trigger-label">Assistant vocal</span>
+    <span class="vb-shortcut" aria-hidden="true">Alt+V</span>
+</button>
+
+{# ── Zone ARIA live pour les annonces vocales ── #}
+<div id="vb-announce" aria-live="assertive" aria-atomic="true" class="vb-sr-only"></div>
+<div id="vb-announce-polite" aria-live="polite" aria-atomic="true" class="vb-sr-only"></div>
+
+{# ── Indicateur visuel (subtil, coin supérieur) ── #}
+<div id="vb-indicator" aria-hidden="true" hidden>
+    <div class="vb-ind-dot"></div>
+    <span class="vb-ind-text">En écoute…</span>
+</div>
+
+<style>
+/* ── Bouton déclencheur ─────────────────────────────────────── */
+#vb-trigger {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 16px;
+    background: #0d3b1f;
+    color: #fff;
+    border: 2px solid #27ae60;
+    border-radius: 16px;
+    cursor: pointer;
+    z-index: 8999;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+    transition: transform .2s, box-shadow .2s;
+    min-width: 90px;
+}
+#vb-trigger:hover, #vb-trigger:focus {
+    transform: scale(1.05);
+    box-shadow: 0 8px 28px rgba(39,174,96,.5);
+    outline: 3px solid #27ae60;
+    outline-offset: 2px;
+}
+#vb-trigger:focus-visible { outline: 3px solid #fff; }
+.vb-trigger-label { font-size: 11px; line-height: 1.2; }
+.vb-shortcut {
+    font-size: 9px;
+    opacity: .6;
+    background: rgba(255,255,255,.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+/* ── Indicateur écoute ──────────────────────────────────────── */
+#vb-indicator {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(13,59,31,.92);
+    color: #7de0a0;
+    border: 1.5px solid #27ae60;
+    border-radius: 30px;
+    padding: 8px 20px;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+}
+.vb-ind-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #e74c3c;
+    animation: vb-blink .7s ease-in-out infinite;
+}
+@keyframes vb-blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.vb-ind-text { letter-spacing: .3px; }
+
+/* ── Screen-reader only ─────────────────────────────────────── */
+.vb-sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+</style>
+
+<script>
+(function () {
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════
+const API = {
+    taches:  '/voice-blind/taches',
+    employes:'/voice-blind/employes',
+    creer:   '/voice-blind/tache/creer',
+    csrf:    '/voice-blind/csrf',
+};
+
+const LANG = 'fr-FR';
+
+// Catégories reconnues par la voix
+const CATEGORIES_MAP = {
+    'plantation':    'Plantation',
+    'récolte':       'Récolte',
+    'recolte':       'Récolte',
+    'irrigation':    'Irrigation',
+    'arrosage':      'Irrigation',
+    'fertilisation': 'Fertilisation',
+    'engrais':       'Fertilisation',
+    'maintenance':   'Maintenance',
+    'entretien':     'Maintenance',
+    'administratif': 'Administratif',
+    'admin':         'Administratif',
+    'autre':         'Autre',
+};
+
+const PRIORITES_MAP = {
+    'basse':    1, 'faible':   1, 'normale': 1,
+    'moyenne':  2, 'moyen':    2, 'standard':2,
+    'haute':    3, 'haut':     3, 'élevée':  3, 'elevee': 3,
+    'critique': 4, 'urgent':   4, 'urgente': 4, 'urgentissime': 4,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  ÉTAT
+// ═══════════════════════════════════════════════════════════════════
+const state = {
+    active:     false,
+    step:       'idle',     // idle | menu | lire | creer_titre | creer_cat | creer_prio | creer_emp | creer_date_debut | creer_date_fin | creer_confirm
+    tache:      {},         // données en cours de saisie
+    employes:   [],         // cache
+    csrf:       '',
+    recognition:null,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  SYNTHÈSE VOCALE
+// ═══════════════════════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let voiceFr = null;
+
+function loadVoices() {
+    const voices = synth.getVoices();
+    voiceFr = voices.find(v => v.lang === 'fr-FR')
+           || voices.find(v => v.lang.startsWith('fr'))
+           || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text, onEnd) {
+    synth.cancel();
+    // Annonce ARIA aussi
+    announce(text, 'assertive');
+
+    const utt   = new SpeechSynthesisUtterance(text);
+    utt.lang    = LANG;
+    utt.rate    = 0.88;
+    utt.pitch   = 1.0;
+    if (voiceFr) utt.voice = voiceFr;
+
+    if (onEnd) utt.onend = onEnd;
+    synth.speak(utt);
+}
+
+function announce(text, type = 'polite') {
+    const el = document.getElementById(type === 'assertive' ? 'vb-announce' : 'vb-announce-polite');
+    if (el) { el.textContent = ''; setTimeout(() => el.textContent = text, 50); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RECONNAISSANCE VOCALE
+// ═══════════════════════════════════════════════════════════════════
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function listen(onResult, onError) {
+    if (!SR) {
+        speak("Désolé, votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.");
+        return;
+    }
+    showIndicator(true);
+
+    const r = new SR();
+    r.lang           = LANG;
+    r.continuous     = false;
+    r.interimResults = false;
+    r.maxAlternatives= 3;
+
+    state.recognition = r;
+
+    r.onresult = (e) => {
+        const transcript = e.results[0][0].transcript.toLowerCase().trim();
+        showIndicator(false);
+        onResult(transcript, e.results[0]);
+    };
+
+    r.onerror = (e) => {
+        showIndicator(false);
+        if (e.error === 'no-speech') {
+            speak("Je n'ai rien entendu. Réessayez.", () => onError && onError('no-speech'));
+        } else if (e.error === 'not-allowed') {
+            speak("L'accès au microphone est refusé. Autorisez-le dans votre navigateur.");
+        } else {
+            speak("Erreur microphone. Réessayez.", () => onError && onError(e.error));
+        }
+    };
+
+    r.onend = () => { showIndicator(false); state.recognition = null; };
+    r.start();
+}
+
+function showIndicator(visible) {
+    const el = document.getElementById('vb-indicator');
+    if (el) el.hidden = !visible;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UTILITAIRES
+// ═══════════════════════════════════════════════════════════════════
+async function fetchJSON(url, method = 'GET', body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    return res.json();
+}
+
+function parseDate(txt) {
+    // Reconnaît "aujourd'hui", "demain", "dans X jours", "le 15 mai", "15/05/2026"
+    const t = txt.toLowerCase().trim();
+    if (/aujourd/.test(t)) return new Date().toISOString().slice(0,10);
+    if (/demain/.test(t)) {
+        const d = new Date(); d.setDate(d.getDate()+1);
+        return d.toISOString().slice(0,10);
+    }
+    const inDays = t.match(/dans (\d+) jours?/);
+    if (inDays) {
+        const d = new Date(); d.setDate(d.getDate() + parseInt(inDays[1]));
+        return d.toISOString().slice(0,10);
+    }
+    // "le 15 mai" ou "15 mai"
+    const moisMap = {
+        'janvier':1,'février':2,'fevrier':2,'mars':3,'avril':4,
+        'mai':5,'juin':6,'juillet':7,'août':8,'aout':8,
+        'septembre':9,'octobre':10,'novembre':11,'décembre':12,'decembre':12
+    };
+    const moisMatch = t.match(/(\d{1,2})\s+([a-zéûô]+)(?:\s+(\d{4}))?/);
+    if (moisMatch && moisMap[moisMatch[2]]) {
+        const year = moisMatch[3] || new Date().getFullYear();
+        return `${year}-${String(moisMap[moisMatch[2]]).padStart(2,'0')}-${String(moisMatch[1]).padStart(2,'0')}`;
+    }
+    // "15/05" ou "15/05/2026"
+    const slashMatch = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+    if (slashMatch) {
+        const year = slashMatch[3] || new Date().getFullYear();
+        return `${year}-${String(slashMatch[2]).padStart(2,'0')}-${String(slashMatch[1]).padStart(2,'0')}`;
+    }
+    return null;
+}
+
+function extractCategorie(txt) {
+    for (const [key, val] of Object.entries(CATEGORIES_MAP)) {
+        if (txt.includes(key)) return val;
+    }
+    return null;
+}
+
+function extractPriorite(txt) {
+    for (const [key, val] of Object.entries(PRIORITES_MAP)) {
+        if (txt.includes(key)) return val;
+    }
+    return null;
+}
+
+function isOui(txt) {
+    return /\b(oui|yes|confirme|correct|ok|parfait|c'est ça|c est ca|valider?|ouais)\b/i.test(txt);
+}
+function isNon(txt) {
+    return /\b(non|no|annule[rz]?|pas|stopper?|arrête[rz]?|quitter?)\b/i.test(txt);
+}
+function isIgnorer(txt) {
+    return /\b(passe[rz]?|ignorer?|sans|aucun|aucune|pas de|skip)\b/i.test(txt);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MENU PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════
+function startAssistant() {
+    state.active = true;
+    speak(
+        "Assistant vocal Ardhi activé. " +
+        "Dites : lire mes tâches, pour entendre vos tâches. " +
+        "Ou dites : ajouter une tâche, pour créer une nouvelle tâche. " +
+        "Ou dites : quitter, pour désactiver.",
+        () => listenMenu()
+    );
+}
+
+function listenMenu() {
+    state.step = 'menu';
+    listen((txt) => {
+        if (isNon(txt) || /quitter|arrêter|désactiver|stop/i.test(txt)) {
+            stopAssistant(); return;
+        }
+        if (/lire|afficher|voir|liste|mes tâches|tâche/i.test(txt)) {
+            flowLireTaches(); return;
+        }
+        if (/ajouter|créer|nouvelle|nouveau|nouvelle tâche|créer une tâche/i.test(txt)) {
+            flowCreerTache(); return;
+        }
+        speak("Commande non reconnue. Dites : lire mes tâches, ou ajouter une tâche.", () => listenMenu());
+    }, () => listenMenu());
+}
+
+function stopAssistant() {
+    state.active = false;
+    state.step   = 'idle';
+    synth.cancel();
+    showIndicator(false);
+    speak("Assistant vocal désactivé. À bientôt.");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  FLUX — LIRE LES TÂCHES
+// ═══════════════════════════════════════════════════════════════════
+async function flowLireTaches() {
+    state.step = 'lire';
+    speak("Je charge vos tâches.");
+
+    try {
+        const data = await fetchJSON(API.taches);
+
+        if (!data.taches || data.taches.length === 0) {
+            speak("Vous n'avez aucune tâche pour le moment. Voulez-vous en créer une ?", () => {
+                listen((txt) => {
+                    if (isOui(txt)) flowCreerTache();
+                    else listenMenu();
+                });
+            });
+            return;
+        }
+
+        // Lire l'intro puis toutes les tâches une par une
+        let script = data.intro + " ";
+        data.taches.forEach(t => { script += t.texte + "  "; });
+        script += "Voulez-vous ajouter une tâche, ou retourner au menu ?";
+
+        speak(script, () => {
+            listen((txt) => {
+                if (/ajouter|créer|nouvelle/i.test(txt)) flowCreerTache();
+                else listenMenu();
+            });
+        });
+    } catch(e) {
+        speak("Erreur lors du chargement des tâches. Réessayez.", () => listenMenu());
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  FLUX — CRÉER UNE TÂCHE (dialogue étape par étape)
+// ═══════════════════════════════════════════════════════════════════
+function flowCreerTache() {
+    state.tache = {
+        titre:      '',
+        categorie:  'Plantation',
+        priorite:   2,
+        idEmploye:  null,
+        dateDebut:  new Date().toISOString().slice(0,10),
+        dateFin:    null,
+        description:'',
+    };
+
+    // Charger CSRF et employés en parallèle
+    Promise.all([
+        fetchJSON(API.csrf),
+        fetchJSON(API.employes),
+    ]).then(([csrfData, empData]) => {
+        state.csrf     = csrfData.token || '';
+        state.employes = empData.employes || [];
+        stepTitre();
+    }).catch(() => {
+        speak("Erreur de connexion. Réessayez.", () => listenMenu());
+    });
+}
+
+// ── Étape 1 : Titre ───────────────────────────────────────────────
+function stepTitre() {
+    state.step = 'creer_titre';
+    speak("Création d'une nouvelle tâche. Étape 1 sur 6. Quel est le titre de la tâche ?", () => {
+        listen((txt) => {
+            if (isNon(txt) || /annuler|quitter/i.test(txt)) {
+                speak("Création annulée.", () => listenMenu()); return;
+            }
+            if (txt.length < 3) {
+                speak("Le titre est trop court. Répétez le titre de la tâche.", () => stepTitre()); return;
+            }
+            // Capitalise la première lettre
+            state.tache.titre = txt.charAt(0).toUpperCase() + txt.slice(1);
+            speak(`Titre enregistré : ${state.tache.titre}.`, () => stepCategorie());
+        }, () => stepTitre());
+    });
+}
+
+// ── Étape 2 : Catégorie ───────────────────────────────────────────
+function stepCategorie() {
+    state.step = 'creer_cat';
+    speak(
+        "Étape 2 sur 6. Quelle est la catégorie ? " +
+        "Dites : plantation, récolte, irrigation, fertilisation, maintenance, ou autre. " +
+        "Ou dites : passer, pour garder la catégorie par défaut.", () => {
+        listen((txt) => {
+            if (isIgnorer(txt)) {
+                speak(`Catégorie : plantation par défaut.`, () => stepPriorite()); return;
+            }
+            const cat = extractCategorie(txt);
+            if (cat) {
+                state.tache.categorie = cat;
+                speak(`Catégorie : ${cat}.`, () => stepPriorite());
+            } else {
+                speak("Catégorie non reconnue. Répétez : plantation, récolte, irrigation, fertilisation, maintenance, ou autre.", () => stepCategorie());
+            }
+        }, () => stepCategorie());
+    });
+}
+
+// ── Étape 3 : Priorité ────────────────────────────────────────────
+function stepPriorite() {
+    state.step = 'creer_prio';
+    speak(
+        "Étape 3 sur 6. Quelle est la priorité ? " +
+        "Dites : basse, moyenne, haute, ou critique. " +
+        "Ou dites : passer, pour garder priorité moyenne.", () => {
+        listen((txt) => {
+            if (isIgnorer(txt)) {
+                speak("Priorité moyenne par défaut.", () => stepEmploye()); return;
+            }
+            const prio = extractPriorite(txt);
+            if (prio) {
+                state.tache.priorite = prio;
+                const labels = {1:'basse', 2:'moyenne', 3:'haute', 4:'critique'};
+                speak(`Priorité : ${labels[prio]}.`, () => stepEmploye());
+            } else {
+                speak("Priorité non reconnue. Dites : basse, moyenne, haute, ou critique.", () => stepPriorite());
+            }
+        }, () => stepPriorite());
+    });
+}
+
+// ── Étape 4 : Employé ─────────────────────────────────────────────
+function stepEmploye() {
+    state.step = 'creer_emp';
+
+    if (!state.employes.length) {
+        speak("Aucun employé disponible. La tâche ne sera pas assignée.", () => stepDateDebut());
+        return;
+    }
+
+    // Lire la liste des employés
+    let empList = "Étape 4 sur 6. À quel employé assigner cette tâche ? Les employés disponibles sont : ";
+    state.employes.forEach(e => { empList += `${e.numero}, ${e.nom}, ${e.poste}. `; });
+    empList += "Dites le numéro ou le nom. Ou dites : passer, pour ne pas assigner.";
+
+    speak(empList, () => {
+        listen((txt) => {
+            if (isIgnorer(txt) || /sans employ|personne|aucun/i.test(txt)) {
+                speak("Tâche non assignée.", () => stepDateDebut()); return;
+            }
+
+            // Cherche par numéro
+            const numMatch = txt.match(/\b(\d+)\b/);
+            if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                const emp = state.employes.find(e => e.numero === num);
+                if (emp) {
+                    state.tache.idEmploye = emp.id;
+                    speak(`Assignée à ${emp.nom}.`, () => stepDateDebut()); return;
+                }
+            }
+
+            // Cherche par nom
+            const found = state.employes.find(e =>
+                e.nom.toLowerCase().includes(txt) || txt.includes(e.nom.toLowerCase().split(' ')[0])
+            );
+            if (found) {
+                state.tache.idEmploye = found.id;
+                speak(`Assignée à ${found.nom}.`, () => stepDateDebut());
+            } else {
+                speak("Employé non trouvé. Répétez le numéro ou le nom. Ou dites : passer.", () => stepEmploye());
+            }
+        }, () => stepEmploye());
+    });
+}
+
+// ── Étape 5 : Date de début ───────────────────────────────────────
+function stepDateDebut() {
+    state.step = 'creer_date_debut';
+    speak(
+        "Étape 5 sur 6. Quelle est la date de début ? " +
+        "Dites : aujourd'hui, demain, dans 3 jours, ou une date comme 15 mai. " +
+        "Ou dites : passer, pour aujourd'hui par défaut.", () => {
+        listen((txt) => {
+            if (isIgnorer(txt)) {
+                speak("Date de début : aujourd'hui.", () => stepDateFin()); return;
+            }
+            const date = parseDate(txt);
+            if (date) {
+                state.tache.dateDebut = date;
+                const [y,m,d] = date.split('-');
+                speak(`Date de début : ${d}/${m}/${y}.`, () => stepDateFin());
+            } else {
+                speak("Date non reconnue. Répétez : aujourd'hui, demain, dans 3 jours, ou le 15 mai.", () => stepDateDebut());
+            }
+        }, () => stepDateDebut());
+    });
+}
+
+// ── Étape 6 : Date de fin ─────────────────────────────────────────
+function stepDateFin() {
+    state.step = 'creer_date_fin';
+    speak(
+        "Étape 6 sur 6. Quelle est la date d'échéance ? " +
+        "Ou dites : passer, pour ne pas définir d'échéance.", () => {
+        listen((txt) => {
+            if (isIgnorer(txt)) {
+                speak("Pas d'échéance définie.", () => stepConfirmation()); return;
+            }
+            const date = parseDate(txt);
+            if (date) {
+                // Vérifier que la date de fin est après la date de début
+                if (date < state.tache.dateDebut) {
+                    speak("La date d'échéance doit être après la date de début. Répétez.", () => stepDateFin()); return;
+                }
+                state.tache.dateFin = date;
+                const [y,m,d] = date.split('-');
+                speak(`Échéance : ${d}/${m}/${y}.`, () => stepConfirmation());
+            } else {
+                speak("Date non reconnue. Répétez ou dites : passer.", () => stepDateFin());
+            }
+        }, () => stepDateFin());
+    });
+}
+
+// ── Étape finale : Confirmation ───────────────────────────────────
+function stepConfirmation() {
+    state.step = 'creer_confirm';
+
+    const prios  = {1:'basse', 2:'moyenne', 3:'haute', 4:'critique'};
+    const emp    = state.tache.idEmploye
+        ? (state.employes.find(e => e.id === state.tache.idEmploye)?.nom ?? 'inconnu')
+        : 'non assignée';
+
+    const debutParts = state.tache.dateDebut.split('-');
+    const debutTxt   = `${debutParts[2]}/${debutParts[1]}/${debutParts[0]}`;
+    const finTxt     = state.tache.dateFin
+        ? (() => { const p = state.tache.dateFin.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; })()
+        : 'aucune';
+
+    const resume =
+        `Récapitulatif de la tâche. ` +
+        `Titre : ${state.tache.titre}. ` +
+        `Catégorie : ${state.tache.categorie}. ` +
+        `Priorité : ${prios[state.tache.priorite]}. ` +
+        `Assignée à : ${emp}. ` +
+        `Début : ${debutTxt}. ` +
+        `Échéance : ${finTxt}. ` +
+        `Confirmez-vous la création ? Dites : oui pour confirmer, ou non pour annuler.`;
+
+    speak(resume, () => {
+        listen((txt) => {
+            if (isOui(txt)) {
+                soumettreCreation();
+            } else if (isNon(txt)) {
+                speak("Création annulée. Retour au menu.", () => listenMenu());
+            } else {
+                speak("Dites oui pour confirmer, ou non pour annuler.", () => {
+                    listen((t2) => {
+                        if (isOui(t2)) soumettreCreation();
+                        else speak("Création annulée.", () => listenMenu());
+                    });
+                });
+            }
+        }, () => stepConfirmation());
+    });
+}
+
+// ── Soumission API ────────────────────────────────────────────────
+async function soumettreCreation() {
+    speak("Création en cours…");
+
+    try {
+        const body = {
+            titre:      state.tache.titre,
+            categorie:  state.tache.categorie,
+            priorite:   state.tache.priorite,
+            idEmploye:  state.tache.idEmploye,
+            dateDebut:  state.tache.dateDebut,
+            dateFin:    state.tache.dateFin,
+            description:state.tache.description,
+            _token:     state.csrf,
+        };
+
+        const res = await fetchJSON(API.creer, 'POST', body);
+
+        if (res.success) {
+            speak(
+                res.message + " Voulez-vous créer une autre tâche, ou quitter ?",
+                () => {
+                    listen((txt) => {
+                        if (/ajouter|créer|autre|oui/i.test(txt)) flowCreerTache();
+                        else stopAssistant();
+                    });
+                }
+            );
+        } else {
+            speak(
+                `Erreur : ${res.message} Voulez-vous réessayer ?`,
+                () => {
+                    listen((txt) => {
+                        if (isOui(txt)) soumettreCreation();
+                        else speak("Création annulée.", () => listenMenu());
+                    });
+                }
+            );
+        }
+    } catch(e) {
+        speak("Erreur réseau. Réessayez.", () => listenMenu());
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DÉCLENCHEUR
+// ═══════════════════════════════════════════════════════════════════
+const trigger = document.getElementById('vb-trigger');
+
+trigger.addEventListener('click', () => {
+    if (state.active) { stopAssistant(); return; }
+    startAssistant();
+});
+
+// Raccourci clavier Alt+V
+document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key === 'v') {
+        e.preventDefault();
+        if (state.active) stopAssistant();
+        else startAssistant();
+    }
+});
+
+// Annonce au chargement pour les lecteurs d'écran
+window.addEventListener('load', () => {
+    announce(
+        "Assistant vocal disponible. Appuyez sur le bouton Assistant vocal ou utilisez le raccourci Alt+V pour l'activer.",
+        'polite'
+    );
+});
+
+})();
+</script>
