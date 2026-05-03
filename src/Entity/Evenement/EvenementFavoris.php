@@ -18,7 +18,7 @@ class EvenementFavoris
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Evenement::class, inversedBy: 'favoris')]
-    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Evenement $evenement = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -26,7 +26,7 @@ class EvenementFavoris
     private ?User $utilisateur = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $dateAjout = null;
+    private \DateTimeInterface $dateAjout;
 
     public function __construct()
     {
@@ -44,6 +44,6 @@ class EvenementFavoris
     public function getUtilisateur(): ?User { return $this->utilisateur; }
     public function setUtilisateur(?User $utilisateur): static { $this->utilisateur = $utilisateur; return $this; }
 
-    public function getDateAjout(): ?\DateTimeInterface { return $this->dateAjout; }
-    public function setDateAjout(\DateTimeInterface $dateAjout): static { $this->dateAjout = $dateAjout; return $this; }
+    public function getDateAjout(): \DateTimeInterface { return $this->dateAjout; }
+    protected function setDateAjout(\DateTimeInterface $dateAjout): static { $this->dateAjout = $dateAjout; return $this; }
 }

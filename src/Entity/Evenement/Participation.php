@@ -6,6 +6,7 @@ use App\Repository\Evenement\ParticipationRepository;
 use App\Entity\UserAndDiag\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ParticipationRepository::class)]
@@ -18,7 +19,7 @@ class Participation
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Evenement::class, inversedBy: 'participations')]
-    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Evenement $evenement = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -26,7 +27,7 @@ class Participation
     private ?User $utilisateur = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $dateInscription = null;
+    private \DateTimeInterface $dateInscription;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $statut = 'CONFIRME';
@@ -55,6 +56,7 @@ class Participation
     private bool $rappelJ1Envoye = false;
 
     #[ORM\Column(type: Types::STRING, length: 64, nullable: true, unique: true)]
+    #[Ignore]
     private ?string $qrCodeToken = null;
 
     public function __construct()
@@ -80,8 +82,8 @@ class Participation
     public function getUtilisateur(): ?User { return $this->utilisateur; }
     public function setUtilisateur(?User $utilisateur): static { $this->utilisateur = $utilisateur; return $this; }
 
-    public function getDateInscription(): ?\DateTimeInterface { return $this->dateInscription; }
-    public function setDateInscription(\DateTimeInterface $dateInscription): static { $this->dateInscription = $dateInscription; return $this; }
+    public function getDateInscription(): \DateTimeInterface { return $this->dateInscription; }
+    protected function setDateInscription(\DateTimeInterface $dateInscription): static { $this->dateInscription = $dateInscription; return $this; }
 
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): static { $this->statut = $statut; return $this; }

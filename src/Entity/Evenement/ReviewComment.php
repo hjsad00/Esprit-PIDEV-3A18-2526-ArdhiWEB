@@ -27,10 +27,10 @@ class ReviewComment
     private ?User $user = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
     #[ORM\ManyToOne(targetEntity: ReviewComment::class, inversedBy: 'replies')]
     #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
@@ -39,7 +39,7 @@ class ReviewComment
     /**
      * @var Collection<int, ReviewComment>
      */
-    #[ORM\OneToMany(mappedBy: 'parentComment', targetEntity: ReviewComment::class)]
+    #[ORM\OneToMany(mappedBy: 'parentComment', targetEntity: ReviewComment::class, cascade: ['remove'])]
     private Collection $replies;
 
     public function __construct()
@@ -78,7 +78,7 @@ class ReviewComment
         return $this;
     }
 
-    public function getContent(): ?string
+    public function getContent(): string
     {
         return $this->content;
     }
@@ -89,7 +89,7 @@ class ReviewComment
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created_at;
     }
