@@ -22,11 +22,7 @@ class IrrigationManager
         }
 
         // Règle 2: Humidité valide (0-100%)
-        $humidite = $irrigation->getHumidite();
-        if ($humidite === null) {
-            throw new \InvalidArgumentException('L\'humidité est obligatoire');
-        }
-        $humiditeValue = (float)$humidite;
+        $humiditeValue = (float) $irrigation->getHumidite();
         if ($humiditeValue < 0 || $humiditeValue > 100) {
             throw new \InvalidArgumentException('L\'humidité doit être entre 0 et 100%');
         }

@@ -5,8 +5,7 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 use App\Service\Parcelles_Cultures\FinancialService;
 use App\Service\PythonRoiService;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
-use App\Repository\Parcelles_Cultures\RoiAnalyseRepository;
-use App\Entity\Parcelles_Cultures\RoiAnalyse;
+use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\UserAndDiag\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +22,6 @@ class RoiController extends AbstractController
         private FinancialService $financialService,
         private PythonRoiService $pythonRoiService,
         private ParcelleRepository $parcelleRepository,
-        private RoiAnalyseRepository $roiAnalyseRepository,
         private EntityManagerInterface $entityManager
     ) {
     }
@@ -129,7 +127,7 @@ class RoiController extends AbstractController
 
             // 📍 Utiliser getReference() au lieu de find() car on n'a besoin que de la référence pour la validation
             if (isset($data['parcelle_id'])) {
-                $dto->parcelle = $this->parcelleRepository->getReference($data['parcelle_id']);
+                $dto->parcelle = $this->entityManager->getReference(Parcelle::class, (int) $data['parcelle_id']);
             }
 
             $errors = $validator->validate($dto);

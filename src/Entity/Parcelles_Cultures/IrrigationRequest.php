@@ -15,7 +15,7 @@ class IrrigationRequest
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private int $id;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'date')]
     #[Assert\NotBlank(message: 'La date est obligatoire')]

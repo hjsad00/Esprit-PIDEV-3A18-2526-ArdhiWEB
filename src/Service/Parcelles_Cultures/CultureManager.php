@@ -16,8 +16,8 @@ class CultureManager
     public function validate(Culture $culture): bool
     {
         // Règle 1: Surface positive
-        $surface = $culture->getSurfaceUtilisee();
-        if ($surface === null || (float)$surface <= 0) {
+        $surface = (float) $culture->getSurfaceUtilisee();
+        if ($surface <= 0) {
             throw new \InvalidArgumentException('La surface doit être positive');
         }
 
@@ -25,10 +25,8 @@ class CultureManager
         $datePlantation = $culture->getDatePlantation();
         $dateRecolte = $culture->getDateRecoltePrevue();
 
-        if ($datePlantation && $dateRecolte) {
-            if ($dateRecolte <= $datePlantation) {
-                throw new \InvalidArgumentException('La date de récolte doit être postérieure à la date de plantation');
-            }
+        if ($dateRecolte <= $datePlantation) {
+            throw new \InvalidArgumentException('La date de récolte doit être postérieure à la date de plantation');
         }
 
         return true;

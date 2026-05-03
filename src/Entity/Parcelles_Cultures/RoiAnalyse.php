@@ -12,7 +12,7 @@ class RoiAnalyse
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private int $id;
+    private ?int $id = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: 'parcelle_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
