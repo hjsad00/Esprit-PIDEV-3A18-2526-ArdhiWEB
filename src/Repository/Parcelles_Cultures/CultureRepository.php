@@ -44,6 +44,35 @@ class CultureRepository extends ServiceEntityRepository
         return (float) ($result['total_surface'] ?? 0);
     }
 
+    /**
+     * @param int[] $parcelleIds
+     * @return array<int, float>
+     */
+    public function getSurfaceUtiliseeByParcelleIds(array $parcelleIds): array
+    {
+        if (count($parcelleIds) === 0) {
+            return [];
+        }
+
+        $results = $this->createQueryBuilder('c')
+            ->select('new App\\DTO\\Parcelles_Cultures\\ParcelleSurfaceUsageDTO(
+                IDENTITY(c.parcelle),
+                COALESCE(SUM(c.surface_utilisee), 0)
+            )')
+            ->andWhere('c.parcelle IN (:ids)')
+            ->setParameter('ids', $parcelleIds)
+            ->groupBy('c.parcelle')
+            ->getQuery()
+            ->getResult();
+
+        $map = [];
+        foreach ($results as $row) {
+            $map[$row->parcelleId] = (float) $row->totalSurface;
+        }
+
+        return $map;
+    }
+
     public function getCulturesPretesARecolter(User $agriculteur)
     {
         return $this->createQueryBuilder('c')
@@ -84,8 +113,8 @@ class CultureRepository extends ServiceEntityRepository
         $stats = $this->createQueryBuilder('c')
             ->select('new App\DTO\Parcelles_Cultures\CultureStatsDTO(
                 COUNT(c.id),
-                SUM(CAST(c.surface_utilisee as decimal)),
-                SUM(CAST(c.surface_utilisee as decimal) * CAST(c.rendement_estime as decimal))
+                SUM(c.surface_utilisee),
+                SUM(c.surface_utilisee * c.rendement_estime)
             )')
             ->join('c.parcelle', 'p')
             ->andWhere('p.agriculteur = :agriculteur')

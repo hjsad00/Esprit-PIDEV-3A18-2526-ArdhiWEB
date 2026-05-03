@@ -35,7 +35,12 @@ class CultureAdminController extends AbstractController
             is_scalar($rawSaison) ? (string) $rawSaison : null
         );
 
-        $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
+        $cultures = $this->paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            10,
+            ['distinct' => false]
+        );
 
         return $this->render('parcelles_cultures/admin/cultures/index.html.twig', [
             'cultures' => $cultures,

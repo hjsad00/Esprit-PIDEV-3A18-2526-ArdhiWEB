@@ -3,15 +3,15 @@
 namespace App\DTO\Parcelles_Cultures;
 
 /**
- * DTO for Culture Statistics Aggregation
+ * DTO for Parcelle Statistics Aggregation
  * Used with Doctrine NEW syntax for type-safe aggregation queries
  */
-class CultureStatsDTO
+class ParcelleStatsDTO
 {
     public function __construct(
-        public ?int $totalCultures = 0,
+        public ?int $totalParcelles = 0,
         public ?float $totalSurface = 0.0,
-        public ?float $totalProduction = 0.0,
+        public ?int $parcellesActives = 0,
     ) {
     }
 }

@@ -36,7 +36,21 @@ class ParcelleFarmerController extends AbstractController
             $request->query->get('typeSol')
         );
 
-        $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
+        $parcelles = $this->paginator->paginate(
+            $query, 
+            $request->query->getInt('page', 1), 
+            10,
+            ['distinct' => false]
+        );
+        
+        // Eager load cultures for paginated items to prevent N+1 queries
+        $parcelleItems = $parcelles->getItems();
+        if (count($parcelleItems) > 0) {
+            $this->em->createQuery('SELECT p, c FROM App\Entity\Parcelles_Cultures\Parcelle p LEFT JOIN p.cultures c WHERE p.id IN (:ids)')
+                ->setParameter('ids', array_map(fn($p) => $p->getId(), $parcelleItems))
+                ->getResult();
+        }
+
         $stats = $this->parcelleRepository->getStatsByAgriculteur($user);
 
         if ($request->isXmlHttpRequest()) {
