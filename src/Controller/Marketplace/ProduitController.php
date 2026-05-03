@@ -79,12 +79,23 @@ class ProduitController extends AbstractController
         }
 
         // Hydratation
-        $produit->setNom((string) $request->request->get('nom'));
-        $produit->setDescription(is_scalar($request->request->get('description')) ? (string) $request->request->get('description') : null);
-        $produit->setPrix((float) $request->request->get('prix'));
-        $produit->setQuantiteStock((int) $request->request->get('quantiteStock'));
-        $produit->setCategorie(is_scalar($request->request->get('categorie')) ? (string) $request->request->get('categorie') : null);
-        $produit->setUniteMesure((string) $request->request->get('uniteMesure'));
+        $nom = $request->request->get('nom');
+        $produit->setNom(is_scalar($nom) ? (string) $nom : '');
+
+        $description = $request->request->get('description');
+        $produit->setDescription(is_scalar($description) ? (string) $description : null);
+
+        $prix = $request->request->get('prix');
+        $produit->setPrix(is_numeric($prix) ? (float) $prix : 0.0);
+
+        $quantiteStock = $request->request->get('quantiteStock');
+        $produit->setQuantiteStock(is_numeric($quantiteStock) ? (int) $quantiteStock : 0);
+
+        $categorie = $request->request->get('categorie');
+        $produit->setCategorie(is_scalar($categorie) ? (string) $categorie : null);
+
+        $uniteMesure = $request->request->get('uniteMesure');
+        $produit->setUniteMesure(is_scalar($uniteMesure) ? (string) $uniteMesure : 'Kg');
 
         // Visibilité
         $visible = $request->request->get('visible') !== null;
@@ -121,13 +132,15 @@ class ProduitController extends AbstractController
 
         // Upload image
         $imageFile = $request->files->get('image');
-        $newFilename = (string) ($produit->getImage() ?? ''); // conserve l'ancienne si pas de nouveau fichier
+        $newFilename = $produit->getImage() ?? ''; // conserve l'ancienne si pas de nouveau fichier
         if ($imageFile) {
             $safeFilename = $slugger->slug(pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME));
             $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
             try {
+                $projectDir = $this->getParameter('kernel.project_dir');
+                $projectDir = is_string($projectDir) ? $projectDir : '';
                 $imageFile->move(
-                    (string) $this->getParameter('kernel.project_dir') . '/public/uploads/produits',
+                    $projectDir . '/public/uploads/produits',
                     $newFilename
                 );
                 $produit->setImage($newFilename);
@@ -142,7 +155,7 @@ class ProduitController extends AbstractController
         $em->flush();
 
         // Notification si changement de prix
-        if (!$isNew && $oldPrice !== null) {
+        if (!$isNew) {
             $notificationService->notifyUpdate($produit, $oldPrice);
         }
 
@@ -227,7 +240,9 @@ class ProduitController extends AbstractController
         }
 
         if ($imageName) {
-            $path = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $imageName;
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $projectDir = is_string($projectDir) ? $projectDir : '';
+            $path = $projectDir . '/public/uploads/produits/' . $imageName;
             if (file_exists($path)) {
                 @unlink($path);
             }
@@ -271,10 +286,15 @@ class ProduitController extends AbstractController
         }
         $imageData = base64_encode($imageContents);
         $mimeType = $imageFile->getMimeType();
+        if (!is_string($mimeType)) {
+            return $this->json(['success' => false, 'message' => 'Type MIME invalide.'], 400);
+        }
 
         // Clé API et modèle depuis .env
-        $apiKey = (string) $this->getParameter('app.marketplace_groq_api_key');
-        $model = (string) $this->getParameter('app.marketplace_groq_model');
+        $apiKeyParam = $this->getParameter('app.marketplace_groq_api_key');
+        $apiKey = is_string($apiKeyParam) ? $apiKeyParam : '';
+        $modelParam = $this->getParameter('app.marketplace_groq_model');
+        $model = is_string($modelParam) ? $modelParam : '';
 
         if (!$apiKey || $apiKey === 'votre_cle_api_ici') {
             return $this->json(['success' => false, 'message' => 'Clé API Groq non configurée.'], 500);
@@ -316,7 +336,7 @@ PROMPT;
                                 [
                                     'type' => 'image_url',
                                     'image_url' => [
-                                        'url' => 'data:' . (string) $mimeType . ';base64,' . $imageData,
+                                        'url' => 'data:' . $mimeType . ';base64,' . $imageData,
                                     ],
                                 ],
                             ],
@@ -331,10 +351,10 @@ PROMPT;
             $content = $data['choices'][0]['message']['content'] ?? '';
 
             // Nettoyage : extraire le JSON de la réponse
-            $content = trim($content);
+            $content = trim((string) $content);
             // Supprimer les éventuels blocs markdown ```json ... ```
-            $content = preg_replace('/^```(?:json)?\s*/i', '', $content);
-            $content = preg_replace('/\s*```$/i', '', $content);
+            $content = preg_replace('/^```(?:json)?\s*/i', '', $content) ?? '';
+            $content = preg_replace('/\s*```$/i', '', $content) ?? '';
             $content = trim($content);
 
             $result = json_decode($content, true);

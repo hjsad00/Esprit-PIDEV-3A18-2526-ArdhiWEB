@@ -3,6 +3,7 @@
 namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Reclamation;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\ReclamationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -63,8 +64,10 @@ class ReclamationController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['success' => false, 'message' => 'Authentification requise.'], 401);
+        }
         
         $data = json_decode($request->getContent(), true);
         
@@ -82,7 +85,9 @@ class ReclamationController extends AbstractController
             return $this->json(['success' => false, 'message' => 'Vous ne pouvez pas signaler votre propre produit.']);
         }
         
-        $descriptionFinale = $sujet ? "SUJET : " . mb_strtoupper($sujet) . "\n\n" . $description : $description;
+        $descriptionFinale = $sujet !== ''
+            ? "SUJET : " . mb_strtoupper($sujet) . "\n\n" . $description
+            : $description;
 
         $reclamation = new Reclamation();
         $reclamation->setUser($user);
@@ -97,7 +102,7 @@ class ReclamationController extends AbstractController
         $errors = $validator->validate($reclamation);
         if (count($errors) > 0) {
             // Ne retourner que le premier message d'erreur pour rester simple
-            $errorMsg = $errors[0]->getMessage();
+            $errorMsg = $errors->get(0)->getMessage();
             return $this->json(['success' => false, 'message' => $errorMsg]);
         }
         
@@ -122,20 +127,35 @@ class ReclamationController extends AbstractController
         }
         
         // Vérifier que l'utilisateur est soit l'auteur, soit admin
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
-        if ($reclamation->getUser()->getId() !== $user->getId() && !$this->isGranted('ROLE_ADMIN')) {
+        if (!$user instanceof User) {
+            return $this->json(['success' => false, 'message' => 'Authentification requise.'], 401);
+        }
+        $reclamationUser = $reclamation->getUser();
+        if (!$reclamationUser) {
+            return $this->json(['success' => false, 'message' => 'Réclamation sans utilisateur.'], 400);
+        }
+
+        if ($reclamationUser->getId() !== $user->getId() && !$this->isGranted('ROLE_ADMIN')) {
             return $this->json(['success' => false, 'message' => 'Accès refusé.']);
         }
+
+        $produit = $reclamation->getProduit();
+        $vendeurNom = 'Inconnu';
+        if ($produit && $produit->getUser()) {
+            $vendeurNom = $produit->getUser()->getPrenom() . ' ' . $produit->getUser()->getNom();
+        }
+
+        $clientNom = $reclamationUser->getPrenom() . ' ' . $reclamationUser->getNom();
         
         return $this->json([
             'success' => true,
             'reclamation' => [
                 'id' => $reclamation->getId(),
                 'nomProduit' => $reclamation->getNomProduit(),
-                'idProduit' => $reclamation->getProduit() ? $reclamation->getProduit()->getId() : null,
-                'vendeurNom' => $reclamation->getProduit() ? ($reclamation->getProduit()->getUser()->getPrenom() . ' ' . $reclamation->getProduit()->getUser()->getNom()) : 'Inconnu',
-                'clientNom' => $reclamation->getUser()->getPrenom() . ' ' . $reclamation->getUser()->getNom(),
+                    'idProduit' => $produit ? $produit->getId() : null,
+                    'vendeurNom' => $vendeurNom,
+                    'clientNom' => $clientNom,
                 'type' => $reclamation->getType(),
                 'statut' => $reclamation->getStatut(),
                 'date' => $reclamation->getDateReclamation()->format('d/m/Y à H:i'),

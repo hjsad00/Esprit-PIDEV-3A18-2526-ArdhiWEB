@@ -177,12 +177,10 @@ class Coupon
     public function validate(ExecutionContextInterface $context): void
     {
         // 1. Validation des dates
-        if ($this->dateDebut && $this->dateFin) {
-            if ($this->dateFin < $this->dateDebut) {
-                $context->buildViolation('La date de fin doit être postérieure ou égale à la date de début.')
-                    ->atPath('dateFin')
-                    ->addViolation();
-            }
+        if ($this->dateFin < $this->dateDebut) {
+            $context->buildViolation('La date de fin doit être postérieure ou égale à la date de début.')
+                ->atPath('dateFin')
+                ->addViolation();
         }
 
         // 2. Validation du pourcentage

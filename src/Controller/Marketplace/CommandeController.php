@@ -138,7 +138,7 @@ class CommandeController extends AbstractController
             'success' => true,
             'commande' => [
                 'id' => $commande->getId(),
-                'date' => $commande->getDateCommande()?->format('d/m/Y') ?? '',
+                'date' => $commande->getDateCommande()->format('d/m/Y'),
                 'etat' => $commande->getEtat(),
                 'total' => number_format((float) $commande->getTotal(), 2, ',', ' '),
                 'fraisLivraison' => number_format((float) $commande->getFraisLivraison(), 2, ',', ' '),
@@ -253,16 +253,14 @@ class CommandeController extends AbstractController
         }
 
         // Notification in-app pour l'acheteur sur tout changement de statut.
-        if ($commande->getUser()) {
-            $commandeUser = $commande->getUser();
-            if ($commandeUser) {
-                $notifMarketRepository->notifierChangementStatutCommande(
-                    (int) $commandeUser->getId(),
-                    (int) $commande->getId(),
-                    $status,
-                    (float) $commande->getTotal()
-                );
-            }
+        $commandeUser = $commande->getUser();
+        if ($commandeUser) {
+            $notifMarketRepository->notifierChangementStatutCommande(
+                (int) $commandeUser->getId(),
+                (int) $commande->getId(),
+                $status,
+                (float) $commande->getTotal()
+            );
         }
 
         return $this->json([
@@ -634,10 +632,8 @@ class CommandeController extends AbstractController
     /**
      * Finalise la création des commandes et notifications.
      *
-     * @return array{nbCommandes:int}
-     */
-    /**
      * @param array<string, mixed> $prepared
+     * @return array{nbCommandes:int}
      */
     private function finalizeCheckout(
         User $user,
@@ -770,12 +766,19 @@ class CommandeController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
         // Sécurité : seul le propriétaire, le vendeur ou l'admin peut accéder
-        $isOwner = $commande->getUser()->getId() === $user->getId();
+        $commandeUser = $commande->getUser();
+        if (!$commandeUser) {
+            throw $this->createAccessDeniedException('Commande sans utilisateur.');
+        }
+
+        $isOwner = $commandeUser->getId() === $user->getId();
         $isSeller = false;
         foreach ($commande->getDetails() as $detail) {
             if ($detail->getProduit() && $detail->getProduit()->getUser() && $detail->getProduit()->getUser()->getId() === $user->getId()) {
