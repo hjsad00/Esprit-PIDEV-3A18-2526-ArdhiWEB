@@ -9,6 +9,9 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: EmployeRepository::class)]
 #[ORM\Table(name: 'employe')]
+#[ORM\Index(columns: ['id_agriculteur'], name: 'idx_employe_agriculteur')]
+#[ORM\Index(columns: ['actif'], name: 'idx_employe_actif')]
+#[ORM\Index(columns: ['id_agriculteur', 'actif'], name: 'idx_employe_agri_actif')]
 #[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')]
 class Employe
 {

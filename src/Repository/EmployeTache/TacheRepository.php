@@ -176,11 +176,13 @@ class TacheRepository extends ServiceEntityRepository
     /**
      * @return Tache[]
      */
-    public function findByAgriculteur(int $idAgriculteur): array
+    public function findByAgriculteur(int $idAgriculteur, int $limit = 100): array
     {
         return $this->createQueryBuilder('t')
             ->where('t.idAgriculteur = :agri')
             ->setParameter('agri', $idAgriculteur)
+            ->orderBy('t.dateDebut', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }

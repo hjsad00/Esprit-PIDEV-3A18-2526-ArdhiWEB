@@ -89,7 +89,6 @@ class EmployeRepository extends ServiceEntityRepository
             ->where('e.idAgriculteur = :id')
             ->andWhere('e.actif = true')
             ->setParameter('id', $idAgriculteur)
-            ->orderBy('e.nom', 'ASC')
             ->getQuery()
             ->getResult();
     }

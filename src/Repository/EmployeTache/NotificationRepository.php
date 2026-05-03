@@ -5,13 +5,15 @@ namespace App\Repository\EmployeTache;
 use App\Entity\EmployeTache\Notification;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * @extends ServiceEntityRepository<Notification>
  */
 class NotificationRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private CacheInterface $cache)
     {
         parent::__construct($registry, Notification::class);
     }
@@ -51,16 +53,33 @@ class NotificationRepository extends ServiceEntityRepository
 
     /**
      * Compte les notifications non lues (pour le badge navbar).
+     * ✅ CACHE 60s — évite la répétition 12x par requête HTTP détectée par Doctrine Doctor.
      */
     public function countUnread(int $idAgriculteur): int
     {
-        return (int) $this->createQueryBuilder('n')
-            ->select('COUNT(n.id)')
-            ->where('n.idAgriculteur = :agri')
-            ->andWhere('n.lue = false')
-            ->setParameter('agri', $idAgriculteur)
-            ->getQuery()
-            ->getSingleScalarResult();
+        $cacheKey = 'notif_unread_' . $idAgriculteur;
+
+        return (int) $this->cache->get($cacheKey, function (ItemInterface $item) use ($idAgriculteur) {
+            $item->expiresAfter(60); // 60 secondes
+
+            $result = $this->createQueryBuilder('n')
+                ->select('NEW App\DTO\EmployeTache\CountDTO(\'unread\', COUNT(n.id))')
+                ->where('n.idAgriculteur = :agri')
+                ->andWhere('n.lue = false')
+                ->setParameter('agri', $idAgriculteur)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            return $result ? (int) $result->total : 0;
+        });
+    }
+
+    /**
+     * Invalide le cache du badge notifications (appeler après marquer-comme-lu ou création).
+     */
+    public function invaliderCacheUnread(int $idAgriculteur): void
+    {
+        $this->cache->delete('notif_unread_' . $idAgriculteur);
     }
 
     /**

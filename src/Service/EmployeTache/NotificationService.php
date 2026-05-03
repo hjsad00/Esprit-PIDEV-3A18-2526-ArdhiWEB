@@ -328,12 +328,30 @@ class NotificationService
     private function nettoyerObsoletes(int $idAgriculteur): void
     {
         $notifications = $this->notifRepo->findByAgriculteur($idAgriculteur);
+        
+        $tacheIds = [];
+        foreach ($notifications as $notif) {
+            if ($notif->getIdTache()) {
+                $tacheIds[] = $notif->getIdTache();
+            }
+        }
+        
+        if (empty($tacheIds)) {
+            $this->em->flush();
+            return;
+        }
+
+        // Fetch all relevant tasks in a single query (Anti N+1)
+        $taches = $this->tacheRepo->findBy(['id' => $tacheIds]);
+        $tachesById = [];
+        foreach ($taches as $tache) {
+            $tachesById[$tache->getId()] = $tache;
+        }
 
         foreach ($notifications as $notif) {
             if (!$notif->getIdTache()) continue;
 
-            /** @var Tache|null $tache */
-            $tache = $this->tacheRepo->find($notif->getIdTache());
+            $tache = $tachesById[$notif->getIdTache()] ?? null;
             if (!$tache) {
                 $this->em->remove($notif);
                 continue;
