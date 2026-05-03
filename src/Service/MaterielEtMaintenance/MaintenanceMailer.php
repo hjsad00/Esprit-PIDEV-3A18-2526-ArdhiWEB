@@ -36,6 +36,9 @@ class MaintenanceMailer
         );
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     private function sendEmail(string $toEmail, string $toName, string $subject, string $template, array $context): void
     {
         $email = (new TemplatedEmail())

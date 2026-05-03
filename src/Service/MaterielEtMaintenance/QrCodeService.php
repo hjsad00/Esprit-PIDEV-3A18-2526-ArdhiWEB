@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class QrCodeService
 {
-    private $urlGenerator;
-    private $projectDir;
+    private UrlGeneratorInterface $urlGenerator;
+    private string $projectDir;
 
     public function __construct(UrlGeneratorInterface $urlGenerator, string $projectDir)
     {
