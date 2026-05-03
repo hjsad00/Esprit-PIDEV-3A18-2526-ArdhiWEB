@@ -23,7 +23,7 @@ class InactiveParticipantDetectionService
      * Analyse every participant and return risk profiles sorted by score desc.
      *
      * @param \App\Entity\UserAndDiag\User|null $creator Filter by event creator (for Agriculteurs)
-     * @return list<array<string, mixed>>
+     * @return list<array<string, mixed>> Each element is a risk-profile array.
      */
     public function detecterParticipantsInactifs(?\App\Entity\UserAndDiag\User $creator = null): array
     {
