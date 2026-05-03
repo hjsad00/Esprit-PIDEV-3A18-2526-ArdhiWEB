@@ -4,6 +4,7 @@ namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Produits;
 use App\Entity\Marketplace\Wishlist;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\Marketplace\WishlistRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,6 +47,9 @@ class WishlistController extends AbstractController
         EntityManagerInterface $em
     ): JsonResponse {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['success' => false, 'message' => 'Authentification requise.'], 401);
+        }
         
         $wishlistItem = $wishlistRepository->findOneBy([
             'user' => $user,

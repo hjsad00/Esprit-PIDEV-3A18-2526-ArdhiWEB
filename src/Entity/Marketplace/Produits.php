@@ -268,17 +268,17 @@ class Produits
         }
 
         if ($this->typeRemise === 'POURCENTAGE') {
-            if ($this->remise === null || $this->remise < 1 || $this->remise > 100) {
+            if ($this->remise < 1 || $this->remise > 100) {
                 $context->buildViolation('La remise en pourcentage doit être comprise entre 1 et 100.')
                     ->atPath('remise')
                     ->addViolation();
             }
         } elseif ($this->typeRemise === 'FIXE') {
-            if ($this->remise === null || $this->remise < 0.1) {
+            if ($this->remise < 0.1) {
                 $context->buildViolation('La remise fixe doit être d\'au moins 0.1 DT.')
                     ->atPath('remise')
                     ->addViolation();
-            } elseif ($this->prix !== null && $this->remise >= $this->prix) {
+            } elseif ($this->remise >= $this->prix) {
                 $context->buildViolation('La remise fixe ({{ remise }} DT) ne peut pas être supérieure ou égale au prix du produit ({{ prix }} DT).')
                     ->setParameter('{{ remise }}', (string) $this->remise)
                     ->setParameter('{{ prix }}', (string) $this->prix)
@@ -296,7 +296,7 @@ class Produits
     public function getPrixFinal(): float
     {
         $prix = $this->prix ?? 0.0;
-        $remise = $this->remise ?? 0.0;
+        $remise = $this->remise;
 
         if ($remise <= 0 || $this->typeRemise === null) {
             return (float) $prix;

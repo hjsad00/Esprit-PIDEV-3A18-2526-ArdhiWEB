@@ -169,7 +169,7 @@ class MarketplaceController extends AbstractController
                 'titre' => $notif->getTitre(),
                 'message' => $notif->getMessage(),
                 'lue' => $notif->isLue(),
-                'dateCreation' => $notif->getDateCreation()?->format('d/m/Y H:i') ?? '',
+                'dateCreation' => $notif->getDateCreation()->format('d/m/Y H:i'),
             ];
         }, $notifications);
 
