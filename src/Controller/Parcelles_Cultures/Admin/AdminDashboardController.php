@@ -35,6 +35,7 @@ class AdminDashboardController extends AbstractController
             ->select('SUM(p.surface) as totalSurface')
             ->from('App\Entity\Parcelles_Cultures\Parcelle', 'p')
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
         
         // Calculer la production totale estimée
@@ -43,6 +44,7 @@ class AdminDashboardController extends AbstractController
             ->select('SUM(c.production_estimee) as totalProduction')
             ->from('App\Entity\Parcelles_Cultures\Culture', 'c')
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
         
         // Récupérer les dernières parcelles (5 dernières)
@@ -61,23 +63,23 @@ class AdminDashboardController extends AbstractController
         
         // Données pour le graphique de distribution des types de sol
         $soilTypeQb = $this->em->createQueryBuilder()
-            ->select('p.type_sol, COUNT(p.id) as count')
+            ->select('new App\DTO\Parcelles_Cultures\ChartStatDTO(p.type_sol, COUNT(p.id))')
             ->from('App\Entity\Parcelles_Cultures\Parcelle', 'p')
             ->groupBy('p.type_sol');
         
-        $soilTypeData = $soilTypeQb->getQuery()->getResult();
-        $soilTypeLabels = !empty($soilTypeData) ? array_map(fn($item) => $item['type_sol'] ?? 'N/A', $soilTypeData) : [];
-        $soilTypeCounts = !empty($soilTypeData) ? array_map(fn($item) => (int)$item['count'], $soilTypeData) : [];
+        $soilTypeData = $soilTypeQb->getQuery()->enableResultCache(3600)->getResult();
+        $soilTypeLabels = !empty($soilTypeData) ? array_map(fn($item) => $item->type ?? 'N/A', $soilTypeData) : [];
+        $soilTypeCounts = !empty($soilTypeData) ? array_map(fn($item) => (int)$item->count, $soilTypeData) : [];
         
         // Données pour le graphique de distribution des types de culture
         $cultureTypeQb = $this->em->createQueryBuilder()
-            ->select('c.type_culture, COUNT(c.id) as count')
+            ->select('new App\DTO\Parcelles_Cultures\ChartStatDTO(c.type_culture, COUNT(c.id))')
             ->from('App\Entity\Parcelles_Cultures\Culture', 'c')
             ->groupBy('c.type_culture');
         
-        $cultureTypeData = $cultureTypeQb->getQuery()->getResult();
-        $cultureTypeLabels = !empty($cultureTypeData) ? array_map(fn($item) => $item['type_culture'] ?? 'N/A', $cultureTypeData) : [];
-        $cultureTypeCounts = !empty($cultureTypeData) ? array_map(fn($item) => (int)$item['count'], $cultureTypeData) : [];
+        $cultureTypeData = $cultureTypeQb->getQuery()->enableResultCache(3600)->getResult();
+        $cultureTypeLabels = !empty($cultureTypeData) ? array_map(fn($item) => $item->type ?? 'N/A', $cultureTypeData) : [];
+        $cultureTypeCounts = !empty($cultureTypeData) ? array_map(fn($item) => (int)$item->count, $cultureTypeData) : [];
 
         return $this->render('parcelles_cultures/admin/dashboard.html.twig', [
             'stats' => [

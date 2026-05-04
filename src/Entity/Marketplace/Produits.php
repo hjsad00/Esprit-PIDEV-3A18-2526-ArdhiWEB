@@ -26,7 +26,7 @@ class Produits
         minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
     )]
-    private ?string $nom = null;
+    private string $nom;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
@@ -34,19 +34,19 @@ class Produits
     #[ORM\Column(type: Types::FLOAT)]
     #[Assert\NotBlank(message: 'Le prix est obligatoire.')]
     #[Assert\GreaterThan(value: 0.1, message: 'Le prix doit être supérieur à 0.1 DT.')]
-    private ?float $prix = null;
+    private float $prix;
 
     #[ORM\Column(name: 'quantiteStock')]
     #[Assert\NotBlank(message: 'La quantité en stock est obligatoire.')]
     #[Assert\GreaterThanOrEqual(value: 1, message: 'Le stock doit être supérieur à 0.')]
-    private ?int $quantiteStock = null;
+    private int $quantiteStock;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
     private ?string $categorie = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false)]
     private ?User $user = null;
 
     #[ORM\Column(name: 'uniteMesure', type: Types::STRING, length: 10, columnDefinition: "ENUM('Kg','L','Piece') NOT NULL")]
@@ -55,13 +55,13 @@ class Produits
         choices: ['Kg', 'L', 'Piece'],
         message: "L'unité de mesure doit être l'une des valeurs suivantes : Kg, L, Piece."
     )]
-    private ?string $uniteMesure = null;
+    private string $uniteMesure;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
     #[ORM\Column(type: Types::FLOAT, options: ["default" => 0])]
-    private ?float $remise = 0;
+    private float $remise = 0.0;
 
     #[ORM\Column(name: 'typeRemise', length: 20, nullable: true)]
     private ?string $typeRemise = null;
@@ -87,7 +87,7 @@ class Produits
         return $this->id;
     }
 
-    public function getNom(): ?string
+    public function getNom(): string
     {
         return $this->nom;
     }
@@ -109,7 +109,7 @@ class Produits
         return $this;
     }
 
-    public function getPrix(): ?float
+    public function getPrix(): float
     {
         return $this->prix;
     }
@@ -120,7 +120,7 @@ class Produits
         return $this;
     }
 
-    public function getQuantiteStock(): ?int
+    public function getQuantiteStock(): int
     {
         return $this->quantiteStock;
     }
@@ -153,7 +153,7 @@ class Produits
         return $this;
     }
 
-    public function getUniteMesure(): ?string
+    public function getUniteMesure(): string
     {
         return $this->uniteMesure;
     }
@@ -175,14 +175,14 @@ class Produits
         return $this;
     }
 
-    public function getRemise(): ?float
+    public function getRemise(): float
     {
         return $this->remise;
     }
 
     public function setRemise(?float $remise): static
     {
-        $this->remise = $remise;
+        $this->remise = $remise ?? 0.0;
         return $this;
     }
 
@@ -268,20 +268,20 @@ class Produits
         }
 
         if ($this->typeRemise === 'POURCENTAGE') {
-            if ($this->remise === null || $this->remise < 1 || $this->remise > 100) {
+            if ($this->remise < 1 || $this->remise > 100) {
                 $context->buildViolation('La remise en pourcentage doit être comprise entre 1 et 100.')
                     ->atPath('remise')
                     ->addViolation();
             }
         } elseif ($this->typeRemise === 'FIXE') {
-            if ($this->remise === null || $this->remise < 0.1) {
+            if ($this->remise < 0.1) {
                 $context->buildViolation('La remise fixe doit être d\'au moins 0.1 DT.')
                     ->atPath('remise')
                     ->addViolation();
-            } elseif ($this->prix !== null && $this->remise >= $this->prix) {
+            } elseif ($this->remise >= $this->prix) {
                 $context->buildViolation('La remise fixe ({{ remise }} DT) ne peut pas être supérieure ou égale au prix du produit ({{ prix }} DT).')
-                    ->setParameter('{{ remise }}', $this->remise)
-                    ->setParameter('{{ prix }}', $this->prix)
+                    ->setParameter('{{ remise }}', (string) $this->remise)
+                    ->setParameter('{{ prix }}', (string) $this->prix)
                     ->atPath('remise')
                     ->addViolation();
             }
@@ -295,15 +295,18 @@ class Produits
      */
     public function getPrixFinal(): float
     {
-        if ($this->remise <= 0 || $this->typeRemise === null) {
-            return $this->prix;
+        $prix = $this->prix ?? 0.0;
+        $remise = $this->remise;
+
+        if ($remise <= 0 || $this->typeRemise === null) {
+            return (float) $prix;
         }
 
         if ($this->typeRemise === 'POURCENTAGE') {
-            return $this->prix * (1 - $this->remise / 100);
+            return (float) ($prix * (1 - $remise / 100));
         }
 
         // Remise fixe
-        return max(0, $this->prix - $this->remise);
+        return (float) max(0.0, $prix - $remise);
     }
 }

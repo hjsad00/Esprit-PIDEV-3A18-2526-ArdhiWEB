@@ -3,6 +3,7 @@
 namespace App\Service\Parcelles_Cultures;
 
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Parcelles_Cultures\CultureRepository;
 
 class CultureService
@@ -41,15 +42,17 @@ class CultureService
     /**
      * Obtient la surface utilisée totale pour une parcelle
      */
-    public function getSurfaceUtiliseeParParcelle(int $parcelleId): float
+    public function getSurfaceUtiliseeParParcelle(int $parcelleId, ?int $excludeCultureId = null): float
     {
-        return $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId);
+        return $this->cultureRepository->getSurfaceUtiliseeParParcelle($parcelleId, $excludeCultureId);
     }
 
     /**
      * Récupère les cultures prêtes à récolter pour un agriculteur
+     *
+     * @return Culture[]
      */
-    public function getCulturesPretesARecolter($agriculteur)
+    public function getCulturesPretesARecolter(User $agriculteur): array
     {
         return $this->cultureRepository->getCulturesPretesARecolter($agriculteur);
     }

@@ -277,7 +277,7 @@ class MaintenanceController extends AbstractController
     private function getMaintenanceOwnedByUser(int $id, MaintenanceRepository $repo): Maintenance
     {
         $maintenance = $repo->find($id);
-        if (!$maintenance || $maintenance->getMateriel()->getUserId() !== $this->getUser()->getId()) {
+        if (!$maintenance || $maintenance->getMateriel()->getUser()?->getId() !== $this->getUser()->getId()) {
             throw $this->createNotFoundException('Maintenance introuvable.');
         }
         return $maintenance;

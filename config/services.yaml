@@ -4,120 +4,120 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    app.mail_from: '%env(string:MAIL_FROM)%'
-    app.marketplace_groq_api_key: '%env(string:MARKETPLACE_GROQ_API_KEY)%'
-    app.marketplace_groq_model: '%env(string:MARKETPLACE_GROQ_MODEL)%'
-    app.twilio_sid: '%env(string:MARKETPLACE_TWILIO_SID)%'
-    app.twilio_token: '%env(string:MARKETPLACE_TWILIO_TOKEN)%'
-    app.twilio_whatsapp_number: '%env(string:MARKETPLACE_TWILIO_WHATSAPP_NUMBER)%'
+  app.mail_from: "%env(string:MAIL_FROM)%"
+  app.marketplace_groq_api_key: "%env(string:MARKETPLACE_GROQ_API_KEY)%"
+  app.marketplace_groq_model: "%env(string:MARKETPLACE_GROQ_MODEL)%"
+  app.twilio_sid: "%env(string:MARKETPLACE_TWILIO_SID)%"
+  app.twilio_token: "%env(string:MARKETPLACE_TWILIO_TOKEN)%"
+  app.twilio_whatsapp_number: "%env(string:MARKETPLACE_TWILIO_WHATSAPP_NUMBER)%"
 
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
-        bind:
-            string $mailFrom: '%app.mail_from%'
-            string $projectDir: '%kernel.project_dir%'
-            string $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
-            string $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
-            string $twilioFrom: '%env(resolve:TWILIO_FROM)%'
-            string $twilioWhatsAppFrom: '%env(resolve:TWILIO_WHATSAPP_FROM)%'
-            string $geminiApiKey: '%env(GEMINI_API_KEY)%'
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    bind:
+      string $mailFrom: "%app.mail_from%"
+      string $projectDir: "%kernel.project_dir%"
+      string $twilioSid: "%env(MATERIEL_TWILIO_SID)%"
+      string $twilioToken: "%env(MATERIEL_TWILIO_AUTH_TOKEN)%"
+      string $twilioFrom: "%env(resolve:TWILIO_FROM)%"
+      string $twilioWhatsAppFrom: "%env(resolve:TWILIO_WHATSAPP_FROM)%"
+      string $geminiApiKey: "%env(GEMINI_API_KEY)%"
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/'
-        exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: "../src/"
+    exclude:
+      - "../src/DependencyInjection/"
+      - "../src/Entity/"
+      - "../src/Kernel.php"
+      - "../src/Migration/"
+      - "../src/Migrations/"
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
-    App\Service\TwilioService:
-        arguments:
-            $sid: '%app.twilio_sid%'
-            $token: '%app.twilio_token%'
-            $from: '%app.twilio_whatsapp_number%'
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
+  App\Service\TwilioService:
+    arguments:
+      $sid: "%app.twilio_sid%"
+      $token: "%app.twilio_token%"
+      $from: "%app.twilio_whatsapp_number%"
 
-    App\Service\MaterielEtMaintenance\WhatsAppService:
-        arguments:
-            $twilioSid: '%env(MATERIEL_TWILIO_SID)%'
-            $twilioToken: '%env(MATERIEL_TWILIO_AUTH_TOKEN)%'
-            $twilioFrom: '%env(resolve:MATERIEL_TWILIO_FROM)%'
+  App\Service\MaterielEtMaintenance\WhatsAppService:
+    arguments:
+      $twilioSid: "%env(MATERIEL_TWILIO_SID)%"
+      $twilioToken: "%env(MATERIEL_TWILIO_AUTH_TOKEN)%"
+      $twilioFrom: "%env(resolve:MATERIEL_TWILIO_FROM)%"
 
-    App\Service\EmployeTache\UrgentNotificationService:
-        arguments:
-            $twilioSid: '%env(TWILIO_SID)%'
-            $twilioToken: '%env(TWILIO_TOKEN)%'
-            $twilioFrom: '%env(TWILIO_FROM)%'
-            $twilioWhatsAppFrom: '%env(TWILIO_WHATSAPP_FROM)%'
+  App\Service\EmployeTache\UrgentNotificationService:
+    arguments:
+      $twilioSid: "%env(TWILIO_SID)%"
+      $twilioToken: "%env(TWILIO_TOKEN)%"
+      $twilioFrom: "%env(TWILIO_FROM)%"
+      $twilioWhatsAppFrom: "%env(TWILIO_WHATSAPP_FROM)%"
 
-    App\Service\EmployeTache\GoogleCalendarService:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-            $calendarId: '%env(GOOGLE_CALENDAR_ID)%'
+  App\Service\EmployeTache\GoogleCalendarService:
+    arguments:
+      $projectDir: "%kernel.project_dir%"
+      $calendarId: "%env(GOOGLE_CALENDAR_ID)%"
 
-    # Parcelles Cultures - External API Services
-    App\Service\ExternalAPI\GroqService:
-        arguments:
-            $groqApiKey: '%env(GROQ_API_KEY)%'
+  # Parcelles Cultures - External API Services
+  App\Service\ExternalAPI\GroqService:
+    arguments:
+      $groqApiKey: "%env(GROQ_API_KEY)%"
 
-    App\Service\ExternalAPI\GeminiService:
-        arguments:
-            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+  App\Service\ExternalAPI\GeminiService:
+    arguments:
+      $geminiApiKey: "%env(GEMINI_API_KEY)%"
 
-    App\Service\ExternalAPI\WeatherService: ~
+  App\Service\ExternalAPI\WeatherService: ~
 
-    # New Culture AI Services
-    App\Service\WeatherService:
-        arguments:
-            $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+  # New Culture AI Services
+  App\Service\WeatherService:
+    arguments:
+      $openWeatherApiKey: "%env(OPENWEATHER_API_KEY)%"
 
-    App\Service\GeminiService:
-        arguments:
-            $geminiApiKey: '%env(GEMINI_API_KEY)%'
+  App\Service\GeminiService:
+    arguments:
+      $geminiApiKey: "%env(GEMINI_API_KEY)%"
 
-    App\Service\CultureAdvisorService: ~
+  App\Service\CultureAdvisorService: ~
 
-    App\Service\Evenement\UnsplashImageService:
-        arguments:
-            $httpClient:  '@http_client'
-            $logger:      '@logger'
-            $projectDir:  '%kernel.project_dir%'
+  App\Service\Evenement\UnsplashImageService:
+    arguments:
+      $httpClient: "@http_client"
+      $logger: "@logger"
+      $projectDir: "%kernel.project_dir%"
 
-    App\Service\Evenement\GeminiAIEventService:
-        arguments:
-            $httpClient:      '@http_client'
-            $unsplashService: '@App\Service\Evenement\UnsplashImageService'
-            $logger:          '@logger'
+  App\Service\Evenement\GeminiAIEventService:
+    arguments:
+      $httpClient: "@http_client"
+      $unsplashService: '@App\Service\Evenement\UnsplashImageService'
+      $logger: "@logger"
 
-    App\Service\Evenement\ParticipationPredictionService: ~
+  App\Service\Evenement\ParticipationPredictionService: ~
 
-    App\Service\Evenement\QRCodeService:
-        arguments:
-            $em:                 '@doctrine.orm.entity_manager'
-            $participationRepo:  '@App\Repository\Evenement\ParticipationRepository'
-            $evenementRepo:      '@App\Repository\Evenement\EvenementRepository'
-            $logger:             '@logger'
-            $projectDir:         '%kernel.project_dir%'
+  App\Service\Evenement\QRCodeService:
+    arguments:
+      $em: "@doctrine.orm.entity_manager"
+      $participationRepo: '@App\Repository\Evenement\ParticipationRepository'
+      $evenementRepo: '@App\Repository\Evenement\EvenementRepository'
+      $logger: "@logger"
+      $projectDir: "%kernel.project_dir%"
 
-    App\Service\Evenement\CalendarExportService:
-        arguments:
-            $logger:       '@logger'
-            $projectDir:   '%kernel.project_dir%'
-            $requestStack: '@request_stack'
+  App\Service\Evenement\CalendarExportService:
+    arguments:
+      $logger: "@logger"
+      $projectDir: "%kernel.project_dir%"
+      $requestStack: "@request_stack"
 
-    App\Service\Evenement\SmartEmailRecommendationService:
-        arguments:
-            $participationRepo: '@App\Repository\Evenement\ParticipationRepository'
-            $evenementRepo:     '@App\Repository\Evenement\EvenementRepository'
-            $mailer:            '@mailer'
-            $logger:            '@logger'
-            $mailFrom:          '%env(MAILER_FROM)%'
+  App\Service\Evenement\SmartEmailRecommendationService:
+    arguments:
+      $participationRepo: '@App\Repository\Evenement\ParticipationRepository'
+      $evenementRepo: '@App\Repository\Evenement\EvenementRepository'
+      $mailer: "@mailer"
+      $logger: "@logger"
+      $mailFrom: "%env(MAILER_FROM)%"
 
-    App\Service\Evenement\InactiveParticipantDetectionService: ~
-
-
+  App\Service\Evenement\InactiveParticipantDetectionService: ~

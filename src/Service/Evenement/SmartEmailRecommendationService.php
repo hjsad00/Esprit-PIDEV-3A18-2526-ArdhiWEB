@@ -3,6 +3,7 @@
 namespace App\Service\Evenement;
 
 use App\Entity\Evenement\Evenement;
+use App\Entity\Evenement\Participation;
 use App\Repository\Evenement\ParticipationRepository;
 use App\Repository\Evenement\EvenementRepository;
 use Symfony\Component\Mailer\MailerInterface;
@@ -31,7 +32,7 @@ class SmartEmailRecommendationService
     /**
      * Send a personalised re-engagement email to one risk profile.
      *
-     * @param array $profile  A risk-profile array from InactiveParticipantDetectionService
+     * @param array<string, mixed> $profile A risk-profile array from InactiveParticipantDetectionService
      */
     public function envoyerRelancePersonnalisee(array $profile): bool
     {
@@ -64,6 +65,9 @@ class SmartEmailRecommendationService
     /**
      * Send re-engagement emails to all profiles that meet the score threshold.
      * Returns stats: ['urgentes', 'importantes', 'standard', 'total', 'echecs']
+     *
+     * @param list<array<string, mixed>> $profiles
+     * @return array{urgentes: int, importantes: int, standard: int, total: int, echecs: int}
      */
     public function envoyerRelancesAutomatiques(array $profiles): array
     {
@@ -92,6 +96,11 @@ class SmartEmailRecommendationService
     // EMAIL BUILDING
     // ═══════════════════════════════════════════════════════════════════════
 
+    /**
+     * @param array<string, mixed> $profile
+     * @param array{typesPreferences: list<string>, lieuxPreferences: list<string>, nombreParticipationsPassees: int} $prefs
+     * @param list<Evenement> $recommandations
+     */
     private function genererEmailHTML(array $profile, array $prefs, array $recommandations): string
     {
         $prenom = htmlspecialchars($profile['prenom'] ?? 'Participant');
@@ -154,8 +163,8 @@ HTML;
                     'ATELIER'    => '🔧',
                     default      => '🌾',
                 };
-                $titre = htmlspecialchars($evt->getTitre());
-                $lieu  = htmlspecialchars($evt->getLieu());
+                $titre = htmlspecialchars($evt->getTitre() ?? '');
+                $lieu  = htmlspecialchars($evt->getLieu() ?? '');
                 $date  = $evt->getDateDebut() ? $evt->getDateDebut()->format('d/m/Y') : 'À confirmer';
                 $places = $evt->getNombrePlacesMax();
                 $num   = $i + 1;
@@ -216,22 +225,28 @@ HTML;
     // PREFERENCE ANALYSIS & EVENT RECOMMENDATION
     // ═══════════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array{typesPreferences: list<string>, lieuxPreferences: list<string>, nombreParticipationsPassees: int}
+     */
     private function analyserHistoriqueUtilisateur(int $userId): array
     {
-        $participations = array_filter(
+        /** @var list<Participation> $participations */
+        $participations = array_values(array_filter(
             $this->participationRepo->findAll(),
-            fn($p) => $p->getUtilisateur()?->getId() === $userId
-        );
+            static fn (mixed $p): bool => $p instanceof Participation
+                && $p->getUtilisateur()?->getId() === $userId
+        ));
 
         $typesCount = [];
         $lieuxCount = [];
 
         foreach ($participations as $p) {
             $evt = $p->getEvenement();
-            if (!$evt) continue;
+            if (!$evt instanceof Evenement) continue;
 
             $type = $evt->getType();
             $lieu = $evt->getLieu();
+            if ($type === null || $lieu === null) continue;
 
             $typesCount[$type] = ($typesCount[$type] ?? 0) + 1;
             $lieuxCount[$lieu] = ($lieuxCount[$lieu] ?? 0) + 1;
@@ -253,7 +268,8 @@ HTML;
     }
 
     /**
-     * @return Evenement[]
+     * @param array{typesPreferences: list<string>, lieuxPreferences: list<string>, nombreParticipationsPassees: int} $prefs
+     * @return list<Evenement>
      */
     private function recommanderEvenements(array $prefs): array
     {
@@ -269,14 +285,14 @@ HTML;
             // Type preference
             if (in_array($evt->getType(), $prefs['typesPreferences'], true)) {
                 $score += 50.0;
-                if (($prefs['typesPreferences'][0] ?? null) === $evt->getType()) {
+                if ($prefs['typesPreferences'][0] === $evt->getType()) {
                     $score += 20.0;
                 }
             }
 
             // Location preference
             foreach ($prefs['lieuxPreferences'] as $lieuPref) {
-                if (str_contains(strtolower($evt->getLieu()), strtolower($lieuPref))) {
+                if (str_contains(strtolower($evt->getLieu() ?? ''), strtolower($lieuPref))) {
                     $score += 30.0;
                     break;
                 }
@@ -300,6 +316,10 @@ HTML;
         return array_map(fn($s) => $s['evt'], array_slice($scores, 0, 3));
     }
 
+    /**
+     * @param array<string, mixed> $profile
+     * @param array{typesPreferences: list<string>, lieuxPreferences: list<string>, nombreParticipationsPassees: int} $prefs
+     */
     private function genererSujetPersonnalise(array $profile, array $prefs): string
     {
         $prenom = $profile['prenom'] ?? 'Participant';

@@ -6,6 +6,8 @@ class CityCoordinatesService
 {
     /**
      * Coordonnées approximatives des principales villes et gouvernorats de Tunisie.
+     *
+     * @var array<string,array{lat:float,lng:float}>
      */
     private array $cities = [
         'tunis' => ['lat' => 36.8065, 'lng' => 10.1815],
@@ -57,6 +59,9 @@ class CityCoordinatesService
      * @param float $lng
      * @param float $radiusKm
      * @return array
+     */
+    /**
+     * @return string[]
      */
     public function getCitiesWithinRadius(float $lat, float $lng, float $radiusKm): array
     {

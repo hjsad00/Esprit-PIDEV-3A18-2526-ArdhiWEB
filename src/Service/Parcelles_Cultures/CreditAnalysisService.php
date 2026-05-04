@@ -35,6 +35,9 @@ class CreditAnalysisService
      * ScoreRisque = 0.4×Rentabilite + 0.3×StabiliteClimat + 0.2×Diversification + 0.1×Historique
      * NiveauRisque: Faible si >= 7, Modéré si >= 4, sinon Élevé
      */
+    /**
+     * @return array{score_risque: float, niveau_risque: string}
+     */
     public function calculerScoreRisque(
         float $scoreRentabilite,
         float $scoreStabiliteClimat,

@@ -3,11 +3,10 @@
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
+use App\Entity\UserAndDiag\User;
 use App\DTO\Parcelles_Cultures\IrrigationDTO;
 use App\Form\Parcelles_Cultures\Type\IrrigationFormType;
-use App\Repository\Parcelles_Cultures\IrrigationRequestRepository;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
-use App\Service\Parcelles_Cultures\IrrigationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,8 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class IrrigationController extends AbstractController
 {
     public function __construct(
-        private IrrigationRequestRepository $irrigationRepository,
-        private IrrigationService $irrigationService,
         private ParcelleRepository $parcelleRepository
     ) {
     }
@@ -80,6 +77,7 @@ class IrrigationController extends AbstractController
         if (!$user) {
             return $this->json(['error' => 'User not authenticated'], 401);
         }
+        assert($user instanceof User);
         
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         
@@ -106,7 +104,7 @@ class IrrigationController extends AbstractController
         foreach ($parcelle->getCultures() as $culture) {
             $cultures[] = [
                 'id' => $culture->getId(),
-                'nom' => $culture->getTypeCulture() ?? $culture->getNomCulture(),
+                'nom' => $culture->getTypeCulture(),
             ];
         }
 

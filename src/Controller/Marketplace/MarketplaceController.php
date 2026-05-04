@@ -32,8 +32,9 @@ class MarketplaceController extends AbstractController
 
         $user = $this->getUser();
         if ($user instanceof User) {
-            $notifications = $notifMarketRepository->getNotificationsParVendeur($user->getId());
-            $unreadCount = $notifMarketRepository->compterNonLues($user->getId());
+            $userId = (int) $user->getId();
+            $notifications = $notifMarketRepository->getNotificationsParVendeur($userId);
+            $unreadCount = $notifMarketRepository->compterNonLues($userId);
         }
 
         return $this->render('Marketplace/accueil.html.twig', [
@@ -68,7 +69,7 @@ class MarketplaceController extends AbstractController
             $updated = true;
         }
 
-        $unreadCount = $notifMarketRepository->compterNonLues($user->getId());
+        $unreadCount = $notifMarketRepository->compterNonLues((int) $user->getId());
 
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
@@ -97,7 +98,7 @@ class MarketplaceController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        $notifMarketRepository->marquerToutesCommeLues($user->getId());
+        $notifMarketRepository->marquerToutesCommeLues((int) $user->getId());
 
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
@@ -136,7 +137,7 @@ class MarketplaceController extends AbstractController
         $wasUnread = !$notif->isLue();
         $notifMarketRepository->supprimerNotification($id);
 
-        $unreadCount = $notifMarketRepository->compterNonLues($user->getId());
+        $unreadCount = $notifMarketRepository->compterNonLues((int) $user->getId());
 
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
@@ -159,7 +160,7 @@ class MarketplaceController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Authentification requise.'], 401);
         }
 
-        $notifications = $notifMarketRepository->getNotificationsParVendeur($user->getId());
+        $notifications = $notifMarketRepository->getNotificationsParVendeur((int) $user->getId());
         $notifications = array_slice($notifications, 0, 12);
 
         $payload = array_map(static function (NotifMarket $notif): array {
@@ -168,13 +169,13 @@ class MarketplaceController extends AbstractController
                 'titre' => $notif->getTitre(),
                 'message' => $notif->getMessage(),
                 'lue' => $notif->isLue(),
-                'dateCreation' => $notif->getDateCreation()?->format('d/m/Y H:i') ?? '',
+                'dateCreation' => $notif->getDateCreation()->format('d/m/Y H:i'),
             ];
         }, $notifications);
 
         return new JsonResponse([
             'success' => true,
-            'unreadCount' => $notifMarketRepository->compterNonLues($user->getId()),
+            'unreadCount' => $notifMarketRepository->compterNonLues((int) $user->getId()),
             'notifications' => $payload,
         ]);
     }

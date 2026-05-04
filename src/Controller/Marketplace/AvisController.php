@@ -41,7 +41,7 @@ class AvisController extends AbstractController
                 'id' => $review->getId(),
                 'note' => $review->getNote(),
                 'commentaire' => $review->getCommentaire(),
-                'dateAvis' => $review->getDateAvis()?->format('d/m/Y'),
+                'dateAvis' => $review->getDateAvis()->format('d/m/Y'),
                 'isVerifiedBuyer' => $review->isVerifiedBuyer(),
                 'user' => [
                     'id' => $user?->getId(),
@@ -107,11 +107,17 @@ class AvisController extends AbstractController
         $entityManager->flush();
 
         $seller = $produit->getUser();
-        if ($seller instanceof User && $seller->getId() !== $user->getId()) {
+        if ($seller instanceof User) {
+            $sellerId = $seller->getId();
+        } else {
+            $sellerId = null;
+        }
+
+        if ($sellerId !== null && $sellerId !== $user->getId()) {
             $notifMarketRepository->notifierNouvelAvis(
-                $seller->getId(),
+                $sellerId,
                 (int) $produit->getId(),
-                (string) ($produit->getNom() ?? 'Produit'),
+                $produit->getNom(),
                 $fullName !== '' ? $fullName : 'Utilisateur',
                 $note
             );
@@ -130,7 +136,7 @@ class AvisController extends AbstractController
                 'id' => $avis->getId(),
                 'note' => $avis->getNote(),
                 'commentaire' => $avis->getCommentaire(),
-                'dateAvis' => $avis->getDateAvis()?->format('d/m/Y'),
+                'dateAvis' => $avis->getDateAvis()->format('d/m/Y'),
                 'isVerifiedBuyer' => $avis->isVerifiedBuyer(),
                 'user' => [
                     'id' => $user->getId(),

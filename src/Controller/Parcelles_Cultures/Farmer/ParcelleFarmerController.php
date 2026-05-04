@@ -3,6 +3,7 @@
 namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
+use App\Entity\UserAndDiag\User;
 use App\Form\Parcelles_Cultures\Type\ParcelleFormType;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,14 +28,30 @@ class ParcelleFarmerController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        $user = $this->getUser();
+        assert($user instanceof User);
         $query = $this->parcelleRepository->searchAndFilter(
-            $this->getUser(),
+            $user,
             $request->query->get('q'),
             $request->query->get('typeSol')
         );
 
-        $parcelles = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
-        $stats = $this->parcelleRepository->getStatsByAgriculteur($this->getUser());
+        $parcelles = $this->paginator->paginate(
+            $query, 
+            $request->query->getInt('page', 1), 
+            10,
+            ['distinct' => false]
+        );
+        
+        // Eager load cultures for paginated items to prevent N+1 queries
+        $parcelleItems = $parcelles->getItems();
+        if (count($parcelleItems) > 0) {
+            $this->em->createQuery('SELECT p, c FROM App\Entity\Parcelles_Cultures\Parcelle p LEFT JOIN p.cultures c WHERE p.id IN (:ids)')
+                ->setParameter('ids', array_map(fn($p) => $p->getId(), $parcelleItems))
+                ->getResult();
+        }
+
+        $stats = $this->parcelleRepository->getStatsByAgriculteur($user);
 
         if ($request->isXmlHttpRequest()) {
             return $this->render('parcelles_cultures/farmer/parcelles/_list.html.twig', [
@@ -57,7 +74,9 @@ class ParcelleFarmerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $parcelle->setAgriculteur($this->getUser());
+            $user = $this->getUser();
+            assert($user instanceof User);
+            $parcelle->setAgriculteur($user);
             
             // Sauvegarder le GeoJSON du polygone
             if ($request->request->has('polygon_geojson_data')) {

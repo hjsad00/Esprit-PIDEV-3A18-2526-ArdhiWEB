@@ -32,6 +32,9 @@ class CurrencyController extends AbstractController
     /**
      * Récupère les taux de change depuis l'API externe avec mise en cache.
      */
+    /**
+     * @return array<string, float>
+     */
     private function getRates(): array
     {
         return $this->cache->get('currency_rates_tnd', function (ItemInterface $item) {
@@ -40,7 +43,7 @@ class CurrencyController extends AbstractController
             try {
                 $response = $this->httpClient->request('GET', self::API_URL);
                 $data = $response->toArray();
-                return $data['rates'] ?? [];
+                return array_map('floatval', $data['rates'] ?? []);
             } catch (\Exception $e) {
                 // En cas d'erreur API, on peut retourner des taux de secours ou vider le cache
                 return [
@@ -56,10 +59,13 @@ class CurrencyController extends AbstractController
     public function convert(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+        if (!is_array($data)) {
+            return new JsonResponse(['success' => false, 'message' => 'JSON invalide'], 400);
+        }
         
         $amounts = $data['amounts'] ?? null;
         $amount = $data['amount'] ?? null;
-        $targetCurrency = $data['targetCurrency'] ?? 'TND';
+        $targetCurrency = is_string($data['targetCurrency'] ?? null) ? $data['targetCurrency'] : 'TND';
 
         $rates = $this->getRates();
 
@@ -71,9 +77,9 @@ class CurrencyController extends AbstractController
         $symbol = self::SYMBOLS[$targetCurrency] ?? $targetCurrency;
 
         if ($amounts !== null && is_array($amounts)) {
-            $converted = array_map(function($amt) use ($rate) {
+            $converted = array_map(function ($amt) use ($rate) {
                 return round($amt * $rate, 2);
-            }, $amounts);
+            }, array_map('floatval', $amounts));
 
             return new JsonResponse([
                 'success' => true,
@@ -85,7 +91,7 @@ class CurrencyController extends AbstractController
         }
 
         if ($amount !== null) {
-            $convertedAmount = $amount * $rate;
+            $convertedAmount = (float) $amount * $rate;
             return new JsonResponse([
                 'success' => true,
                 'originalAmount' => $amount,

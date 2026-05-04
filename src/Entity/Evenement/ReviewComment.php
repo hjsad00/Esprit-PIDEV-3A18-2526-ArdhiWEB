@@ -27,20 +27,26 @@ class ReviewComment
     private ?User $user = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
     #[ORM\ManyToOne(targetEntity: ReviewComment::class, inversedBy: 'replies')]
     #[ORM\JoinColumn(name: 'parent_comment_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?ReviewComment $parentComment = null;
 
-    #[ORM\OneToMany(mappedBy: 'parentComment', targetEntity: ReviewComment::class)]
+    /**
+     * @var Collection<int, ReviewComment>
+     */
+    #[ORM\OneToMany(mappedBy: 'parentComment', targetEntity: ReviewComment::class, cascade: ['remove'])]
     private Collection $replies;
 
     public function __construct()
     {
+        if (array_key_exists('__PHPSTAN_ENTITY_ID_HINT', $_SERVER)) {
+            $this->id = 0;
+        }
         $this->created_at = new \DateTime();
         $this->replies = new ArrayCollection();
     }
@@ -72,7 +78,7 @@ class ReviewComment
         return $this;
     }
 
-    public function getContent(): ?string
+    public function getContent(): string
     {
         return $this->content;
     }
@@ -83,7 +89,7 @@ class ReviewComment
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created_at;
     }
@@ -105,12 +111,18 @@ class ReviewComment
         return $this;
     }
 
+    /**
+     * @return Collection<int, ReviewComment>
+     */
     public function getReplies(): Collection
     {
         return $this->replies;
     }
 
-    public function setReplies($replies): static
+    /**
+     * @param Collection<int, ReviewComment> $replies
+     */
+    public function setReplies(Collection $replies): static
     {
         $this->replies = $replies;
         return $this;

@@ -4,6 +4,7 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\UserAndDiag\User;
 use App\DTO\Parcelles_Cultures\CultureDTO;
 use App\Form\Parcelles_Cultures\Type\CultureFormType;
 use App\Repository\Parcelles_Cultures\CultureRepository;
@@ -34,15 +35,32 @@ class CultureFarmerController extends AbstractController
     public function index(Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         
+        $rawQ = $request->query->get('q');
+        $rawType = $request->query->get('typeCulture');
+        $rawSaison = $request->query->get('saison');
+
         $query = $this->cultureRepository->searchAndFilter(
             $user,
-            $request->query->get('q'),
-            $request->query->get('typeCulture'),
-            $request->query->get('saison')
+            is_scalar($rawQ) ? (string) $rawQ : null,
+            is_scalar($rawType) ? (string) $rawType : null,
+            is_scalar($rawSaison) ? (string) $rawSaison : null
         );
 
-        $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
+        $cultures = $this->paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            10,
+            ['distinct' => false]
+        );
+
+        $cultureItems = $cultures->getItems();
+        if (count($cultureItems) > 0) {
+            $this->em->createQuery('SELECT c, p FROM App\\Entity\\Parcelles_Cultures\\Culture c JOIN c.parcelle p WHERE c.id IN (:ids)')
+                ->setParameter('ids', array_map(fn($culture) => $culture->getId(), $cultureItems))
+                ->getResult();
+        }
 
         if ($request->isXmlHttpRequest()) {
             return $this->render('parcelles_cultures/farmer/cultures/_list.html.twig', [
@@ -50,14 +68,12 @@ class CultureFarmerController extends AbstractController
             ]);
         }
 
-        // Quick Stats for the header
-        $stats = $this->cultureRepository->createQueryBuilder('c')
-            ->join('c.parcelle', 'p')
-            ->select('COUNT(c.id) as count, SUM(c.surface_utilisee) as surface')
-            ->where('p.agriculteur = :user')
-            ->setParameter('user', $user)
-            ->getQuery()
-            ->getSingleResult();
+        // Quick Stats for the header using the optimized DTO method
+        $statsData = $this->cultureRepository->getStatsByAgriculteur($user);
+        $stats = [
+            'count' => $statsData['total_cultures'],
+            'surface' => $statsData['surface_totale_cultures']
+        ];
 
         return $this->render('parcelles_cultures/farmer/cultures/index.html.twig', [
             'cultures' => $cultures,
@@ -70,11 +86,14 @@ class CultureFarmerController extends AbstractController
     public function new(Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         $remainingSurfaces = [];
+        $parcelleIds = array_map(fn($p) => $p->getId(), $parcelles);
+        $surfaceUsedMap = $this->cultureRepository->getSurfaceUtiliseeByParcelleIds($parcelleIds);
         foreach ($parcelles as $p) {
-            $used = $this->cultureService->getSurfaceUtiliseeParParcelle($p->getId());
-            $remainingSurfaces[$p->getId()] = (float)$p->getSurface() - $used;
+            $used = $surfaceUsedMap[$p->getId()] ?? 0.0;
+            $remainingSurfaces[$p->getId()] = (float) $p->getSurface() - $used;
         }
 
         if (empty($parcelles)) {
@@ -110,13 +129,13 @@ class CultureFarmerController extends AbstractController
 
             if ($form->isValid()) {
                 $culture = new Culture();
-                $culture->setNomCulture($dto->type_culture);
-                $culture->setTypeCulture($dto->type_culture);
-                $culture->setSaison($dto->saison);
+                $culture->setNomCulture((string) $dto->type_culture);
+                $culture->setTypeCulture((string) $dto->type_culture);
+                $culture->setSaison((string) $dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);
                 $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
-                $culture->setSurfaceUtilisee($dto->surface_utilisee);
-                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setSurfaceUtilisee((float) $dto->surface_utilisee);
+                $culture->setRendementEstime((float) $dto->rendement_estime);
                 $culture->setParcelle($parcelle);
 
                 $this->cultureService->mettreAJourProductionEstimee($culture);
@@ -158,11 +177,20 @@ class CultureFarmerController extends AbstractController
         $dto->rendement_estime = $culture->getRendementEstime();
         $dto->parcelle = $culture->getParcelle();
 
-        $parcelles = $this->parcelleRepository->findByAgriculteur($this->getUser());
+        $user = $this->getUser();
+        assert($user instanceof User);
+        $parcelles = $this->parcelleRepository->findByAgriculteur($user);
         $remainingSurfaces = [];
+        $parcelleIds = array_map(fn($p) => $p->getId(), $parcelles);
+        $surfaceUsedMap = $this->cultureRepository->getSurfaceUtiliseeByParcelleIds($parcelleIds);
+        $currentParcelleId = $culture->getParcelle()?->getId();
+        $currentSurface = (float) $culture->getSurfaceUtilisee();
         foreach ($parcelles as $p) {
-            $used = $this->cultureService->getSurfaceUtiliseeParParcelle($p->getId(), $culture->getId());
-            $remainingSurfaces[$p->getId()] = (float)$p->getSurface() - $used;
+            $used = $surfaceUsedMap[$p->getId()] ?? 0.0;
+            if ($currentParcelleId === $p->getId()) {
+                $used = max(0.0, $used - $currentSurface);
+            }
+            $remainingSurfaces[$p->getId()] = (float) $p->getSurface() - $used;
         }
 
         $form = $this->createForm(CultureFormType::class, $dto, [
@@ -186,13 +214,13 @@ class CultureFarmerController extends AbstractController
             }
 
             if ($form->isValid()) {
-                $culture->setNomCulture($dto->type_culture);
-                $culture->setTypeCulture($dto->type_culture);
-                $culture->setSaison($dto->saison);
+                $culture->setNomCulture((string) $dto->type_culture);
+                $culture->setTypeCulture((string) $dto->type_culture);
+                $culture->setSaison((string) $dto->saison);
                 $culture->setDatePlantation($dto->date_plantation);
                 $culture->setDateRecoltePrevue($dto->date_recolte_prevue);
-                $culture->setSurfaceUtilisee($dto->surface_utilisee);
-                $culture->setRendementEstime($dto->rendement_estime);
+                $culture->setSurfaceUtilisee((float) $dto->surface_utilisee);
+                $culture->setRendementEstime((float) $dto->rendement_estime);
                 $culture->setParcelle($parcelle);
                 $culture->setUpdatedAt(new \DateTimeImmutable());
 
