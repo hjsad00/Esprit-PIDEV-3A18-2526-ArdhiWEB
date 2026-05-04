@@ -24,8 +24,8 @@ class AdminMaintenanceController extends AbstractController
         $materielId = $request->query->get('materiel_id');
         $materielFilter = null;
 
-        if ($materielId) {
-            $materielFilter = $matRepo->find($materielId);
+        if ($materielId && is_numeric($materielId)) {
+            $materielFilter = $matRepo->find((int) $materielId);
             $maintenances = $repo->findBy(['materiel' => $materielFilter], ['date_maintenance' => 'DESC']);
         } else {
             $maintenances = $repo->findAllOrderedByDate();
@@ -75,8 +75,8 @@ class AdminMaintenanceController extends AbstractController
                 $materiel = $maintenance->getMateriel();
                 if ($materiel) {
                     $userId = $materiel->getUser()?->getId();
-                    $user = $userRepo->find($userId);
-                    if ($user) {
+                    $user = $userId ? $userRepo->find($userId) : null;
+                    if ($user instanceof \App\Entity\UserAndDiag\User) {
                         $notif = new \App\Entity\MaterielEtMaintenance\NotificationMaintenance();
                         $notif->setUser($user);
                         $notif->setMateriel($materiel);

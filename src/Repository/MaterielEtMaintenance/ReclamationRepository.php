@@ -21,6 +21,7 @@ class ReclamationRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('r')
             ->orderBy('CASE WHEN r.urgence = \'urgente\' THEN 0 ELSE 1 END', 'ASC')
             ->addOrderBy('r.createdAt', 'DESC')
+            ->setMaxResults(100)
             ->getQuery()
             ->getResult();
     }

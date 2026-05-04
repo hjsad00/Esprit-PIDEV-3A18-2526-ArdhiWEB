@@ -92,10 +92,15 @@ class GroqPredictionService
             $textResponse = $result['choices'][0]['message']['content'] ?? null;
 
             if (!$textResponse) {
-                throw new \Exception("Réponse vide de Groq.");
+                throw new \Exception("Réponse vide ou malformée de Groq (content manquant).");
             }
 
-            return json_decode($textResponse, true);
+            $decoded = json_decode($textResponse, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                throw new \Exception("Erreur de décodage JSON de la réponse Groq.");
+            }
+
+            return $decoded;
 
         } catch (\Exception $e) {
             $this->logger->error("Groq Prediction Error: " . $e->getMessage());
