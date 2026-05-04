@@ -18,7 +18,7 @@ class Abonnement
     private ?string $type = null;
 
     #[ORM\Column]
-    private ?float $prix = null;
+    private float $prix;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_debut = null;
@@ -55,7 +55,7 @@ class Abonnement
 
     public function getPrix(): ?float
     {
-        return $this->prix;
+        return $this->prix ?? null;
     }
 
     public function setPrix(float $prix): static

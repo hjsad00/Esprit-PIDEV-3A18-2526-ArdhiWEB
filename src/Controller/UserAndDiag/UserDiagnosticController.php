@@ -58,7 +58,6 @@ class UserDiagnosticController extends AbstractController
         }
 
         // 2. Handle uploaded image
-        /** @var UploadedFile $file */
         $file = $request->files->get('image');
 
         if (!$file) {
@@ -117,7 +116,7 @@ class UserDiagnosticController extends AbstractController
 
             // 5. Persist Diagnostic
             $diagnostic = new Diagnostic();
-            $diagnostic->setUser($this->getUser());
+            $diagnostic->setUser($user);
             $diagnostic->setImageScannee($publicPath);
             $diagnostic->setResultatIa($plante . ' - ' . $maladie);
             $diagnostic->setConfiance($confiance);

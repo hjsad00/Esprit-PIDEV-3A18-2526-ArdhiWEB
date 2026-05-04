@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Entity\UserAndDiag\User;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\CommunityCommentRepository::class)]
-#[ORM\Table(name: "community_comments")]
+#[ORM\Table(name: "community_comment")]
 class CommunityComment
 {
     #[ORM\Id]
@@ -24,10 +24,10 @@ class CommunityComment
     private ?User $user = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
     #[ORM\Column(nullable: true, options: ["default" => 0])]
     private ?int $likes = 0;
@@ -79,7 +79,7 @@ class CommunityComment
 
     public function getContent(): ?string
     {
-        return $this->content;
+        return $this->content ?? null;
     }
 
     public function setContent(string $content): static
@@ -90,10 +90,10 @@ class CommunityComment
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

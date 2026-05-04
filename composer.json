@@ -117,9 +117,16 @@
     }
   },
   "require-dev": {
+<<<<<<< HEAD
+    "ahmed-bhs/doctrine-doctor": "*",
+    "phpstan/phpstan": "*",
+    "phpstan/phpstan-doctrine": "*",
+    "phpstan/phpstan-symfony": "*",
+=======
     "ahmed-bhs/doctrine-doctor": "^1.1",
     "phpstan/phpstan": "^2.1",
     "phpstan/phpstan": "^2.1",
+>>>>>>> 48dc48d2d8c6e0a574bc9efcd9c5db5041daeddb
     "phpunit/phpunit": "^11.5",
     "symfony/browser-kit": "6.4.*",
     "symfony/css-selector": "6.4.*",

@@ -14,13 +14,13 @@ class Offre
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $nom = null;
+    private string $nom;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column]
-    private ?float $prix_mensuel = null;
+    private float $prix_mensuel;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $avantages = null;
@@ -61,7 +61,7 @@ class Offre
 
     public function getNom(): ?string
     {
-        return $this->nom;
+        return $this->nom ?? null;
     }
 
     public function setNom(string $nom): static
@@ -83,7 +83,7 @@ class Offre
 
     public function getPrixMensuel(): ?float
     {
-        return $this->prix_mensuel;
+        return $this->prix_mensuel ?? null;
     }
 
     public function setPrixMensuel(float $prix_mensuel): static

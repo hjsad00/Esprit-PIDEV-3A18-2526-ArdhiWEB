@@ -23,7 +23,7 @@ class ModerationAudit
     private ?User $targetUser = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $action = null;
+    private string $action;
 
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $reason = null;
@@ -35,7 +35,7 @@ class ModerationAudit
     private ?int $related_comment_id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
     public function __construct()
     {
@@ -69,7 +69,7 @@ class ModerationAudit
 
     public function getAction(): ?string
     {
-        return $this->action;
+        return $this->action ?? null;
     }
     public function setAction(string $action): static
     {
@@ -109,9 +109,9 @@ class ModerationAudit
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

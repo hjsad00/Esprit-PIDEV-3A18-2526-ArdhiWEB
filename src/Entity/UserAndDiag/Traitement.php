@@ -18,7 +18,7 @@ class Traitement
     private ?Diagnostic $diagnostic = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $solution_nom = null;
+    private string $solution_nom;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description_detaillee = null;
@@ -47,7 +47,7 @@ class Traitement
 
     public function getSolutionNom(): ?string
     {
-        return $this->solution_nom;
+        return $this->solution_nom ?? null;
     }
 
     public function setSolutionNom(string $solution_nom): static

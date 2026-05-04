@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Entity\UserAndDiag\User;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\CommunityLikeRepository::class)]
-#[ORM\Table(name: "community_likes")]
+#[ORM\Table(name: "community_like")]
 #[ORM\UniqueConstraint(name: "unique_post_like", columns: ["user_id", "post_id"])]
 #[ORM\UniqueConstraint(name: "unique_comment_like", columns: ["user_id", "comment_id"])]
 class CommunityLike
@@ -30,10 +30,10 @@ class CommunityLike
     private ?CommunityComment $comment = null;
 
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('LIKE','DISLIKE') NOT NULL DEFAULT 'LIKE'")]
-    private ?string $vote_type = 'LIKE';
+    private string $vote_type = 'LIKE';
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
     public function __construct()
     {
@@ -80,7 +80,7 @@ class CommunityLike
 
     public function getVoteType(): ?string
     {
-        return $this->vote_type;
+        return $this->vote_type ?? null;
     }
 
     public function setVoteType(string $vote_type): static
@@ -91,10 +91,10 @@ class CommunityLike
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

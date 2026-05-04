@@ -16,7 +16,7 @@ use App\Security\CustomResetPasswordRequest;
 /**
  * @extends ServiceEntityRepository<User>
  */
-class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
+class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, ResetPasswordRequestRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -115,5 +115,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
 
         return $count;
+    }
+
+    public function persistResetPasswordRequest(ResetPasswordRequestInterface $resetPasswordRequest): void
+    {
+    }
+
+    public function findResetPasswordRequest(string $hashedToken): ?ResetPasswordRequestInterface
+    {
+        return null;
+    }
+
+    public function getMostRecentNonExpiredRequestDate(object $user): ?\DateTimeInterface
+    {
+        return null;
+    }
+
+    public function removeResetPasswordRequest(ResetPasswordRequestInterface $resetPasswordRequest): void
+    {
     }
 }
