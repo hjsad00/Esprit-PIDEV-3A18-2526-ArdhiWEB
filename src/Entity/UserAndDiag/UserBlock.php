@@ -6,7 +6,7 @@ use App\Repository\UserAndDiag\UserBlockRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserBlockRepository::class)]
-#[ORM\Table(name: 'user_blocks')]
+#[ORM\Table(name: 'user_block')]
 class UserBlock
 {
     #[ORM\Id]

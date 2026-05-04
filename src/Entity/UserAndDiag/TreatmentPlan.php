@@ -27,7 +27,7 @@ class TreatmentPlan
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('ACTIVE','COMPLETED','ABANDONED') DEFAULT 'ACTIVE'", nullable: true)]
     private ?string $status = 'ACTIVE';
 
-    #[ORM\OneToMany(mappedBy: 'treatmentPlan', targetEntity: TreatmentTask::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'treatmentPlan', targetEntity: TreatmentTask::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $tasks;
 
     public function __construct()

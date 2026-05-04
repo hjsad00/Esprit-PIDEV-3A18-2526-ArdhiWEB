@@ -29,11 +29,6 @@ class EpidemicAlertService
             if (!$result)
                 continue;
 
-            // Skip records that don't have GPS coordinates to prevent TypeError in calculateDistance
-            if ($d->getLatitude() === null || $d->getLongitude() === null) {
-                continue;
-            }
-
             // Result format can be "Plant - Disease" or "Plant : Disease"
             $parts = preg_split('/[:\-]/', $result);
             $diseaseName = trim($parts[1] ?? $result);

@@ -60,7 +60,7 @@ class RegistrationController extends AbstractController
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
-            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
                 'secret' => $secret,
                 'response' => $recaptchaToken
@@ -267,7 +267,7 @@ class RegistrationController extends AbstractController
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://api.twilio.com/2010-04-01/Accounts/{$twilioSid}/Messages.json");
-        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
             'To' => $phone,
             'From' => $twilioFrom,

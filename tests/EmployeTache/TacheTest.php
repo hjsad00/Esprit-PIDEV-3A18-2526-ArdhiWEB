@@ -52,9 +52,7 @@ class TacheTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testAjouterTache
-     */
+    #[\PHPUnit\Framework\Attributes\Depends('testAjouterTache')]
     public function testModifierTache(int $id): int
     {
         $tache = $this->entityManager->getRepository(Tache::class)->find($id);
@@ -71,9 +69,7 @@ class TacheTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testModifierTache
-     */
+    #[\PHPUnit\Framework\Attributes\Depends('testModifierTache')]
     public function testSupprimerTache(int $id): void
     {
         $tache = $this->entityManager->getRepository(Tache::class)->find($id);

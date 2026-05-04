@@ -13,6 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -27,17 +28,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank(message: 'L\'adresse email est obligatoire.')]
     #[Assert\Email(message: 'Veuillez entrer une adresse email valide.')]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(type: Types::STRING, length: 255, columnDefinition: "ENUM('ADMIN','AGRICULTEUR','CLIENT','AGRONOME') NOT NULL DEFAULT 'AGRICULTEUR'")]
     #[Assert\NotBlank(message: 'Le rôle est obligatoire.')]
     #[Assert\Choice(choices: ['AGRICULTEUR', 'CLIENT', 'AGRONOME', 'ADMIN'], message: 'Le rôle sélectionné est invalide.')]
-    private ?string $role = 'AGRICULTEUR';
+    private string $role = 'AGRICULTEUR';
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.', groups: ['registration'])]
     #[Assert\Length(min: 6, minMessage: 'Le mot de passe doit contenir au moins 6 caractères.', groups: ['registration', 'profile_password'])]
-    private ?string $password = null;
+    #[Ignore]
+    private string $password;
 
     private ?string $passwordConfirm = null;
 
@@ -45,30 +47,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     #[Assert\Length(max: 255, maxMessage: 'Le nom ne peut pas dépasser 255 caractères.')]
     #[Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes.')]
-    private ?string $nom = null;
+    private string $nom;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
     #[Assert\Length(max: 255, maxMessage: 'Le prénom ne peut pas dépasser 255 caractères.')]
     #[Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u', message: 'Le prénom ne peut contenir que des lettres, espaces, tirets et apostrophes.')]
-    private ?string $prenom = null;
+    private string $prenom;
 
     #[ORM\Column(options: ["default" => 0])]
     #[Assert\PositiveOrZero(message: 'Les points doivent être positifs ou nuls.')]
-    private ?int $points = 0;
+    private int $points = 0;
 
     #[ORM\Column(options: ["default" => 1])]
     #[Assert\Positive(message: 'Le niveau doit être d\'au moins 1.')]
-    private ?int $level = 1;
+    private int $level = 1;
 
     #[ORM\Column(options: ["default" => false])]
-    private ?bool $two_factor_enabled = false;
+    private bool $two_factor_enabled = false;
 
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $two_factor_code = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeInterface $two_factor_expires_at = null;
+    private ?\DateTimeImmutable $two_factor_expires_at = null;
 
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -79,13 +81,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     #[ORM\Column(type: Types::FLOAT, options: ["default" => 0])]
     #[Assert\PositiveOrZero(message: 'Les points de fidélité ne peuvent pas être négatifs.')]
-    private ?float $points_fidelite = 0;
+    private float $points_fidelite = 0;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
     private ?string $reset_password_code = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeInterface $reset_password_expires_at = null;
+    private ?\DateTimeImmutable $reset_password_expires_at = null;
 
     #[ORM\Column(length: 20, nullable: true)]
     #[Assert\Regex(pattern: '/^\+?[0-9\s\-\(\)]{8,20}$/', message: 'Veuillez entrer un numéro de téléphone valide.')]
@@ -96,13 +99,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     private ?string $location = null;
 
     #[ORM\Column(options: ["default" => false])]
-    private ?bool $is_moderator = false;
+    private bool $is_moderator = false;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $muted_until = null;
 
     #[ORM\Column(options: ["default" => false])]
-    private ?bool $is_banned = false;
+    private bool $is_banned = false;
 
     /**
      * @var Collection<int, Parcelle>
@@ -122,7 +125,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     /**
      * @var Collection<int, UserBlock>
      */
-    #[ORM\OneToMany(targetEntity: UserBlock::class, mappedBy: 'blocker', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: UserBlock::class, mappedBy: 'blocker', cascade: ['persist'], orphanRemoval: true)]
     private Collection $userBlocks;
 
     public function __construct()
@@ -138,7 +141,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getEmail(): ?string
     {
-        return $this->email;
+        return $this->email ?? null;
     }
 
     public function setEmail(string $email): static
@@ -149,19 +152,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string) ($this->email ?? '');
     }
 
     public function getRoles(): array
     {
         $roles = [];
-        if ($this->role) {
+        if (!empty($this->role)) {
             $roles[] = 'ROLE_' . strtoupper($this->role);
         }
         $roles[] = 'ROLE_USER';
 
         // Admins are always moderators; non-admins can be promoted
-        if ($this->role === 'ADMIN' || $this->is_moderator) {
+        if (($this->role ?? '') === 'ADMIN' || ($this->is_moderator ?? false)) {
             $roles[] = 'ROLE_MODERATOR';
         }
 
@@ -170,7 +173,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getRole(): ?string
     {
-        return $this->role;
+        return $this->role ?? null;
     }
 
     public function setRole(string $role): static
@@ -181,10 +184,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getPassword(): ?string
     {
-        return $this->password;
+        return $this->password ?? null;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(#[\SensitiveParameter] string $password): static
     {
         $this->password = $password;
         return $this;
@@ -192,7 +195,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getNom(): ?string
     {
-        return $this->nom;
+        return $this->nom ?? null;
     }
 
     public function setNom(string $nom): static
@@ -203,7 +206,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getPrenom(): ?string
     {
-        return $this->prenom;
+        return $this->prenom ?? null;
     }
 
     public function setPrenom(string $prenom): static
@@ -214,7 +217,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getPoints(): ?int
     {
-        return $this->points;
+        return $this->points ?? 0;
     }
 
     public function setPoints(int $points): static
@@ -225,7 +228,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getLevel(): ?int
     {
-        return $this->level;
+        return $this->level ?? 1;
     }
 
     public function setLevel(int $level): static
@@ -236,7 +239,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function isTwoFactorEnabled(): ?bool
     {
-        return $this->two_factor_enabled;
+        return $this->two_factor_enabled ?? false;
     }
 
     public function setTwoFactorEnabled(bool $two_factor_enabled): static
@@ -256,12 +259,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this;
     }
 
-    public function getTwoFactorExpiresAt(): ?\DateTimeInterface
+    public function getTwoFactorExpiresAt(): ?\DateTimeImmutable
     {
         return $this->two_factor_expires_at;
     }
 
-    public function setTwoFactorExpiresAt(?\DateTimeInterface $two_factor_expires_at): static
+    public function setTwoFactorExpiresAt(?\DateTimeImmutable $two_factor_expires_at): static
     {
         $this->two_factor_expires_at = $two_factor_expires_at;
         return $this;
@@ -296,7 +299,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this->reset_password_code;
     }
 
-    public function setResetPasswordCode(?string $reset_password_code): static
+    public function setResetPasswordCode(#[\SensitiveParameter] ?string $reset_password_code): static
     {
         $this->reset_password_code = $reset_password_code;
 
@@ -309,12 +312,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this;
     }
 
-    public function getResetPasswordExpiresAt(): ?\DateTimeInterface
+    public function getResetPasswordExpiresAt(): ?\DateTimeImmutable
     {
         return $this->reset_password_expires_at;
     }
 
-    public function setResetPasswordExpiresAt(?\DateTimeInterface $reset_password_expires_at): static
+    public function setResetPasswordExpiresAt(?\DateTimeImmutable $reset_password_expires_at): static
     {
         $this->reset_password_expires_at = $reset_password_expires_at;
         return $this;
@@ -344,7 +347,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function isModerator(): ?bool
     {
-        return $this->is_moderator;
+        return $this->is_moderator ?? false;
     }
 
     public function setIsModerator(bool $is_moderator): static
@@ -366,7 +369,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function isBanned(): ?bool
     {
-        return $this->is_banned;
+        return $this->is_banned ?? false;
     }
 
     public function setIsBanned(bool $is_banned): static
@@ -377,7 +380,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getPointsFidelite(): ?float
     {
-        return $this->points_fidelite;
+        return $this->points_fidelite ?? 0;
     }
 
     public function setPointsFidelite(float $points_fidelite): static
@@ -387,9 +390,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
     }
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Ignore]
     private ?string $googleAccessToken = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Ignore]
     private ?string $googleRefreshToken = null;
 
     public function getGoogleAccessToken(): ?string
@@ -397,7 +402,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this->googleAccessToken;
     }
 
-    public function setGoogleAccessToken(?string $googleAccessToken): static
+    public function setGoogleAccessToken(#[\SensitiveParameter] ?string $googleAccessToken): static
     {
         $this->googleAccessToken = $googleAccessToken;
         return $this;
@@ -408,7 +413,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
         return $this->googleRefreshToken;
     }
 
-    public function setGoogleRefreshToken(?string $googleRefreshToken): static
+    public function setGoogleRefreshToken(#[\SensitiveParameter] ?string $googleRefreshToken): static
     {
         $this->googleRefreshToken = $googleRefreshToken;
         return $this;
@@ -426,7 +431,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \Scheb\
 
     public function getEmailAuthRecipient(): string
     {
-        return $this->email;
+        return $this->email ?? '';
     }
 
     public function getEmailAuthCode(): ?string

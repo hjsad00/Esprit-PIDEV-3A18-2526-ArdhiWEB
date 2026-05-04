@@ -60,9 +60,7 @@ class EmployeTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testAjouterEmploye
-     */
+    #[\PHPUnit\Framework\Attributes\Depends('testAjouterEmploye')]
     public function testModifierEmploye(int $id): int
     {
         $employe = $this->entityManager->getRepository(Employe::class)->find($id);
@@ -77,9 +75,7 @@ class EmployeTest extends KernelTestCase
         return $id;
     }
 
-    /**
-     * @depends testModifierEmploye
-     */
+    #[\PHPUnit\Framework\Attributes\Depends('testModifierEmploye')]
     public function testSupprimerEmploye(int $id): void
     {
         $employe = $this->entityManager->getRepository(Employe::class)->find($id);

@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Entity\UserAndDiag\User;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\CommunityPostRepository::class)]
-#[ORM\Table(name: "community_posts")]
+#[ORM\Table(name: "community_post")]
 class CommunityPost
 {
     #[ORM\Id]
@@ -20,7 +20,7 @@ class CommunityPost
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -28,8 +28,8 @@ class CommunityPost
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $image_url = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
     #[ORM\Column(nullable: true, options: ["default" => 0])]
     private ?int $likes = 0;
@@ -85,7 +85,7 @@ class CommunityPost
 
     public function getTitle(): ?string
     {
-        return $this->title;
+        return $this->title ?? null;
     }
 
     public function setTitle(string $title): static
@@ -118,10 +118,10 @@ class CommunityPost
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

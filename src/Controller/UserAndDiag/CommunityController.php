@@ -112,7 +112,7 @@ class CommunityController extends AbstractController
         }
 
         $latestMuteReason = null;
-        if ($user && $user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
+        if ($user->getMutedUntil() && $user->getMutedUntil() > new \DateTime()) {
             $latestMuteReason = $auditRepo->findLatestMuteReasonForUser($user);
         }
 
@@ -314,7 +314,7 @@ class CommunityController extends AbstractController
 
         $chartLabels = [];
         $chartViews = [];
-        if ($user && $post->getUser()->getId() === $user->getId()) {
+        if ($post->getUser()->getId() === $user->getId()) {
             $logs = $em->getRepository(\App\Entity\UserAndDiag\CommunityAnalyticsDaily::class)
                 ->createQueryBuilder('a')
                 ->where('a.post = :post')

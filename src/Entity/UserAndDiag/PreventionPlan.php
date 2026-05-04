@@ -24,13 +24,13 @@ class PreventionPlan
     private ?Vulnerability $vulnerability = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $problem_summary = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $steps = null;
+    private string $steps;
 
     #[ORM\Column(nullable: true)]
     private ?int $timeline_days = null;
@@ -50,10 +50,10 @@ class PreventionPlan
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $start_date = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
-    #[ORM\OneToMany(mappedBy: 'preventionPlan', targetEntity: PreventionTask::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'preventionPlan', targetEntity: PreventionTask::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $tasks;
 
     public function __construct()
@@ -93,7 +93,7 @@ class PreventionPlan
 
     public function getTitle(): ?string
     {
-        return $this->title;
+        return $this->title ?? null;
     }
 
     public function setTitle(string $title): static
@@ -115,7 +115,7 @@ class PreventionPlan
 
     public function getSteps(): ?string
     {
-        return $this->steps;
+        return $this->steps ?? null;
     }
 
     public function setSteps(string $steps): static
@@ -192,10 +192,10 @@ class PreventionPlan
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

@@ -19,16 +19,16 @@ class DiagNotification
     private ?User $user = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $type = null;
+    private string $type;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $message = null;
+    private string $message;
 
     #[ORM\Column]
     private bool $isRead = false;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     #[ORM\Column(nullable: true)]
     private ?int $relatedEntityId = null;
@@ -60,7 +60,7 @@ class DiagNotification
 
     public function getType(): ?string
     {
-        return $this->type;
+        return $this->type ?? null;
     }
 
     public function setType(string $type): static
@@ -72,7 +72,7 @@ class DiagNotification
 
     public function getMessage(): ?string
     {
-        return $this->message;
+        return $this->message ?? null;
     }
 
     public function setMessage(string $message): static
@@ -96,14 +96,7 @@ class DiagNotification
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
+        return $this->createdAt ?? null;
     }
 
     public function getRelatedEntityId(): ?int

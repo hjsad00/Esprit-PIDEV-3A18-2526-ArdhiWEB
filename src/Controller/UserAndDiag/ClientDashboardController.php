@@ -118,15 +118,7 @@ class ClientDashboardController extends AbstractController
             'badges' => $userBadges,
             'leaderboard' => $leaderboard,
 
-            'weather' => $currentWeather ?: [
-                'icon' => '🌡️',
-                'temperature' => '--',
-                'apparentTemperature' => '--',
-                'humidity' => '--',
-                'windSpeed' => '--',
-                'condition' => 'Météo indisponible',
-                'advice' => 'Impossible de charger les données météo.'
-            ],
+            'weather' => $currentWeather,
             'regional_diseases' => $regionalDiseases,
             'treatment_timing' => $treatmentTiming['overallAdvice'] ?? 'Service indisponible',
 
@@ -149,7 +141,7 @@ class ClientDashboardController extends AbstractController
         \App\Service\UserAndDiag\EpidemicAlertService $epidemicService,
         LocationService $locationService
     ): Response {
-        /** @var \App\Entity\UserAndDiag\User $user */
+        /** @var \App\Entity\UserAndDiag\User|null $user */
         $user = $this->getUser();
 
         if (!$user) {
