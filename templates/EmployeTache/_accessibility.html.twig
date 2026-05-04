@@ -1,0 +1,602 @@
+{#
+  templates/EmployeTache/_accessibility.html.twig
+  ═══════════════════════════════════════════════
+  Module d'accessibilité intelligent pour le dashboard agriculteur.
+  Les préférences sont sauvegardées en localStorage et appliquées
+  automatiquement sur toutes les pages du module (employe + tache).
+  
+  Fonctionnalités :
+   - Mode sombre
+   - Contraste élevé
+   - Filtre lumière bleue (fatigue visuelle)
+   - Taille de texte (3 niveaux)
+   - Police dyslexie (OpenDyslexic)
+   - Activation automatique selon heure / météo
+#}
+
+{# ── Panneau ─────────────────────────────────────────────────────── #}
+<div id="acc-panel" role="dialog" aria-modal="true" aria-label="Préférences d'accessibilité" hidden>
+
+    <div class="acc-header">
+        <div class="acc-header-left">
+            <span class="acc-header-icon">♿</span>
+            <div>
+                <div class="acc-title">Accessibilité</div>
+                <div class="acc-subtitle" id="acc-auto-msg">Préférences visuelles</div>
+            </div>
+        </div>
+        <button class="acc-close" id="acc-close" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="acc-body">
+
+        {# ── Mode Sombre ─────────────────────────────────────── #}
+        <div class="acc-row">
+            <div class="acc-row-left">
+                <span class="acc-row-icon">🌙</span>
+                <div>
+                    <div class="acc-row-label">Mode sombre</div>
+                    <div class="acc-row-desc">Réduit la luminosité pour les yeux</div>
+                </div>
+            </div>
+            <button class="acc-toggle" id="toggle-dark" role="switch" aria-checked="false" aria-label="Activer le mode sombre">
+                <span class="acc-toggle-knob"></span>
+            </button>
+        </div>
+
+        {# ── Contraste Élevé ─────────────────────────────────── #}
+        <div class="acc-row">
+            <div class="acc-row-left">
+                <span class="acc-row-icon">◑</span>
+                <div>
+                    <div class="acc-row-label">Contraste élevé</div>
+                    <div class="acc-row-desc">Texte plus lisible, fort soleil</div>
+                </div>
+            </div>
+            <button class="acc-toggle" id="toggle-contrast" role="switch" aria-checked="false" aria-label="Activer le contraste élevé">
+                <span class="acc-toggle-knob"></span>
+            </button>
+        </div>
+
+        {# ── Filtre Lumière Bleue ─────────────────────────────── #}
+        <div class="acc-row">
+            <div class="acc-row-left">
+                <span class="acc-row-icon">🟠</span>
+                <div>
+                    <div class="acc-row-label">Filtre lumière bleue</div>
+                    <div class="acc-row-desc">Réduit la fatigue visuelle du soir</div>
+                </div>
+            </div>
+            <button class="acc-toggle" id="toggle-blue" role="switch" aria-checked="false" aria-label="Activer le filtre lumière bleue">
+                <span class="acc-toggle-knob"></span>
+            </button>
+        </div>
+
+        {# ── Police Dyslexie ──────────────────────────────────── #}
+        <div class="acc-row">
+            <div class="acc-row-left">
+                <span class="acc-row-icon">📖</span>
+                <div>
+                    <div class="acc-row-label">Police dyslexie</div>
+                    <div class="acc-row-desc">OpenDyslexic — lecture facilitée</div>
+                </div>
+            </div>
+            <button class="acc-toggle" id="toggle-dyslexia" role="switch" aria-checked="false" aria-label="Activer la police dyslexie">
+                <span class="acc-toggle-knob"></span>
+            </button>
+        </div>
+
+        {# ── Taille du texte ──────────────────────────────────── #}
+        <div class="acc-row acc-row--col">
+            <div class="acc-row-left">
+                <span class="acc-row-icon">📏</span>
+                <div>
+                    <div class="acc-row-label">Taille du texte</div>
+                    <div class="acc-row-desc" id="acc-size-label">Normale (16px)</div>
+                </div>
+            </div>
+            <div class="acc-size-btns" role="group" aria-label="Taille du texte">
+                <button class="acc-size-btn" data-size="small"  aria-label="Petite taille">A<small>−</small></button>
+                <button class="acc-size-btn active" data-size="normal" aria-label="Taille normale">A</button>
+                <button class="acc-size-btn" data-size="large"  aria-label="Grande taille">A<sup>+</sup></button>
+                <button class="acc-size-btn" data-size="xlarge" aria-label="Très grande taille">A<sup>++</sup></button>
+            </div>
+        </div>
+
+        {# ── Activation automatique ───────────────────────────── #}
+        <div class="acc-auto-section">
+            <div class="acc-auto-title">⚡ Activation intelligente</div>
+            <div class="acc-auto-grid">
+                <div class="acc-auto-item" id="auto-night">
+                    <span>🌙</span>
+                    <span>Nuit → Mode sombre</span>
+                    <span class="acc-auto-badge" id="auto-night-badge">—</span>
+                </div>
+                <div class="acc-auto-item" id="auto-sun">
+                    <span>☀️</span>
+                    <span>Journée → Contraste</span>
+                    <span class="acc-auto-badge" id="auto-sun-badge">—</span>
+                </div>
+            </div>
+        </div>
+
+        {# ── Réinitialiser ─────────────────────────────────────── #}
+        <button class="acc-reset" id="acc-reset" aria-label="Réinitialiser toutes les préférences">
+            ↺ Réinitialiser tout
+        </button>
+
+    </div>
+</div>
+
+{# ── Overlay ─────────────────────────────────────────────────────── #}
+<div id="acc-overlay" hidden aria-hidden="true"></div>
+
+{# ── Filtre bleu (overlay CSS) ───────────────────────────────────── #}
+<div id="acc-blue-filter" aria-hidden="true" hidden></div>
+
+{# ── Police OpenDyslexic (chargée à la demande) ──────────────────── #}
+<link id="acc-dyslexia-font" rel="stylesheet" href="" disabled>
+
+<style>
+/* ════════════════════════════════════════════════════════════════
+   BOUTON DÉCLENCHEUR
+   ════════════════════════════════════════════════════════════════ */
+#acc-trigger {
+    position: fixed;
+    bottom: 180px;
+    right: 28px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d3b1f, #1a7a45);
+    border: 2px solid #27ae60;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 8998;
+    box-shadow: 0 4px 16px rgba(26,122,69,.35);
+    transition: transform .2s, box-shadow .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#acc-trigger:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(26,122,69,.5);
+}
+#acc-trigger:focus-visible {
+    outline: 3px solid #27ae60;
+    outline-offset: 3px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   OVERLAY
+   ════════════════════════════════════════════════════════════════ */
+#acc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    backdrop-filter: blur(4px);
+    z-index: 9000;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PANNEAU
+   ════════════════════════════════════════════════════════════════ */
+#acc-panel {
+    position: fixed;
+    bottom: 250px;
+    right: 28px;
+    width: min(360px, calc(100vw - 40px));
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.16), 0 4px 16px rgba(0,0,0,.08);
+    border: 1px solid #c8e6d0;
+    z-index: 9001;
+    overflow: hidden;
+    animation: acc-slide .28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes acc-slide {
+    from { opacity:0; transform: translateY(20px) scale(.96) }
+    to   { opacity:1; transform: translateY(0) scale(1) }
+}
+
+/* Header */
+.acc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 18px 13px;
+    background: linear-gradient(135deg, #0d3b1f, #1a7a45);
+    color: #fff;
+}
+.acc-header-left { display: flex; align-items: center; gap: 10px; }
+.acc-header-icon { font-size: 22px; }
+.acc-title    { font-weight: 700; font-size: 15px; }
+.acc-subtitle { font-size: 11px; opacity: .75; margin-top: 2px; }
+.acc-close {
+    background: rgba(255,255,255,.15);
+    border: none; color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 50%; cursor: pointer;
+    font-size: 13px; transition: background .2s;
+}
+.acc-close:hover { background: rgba(255,255,255,.3); }
+
+/* Body */
+.acc-body { padding: 14px 16px 16px; }
+
+/* Rows */
+.acc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid #edf7f0;
+}
+.acc-row--col { flex-direction: column; align-items: flex-start; gap: 10px; }
+.acc-row:last-of-type { border-bottom: none; }
+.acc-row-left { display: flex; align-items: center; gap: 10px; }
+.acc-row-icon { font-size: 20px; width: 28px; text-align: center; }
+.acc-row-label { font-weight: 600; font-size: 13.5px; color: #1a2e23; }
+.acc-row-desc  { font-size: 11px; color: #6b8f74; margin-top: 2px; }
+
+/* Toggle */
+.acc-toggle {
+    width: 46px; height: 25px;
+    border-radius: 13px;
+    background: #d1d5db;
+    border: none; cursor: pointer;
+    position: relative;
+    transition: background .25s;
+    flex-shrink: 0;
+}
+.acc-toggle[aria-checked="true"] { background: #1a7a45; }
+.acc-toggle-knob {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 19px; height: 19px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    transition: transform .25s;
+}
+.acc-toggle[aria-checked="true"] .acc-toggle-knob { transform: translateX(21px); }
+
+/* Taille texte */
+.acc-size-btns {
+    display: flex; gap: 6px;
+    align-self: flex-end;
+}
+.acc-size-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid #c8e6d0;
+    background: #f0faf4;
+    color: #1a7a45;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 13px;
+}
+.acc-size-btn.active,
+.acc-size-btn:hover {
+    background: #1a7a45;
+    color: #fff;
+    border-color: #1a7a45;
+}
+
+/* Auto section */
+.acc-auto-section {
+    margin-top: 10px;
+    background: #f0faf4;
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #c8e6d0;
+}
+.acc-auto-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: #4d7a5a;
+    margin-bottom: 8px;
+}
+.acc-auto-grid { display: flex; flex-direction: column; gap: 5px; }
+.acc-auto-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #1a2e23;
+}
+.acc-auto-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    background: #27ae60;
+    color: #fff;
+    border-radius: 8px;
+    padding: 2px 7px;
+}
+.acc-auto-badge.off { background: #d1d5db; color: #666; }
+
+/* Reset */
+.acc-reset {
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px;
+    border-radius: 10px;
+    border: 1.5px solid #e74c3c;
+    background: transparent;
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+}
+.acc-reset:hover { background: #e74c3c; color: #fff; }
+
+/* ════════════════════════════════════════════════════════════════
+   FILTRE BLEU
+   ════════════════════════════════════════════════════════════════ */
+#acc-blue-filter {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 120, 0, 0.09);
+    pointer-events: none;
+    z-index: 99998;
+    mix-blend-mode: multiply;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MODES — appliqués sur <body>
+   ════════════════════════════════════════════════════════════════ */
+
+/* Mode Sombre */
+body.acc-dark {
+    background: #0a1a10 !important;
+    color: #e0f0e6 !important;
+}
+body.acc-dark .marketplace-hero,
+body.acc-dark .categories-glass-panel {
+    background: rgba(10,26,16,.95) !important;
+    border-color: #1e4d2b !important;
+    color: #e0f0e6 !important;
+}
+body.acc-dark .category-item {
+    background: rgba(30,60,40,.6) !important;
+    border-color: #1e4d2b !important;
+    color: #c0e8cc !important;
+}
+body.acc-dark .category-item:hover { background: rgba(26,122,69,.3) !important; }
+body.acc-dark .hero-headline,
+body.acc-dark .hero-description,
+body.acc-dark .categories-panel-title { color: #e0f0e6 !important; }
+body.acc-dark h4, body.acc-dark span { color: #b0d8bc !important; }
+body.acc-dark #acc-panel { background: #0d2016; border-color: #1e4d2b; }
+body.acc-dark .acc-row  { border-color: #1e4d2b; }
+body.acc-dark .acc-row-label { color: #e0f0e6; }
+body.acc-dark .acc-row-desc  { color: #6b9e7a; }
+body.acc-dark .acc-auto-section { background: #0a1a10; border-color: #1e4d2b; }
+body.acc-dark .acc-auto-item { color: #b0d8bc; }
+
+/* Contraste Élevé */
+body.acc-contrast {
+    filter: contrast(1.25);
+}
+body.acc-contrast .hero-headline { color: #fff !important; text-shadow: 0 2px 8px rgba(0,0,0,.8) !important; }
+body.acc-contrast .category-item {
+    background: rgba(0,0,0,.7) !important;
+    border: 2px solid #fff !important;
+    color: #fff !important;
+}
+body.acc-contrast .category-item h4,
+body.acc-contrast .category-item span { color: #fff !important; }
+
+/* Police Dyslexie */
+body.acc-dyslexia,
+body.acc-dyslexia h1,
+body.acc-dyslexia h2,
+body.acc-dyslexia h4,
+body.acc-dyslexia p,
+body.acc-dyslexia span,
+body.acc-dyslexia a,
+body.acc-dyslexia button {
+    font-family: 'OpenDyslexic', sans-serif !important;
+    letter-spacing: .05em;
+    line-height: 1.7;
+}
+
+/* Tailles de texte */
+body.acc-text-small  { font-size: 14px !important; }
+body.acc-text-normal { font-size: 16px !important; }
+body.acc-text-large  { font-size: 19px !important; }
+body.acc-text-xlarge { font-size: 22px !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   DARK MODE — panneau lui-même
+   ════════════════════════════════════════════════════════════════ */
+body.acc-dark .acc-size-btn { background: #1e4d2b; border-color: #27ae60; color: #7de0a0; }
+body.acc-dark .acc-size-btn.active,
+body.acc-dark .acc-size-btn:hover { background: #27ae60; color: #fff; }
+body.acc-dark .acc-reset { border-color: #e74c3c; color: #ff7f7f; }
+body.acc-dark .acc-reset:hover { background: #e74c3c; color: #fff; }
+</style>
+
+<script>
+(function () {
+'use strict';
+
+// ── Clé localStorage ────────────────────────────────────────────────
+const KEY = 'ardhi_acc_prefs';
+
+// ── Préférences par défaut ──────────────────────────────────────────
+const DEFAULTS = {
+    dark:     false,
+    contrast: false,
+    blue:     false,
+    dyslexia: false,
+    size:     'normal',
+    autoApplied: null,  // 'dark' | 'contrast' | null
+};
+
+// ── Chargement ──────────────────────────────────────────────────────
+let prefs = DEFAULTS;
+try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) prefs = { ...DEFAULTS, ...JSON.parse(saved) };
+} catch(e) {}
+
+// ── Éléments DOM ────────────────────────────────────────────────────
+const panel        = document.getElementById('acc-panel');
+const overlay      = document.getElementById('acc-overlay');
+const trigger      = document.getElementById('acc-trigger');
+const btnClose     = document.getElementById('acc-close');
+const btnReset     = document.getElementById('acc-reset');
+const blueFilter   = document.getElementById('acc-blue-filter');
+const autoMsg      = document.getElementById('acc-subtitle') || document.getElementById('acc-auto-msg');
+const sizeLbl      = document.getElementById('acc-size-label');
+const nightBadge   = document.getElementById('auto-night-badge');
+const sunBadge     = document.getElementById('auto-sun-badge');
+
+const toggles = {
+    dark:     document.getElementById('toggle-dark'),
+    contrast: document.getElementById('toggle-contrast'),
+    blue:     document.getElementById('toggle-blue'),
+    dyslexia: document.getElementById('toggle-dyslexia'),
+};
+
+// ── Appliquer toutes les préférences ────────────────────────────────
+function applyAll() {
+    const b = document.body;
+
+    // Modes
+    b.classList.toggle('acc-dark',     prefs.dark);
+    b.classList.toggle('acc-contrast', prefs.contrast);
+    b.classList.toggle('acc-dyslexia', prefs.dyslexia);
+
+    // Filtre bleu
+    blueFilter.hidden = !prefs.blue;
+
+    // Police dyslexie (charge la font si besoin)
+    const fontLink = document.getElementById('acc-dyslexia-font');
+    if (prefs.dyslexia && fontLink) {
+        fontLink.href = 'https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.min.css';
+        fontLink.removeAttribute('disabled');
+    }
+
+    // Taille texte
+    ['small','normal','large','xlarge'].forEach(s =>
+        b.classList.toggle('acc-text-' + s, prefs.size === s));
+
+    // Sync toggles UI
+    for (const [key, btn] of Object.entries(toggles)) {
+        if (btn) btn.setAttribute('aria-checked', String(prefs[key]));
+    }
+
+    // Sync size buttons
+    document.querySelectorAll('.acc-size-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.size === prefs.size);
+    });
+
+    // Labels taille
+    const sizeLabels = { small:'Petite (14px)', normal:'Normale (16px)', large:'Grande (19px)', xlarge:'Très grande (22px)' };
+    if (sizeLbl) sizeLbl.textContent = sizeLabels[prefs.size] || 'Normale';
+
+    save();
+}
+
+function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch(e) {}
+}
+
+// ── Activation intelligente ─────────────────────────────────────────
+function autoActivate() {
+    const h = new Date().getHours();
+    const isNight = h >= 20 || h < 7;    // 20h → 7h
+    const isDay   = h >= 10 && h <= 16;  // 10h → 16h (fort soleil)
+
+    // Met à jour les badges
+    if (nightBadge) {
+        nightBadge.textContent = isNight ? 'Actif' : 'Inactif';
+        nightBadge.classList.toggle('off', !isNight);
+    }
+    if (sunBadge) {
+        sunBadge.textContent = isDay ? 'Actif' : 'Inactif';
+        sunBadge.classList.toggle('off', !isDay);
+    }
+
+    // Applique seulement si l'utilisateur n'a pas de préférence manuelle
+    if (isNight && !prefs.dark && !prefs.autoApplied) {
+        prefs.dark        = true;
+        prefs.autoApplied = 'dark';
+        if (autoMsg) autoMsg.textContent = '🌙 Mode sombre activé automatiquement';
+        applyAll();
+    } else if (isDay && !prefs.contrast && !prefs.autoApplied) {
+        prefs.contrast    = true;
+        prefs.autoApplied = 'contrast';
+        if (autoMsg) autoMsg.textContent = '☀️ Contraste activé automatiquement';
+        applyAll();
+    }
+}
+
+// ── Ouvrir / Fermer ─────────────────────────────────────────────────
+function openPanel() {
+    panel.hidden   = false;
+    overlay.hidden = false;
+    panel.focus?.();
+}
+function closePanel() {
+    panel.hidden   = true;
+    overlay.hidden = true;
+}
+
+trigger?.addEventListener('click', () => {
+    panel.hidden ? openPanel() : closePanel();
+});
+btnClose?.addEventListener('click', closePanel);
+overlay?.addEventListener('click', closePanel);
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePanel();
+    if (e.altKey && e.key === 'a') { e.preventDefault(); panel.hidden ? openPanel() : closePanel(); }
+});
+
+// ── Toggles ─────────────────────────────────────────────────────────
+for (const [key, btn] of Object.entries(toggles)) {
+    btn?.addEventListener('click', () => {
+        prefs[key]        = !prefs[key];
+        prefs.autoApplied = null;   // L'utilisateur a pris le contrôle
+        applyAll();
+    });
+}
+
+// ── Taille texte ─────────────────────────────────────────────────────
+document.querySelectorAll('.acc-size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        prefs.size = btn.dataset.size;
+        applyAll();
+    });
+});
+
+// ── Reset ────────────────────────────────────────────────────────────
+btnReset?.addEventListener('click', () => {
+    prefs = { ...DEFAULTS };
+    if (autoMsg) autoMsg.textContent = 'Préférences visuelles';
+    applyAll();
+    // Retire toutes les classes acc-*
+    document.body.className = document.body.className
+        .split(' ')
+        .filter(c => !c.startsWith('acc-'))
+        .join(' ');
+});
+
+// ── Init ─────────────────────────────────────────────────────────────
+autoActivate();
+applyAll();
+
+// Révérifier toutes les heures
+setInterval(autoActivate, 60 * 60 * 1000);
+
+})();
+</script>

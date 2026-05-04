@@ -168,6 +168,11 @@
 
             </div>
 
+            {# ── Bouton Accessibilité ── #}
+            <button id="acc-trigger" aria-label="Ouvrir les préférences d'accessibilité" title="Accessibilité">
+              <i class="bi bi-universal-access"></i>
+            </button>
+
           </div>
 
         </div>
@@ -176,4 +181,5 @@
 
     {% include 'EmployeTache/rh_chatbot_widget.html.twig' %}
     {% include 'EmployeTache/_i18n_support.html.twig' %}
+    {% include 'EmployeTache/_accessibility.html.twig' %}
 {% endblock %}
