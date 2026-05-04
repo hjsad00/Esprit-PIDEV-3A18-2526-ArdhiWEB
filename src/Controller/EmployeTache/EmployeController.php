@@ -68,9 +68,9 @@ class EmployeController extends AbstractController
         if ($result instanceof Response) return $result;
         $idAgriculteur = $result;
 
-        $search    = $request->query->get('search', '');
-        $tri       = $request->query->get('tri', 'nom');
-        $direction = $request->query->get('direction', 'asc');
+        $search    = (string) $request->query->get('search', '');
+        $tri       = (string) $request->query->get('tri', 'nom');
+        $direction = (string) $request->query->get('direction', 'asc');
 
         if (!in_array($tri, self::TRIS_VALIDES, true)) $tri = 'nom';
         $direction = $direction === 'desc' ? 'desc' : 'asc';
@@ -81,13 +81,12 @@ class EmployeController extends AbstractController
 
         $employes = $repo->findByAgriculteurTrie($idAgriculteur, $tri, $direction, $search);
 
-        // ✅ Calcul du score de performance pour chaque employé
-        $performanceMap = [];
+        // ✅ Calcul du score de performance pour chaque employé avec une seule requête (Batch anti-N+1)
+        $performanceMap = $this->performanceService->calculatePerformancesBatch($employes, $idAgriculteur);
         $perfSort = [];
         foreach ($employes as $emp) {
-            $perf = $this->performanceService->calculatePerformance($emp->getId());
-            $performanceMap[$emp->getId()] = $perf;
-            if ($emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
+            $perf = $performanceMap[$emp->getId()] ?? null;
+            if ($perf && $emp->isActif() && $perf['totalTaches'] > 0 && $perf['score'] > 0) {
                 $perfSort[] = ['emp' => $emp, 'perf' => $perf];
             }
         }
@@ -122,7 +121,7 @@ class EmployeController extends AbstractController
         $old    = [];
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('employe_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('employe_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('employe_new');
             }
@@ -144,7 +143,7 @@ class EmployeController extends AbstractController
 
                 $photoFile = $request->files->get('photo');
                 if ($photoFile) {
-                    $path = $this->uploadPhoto($photoFile, $employe->getId());
+                    $path = $this->uploadPhoto($photoFile, (int) $employe->getId());
                     if ($path) $employe->setPhotoPath($path);
                 }
                 $em->flush();
@@ -184,7 +183,7 @@ class EmployeController extends AbstractController
         $old    = [];
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('employe_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('employe_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('employe_edit', ['id' => $id]);
             }
@@ -199,7 +198,7 @@ class EmployeController extends AbstractController
 
                 $photoFile = $request->files->get('photo');
                 if ($photoFile) {
-                    $path = $this->uploadPhoto($photoFile, $employe->getId());
+                    $path = $this->uploadPhoto($photoFile, (int) $employe->getId());
                     if ($path) $employe->setPhotoPath($path);
                 }
                 $em->flush();
@@ -232,7 +231,7 @@ class EmployeController extends AbstractController
 
         $employe = $repo->find($id);
         if ($employe && $employe->getIdAgriculteur() === $idAgriculteur
-            && $this->isCsrfTokenValid('delete' . $id, $request->request->get('_token'))) {
+            && $this->isCsrfTokenValid('delete' . $id, (string) $request->request->get('_token'))) {
             $nom = $employe->getNomComplet();
             $em->remove($employe);
             $em->flush();
@@ -255,7 +254,7 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException('Employé introuvable.');
         }
 
-        $qrUrl = $qrService->generateFicheUrl($employe->getId());
+        $qrUrl = $qrService->generateFicheUrl((int) $employe->getId());
         $qrCodeUri = $qrService->generateQrCodeDataUri($qrUrl, 150);
 
         return $this->render('EmployeTache/employe/show.html.twig', [
@@ -365,10 +364,10 @@ class EmployeController extends AbstractController
         foreach ($employes as $i => $emp) {
             $pdf->SetFillColor($i % 2 === 0 ? 245 : 255, $i % 2 === 0 ? 250 : 255, $i % 2 === 0 ? 245 : 255);
 
-            $pdf->Cell(15, 7, $emp->getId(), 1, 0, 'C', true);
-            $pdf->Cell(40, 7, $emp->getNom(), 1, 0, 'L', true);
-            $pdf->Cell(40, 7, $emp->getPrenom(), 1, 0, 'L', true);
-            $pdf->Cell(60, 7, $emp->getEmail(), 1, 0, 'L', true);
+            $pdf->Cell(15, 7, (string) $emp->getId(), 1, 0, 'C', true);
+            $pdf->Cell(40, 7, $emp->getNom() ?? '', 1, 0, 'L', true);
+            $pdf->Cell(40, 7, $emp->getPrenom() ?? '', 1, 0, 'L', true);
+            $pdf->Cell(60, 7, $emp->getEmail() ?? '', 1, 0, 'L', true);
             $pdf->Cell(40, 7, $emp->getPoste() ?? '-', 1, 0, 'L', true);
             $pdf->Cell(35, 7, $emp->getTelephone() ?? '-', 1, 0, 'C', true);
 
@@ -453,7 +452,7 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException('Employé introuvable.');
         }
 
-        $qrUrl = $qrService->generateFicheUrl($employe->getId());
+        $qrUrl = $qrService->generateFicheUrl((int) $employe->getId());
         $qrSvg = $qrService->generateQrCodeSvg($qrUrl, 150);
 
         return new Response($qrSvg, 200, ['Content-Type' => 'image/svg+xml']);
@@ -497,7 +496,9 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException('Employé introuvable.');
         }
 
-        $publicDir = $params->get('kernel.project_dir') . '/public';
+        /** @var string $projectDir */
+        $projectDir = $params->get('kernel.project_dir');
+        $publicDir = $projectDir . '/public';
         $pdfContent = $fichePdfService->genererFichePdf($employe, $publicDir);
 
         return new Response(
@@ -514,6 +515,10 @@ class EmployeController extends AbstractController
     // VALIDATION SERVEUR
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, string>
+     */
     private function validerDonnees(array $data, ValidatorInterface $validator,
                                     EmployeRepository $repo, ?int $excludeId = null): array
     {
@@ -527,7 +532,7 @@ class EmployeController extends AbstractController
             new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u',
                 message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
         ]);
-        if (count($v)) $errors['nom'] = $v[0]->getMessage();
+        if (count($v)) $errors['nom'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['prenom'], [
             new Assert\NotBlank(message: 'Le prénom est obligatoire.'),
@@ -537,7 +542,7 @@ class EmployeController extends AbstractController
             new Assert\Regex(pattern: '/^[\p{L}\s\-\']+$/u',
                 message: 'Le prénom ne peut contenir que des lettres, espaces, tirets et apostrophes.'),
         ]);
-        if (count($v)) $errors['prenom'] = $v[0]->getMessage();
+        if (count($v)) $errors['prenom'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['email'], [
             new Assert\NotBlank(message: "L'email est obligatoire."),
@@ -545,7 +550,7 @@ class EmployeController extends AbstractController
             new Assert\Length(max: 150, maxMessage: "L'email ne peut pas dépasser {{ limit }} caractères."),
         ]);
         if (count($v)) {
-            $errors['email'] = $v[0]->getMessage();
+            $errors['email'] = (string) $v[0]?->getMessage();
         } elseif ($repo->emailExists($data['email'], $excludeId)) {
             $errors['email'] = 'Cet email est déjà utilisé par un autre employé.';
         }
@@ -553,18 +558,21 @@ class EmployeController extends AbstractController
         if ($data['poste'] !== null) {
             $v = $validator->validate($data['poste'], [
                 new Assert\Length(max: 100, maxMessage: 'Le poste ne peut pas dépasser {{ limit }} caractères.')]);
-            if (count($v)) $errors['poste'] = $v[0]->getMessage();
+            if (count($v)) $errors['poste'] = (string) $v[0]?->getMessage();
         }
 
         $v = $validator->validate($data['telephone'], [
             new Assert\NotBlank(message: 'Le numéro de téléphone est obligatoire pour les notifications urgentes.'),
             new Assert\Regex(pattern: '/^[0-9]{8}$/', message: 'Le téléphone doit contenir exactement 8 chiffres.'),
         ]);
-        if (count($v)) $errors['telephone'] = $v[0]->getMessage();
+        if (count($v)) $errors['telephone'] = (string) $v[0]?->getMessage();
 
         return $errors;
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function validerPhoto(mixed $photoFile): array
     {
         if (!$photoFile) return [];
@@ -573,21 +581,27 @@ class EmployeController extends AbstractController
                 mimeTypes: ['image/jpeg','image/png','image/webp'],
                 mimeTypesMessage: 'La photo doit être au format JPG, PNG ou WebP.'),
         ]);
-        return count($v) ? ['photo' => $v[0]->getMessage()] : [];
+        return count($v) ? ['photo' => (string) $v[0]?->getMessage()] : [];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function extractFormData(Request $r): array
     {
         return [
-            'nom'       => trim($r->request->get('nom', '')),
-            'prenom'    => trim($r->request->get('prenom', '')),
-            'email'     => strtolower(trim($r->request->get('email', ''))),
-            'poste'     => $r->request->get('poste') ? trim($r->request->get('poste')) : null,
-            'telephone' => $r->request->get('telephone') ? trim($r->request->get('telephone')) : null,
+            'nom'       => trim((string) $r->request->get('nom', '')),
+            'prenom'    => trim((string) $r->request->get('prenom', '')),
+            'email'     => strtolower(trim((string) $r->request->get('email', ''))),
+            'poste'     => $r->request->get('poste') ? trim((string) $r->request->get('poste')) : null,
+            'telephone' => $r->request->get('telephone') ? trim((string) $r->request->get('telephone')) : null,
             'actif'     => $r->request->get('actif') === '1',
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function hydraterEmploye(Employe $employe, array $data): void
     {
         $employe->setNom($data['nom']);
@@ -602,7 +616,9 @@ class EmployeController extends AbstractController
                                   int $idEmploye): ?string
     {
         try {
-            $dir = $this->getParameter('kernel.project_dir') . '/public/uploads/employes/';
+            /** @var string $projectDir */
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $dir = $projectDir . '/public/uploads/employes/';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
             $filename = 'EMP_' . $idEmploye . '_' . time() . '.' . $file->guessExtension();
             $file->move($dir, $filename);

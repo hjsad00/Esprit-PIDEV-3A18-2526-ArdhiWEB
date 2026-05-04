@@ -212,7 +212,7 @@ class TreatmentPlanController extends AbstractController
         }
 
         // 3. Construct the WhatsApp Message Body
-        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'votre plante';
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0];
 
         $message = "🌱 *Rappel Ardhi : Protocole de Traitement*\n";
         $message .= "Voici vos prochaines interventions pour : _" . $diseaseName . "_\n\n";
@@ -251,7 +251,7 @@ class TreatmentPlanController extends AbstractController
             return $this->json(['error' => 'Aucune image fournie.'], 400);
 
         try {
-            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'Maladie';
+            $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0];
             $baselineUrl = $plan->getDiagnostic()->getImageScannee();
 
             // 1. Consistency Check (Different Plant)
@@ -293,7 +293,7 @@ class TreatmentPlanController extends AbstractController
         \App\Service\UserAndDiag\GroqService $groqService
     ): JsonResponse {
 
-        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0] ?? 'la maladie';
+        $diseaseName = explode(' - ', $plan->getDiagnostic()->getResultatIa())[0];
 
         // Ask Groq for a new plan based on the disease
         $aiResponse = $groqService->generateTreatmentPlan($diseaseName);

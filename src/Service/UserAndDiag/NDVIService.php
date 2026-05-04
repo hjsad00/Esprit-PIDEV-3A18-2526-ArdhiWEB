@@ -6,8 +6,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class NDVIService
 {
-    private HttpClientInterface $httpClient;
-    private const STATS_API_URL = 'https://sh.dataspace.copernicus.eu/api/v1/statistics';
+    private HttpClientInterface $httpClient; // @phpstan-ignore property.onlyWritten
+    private const STATS_API_URL = 'https://sh.dataspace.copernicus.eu/api/v1/statistics'; // @phpstan-ignore classConstant.unused
 
     public function __construct(HttpClientInterface $httpClient)
     {

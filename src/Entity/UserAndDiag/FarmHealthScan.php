@@ -19,13 +19,13 @@ class FarmHealthScan
     private ?User $user = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $crop_type = null;
+    private string $crop_type;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $planting_date = null;
+    private \DateTimeInterface $planting_date;
 
     #[ORM\Column(length: 50)]
-    private ?string $growth_stage = null;
+    private string $growth_stage;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
     private ?float $latitude = null;
@@ -87,7 +87,7 @@ class FarmHealthScan
 
     public function getCropType(): ?string
     {
-        return $this->crop_type;
+        return $this->crop_type ?? null;
     }
 
     public function setCropType(string $crop_type): static
@@ -98,7 +98,7 @@ class FarmHealthScan
 
     public function getPlantingDate(): ?\DateTimeInterface
     {
-        return $this->planting_date;
+        return $this->planting_date ?? null;
     }
 
     public function setPlantingDate(\DateTimeInterface $planting_date): static
@@ -109,7 +109,7 @@ class FarmHealthScan
 
     public function getGrowthStage(): ?string
     {
-        return $this->growth_stage;
+        return $this->growth_stage ?? null;
     }
 
     public function setGrowthStage(string $growth_stage): static

@@ -87,7 +87,7 @@ class GeminiChatbotService
         $employes = $this->employeRepository->findActifsByAgriculteur($idAgriculteur);
         $empList  = '';
         foreach (array_slice($employes, 0, 10) as $emp) {
-            $nb = $this->tacheRepository->countTachesActivesParEmploye($emp->getId(), $idAgriculteur);
+            $nb = $this->tacheRepository->countTachesActivesParEmploye((int) $emp->getId(), $idAgriculteur);
             $empList .= sprintf(
                 "- %s %s (%s) — %d tâche(s) en cours\n",
                 $emp->getPrenom(),
@@ -105,11 +105,11 @@ class GeminiChatbotService
         $statuts_termines = ['terminé', 'terminee', 'validé', 'validee', 'annulé', 'annulee'];
         $actives = array_filter(
             $taches,
-            fn($t) => !in_array(strtolower($t->getStatut() ?? ''), $statuts_termines, true)
+            fn($t) => !in_array(strtolower($t->getStatut()), $statuts_termines, true)
         );
         $tacheList = '';
         foreach (array_slice($actives, 0, 8) as $t) {
-            $tacheList .= sprintf("- #%d : %s (%s)\n", $t->getId(), $t->getTitre(), $t->getStatut() ?? 'en attente');
+            $tacheList .= sprintf("- #%d : %s (%s)\n", $t->getId(), $t->getTitre(), $t->getStatut());
         }
         if (empty($tacheList)) {
             $tacheList = "- Aucune tâche active\n";

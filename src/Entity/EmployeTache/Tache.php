@@ -9,6 +9,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: TacheRepository::class)]
 #[ORM\Table(name: 'tache')]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\Index(columns: ['id_agriculteur'], name: 'idx_tache_agriculteur')]
+#[ORM\Index(columns: ['id_employe'], name: 'idx_tache_employe')]
+#[ORM\Index(columns: ['statut'], name: 'idx_tache_statut')]
+#[ORM\Index(columns: ['date_fin'], name: 'idx_tache_date_fin')]
+#[ORM\Index(columns: ['id_agriculteur', 'statut'], name: 'idx_tache_agri_statut')]
 class Tache
 {
     // ── Statuts (identiques au desktop) ───────────────────────────────
@@ -43,7 +48,7 @@ class Tache
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_tache')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'titre', length: 200)]
     #[Assert\NotBlank(message: 'Le titre est obligatoire.')]

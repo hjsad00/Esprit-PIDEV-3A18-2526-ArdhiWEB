@@ -19,13 +19,13 @@ class CommunityAnalyticsDaily
     private ?CommunityPost $post = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    private \DateTimeInterface $date;
 
     #[ORM\Column(nullable: false, options: ["default" => 0])]
-    private ?int $views = 0;
+    private int $views = 0;
 
     #[ORM\Column(nullable: false, options: ["default" => 0])]
-    private ?int $readTime = 0;
+    private int $readTime = 0;
 
     public function getId(): ?int
     {
@@ -45,7 +45,7 @@ class CommunityAnalyticsDaily
 
     public function getDate(): ?\DateTimeInterface
     {
-        return $this->date;
+        return $this->date ?? null;
     }
 
     public function setDate(\DateTimeInterface $date): static
@@ -56,7 +56,7 @@ class CommunityAnalyticsDaily
 
     public function getViews(): ?int
     {
-        return $this->views;
+        return $this->views ?? null;
     }
 
     public function setViews(int $views): static
@@ -67,7 +67,7 @@ class CommunityAnalyticsDaily
 
     public function getReadTime(): ?int
     {
-        return $this->readTime;
+        return $this->readTime ?? null;
     }
 
     public function setReadTime(int $readTime): static

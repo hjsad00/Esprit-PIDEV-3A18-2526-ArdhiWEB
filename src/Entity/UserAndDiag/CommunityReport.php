@@ -6,7 +6,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: \App\Repository\UserAndDiag\CommunityReportRepository::class)]
-#[ORM\Table(name: "community_reports")]
+#[ORM\Table(name: "community_report")]
 class CommunityReport
 {
     #[ORM\Id]
@@ -27,13 +27,13 @@ class CommunityReport
     private ?CommunityComment $comment = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $reason = null;
+    private string $reason;
 
     #[ORM\Column(options: ["default" => false])]
-    private ?bool $is_resolved = false;
+    private bool $is_resolved = false;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
     public function __construct()
     {
@@ -77,7 +77,7 @@ class CommunityReport
 
     public function getReason(): ?string
     {
-        return $this->reason;
+        return $this->reason ?? null;
     }
     public function setReason(string $reason): static
     {
@@ -87,7 +87,7 @@ class CommunityReport
 
     public function isResolved(): ?bool
     {
-        return $this->is_resolved;
+        return $this->is_resolved ?? false;
     }
     public function setIsResolved(bool $is_resolved): static
     {
@@ -97,9 +97,9 @@ class CommunityReport
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

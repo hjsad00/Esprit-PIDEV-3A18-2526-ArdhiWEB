@@ -11,3 +11,11 @@ parameters:
 			message: '#Property App\\Entity\\Marketplace\\.* is never assigned#'
 			paths:
 				- src/Entity/Marketplace
+parameters:
+    level: 6
+    paths:
+        - bin/
+        - config/
+        - public/
+        - src/
+        - tests/

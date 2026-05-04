@@ -9,13 +9,16 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: EmployeRepository::class)]
 #[ORM\Table(name: 'employe')]
+#[ORM\Index(columns: ['id_agriculteur'], name: 'idx_employe_agriculteur')]
+#[ORM\Index(columns: ['actif'], name: 'idx_employe_actif')]
+#[ORM\Index(columns: ['id_agriculteur', 'actif'], name: 'idx_employe_agri_actif')]
 #[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')]
 class Employe
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_employe')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'nom', length: 100)]
     #[Assert\NotBlank]
@@ -163,7 +166,7 @@ class Employe
 
     public function getInitiales(): string
     {
-        return strtoupper(substr($this->prenom, 0, 1) . substr($this->nom, 0, 1));
+        return strtoupper(substr($this->prenom ?? '', 0, 1) . substr($this->nom ?? '', 0, 1));
     }
 
     public function genererQrCodeUnique(): string

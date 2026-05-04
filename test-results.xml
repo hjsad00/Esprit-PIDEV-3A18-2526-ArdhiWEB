@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="App\Tests\EmployeTache\TacheTest" file="C:\Users\MSI\ArdhiWEB\tests\EmployeTache\TacheTest.php" tests="4" assertions="9" errors="0" failures="0" skipped="0" time="5.269896">
+    <testcase name="testControleSaisieTacheInvalide" file="C:\Users\MSI\ArdhiWEB\tests\EmployeTache\TacheTest.php" line="22" class="App\Tests\EmployeTache\TacheTest" classname="App.Tests.EmployeTache.TacheTest" assertions="2" time="5.138317"/>
+    <testcase name="testAjouterTache" file="C:\Users\MSI\ArdhiWEB\tests\EmployeTache\TacheTest.php" line="34" class="App\Tests\EmployeTache\TacheTest" classname="App.Tests.EmployeTache.TacheTest" assertions="2" time="0.105758"/>
+    <testcase name="testModifierTache" file="C:\Users\MSI\ArdhiWEB\tests\EmployeTache\TacheTest.php" line="58" class="App\Tests\EmployeTache\TacheTest" classname="App.Tests.EmployeTache.TacheTest" assertions="3" time="0.013941"/>
+    <testcase name="testSupprimerTache" file="C:\Users\MSI\ArdhiWEB\tests\EmployeTache\TacheTest.php" line="77" class="App\Tests\EmployeTache\TacheTest" classname="App.Tests.EmployeTache.TacheTest" assertions="2" time="0.011880"/>
+  </testsuite>
+</testsuites>

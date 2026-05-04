@@ -14,7 +14,7 @@ class Badge
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
@@ -35,7 +35,7 @@ class Badge
 
     public function getName(): ?string
     {
-        return $this->name;
+        return $this->name ?? null;
     }
 
     public function setName(string $name): static

@@ -105,12 +105,8 @@ class MeteoService
         $recos = [];
         if (!$w->isAvailable()) return $recos;
 
-        // ✅ FIX : getTypeTache() peut ne pas exister → getCategorie() en priorité
-        $categorie = $tache->getCategorie();
-        if ($categorie === null && method_exists($tache, 'getTypeTache')) {
-            $categorie = $tache->getTypeTache();
-        }
-        $type  = strtoupper($categorie ?? '');
+        // getCategorie() en priorité, getTypeTache() en fallback
+        $type = strtoupper($tache->getCategorie() ?? '');
 
         $temp  = $w->getTemperature();
         $vent  = $w->getWindSpeed();
@@ -125,7 +121,7 @@ class MeteoService
                     $recos[] = $this->reco(Recommandation::NIVEAU_DANGER, $tache, 'meteo.conditions.too_wet', 'METEO_PLUIE');
                 } elseif ($vent > 40) {
                     $recos[] = $this->reco(Recommandation::NIVEAU_DANGER, $tache, 'meteo.conditions.too_windy', 'METEO_VENT');
-                } elseif ($bonVent && !$pluie && $temp >= 15 && $temp <= 30) {
+                } elseif ($bonVent && $temp >= 15 && $temp <= 30) {
                     $recos[] = $this->recoPositive($tache, 'METEO_POSITIVE');
                 }
                 break;
@@ -135,7 +131,7 @@ class MeteoService
                     $recos[] = $this->reco(Recommandation::NIVEAU_WARNING, $tache, 'meteo.conditions.too_wet', 'METEO_PLUIE');
                 } elseif ($temp > 35) {
                     $recos[] = $this->reco(Recommandation::NIVEAU_WARNING, $tache, 'meteo.conditions.too_hot', 'METEO_CHALEUR');
-                } elseif ($temp >= 18 && $temp <= 30 && !$pluie) {
+                } elseif ($temp >= 18 && $temp <= 30) {
                     $recos[] = $this->recoPositive($tache, 'METEO_POSITIVE');
                 }
                 break;
@@ -162,7 +158,7 @@ class MeteoService
             case 'LABOUR':
                 if ($pluie) {
                     $recos[] = $this->reco(Recommandation::NIVEAU_DANGER, $tache, 'meteo.conditions.too_wet', 'METEO_PLUIE');
-                } elseif (!$pluie && $temp <= 30) {
+                } elseif ($temp <= 30) {
                     $recos[] = $this->recoPositive($tache, 'METEO_POSITIVE');
                 }
                 break;

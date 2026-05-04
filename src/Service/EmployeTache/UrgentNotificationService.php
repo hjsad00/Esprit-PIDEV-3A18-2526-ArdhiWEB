@@ -67,6 +67,7 @@ class UrgentNotificationService
     private function sendSms(string $to, string $message, Employe $employe): void
     {
         if (!$this->fromSms) return;
+        if (!$this->twilioClient) return; // Fix PHPStan: property.nonObject
 
         try {
             $this->twilioClient->messages->create(
@@ -85,6 +86,7 @@ class UrgentNotificationService
     private function sendWhatsApp(string $to, string $message, Employe $employe): void
     {
         if (!$this->fromWhatsApp) return;
+        if (!$this->twilioClient) return; // Fix PHPStan: property.nonObject
 
         try {
             $this->twilioClient->messages->create(

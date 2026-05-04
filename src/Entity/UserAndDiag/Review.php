@@ -28,7 +28,7 @@ class Review
     private ?User $expert = null;
 
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('DIAGNOSIS','PROGRESS','PREVENTION') NOT NULL")]
-    private ?string $review_type = null;
+    private string $review_type;
 
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('PENDING','IN_PROGRESS','COMPLETED') DEFAULT 'PENDING'", nullable: true)]
     private ?string $status = 'PENDING';
@@ -48,8 +48,8 @@ class Review
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $expert_disease_name = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updated_at = null;
@@ -111,7 +111,7 @@ class Review
 
     public function getReviewType(): ?string
     {
-        return $this->review_type;
+        return $this->review_type ?? null;
     }
 
     public function setReviewType(string $review_type): static
@@ -188,10 +188,10 @@ class Review
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->created_at;
+        return $this->created_at ?? null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
         return $this;

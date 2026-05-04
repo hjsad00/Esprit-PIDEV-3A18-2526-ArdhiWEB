@@ -120,16 +120,9 @@ class FinanceRHController extends AbstractController
             ], 422);
         }
 
-        // Mise à jour : via setter si disponible, sinon SQL direct
-        if (method_exists($employe, 'setSalaireJournalier')) {
-            $employe->setSalaireJournalier($salaire);
-            $this->em->flush();
-        } else {
-            $this->em->getConnection()->executeStatement(
-                'UPDATE employe SET salaire_journalier = ? WHERE id_employe = ?',
-                [$salaire, $id]
-            );
-        }
+        // Mise à jour via le setter
+        $employe->setSalaireJournalier($salaire);
+        $this->em->flush();
 
         // Recalcul immédiat pour retourner les nouvelles valeurs
         $bulletin = $this->financeService->genererBulletinPaie($id, (int) date('n'), (int) date('Y'));

@@ -154,8 +154,11 @@ class LocalMLIntentClassifier
         $item = $this->cache->getItem(self::CACHE_KEY);
 
         if ($item->isHit()) {
-            $this->pipeline = unserialize($item->get());
-            return $this->pipeline;
+            $unserialized = unserialize((string) $item->get());
+            $this->pipeline = $unserialized instanceof Pipeline ? $unserialized : null;
+            if ($this->pipeline !== null) {
+                return $this->pipeline;
+            }
         }
 
         // Entraînement (une seule fois, ~50-100ms)
@@ -164,7 +167,7 @@ class LocalMLIntentClassifier
         $pipeline = new Pipeline([
             new TokenCountVectorizer(new WordTokenizer(), new French()),
             new TfIdfTransformer(),
-        ], new SVC(Kernel::LINEAR, 1.0, 3, 0.0, 0.0, 0.001, 50, 1.0, true));
+        ], new SVC(Kernel::LINEAR, 1.0, 3, 0.0, 0.0, 0.001, 50, true));
 
         $pipeline->train($samples, $labels);
 
@@ -223,6 +226,9 @@ class LocalMLIntentClassifier
     //  DATASET TRILINGUE
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array{array<int, string>, array<int, string>}
+     */
     private function buildDataset(): array
     {
         $data = [
@@ -448,7 +454,7 @@ class LocalMLIntentClassifier
     {
         $msg = strtolower(trim($message));
         // Suppression ponctuation sauf apostrophe et tiret
-        $msg = preg_replace('/[?!.,;:()\[\]{}«»""\'\/\\\\]/', ' ', $msg ?? '');
+        $msg = preg_replace('/[?!.,;:()\[\]{}«»""\'\/\\\\]/', ' ', $msg) ?? $msg;
         // Normalisation diacritiques latins uniquement
         $msg = preg_replace_callback(
             '/\p{L}/u',
@@ -459,7 +465,10 @@ class LocalMLIntentClassifier
                     return $char;
                 }
                 $normalized = \Normalizer::normalize($char, \Normalizer::FORM_D);
-                return preg_replace('/\p{Mn}/u', '', $normalized ?? $char) ?? $char;
+                if ($normalized === false) {
+                    return $char;
+                }
+                return preg_replace('/\p{Mn}/u', '', $normalized) ?? $char;
             },
             $msg
         ) ?? $msg;

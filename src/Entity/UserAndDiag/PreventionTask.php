@@ -18,10 +18,10 @@ class PreventionTask
     private ?PreventionPlan $preventionPlan = null;
 
     #[ORM\Column]
-    private ?int $day_offset = null;
+    private int $day_offset;
 
     #[ORM\Column(length: 255)]
-    private ?string $task_description = null;
+    private string $task_description;
 
     #[ORM\Column(type: Types::STRING, columnDefinition: "ENUM('PENDING','COMPLETED','MISSED') DEFAULT 'PENDING'", nullable: true)]
     private ?string $status = 'PENDING';
@@ -50,7 +50,7 @@ class PreventionTask
 
     public function getDayOffset(): ?int
     {
-        return $this->day_offset;
+        return $this->day_offset ?? null;
     }
 
     public function setDayOffset(int $day_offset): static
@@ -61,7 +61,7 @@ class PreventionTask
 
     public function getTaskDescription(): ?string
     {
-        return $this->task_description;
+        return $this->task_description ?? null;
     }
 
     public function setTaskDescription(string $task_description): static

@@ -3,6 +3,7 @@
 namespace App\Service\EmployeTache;
 
 use App\Entity\EmployeTache\Notification;
+use App\Entity\EmployeTache\Tache;
 use App\Repository\EmployeTache\NotificationRepository;
 use App\Repository\EmployeTache\TacheRepository;
 use App\Repository\EmployeTache\EmployeRepository;
@@ -43,15 +44,51 @@ class NotificationService
     //  POINT D'ENTRÉE PRINCIPAL
     // ══════════════════════════════════════════════════════════════════
 
+    /** @var array<string, bool> */
+    private array $notifsAujourdhuiCache = [];
+
     /**
      * Analyse complète : retards + tâches bloquées + météo intelligente.
      * À appeler depuis : NotificationController, dashboard employé, cron.
      */
     public function analyserNotifications(int $idAgriculteur): void
     {
+        $this->chargerCacheNotificationsDuJour($idAgriculteur);
+        
         $this->analyserRetards($idAgriculteur);
         $this->analyserMeteo($idAgriculteur);       // ✅ FIX BUG 4 : plus silencieux
         $this->nettoyerObsoletes($idAgriculteur);
+    }
+
+    private function chargerCacheNotificationsDuJour(int $idAgriculteur): void
+    {
+        $today  = new \DateTime('today');
+        $tomorrow = clone $today;
+        $tomorrow->modify('+1 day');
+
+        $notifs = $this->em->createQuery('
+            SELECT n.type, n.idTache 
+            FROM App\Entity\EmployeTache\Notification n 
+            WHERE n.idAgriculteur = :agri 
+              AND n.dateCreation >= :today 
+              AND n.dateCreation < :tomorrow
+        ')
+        ->setParameter('agri', $idAgriculteur)
+        ->setParameter('today', $today)
+        ->setParameter('tomorrow', $tomorrow)
+        ->getArrayResult();
+
+        $this->notifsAujourdhuiCache = [];
+        foreach ($notifs as $n) {
+            $key = $n['type'] . '_' . ($n['idTache'] ?? 'global');
+            $this->notifsAujourdhuiCache[$key] = true;
+        }
+    }
+
+    private function aDejaEteNotifieAujourdhui(string $type, ?int $idTache): bool
+    {
+        $key = $type . '_' . ($idTache ?? 'global');
+        return isset($this->notifsAujourdhuiCache[$key]);
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -61,6 +98,7 @@ class NotificationService
     private function analyserRetards(int $idAgriculteur): void
     {
         $today  = new \DateTime('today');
+        /** @var Tache[] $taches */
         $taches = $this->tacheRepo->findByAgriculteur($idAgriculteur);
 
         foreach ($taches as $tache) {
@@ -69,17 +107,13 @@ class NotificationService
             $dateFin = $tache->getDateFin();
             if (!$dateFin) continue;
 
-            $finDate = $dateFin instanceof \DateTimeInterface
-                ? \DateTime::createFromInterface($dateFin)
-                : new \DateTime($dateFin);
+            $finDate = \DateTime::createFromInterface($dateFin);
 
             // Tâche en retard
             if ($finDate < $today) {
-                if (!$this->notifRepo->existsTodayForTache(
-                    Notification::TYPE_TACHE_RETARD,
-                    $tache->getId(),
-                    $idAgriculteur
-                )) {
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
+                if (!$this->aDejaEteNotifieAujourdhui(Notification::TYPE_TACHE_RETARD, $tacheId)) {
                     $jours = (int) $today->diff($finDate)->days;
                     $titre = $this->translator->trans('notification.types.task_overdue', ['%title%' => $tache->getTitre()]);
                     $message = $this->translator->trans('notification.messages.overdue_detail', [
@@ -93,7 +127,7 @@ class NotificationService
                         $titre,
                         $message,
                         $idAgriculteur,
-                        $tache->getId(),
+                        $tacheId,
                         $tache->getIdEmploye()
                     );
 
@@ -110,18 +144,16 @@ class NotificationService
 
             // Tâche bloquée (En cours, non modifiée depuis > 2 jours)
             if ($this->estEnCours($tache) && !$this->modificationRecente($tache)) {
-                if (!$this->notifRepo->existsTodayForTache(
-                    Notification::TYPE_TACHE_BLOQUEE,
-                    $tache->getId(),
-                    $idAgriculteur
-                )) {
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
+                if (!$this->aDejaEteNotifieAujourdhui(Notification::TYPE_TACHE_BLOQUEE, $tacheId)) {
                     $this->creer(
                         Notification::TYPE_TACHE_BLOQUEE,
                         Notification::PRIORITE_WARNING,
                         $this->translator->trans('notification.types.task_blocked', ['%title%' => $tache->getTitre()]),
                         $this->translator->trans('notification.messages.blocked_detail'),
                         $idAgriculteur,
-                        $tache->getId(),
+                        $tacheId,
                         $tache->getIdEmploye()
                     );
                 }
@@ -152,6 +184,7 @@ class NotificationService
 
         // ✅ FIX BUG 3 : findTachesDuJour() remplacé par une méthode sûre
         // On cherche les tâches actives (En cours + En attente) de l'agriculteur
+        /** @var Tache[] $taches */
         $taches = $this->getTachesActivesAujourdhui($idAgriculteur);
 
         // Étape B : notifications liées aux tâches spécifiques
@@ -170,15 +203,13 @@ class NotificationService
                 $niveau    = $reco->getNiveau();
 
                 // Anti-spam : 1 notif par type / tâche / jour
-                if ($this->notifRepo->existsTodayForTache(
-                    $notifType,
-                    $tache->getId(),
-                    $idAgriculteur
-                )) {
+                $tacheId = $tache->getId();
+                if ($tacheId === null) continue;
+                if ($this->aDejaEteNotifieAujourdhui($notifType, $tacheId)) {
                     continue;
                 }
 
-                [$priorite, $titre] = $this->resoudreNiveau($niveau, $tache->getTitre(), $tache->getCategorie());
+                [$priorite, $titre] = $this->resoudreNiveau($niveau, $tache->getTitre() ?? '', $tache->getCategorie());
 
                 $this->creer(
                     $notifType,
@@ -186,7 +217,7 @@ class NotificationService
                     $titre,
                     $reco->getMessage(),
                     $idAgriculteur,
-                    $tache->getId(),
+                    $tacheId,
                     $tache->getIdEmploye()
                 );
             }
@@ -214,7 +245,7 @@ class NotificationService
             $notifType = $reco->getNotifType();
 
             // Anti-spam : 1 notif de ce type par jour pour cet agriculteur (pas par tâche)
-            if ($this->notifRepo->existsTodayGlobal($notifType, $idAgriculteur)) {
+            if ($this->aDejaEteNotifieAujourdhui($notifType, null)) {
                 continue;
             }
 
@@ -234,6 +265,9 @@ class NotificationService
 
     /**
      * Résout priorité + titre selon le niveau de risque météo.
+     */
+    /**
+     * @return array{string, string}
      */
     private function resoudreNiveau(
         string  $niveau,
@@ -274,23 +308,17 @@ class NotificationService
      * Priorité : tâches dont la date de début = aujourd'hui ou passée
      * ET date de fin = aujourd'hui ou future (pas encore terminées).
      */
+    /**
+     * @return Tache[]
+     */
     private function getTachesActivesAujourdhui(int $idAgriculteur): array
     {
-        // Essayer findTachesDuJour() si elle existe dans le repo
-        if (method_exists($this->tacheRepo, 'findTachesDuJour')) {
-            try {
-                return $this->tacheRepo->findTachesDuJour($idAgriculteur);
-            } catch (\Throwable $e) {
-                // Fallback ci-dessous
-            }
-        }
-
-        // Fallback universel : toutes les tâches actives
+        /** @var Tache[] $toutesLesTaches */
         $toutesLesTaches = $this->tacheRepo->findByAgriculteur($idAgriculteur);
-        return array_filter(
+        return array_values(array_filter(
             $toutesLesTaches,
-            fn($t) => in_array($t->getStatut(), ['En cours', 'En attente'], true)
-        );
+            fn(Tache $t) => in_array($t->getStatut(), ['En cours', 'En attente'], true)
+        ));
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -300,11 +328,30 @@ class NotificationService
     private function nettoyerObsoletes(int $idAgriculteur): void
     {
         $notifications = $this->notifRepo->findByAgriculteur($idAgriculteur);
+        
+        $tacheIds = [];
+        foreach ($notifications as $notif) {
+            if ($notif->getIdTache()) {
+                $tacheIds[] = $notif->getIdTache();
+            }
+        }
+        
+        if (empty($tacheIds)) {
+            $this->em->flush();
+            return;
+        }
+
+        // Fetch all relevant tasks in a single query (Anti N+1)
+        $taches = $this->tacheRepo->findBy(['id' => $tacheIds]);
+        $tachesById = [];
+        foreach ($taches as $tache) {
+            $tachesById[$tache->getId()] = $tache;
+        }
 
         foreach ($notifications as $notif) {
             if (!$notif->getIdTache()) continue;
 
-            $tache = $this->tacheRepo->find($notif->getIdTache());
+            $tache = $tachesById[$notif->getIdTache()] ?? null;
             if (!$tache) {
                 $this->em->remove($notif);
                 continue;
@@ -334,6 +381,9 @@ class NotificationService
     //  CRUD PUBLIC
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<int, Notification>
+     */
     public function getByAgriculteur(int $idAgriculteur): array
     {
         return $this->notifRepo->findByAgriculteur($idAgriculteur);
@@ -402,27 +452,27 @@ class NotificationService
 
         $this->em->persist($notif);
         $this->em->flush();
+        
+        // Mettre à jour le cache local pour éviter les doublons dans la même passe
+        $this->notifsAujourdhuiCache[$type . '_' . ($idTache ?? 'global')] = true;
     }
 
-    private function estTerminee(object $tache): bool
+    private function estTerminee(Tache $tache): bool
     {
         return in_array($tache->getStatut(), ['Terminé', 'Validé', 'Annulé'], true);
     }
 
-    private function estEnCours(object $tache): bool
+    private function estEnCours(Tache $tache): bool
     {
         return $tache->getStatut() === 'En cours';
     }
 
-    private function modificationRecente(object $tache): bool
+    private function modificationRecente(Tache $tache): bool
     {
-        if (!method_exists($tache, 'getDateModification')) return false;
         $modif = $tache->getDateModification();
         if (!$modif) return false;
         $limit   = new \DateTime('-2 days');
-        $modifDt = $modif instanceof \DateTimeInterface
-            ? \DateTime::createFromInterface($modif)
-            : new \DateTime($modif);
+        $modifDt = \DateTime::createFromInterface($modif);
         return $modifDt > $limit;
     }
 }

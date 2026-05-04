@@ -1,5 +1,24 @@
 {
     "ahmed-bhs/doctrine-doctor": {
+<<<<<<< HEAD
+        "version": "1.1",
+=======
+        "version": "1.0",
+>>>>>>> 48dc48d2d8c6e0a574bc9efcd9c5db5041daeddb
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "0a0c0e3972f784e628c4f759d2fb446e9eeb4959"
+<<<<<<< HEAD
+        }
+=======
+        },
+        "files": [
+            "./config/packages/doctrine_doctor.yaml"
+        ]
+    },
+    "ahmed-bhs/doctrine-doctor": {
         "version": "1.0",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
@@ -10,6 +29,7 @@
         "files": [
             "./config/packages/doctrine_doctor.yaml"
         ]
+>>>>>>> 48dc48d2d8c6e0a574bc9efcd9c5db5041daeddb
     },
     "cmen/google-charts-bundle": {
         "version": "7.1.0"
@@ -99,6 +119,9 @@
             "branch": "main",
             "version": "1.0",
             "ref": "5e490cc197fb6bb1ae22e5abbc531ddc633b6767"
+<<<<<<< HEAD
+        }
+=======
         },
         "files": [
             "./phpstan.dist.neon"
@@ -115,6 +138,19 @@
         "files": [
             "./phpstan.dist.neon"
         ]
+    },
+    "phpstan/phpstan": {
+        "version": "2.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "5e490cc197fb6bb1ae22e5abbc531ddc633b6767"
+        },
+        "files": [
+            "./phpstan.dist.neon"
+        ]
+>>>>>>> 48dc48d2d8c6e0a574bc9efcd9c5db5041daeddb
     },
     "phpunit/phpunit": {
         "version": "11.5",

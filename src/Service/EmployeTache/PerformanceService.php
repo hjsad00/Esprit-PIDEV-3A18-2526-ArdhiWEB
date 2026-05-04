@@ -8,15 +8,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * 📊 PerformanceService v2
- *
- * FIX SCORE 0.0 :
- *  Le score était 0 car findTachesParEmployePourPerformance() retournait
- *  un tableau vide si la méthode n'existait pas dans le repo, ou si la
- *  requête DQL filtrait mal.
- *
- *  Solution : fallback sur findBy() standard + vérification défensive.
- *  + Score minimum 5.0 pour un employé actif sans tâches (au lieu de 0)
- *    pour éviter l'affichage "Faible" sur quelqu'un qui vient d'être créé.
  */
 class PerformanceService
 {
@@ -30,12 +21,13 @@ class PerformanceService
     //  CALCUL DU SCORE
     // ══════════════════════════════════════════════════════════════════
 
-    public function calculatePerformance(int $idEmploye): array
+    /**
+     * @param \App\Entity\EmployeTache\Tache[]|null $tachesFournies
+     * @return array<string, mixed>
+     */
+    public function calculatePerformance(int $idEmploye, ?array $tachesFournies = null): array
     {
-        // ── Récupération défensive des tâches ──────────────────────
-        // On essaie d'abord la méthode dédiée du repo, avec fallback
-        // sur findBy() standard si elle n'existe pas ou retourne vide.
-        $taches = $this->fetchTaches($idEmploye);
+        $taches = $tachesFournies ?? $this->fetchTaches($idEmploye);
 
         $totalTaches           = 0;
         $tachesTerminees       = 0;
@@ -75,7 +67,6 @@ class PerformanceService
             ? round($totalJoursRealisation / $compteurDuree, 1)
             : 0.0;
 
-        // ── Calcul du score ────────────────────────────────────────
         $score        = 0.0;
         $tauxReussite = 0.0;
 
@@ -85,9 +76,6 @@ class PerformanceService
             $penaliteEnCours = $tachesEnCours  * 2;
             $score = max(0.0, min(100.0, $tauxReussite - $penaliteRetard - $penaliteEnCours));
         } else {
-            // ✅ FIX : employé sans tâche → score neutre 5 (pas "Faible")
-            // Cela évite d'afficher "Score: 0.0/100 — Faible" pour un
-            // employé qui vient d'être créé et n'a encore aucune tâche.
             $score = 5.0;
         }
 
@@ -110,18 +98,61 @@ class PerformanceService
     }
 
     // ══════════════════════════════════════════════════════════════════
+    //  BATCH CALCULATIONS (Anti N+1)
+    // ══════════════════════════════════════════════════════════════════
+
+    /**
+     * @param \App\Entity\EmployeTache\Employe[] $employes
+     * @return array<int, array<string, mixed>>
+     */
+    public function calculatePerformancesBatch(array $employes, int $idAgriculteur): array
+    {
+        if (empty($employes)) {
+            return [];
+        }
+
+        // 1. Fetch all tasks for this farmer in ONE query (Anti N+1)
+        $allTaches = $this->tacheRepo->findBy(['idAgriculteur' => $idAgriculteur]);
+
+        // 2. Group by idEmploye
+        $tachesParEmploye = [];
+        foreach ($allTaches as $t) {
+            $idEmp = $t->getIdEmploye();
+            if ($idEmp !== null) {
+                $tachesParEmploye[$idEmp][] = $t;
+            }
+        }
+
+        // 3. Calculate all
+        $result = [];
+        foreach ($employes as $emp) {
+            $id = (int) $emp->getId();
+            $result[$id] = $this->calculatePerformance($id, $tachesParEmploye[$id] ?? []);
+        }
+
+        return $result;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     //  CLASSEMENT
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getClassement(int $idAgriculteur): array
     {
         $employes   = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
         $classement = [];
 
+        $performances = $this->calculatePerformancesBatch($employes, $idAgriculteur);
+
         foreach ($employes as $employe) {
-            $perf               = $this->calculatePerformance($employe->getId());
-            $perf['nomEmploye'] = $employe->getNomComplet();
-            $classement[]       = $perf;
+            $perf               = $performances[(int) $employe->getId()] ?? [];
+            if (!empty($perf)) {
+                $perf['nomEmploye'] = $employe->getNomComplet();
+                $classement[]       = $perf;
+            }
         }
 
         usort($classement, fn($a, $b) => $b['score'] <=> $a['score']);
@@ -132,6 +163,10 @@ class PerformanceService
     //  STATISTIQUES GLOBALES
     // ══════════════════════════════════════════════════════════════════
 
+    /**
+     * @param array<int, array<string, mixed>> $classement
+     * @return array<string, mixed>
+     */
     public function getStatistiquesGlobales(array $classement): array
     {
         if (empty($classement)) {
@@ -185,33 +220,23 @@ class PerformanceService
     }
 
     // ══════════════════════════════════════════════════════════════════
-    //  RÉCUPÉRATION DÉFENSIVE DES TÂCHES
+    //  RÉCUPÉRATION DES TÂCHES
     // ══════════════════════════════════════════════════════════════════
 
     /**
-     * ✅ FIX : récupération défensive.
-     *
-     * Problème original : si findTachesParEmployePourPerformance() n'est
-     * pas implémentée dans TacheRepository (méthode manquante ou DQL
-     * incorrecte), elle retourne [] silencieusement → score = 0.
-     *
-     * Solution : on essaie la méthode dédiée, et si elle retourne vide
-     * on vérifie avec findBy() standard pour savoir si c'est vraiment
-     * vide ou si c'est un bug de requête.
+     * @return array<int, mixed>
      */
     private function fetchTaches(int $idEmploye): array
     {
-        // Méthode dédiée (performante, avec index)
-        if (method_exists($this->tacheRepo, 'findTachesParEmployePourPerformance')) {
-            $result = $this->tacheRepo->findTachesParEmployePourPerformance($idEmploye);
+        // Fix PHPStan: method_exists() inutile car la méthode existe toujours dans TacheRepository
+        // On appelle directement la méthode dédiée, avec fallback sur findBy() si vide
+        $result = $this->tacheRepo->findTachesParEmployePourPerformance($idEmploye);
 
-            // Vérification anti-bug : si vide, cross-check avec findBy
-            if (!empty($result)) {
-                return $result;
-            }
+        if (!empty($result)) {
+            return $result;
         }
 
-        // Fallback universel — fonctionne toujours
+        // Fallback universel
         return $this->tacheRepo->findBy(['idEmploye' => $idEmploye]);
     }
 }

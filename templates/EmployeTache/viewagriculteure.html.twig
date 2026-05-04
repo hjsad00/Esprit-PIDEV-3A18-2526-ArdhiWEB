@@ -166,6 +166,18 @@
                 </div>
               </a>
 
+              {# ── Bouton Accessibilité — en bas des services ── #}
+              <button id="acc-trigger"
+                      aria-label="Ouvrir les préférences d'accessibilité"
+                      title="Préférences visuelles">
+                <span class="acc-trigger-icon">♿</span>
+                <div class="acc-trigger-text">
+                  <span>Accessibilité</span>
+                  <small>Préférences visuelles</small>
+                </div>
+                <span class="acc-trigger-chevron">›</span>
+              </button>
+
             </div>
 
           </div>
@@ -176,4 +188,5 @@
 
     {% include 'EmployeTache/rh_chatbot_widget.html.twig' %}
     {% include 'EmployeTache/_i18n_support.html.twig' %}
+    {% include 'EmployeTache/_accessibility.html.twig' %}
 {% endblock %}

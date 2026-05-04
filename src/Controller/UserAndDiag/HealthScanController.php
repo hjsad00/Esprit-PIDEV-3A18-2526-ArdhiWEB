@@ -44,6 +44,7 @@ class HealthScanController extends AbstractController
         \App\Service\UserAndDiag\ImgBBService $imgBBService
     ): Response {
         if ($request->isMethod('POST')) {
+            /** @var \App\Entity\UserAndDiag\User $user */
             $user = $this->getUser();
 
             // 1. Create the base Scan entity

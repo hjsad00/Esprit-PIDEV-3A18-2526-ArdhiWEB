@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class EmployeAutoInactifService
 {
-    // Statuts considérés comme "tâche active" — l'employé reste actif
+    /** @phpstan-ignore classConstant.unused */
     private const STATUTS_ACTIFS = ['En attente', 'En cours'];
 
     public function __construct(
@@ -34,11 +34,18 @@ class EmployeAutoInactifService
     public function synchroniserStatuts(int $idAgriculteur): array
     {
         $employes  = $this->employeRepo->findByAgriculteur($idAgriculteur);
+        
+        $actifsBatch = $this->tacheRepo->countTachesActivesBatch($idAgriculteur);
+        $mapActifs = [];
+        foreach ($actifsBatch as $dto) {
+            $mapActifs[(int) $dto->key] = $dto->total > 0;
+        }
+
         $actives   = 0;
         $desactives = 0;
 
         foreach ($employes as $employe) {
-            $aTacheActive = $this->aTacheActive($employe->getId(), $idAgriculteur);
+            $aTacheActive = $mapActifs[(int) $employe->getId()] ?? false;
 
             if ($aTacheActive && !$employe->isActif()) {
                 // Réactivation automatique

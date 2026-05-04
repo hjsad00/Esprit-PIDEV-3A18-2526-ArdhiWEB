@@ -2,6 +2,7 @@
 
 namespace App\Service\EmployeTache;
 
+use App\Entity\EmployeTache\Employe;
 use App\Repository\EmployeTache\EmployeRepository;
 use App\Repository\EmployeTache\TacheRepository;
 
@@ -13,11 +14,13 @@ class RhChatbotService
         private TacheRepository    $tacheRepo
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function processMessage(string $message, int $idAgriculteur): array
     {
         $message = strtolower(trim($message));
 
-        // Intents
         if ($this->isIntent(['recommander', 'recommande', 'meilleur', 'recommandation'], $message)) {
             return $this->getRecommandationResponse($idAgriculteur);
         }
@@ -44,6 +47,9 @@ class RhChatbotService
         ];
     }
 
+    /**
+     * @param array<int, string> $keywords
+     */
     private function isIntent(array $keywords, string $message): bool
     {
         foreach ($keywords as $kw) {
@@ -54,6 +60,9 @@ class RhChatbotService
         return false;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getGreetingResponse(): array
     {
         return [
@@ -62,6 +71,9 @@ class RhChatbotService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getRecommandationResponse(int $idAgriculteur): array
     {
         $classement = $this->performanceService->getClassement($idAgriculteur);
@@ -73,8 +85,15 @@ class RhChatbotService
             ];
         }
 
-        $best = $classement[0];
+       $best = $classement[0];
         $employe = $this->employeRepo->find($best['idEmploye']);
+
+        if (!$employe) {
+            return [
+                'type' => 'text',
+                'text' => "Employé introuvable."
+            ];
+        }
 
         return [
             'type' => 'employee_card',
@@ -82,7 +101,9 @@ class RhChatbotService
             'employees' => [$this->formatEmployeeCard($employe, $best)]
         ];
     }
-
+    /**
+     * @return array<string, mixed>
+     */
     private function getTop3Response(int $idAgriculteur): array
     {
         $classement = $this->performanceService->getClassement($idAgriculteur);
@@ -95,6 +116,7 @@ class RhChatbotService
         }
 
         $top3 = array_slice($classement, 0, 3);
+        /** @var array<int, array<string, mixed>> $employeesData */
         $employeesData = [];
 
         foreach ($top3 as $perf) {
@@ -111,10 +133,13 @@ class RhChatbotService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getDisponibilitesResponse(int $idAgriculteur): array
     {
         $employes = $this->employeRepo->findActifsByAgriculteur($idAgriculteur);
-        
+
         if (empty($employes)) {
             return [
                 'type' => 'text',
@@ -122,16 +147,15 @@ class RhChatbotService
             ];
         }
 
+        /** @var array<int, array<string, mixed>> $dispos */
         $dispos = [];
         foreach ($employes as $emp) {
-            // Count 'En cours' tasks
             $taches = $this->tacheRepo->findBy(['idEmploye' => $emp->getId(), 'statut' => 'En cours']);
             $enCoursCount = count($taches);
-            
+
             $status = $enCoursCount == 0 ? '🟢 Disponible' : '🟠 Occupé (' . $enCoursCount . ' en cours)';
             $color = $enCoursCount == 0 ? '#27ae60' : '#f39c12';
-            
-            // On ordonne pour mettre les dispos en premier
+
             $dispos[] = [
                 'emp' => $emp,
                 'statusLabel' => $status,
@@ -149,10 +173,8 @@ class RhChatbotService
             ];
         }
 
-        // Sort by number of active tasks ASC
         usort($dispos, fn($a, $b) => $a['count'] <=> $b['count']);
 
-        // Limit to top 5 for chat size
         $topDispos = array_slice($dispos, 0, 5);
         $finalData = array_map(fn($item) => $item['data'], $topDispos);
 
@@ -163,6 +185,9 @@ class RhChatbotService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getPerformancesResponse(int $idAgriculteur): array
     {
         $classement = $this->performanceService->getClassement($idAgriculteur);
@@ -179,7 +204,11 @@ class RhChatbotService
         ];
     }
 
-    private function formatEmployeeCard($employe, array $perf): array
+    /**
+     * @param array<string, mixed> $perf
+     * @return array<string, mixed>
+     */
+    private function formatEmployeeCard(Employe $employe, array $perf): array
     {
         return [
             'id' => $employe->getId(),
