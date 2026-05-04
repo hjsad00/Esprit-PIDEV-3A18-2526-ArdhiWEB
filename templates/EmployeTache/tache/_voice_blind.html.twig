@@ -126,6 +126,9 @@ const API = {
     csrf:    '/voice-blind/csrf',
 };
 
+// ✅ Token CSRF injecté directement depuis Twig (évite l'appel API /csrf)
+const CSRF_TOKEN_INLINE = '{{ csrf_token('tache_form') }}';
+
 const LANG = 'fr-FR';
 
 // Catégories reconnues par la voix
@@ -248,9 +251,26 @@ function showIndicator(visible) {
 //  UTILITAIRES
 // ═══════════════════════════════════════════════════════════════════
 async function fetchJSON(url, method = 'GET', body = null) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    const opts = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',  // Empêche la redirection vers login
+        },
+        credentials: 'same-origin',
+    };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
+
+    if (res.status === 401 || res.status === 302) {
+        throw new Error('non_authentifie');
+    }
+    if (res.status === 403) {
+        throw new Error('acces_refuse');
+    }
+    if (!res.ok) {
+        throw new Error('http_' + res.status);
+    }
     return res.json();
 }
 
@@ -331,11 +351,13 @@ function listenMenu() {
         if (isNon(txt) || /quitter|arrêter|désactiver|stop/i.test(txt)) {
             stopAssistant(); return;
         }
-        if (/lire|afficher|voir|liste|mes tâches|tâche/i.test(txt)) {
-            flowLireTaches(); return;
-        }
-        if (/ajouter|créer|nouvelle|nouveau|nouvelle tâche|créer une tâche/i.test(txt)) {
+        // ⚠️ Tester AJOUTER en premier — plus spécifique
+        if (/ajouter|créer|cr[eé]er|nouvelle tâche|nouveau|créer une tâche/i.test(txt)) {
             flowCreerTache(); return;
+        }
+        // Ensuite LIRE — ne pas confondre avec "ajouter"
+        if (/^lire|^afficher|^voir|^liste|^mes tâches|tâches disponibles|lire les tâches/i.test(txt)) {
+            flowLireTaches(); return;
         }
         speak("Commande non reconnue. Dites : lire mes tâches, ou ajouter une tâche.", () => listenMenu());
     }, () => listenMenu());
@@ -399,16 +421,22 @@ function flowCreerTache() {
         description:'',
     };
 
-    // Charger CSRF et employés en parallèle
-    Promise.all([
-        fetchJSON(API.csrf),
-        fetchJSON(API.employes),
-    ]).then(([csrfData, empData]) => {
-        state.csrf     = csrfData.token || '';
+    // Charger uniquement les employés — CSRF déjà disponible inline
+    state.csrf = CSRF_TOKEN_INLINE;
+
+    fetchJSON(API.employes)
+    .then((empData) => {
         state.employes = empData.employes || [];
         stepTitre();
-    }).catch(() => {
-        speak("Erreur de connexion. Réessayez.", () => listenMenu());
+    }).catch((err) => {
+        console.error('VoiceBlind flowCreerTache error:', err.message);
+        if (err.message === 'non_authentifie') {
+            speak("Vous n'êtes pas connecté. Veuillez vous reconnecter.");
+        } else if (err.message === 'acces_refuse') {
+            speak("Accès refusé. Vous n'avez pas les droits nécessaires.");
+        } else {
+            speak("Erreur de chargement des employés. Réessayez.", () => listenMenu());
+        }
     });
 }
 

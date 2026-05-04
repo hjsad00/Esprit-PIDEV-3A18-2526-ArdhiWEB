@@ -680,21 +680,9 @@ function supprimerSelectionne() {
     {% include 'EmployeTache/_i18n_support.html.twig' %}
 
 {# ══════════════════════════════════════════════════════════════════
-   ASSISTANT VOCAL — données JSON injectées depuis Twig
+   ASSISTANT VOCAL NON-VOYANTS — _voice_blind.html.twig
+   Gère : lire les tâches + créer une tâche par dialogue vocal
    ════════════════════════════════════════════════════════════════ #}
-<script id="va-taches-data" type="application/json">
-{{ taches|map(t => {
-    'id':        t.id,
-    'titre':     t.titre,
-    'statut':    t.statut,
-    'priorite':  t.priorite,
-    'categorie': t.categorie,
-    'employe':   mapEmployes[t.idEmploye] ?? null,
-    'enRetard':  t.isEnRetard(),
-    'url':       path('tache_edit', {id: t.id})
-})|json_encode|raw }}
-</script>
-
-{{ include('EmployeTache/tache/_voice_assistant.html.twig') }}
+{{ include('EmployeTache/tache/_voice_blind.html.twig') }}
 
 {% endblock %}

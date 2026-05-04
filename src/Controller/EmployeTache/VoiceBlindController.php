@@ -14,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * 🎙️ API dédiée à l'assistant vocal pour non-voyants
@@ -29,19 +30,31 @@ use Symfony\Component\Routing\Annotation\Route;
 class VoiceBlindController extends AbstractController
 {
     public function __construct(
-        private AgriculteurContextService $ctx,
-        private TacheRepository           $tacheRepo,
-        private EmployeRepository         $empRepo,
-        private EntityManagerInterface    $em,
-        private EmployeAutoInactifService $autoInactif,
-        private TacheRiskService          $riskService,
-        private UrgentNotificationService $urgentNotif,
+        private AgriculteurContextService  $ctx,
+        private TacheRepository            $tacheRepo,
+        private EmployeRepository          $empRepo,
+        private EntityManagerInterface     $em,
+        private EmployeAutoInactifService  $autoInactif,
+        private TacheRiskService           $riskService,
+        private UrgentNotificationService  $urgentNotif,
+        private CsrfTokenManagerInterface  $csrfTokenManager,
     ) {}
 
     private function getAgriculteurId(): ?int
     {
+        // Pour les requêtes AJAX de l'assistant vocal,
+        // on tente aussi de récupérer l'ID même sans supervision active
         if (!$this->ctx->hasAccess()) return null;
-        return $this->ctx->getActiveAgriculteurId();
+        $id = $this->ctx->getActiveAgriculteurId();
+        if ($id !== null) return $id;
+
+        // Fallback : si l'utilisateur est un agriculteur connecté,
+        // utilise son propre ID
+        $user = $this->getUser();
+        if ($user && method_exists($user, 'getId')) {
+            return (int) $user->getId();
+        }
+        return null;
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -134,9 +147,8 @@ class VoiceBlindController extends AbstractController
     #[Route('/csrf', name: 'csrf', methods: ['GET'])]
     public function csrf(): JsonResponse
     {
-        return new JsonResponse([
-            'token' => $this->generateCsrfToken('tache_form'),
-        ]);
+        $token = $this->csrfTokenManager->getToken('tache_form')->getValue();
+        return new JsonResponse(['token' => $token]);
     }
 
     // ══════════════════════════════════════════════════════════════════
