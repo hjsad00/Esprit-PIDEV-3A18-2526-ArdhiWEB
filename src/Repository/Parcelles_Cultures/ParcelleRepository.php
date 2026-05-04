@@ -19,10 +19,12 @@ class ParcelleRepository extends ServiceEntityRepository
 
     public function findByAgriculteur(User $user)
     {
+        // JOIN FETCH prevents N+1 queries on lazy-loaded associations
         return $this->createQueryBuilder('p')
+            ->leftJoin('p.agriculteur', 'a')
+            ->addSelect('a')
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
-            ->orderBy('p.created_at', 'DESC')
             ->getQuery()
             ->getResult();
     }
@@ -34,6 +36,7 @@ class ParcelleRepository extends ServiceEntityRepository
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getSingleScalarResult();
     }
 
@@ -44,6 +47,7 @@ class ParcelleRepository extends ServiceEntityRepository
             ->andWhere('p.agriculteur = :agriculteur')
             ->setParameter('agriculteur', $user)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
 
         return (float) ($result['total_surface'] ?? 0);
@@ -51,17 +55,25 @@ class ParcelleRepository extends ServiceEntityRepository
 
     public function getStatsByAgriculteur(User $user): array
     {
+        $dto = $this->createQueryBuilder('p')
+            ->select('new App\DTO\Parcelles_Cultures\ParcelleStatsDTO(
+                COUNT(p.id),
+                SUM(p.surface),
+                SUM(CASE WHEN p.statut = \'active\' THEN 1 ELSE 0 END)
+            )')
+            ->andWhere('p.agriculteur = :agriculteur')
+            ->setParameter('agriculteur', $user)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$dto) {
+            $dto = new \App\DTO\Parcelles_Cultures\ParcelleStatsDTO();
+        }
+
         return [
-            'total_parcelles' => $this->countByAgriculteur($user),
-            'surface_totale' => $this->getSurfaceTotalByAgriculteur($user),
-            'parcelles_actives' => $this->createQueryBuilder('p')
-                ->select('COUNT(p.id)')
-                ->andWhere('p.agriculteur = :agriculteur')
-                ->andWhere('p.statut = :statut')
-                ->setParameter('agriculteur', $user)
-                ->setParameter('statut', 'active')
-                ->getQuery()
-                ->getSingleScalarResult(),
+            'total_parcelles' => $dto->totalParcelles,
+            'surface_totale' => $dto->totalSurface ?? 0.0,
+            'parcelles_actives' => $dto->parcellesActives ?? 0,
         ];
     }
 

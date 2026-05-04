@@ -2,83 +2,63 @@
 
 namespace App\Service\Evenement;
 
-use App\Entity\Evenement\Participation;
 use App\Entity\Evenement\Evenement;
-use App\Repository\Evenement\ParticipationRepository;
+use App\Entity\Evenement\Participation;
 use App\Repository\Evenement\EvenementRepository;
+use App\Repository\Evenement\ParticipationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\SvgWriter;
-use Endroid\QrCodeBundle\Response\QrCodeResponse;
 use Psr\Log\LoggerInterface;
 
-/**
- * Generates QR codes for event check-in using Symfony Bundle (best practice).
- * Ported from the Java QRCodeService.
- *
- * QR content format: ARDHI_CHECKIN|<token>|P<participationId>|E<evenementId>
- *
- * Uses: endroid/qr-code-bundle (composer require endroid/qr-code-bundle)
- */
 class QRCodeService
 {
     public function __construct(
-        private EntityManagerInterface  $em,
+        private EntityManagerInterface $em,
         private ParticipationRepository $participationRepo,
-        private EvenementRepository     $evenementRepo,
-        private LoggerInterface         $logger,
-        private string                  $projectDir
+        private EvenementRepository $evenementRepo,
+        private LoggerInterface $logger,
+        private string $projectDir
     ) {}
 
-    // ── Token helpers ────────────────────────────────────────────────────────
-
-    /**
-     * Returns the existing token for a participation, or creates + persists one.
-     */
     public function getOrCreateToken(Participation $participation): string
     {
         if ($participation->getQrCodeToken()) {
             return $participation->getQrCodeToken();
         }
 
-        $token = bin2hex(random_bytes(16)); // 32-char hex token
+        $token = bin2hex(random_bytes(16));
         $participation->setQrCodeToken($token);
         $this->em->flush();
 
         return $token;
     }
 
-    // ── QR Generation (via Bundle) ───────────────────────────────────────────
-
-    /**
-     * Returns the QR code as SVG binary data (ready to save to file or embed).
-     * Uses the bundle's default SVG writer configuration. No external dependencies.
-     */
     public function genererQRCodePng(Participation $participation): string
     {
+        $participationId = $participation->getId();
+        $evenementId = $participation->getEvenement()?->getId();
+
+        if ($participationId === null || $evenementId === null) {
+            throw new \LogicException('La participation et son événement doivent être persistés avant de générer un QR code.');
+        }
+
         $content = $this->buildQRContent(
             $this->getOrCreateToken($participation),
-            $participation->getId(),
-            $participation->getEvenement()->getId()
+            $participationId,
+            $evenementId
         );
 
         return $this->generateSvgData($content);
     }
 
-    /**
-     * Returns the QR code as a base64-encoded data URI for direct embedding in HTML.
-     * e.g. data:image/svg+xml;base64,PHN2ZyB3aWR0aD0i...
-     */
     public function genererQRCodeBase64(Participation $participation): string
     {
         $svgData = $this->genererQRCodePng($participation);
+
         return 'data:image/svg+xml;base64,' . base64_encode($svgData);
     }
 
-    /**
-     * Saves the QR code SVG to public/uploads/qrcodes/ and returns the web path.
-     * e.g. /uploads/qrcodes/qr_42_a1b2c3d4.svg
-     */
     public function genererQRCodeFichier(Participation $participation): string
     {
         $uploadsDir = $this->projectDir . '/public/uploads/qrcodes';
@@ -86,8 +66,13 @@ class QRCodeService
             mkdir($uploadsDir, 0755, true);
         }
 
-        $token    = $this->getOrCreateToken($participation);
-        $filename = 'qr_' . $participation->getId() . '_' . substr($token, 0, 8) . '.svg';
+        $participationId = $participation->getId();
+        if ($participationId === null) {
+            throw new \LogicException('La participation doit être persistée avant de sauvegarder un QR code.');
+        }
+
+        $token = $this->getOrCreateToken($participation);
+        $filename = 'qr_' . $participationId . '_' . substr($token, 0, 8) . '.svg';
         $filepath = $uploadsDir . '/' . $filename;
 
         file_put_contents($filepath, $this->genererQRCodePng($participation));
@@ -97,29 +82,25 @@ class QRCodeService
         return '/uploads/qrcodes/' . $filename;
     }
 
-    // ── Validation / Check-in ────────────────────────────────────────────────
-
     /**
-     * Result object returned by processQRScan() and validateToken().
+     * @return array<string, mixed>
      */
     public static function makeResult(
-        bool          $success,
-        string        $message,
+        bool $success,
+        string $message,
         ?Participation $participation = null,
-        ?Evenement    $evenement     = null
+        ?Evenement $evenement = null
     ): array {
         return [
-            'success'       => $success,
-            'message'       => $message,
+            'success' => $success,
+            'message' => $message,
             'participation' => $participation,
-            'evenement'     => $evenement,
+            'evenement' => $evenement,
         ];
     }
 
     /**
-     * Parse and validate a raw QR code string, then mark the participant PRESENT.
-     *
-     * Expected format: ARDHI_CHECKIN|<token>|P<participationId>|E<evenementId>
+     * @return array<string, mixed>
      */
     public function processQRScan(string $qrContent): array
     {
@@ -133,30 +114,27 @@ class QRCodeService
         }
 
         [, $token, $pPart, $ePart] = $parts;
-
         $participationId = (int) ltrim($pPart, 'P');
-        $evenementId     = (int) ltrim($ePart, 'E');
+        $evenementId = (int) ltrim($ePart, 'E');
 
-        // Verify token matches the participation in the DB
         $participation = $this->participationRepo->findOneBy([
-            'id'           => $participationId,
-            'qrCodeToken'  => $token,
+            'id' => $participationId,
+            'qrCodeToken' => $token,
         ]);
 
-        if (!$participation) {
+        if (!$participation instanceof Participation) {
             return self::makeResult(false, 'QR code invalide — token non trouvé');
         }
 
         $evenement = $this->evenementRepo->find($evenementId);
-        if (!$evenement) {
+        if (!$evenement instanceof Evenement) {
             return self::makeResult(false, 'Événement introuvable', $participation);
         }
 
-        // Guard against duplicate check-ins
         if ($participation->getStatut() === 'PRESENT') {
             return self::makeResult(
                 false,
-                '⚠️ ' . $participation->getNomComplet() . ' est déjà marqué(e) présent(e) !',
+                'Participant déjà marqué présent',
                 $participation,
                 $evenement
             );
@@ -165,74 +143,66 @@ class QRCodeService
         if ($participation->getStatut() === 'ANNULE') {
             return self::makeResult(
                 false,
-                '❌ L\'inscription de ' . $participation->getNomComplet() . ' est annulée',
+                'Inscription annulée',
                 $participation,
                 $evenement
             );
         }
 
-        // Mark as present
         $participation->setStatut('PRESENT');
         $this->em->flush();
 
         $this->logger->info('Check-in OK: participation #{id}', ['id' => $participation->getId()]);
 
-        return self::makeResult(
-            true,
-            '✅ ' . $participation->getNomComplet() . ' — Check-in réussi !',
-            $participation,
-            $evenement
-        );
+        return self::makeResult(true, 'Check-in réussi', $participation, $evenement);
     }
 
     /**
-     * Validate a raw token string (mobile scanner compatibility — same as Java validateToken).
+     * @return array<string, mixed>
      */
     public function validateToken(string $token): array
     {
         $participation = $this->participationRepo->findOneBy(['qrCodeToken' => $token]);
 
-        if (!$participation) {
+        if (!$participation instanceof Participation) {
             return self::makeResult(false, 'Token inconnu');
         }
 
-        $qrContent = $this->buildQRContent(
-            $token,
-            $participation->getId(),
-            $participation->getEvenement()->getId()
-        );
+        $participationId = $participation->getId();
+        $evenementId = $participation->getEvenement()?->getId();
+        if ($participationId === null || $evenementId === null) {
+            return self::makeResult(false, 'Participation invalide');
+        }
+
+        $qrContent = $this->buildQRContent($token, $participationId, $evenementId);
 
         return $this->processQRScan($qrContent);
     }
 
-    // ── Stats helper ─────────────────────────────────────────────────────────
-
     /**
-     * Returns [ presents, inscrits, enAttente, taux ] for a given event.
+     * @return array<string, int|float>
      */
     public function getCheckInStats(Evenement $evenement): array
     {
-        $all       = $this->participationRepo->findBy(['evenement' => $evenement]);
-        $presents  = count(array_filter($all, fn($p) => $p->getStatut() === 'PRESENT'));
-        $inscrits  = count(array_filter($all, fn($p) => $p->getStatut() !== 'ANNULE'));
-        $enAttente = count(array_filter($all, fn($p) => $p->getStatut() === 'EN_ATTENTE'));
-        $taux      = $inscrits > 0 ? round($presents / $inscrits * 100) : 0;
+        /** @var list<Participation> $all */
+        $all = array_values(array_filter(
+            $this->participationRepo->findBy(['evenement' => $evenement]),
+            static fn (mixed $participation): bool => $participation instanceof Participation
+        ));
+
+        $presents = count(array_filter($all, static fn (Participation $p): bool => $p->getStatut() === 'PRESENT'));
+        $inscrits = count(array_filter($all, static fn (Participation $p): bool => $p->getStatut() !== 'ANNULE'));
+        $enAttente = count(array_filter($all, static fn (Participation $p): bool => $p->getStatut() === 'EN_ATTENTE'));
+        $taux = $inscrits > 0 ? round($presents / $inscrits * 100) : 0;
 
         return compact('presents', 'inscrits', 'enAttente', 'taux');
     }
 
-    // ── Private ──────────────────────────────────────────────────────────────
-
-    /**
-     * Generate SVG binary data for a QR code content string using the bundle.
-     * Uses the bundle's default SvgWriter configuration. No external dependencies required.
-     */
     private function generateSvgData(string $content): string
     {
         $qrCode = new QrCode($content);
         $writer = new SvgWriter();
 
-        // Apply bundle configuration (300x300, margin 10, UTF-8, etc.)
         return $writer->write($qrCode)->getString();
     }
 

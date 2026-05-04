@@ -2,6 +2,7 @@
 
 namespace App\Controller\Marketplace;
 
+use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\AvisRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
@@ -30,9 +31,8 @@ class CatalogueController extends AbstractController
         PaginatorInterface $paginator
     ): Response
     {
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user   = $this->getUser();
-        $userId = $user ? $user->getId() : null;
+        $userId = $user instanceof User ? $user->getId() : null;
 
         // Récupération des filtres depuis l'URL (GET)
         $filters = [
@@ -110,7 +110,7 @@ class CatalogueController extends AbstractController
 
         $panier = null;
         $favIds = [];
-        if ($user) {
+        if ($user instanceof User) {
             $panier = $panierRepository->findPanierActif($user);
             $favIds = $wishlistRepository->findAllIdsByUser($user);
         }

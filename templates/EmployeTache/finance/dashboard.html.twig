@@ -6,38 +6,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --g900:#0a1a0f;--g800:#0f2a18;--g700:#163821;--g600:#1e4d2e;
-  --g500:#2a6b3f;--g400:#3d8f56;--g300:#5dae74;--g200:#8ecfa0;
-  --g100:#c2e8cb;--g50:#eaf6ec;
-  --gold:#c9a84c;--gold2:#e8c96a;--gold-bg:rgba(201,168,76,.1);
+  --g900:#0d2211;--g800:#1a3d25;--g700:#214d2e;--g600:#2a6340;
+  --g500:#357a4e;--g400:#4aa368;--g300:#6ec285;--g200:#a2dab2;
+  --gold:#c9a84c;--gold-bg:rgba(201,168,76,.1);
   --red:#e05454;--red-bg:rgba(224,84,84,.1);
-  --text1:#f0f7f1;--text2:#8ab598;--text3:#4a6b52;
-  --border:rgba(93,174,116,.12);--border2:rgba(93,174,116,.22);
-  --card:#0f2218;--page:#0a1a0f;
+  --text1:#f4faf5;--text2:#a3c9af;--text3:#5e8268;
+  --border:rgba(93,174,116,.18);--border2:rgba(93,174,116,.32);
+  --card:#1a3828;--page:#132b1a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus Jakarta Sans',sans-serif}
 .frh{min-height:100vh;padding-bottom:80px}
-
-/* HEADER */
-.frh-header{background:var(--g800);border-bottom:1px solid var(--border);padding:2rem 2.5rem 1.75rem;position:relative;overflow:hidden}
-.frh-header::after{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;background:radial-gradient(circle,rgba(93,174,116,.06) 0%,transparent 65%);pointer-events:none}
+.frh-header{background:var(--g700);border-bottom:1px solid var(--border);padding:2rem 2.5rem 1.75rem;position:relative;overflow:hidden}
+.frh-header::after{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;background:radial-gradient(circle,rgba(93,174,116,.06),transparent 65%);pointer-events:none}
 .frh-bc{font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
 .frh-bc a{color:var(--g300);text-decoration:none}
-.frh-bc a:hover{color:var(--g200)}
 .frh-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,46px);font-weight:600;line-height:1.05;color:var(--text1)}
 .frh-h1 em{color:var(--g300);font-style:normal}
 .frh-h1 strong{color:var(--gold);font-style:normal}
 .frh-desc{font-size:13px;color:var(--text2);margin-top:.5rem}
 .frh-actions{display:flex;gap:10px;margin-top:1.5rem;flex-wrap:wrap}
-.btn-g{font-size:13px;padding:8px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:all .2s;font-weight:500}
-.btn-primary-g{background:var(--g400);color:#fff;border:none}
-.btn-primary-g:hover{background:var(--g300)}
+.btn-g{font-size:13px;padding:8px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:all .2s;font-weight:500;text-decoration:none;display:inline-flex;align-items:center}
 .btn-outline-g{background:transparent;color:var(--g300);border:1px solid var(--border2)}
 .btn-outline-g:hover{background:rgba(93,174,116,.08)}
-
-/* KPI STRIP */
-.frh-kpis{display:grid;grid-template-columns:repeat(6,1fr);background:var(--g800);border-bottom:1px solid var(--border)}
+.frh-kpis{display:grid;grid-template-columns:repeat(6,1fr);background:var(--g700);border-bottom:1px solid var(--border)}
 @media(max-width:1100px){.frh-kpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.frh-kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{padding:1.25rem 1.5rem;border-right:1px solid var(--border);opacity:0;transform:translateY(10px);animation:up .4s ease forwards}
@@ -46,56 +38,48 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
 .kpi:nth-child(3){animation-delay:.15s}.kpi:nth-child(4){animation-delay:.20s}
 .kpi:nth-child(5){animation-delay:.25s}.kpi:nth-child(6){animation-delay:.30s}
 .kpi-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
-.kpi-n{font-size:20px;font-weight:600;line-height:1}
+.kpi-n{font-size:20px;font-weight:600;line-height:1;letter-spacing:-.01em}
 .kpi-n.green{color:var(--g300)}.kpi-n.gold{color:var(--gold)}.kpi-n.red{color:var(--red)}
 .kpi-unit{font-size:10px;color:var(--text3);margin-top:3px}
-
-/* BODY */
 .frh-body{max-width:1440px;margin:0 auto;padding:2rem 2.5rem}
 .frh-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
 @media(max-width:1000px){.frh-grid{grid-template-columns:1fr}}
-
-/* CARDS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;opacity:0;transform:translateY(14px);animation:up .55s ease forwards}
 .card:nth-child(1){animation-delay:.35s}.card:nth-child(2){animation-delay:.45s}
-.card:nth-child(3){animation-delay:.40s}.card:nth-child(4){animation-delay:.50s}
 .card-hd{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.5rem;border-bottom:1px solid var(--border)}
 .card-hd-t{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
 .badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
 .badge-g{background:rgba(61,143,86,.18);color:var(--g300);border:1px solid rgba(61,143,86,.3)}
 .badge-gold{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
 .badge-r{background:var(--red-bg);color:var(--red)}
-
-/* TABLE */
 .ft{width:100%;border-collapse:collapse}
-.ft th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:.65rem 1.25rem;text-align:left;border-bottom:1px solid var(--border)}
-.ft td{padding:.85rem 1.25rem;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.ft th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:.65rem 1.25rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.ft td{padding:.85rem 1.25rem;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
 .ft tr:last-child td{border-bottom:none}
-.ft tbody tr{transition:background .15s;cursor:pointer}
+.ft tbody tr{transition:background .15s}
 .ft tbody tr:hover td{background:rgba(93,174,116,.04)}
 .av{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(93,174,116,.3)}
 .av-i{width:34px;height:34px;border-radius:50%;background:rgba(61,143,86,.15);border:1.5px solid rgba(93,174,116,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--g300);flex-shrink:0}
 .emp-cell{display:flex;align-items:center;gap:9px}
 .emp-nm{font-weight:500;color:var(--text1);font-size:13px}
 .emp-ps{font-size:11px;color:var(--text3)}
-.num-g{color:var(--g300);font-weight:500}.num-gold{color:var(--gold)}.num-r{color:var(--red)}
+.num-g{color:var(--g300);font-weight:500}
+.num-gold{color:var(--gold);font-weight:500}
+.num-r{color:var(--red);font-weight:500}
 .cp{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600}
 .cp-cdi{background:rgba(61,143,86,.18);color:var(--g300)}
 .cp-sais{background:rgba(186,117,23,.18);color:#ef9f27}
-.salaire-input{background:transparent;border:none;color:var(--gold);font-family:inherit;font-size:13px;font-weight:500;width:80px;text-align:right;cursor:pointer;border-bottom:1px dashed rgba(201,168,76,.3);padding:2px 4px}
-.salaire-input:focus{outline:none;border-bottom-color:var(--gold);background:rgba(201,168,76,.05)}
+.salaire-input{background:transparent;border:none;color:var(--gold);font-family:inherit;font-size:13px;font-weight:500;width:72px;text-align:right;cursor:pointer;border-bottom:1px dashed rgba(201,168,76,.3);padding:2px 4px}
+.salaire-input:focus{outline:none;border-bottom-color:var(--gold);background:rgba(201,168,76,.05);border-radius:4px 4px 0 0}
 .btn-sm{font-size:11px;padding:4px 12px;border:1px solid rgba(93,174,116,.3);border-radius:8px;background:transparent;color:var(--g300);cursor:pointer;transition:all .2s}
 .btn-sm:hover{background:rgba(93,174,116,.1)}
-
-/* CNSS */
+.btn-sm:disabled{opacity:.4;cursor:not-allowed}
 .cnss-g{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
 .cnss-c{background:var(--card);padding:1.5rem;text-align:center}
 .cnss-pct{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;color:var(--g300);line-height:1;margin-bottom:.2rem}
 .cnss-who{font-size:11px;color:var(--text3);margin-bottom:.75rem}
 .cnss-amt{font-size:20px;font-weight:600;color:var(--text1)}
 .cnss-lbl{font-size:10px;color:var(--text3);margin-top:3px}
-
-/* CATÉGORIES */
 .cat-r{display:flex;align-items:center;gap:10px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)}
 .cat-r:last-child{border-bottom:none}
 .cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -103,42 +87,40 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
 .cat-sub{font-size:10px;color:var(--text3)}
 .bar-t{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;max-width:100px}
 .bar-f{height:100%;border-radius:2px;transition:width 1.3s cubic-bezier(.4,0,.2,1)}
-.cat-amt{font-size:12px;font-weight:500;color:var(--text1);min-width:85px;text-align:right}
-
-/* TÂCHES BUDGET */
+.cat-amt{font-size:12px;font-weight:500;color:var(--text1);min-width:90px;text-align:right}
 .tb-r{padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
 .tb-r:last-child{border-bottom:none}
-.tb-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem}
+.tb-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;gap:1rem}
 .tb-nm{font-size:13px;font-weight:500;color:var(--text1)}
 .tb-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.tb-amts{font-size:12px;text-align:right}
+.tb-amts{font-size:12px;text-align:right;flex-shrink:0}
 .bar-tr{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .bar-ok{background:var(--g400)}.bar-warn{background:var(--gold)}.bar-over{background:var(--red)}
 .tb-ecart{font-size:11px;margin-top:4px;text-align:right}
 .tb-detail{font-size:11px;color:var(--text3);margin-top:4px}
 
-/* MODAL */
+/* ── MODAL ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.on{display:flex}
-.modal{background:var(--g800);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:520px;animation:slideUp .3s ease;overflow:hidden}
+.bul-dialog{display:block;background:#1e2d1e;border:2px solid rgba(110,194,133,.6);border-radius:20px;width:100%;max-width:520px;animation:slideUp .3s ease;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.8)}
 .modal-hd{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
 .modal-t{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text1)}
 .modal-s{font-size:11px;color:var(--text3);margin-top:2px}
-.modal-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;transition:color .2s;line-height:1}
+.modal-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;transition:color .2s}
 .modal-x:hover{color:var(--text1)}
-.modal-body{padding:1.5rem}
-.ms{display:flex;gap:8px;margin-bottom:1.25rem}
-.ms select{background:var(--g700);border:1px solid var(--border);color:var(--text1);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;flex:1;font-family:inherit}
+.bul-body{padding:1.5rem}
+.ms{display:flex;gap:8px;margin-bottom:1.25rem;align-items:center;flex-wrap:wrap}
+.ms select{background:var(--g700);border:1px solid var(--border);color:var(--text1);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;flex:1;font-family:inherit;min-width:90px}
 .bl-r{display:flex;justify-content:space-between;padding:.6rem 0;font-size:13px;border-bottom:1px solid var(--border)}
 .bl-r:last-child{border-bottom:none}
 .bl-r.tot{font-weight:600;font-size:14px;padding-top:1rem;margin-top:.5rem;border-top:1px solid var(--border2);border-bottom:none}
 .bl-lbl{color:var(--text2)}.bl-v{color:var(--text1);font-weight:500}
-.bl-v.minus{color:var(--red)}.bl-v.net{color:var(--g300);font-size:18px}
-.btn-main{width:100%;padding:12px;background:var(--g500);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:1rem;font-family:inherit}
-.btn-main:hover{background:var(--g400);transform:translateY(-1px)}
+.bl-v.minus{color:var(--red)}.bl-v.net{color:var(--g300);font-size:20px}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+.btn-pdf{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.35);font-size:11px;padding:4px 14px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600}
+.btn-pdf:hover:not(:disabled){background:rgba(201,168,76,.25)}
+.btn-pdf:disabled{opacity:.35;cursor:not-allowed}
 
-/* ANIMS */
 @keyframes up{to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -148,7 +130,7 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
 {% block body %}
 <div class="frh">
 
-{# ─── HEADER ─── #}
+{# ── HEADER ── #}
 <div class="frh-header">
   <div style="max-width:1440px;margin:0 auto">
     <div class="frh-bc">
@@ -157,52 +139,52 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
     <div class="frh-h1"><em>Finance</em> <strong>RH</strong></div>
     <div class="frh-desc">Masse salariale · CNSS Tunisie · Coût de revient · Bulletins de paie</div>
     <div class="frh-actions">
-      <a href="{{ path('pointage_dashboard') }}" class="btn-g btn-outline-g">Pointage GPS</a>
+      
     </div>
   </div>
 </div>
 
-{# ─── KPI STRIP ─── #}
+{# ── KPI STRIP ── #}
 <div class="frh-kpis">
   <div class="kpi">
     <div class="kpi-lbl">Masse salariale / mois</div>
-    <div class="kpi-n green">{{ masseSalarialeMensuelle|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-n green">{{ masseSalarialeMensuelle|tnd }}</div>
     <div class="kpi-unit">TND</div>
   </div>
   <div class="kpi">
     <div class="kpi-lbl">CNSS employeur</div>
-    <div class="kpi-n">{{ coutCNSSEmployeur|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-n">{{ coutCNSSEmployeur|tnd }}</div>
     <div class="kpi-unit">TND / mois (16.57%)</div>
   </div>
   <div class="kpi">
     <div class="kpi-lbl">Coût total mensuel</div>
-    <div class="kpi-n gold">{{ coutTotalMensuel|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-n gold">{{ coutTotalMensuel|tnd }}</div>
     <div class="kpi-unit">TND tout compris</div>
   </div>
   <div class="kpi">
     <div class="kpi-lbl">Projection annuelle</div>
-    <div class="kpi-n">{{ chargesAnnuelles|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-n">{{ chargesAnnuelles|tnd }}</div>
     <div class="kpi-unit">TND / an</div>
   </div>
   <div class="kpi">
     <div class="kpi-lbl">Budget tâches</div>
-    <div class="kpi-n green">{{ budgetTaches|number_format(0,'.','\u{202F}') }}</div>
+    <div class="kpi-n green">{{ budgetTaches|tnd }}</div>
     <div class="kpi-unit">TND planifié</div>
   </div>
   <div class="kpi">
     <div class="kpi-lbl">Écart budget / réel</div>
     <div class="kpi-n {{ ecartBudget > 0 ? 'red' : 'green' }}">
-      {{ ecartBudget > 0 ? '+' : '' }}{{ ecartBudget|number_format(0,'.','\u{202F}') }}
+      {{ ecartBudget > 0 ? '+' : '' }}{{ ecartBudget|tnd }}
     </div>
     <div class="kpi-unit">{{ ecartBudget > 0 ? 'Surcoût' : 'Économie' }}</div>
   </div>
 </div>
 
-{# ─── BODY ─── #}
+{# ── BODY ── #}
 <div class="frh-body">
 <div class="frh-grid">
 
-{# ─── TABLEAU EMPLOYÉS + SALAIRE ─── #}
+{# ── TABLEAU EMPLOYÉS ── #}
 <div class="card">
   <div class="card-hd">
     <div class="card-hd-t">Masse salariale par employé</div>
@@ -222,7 +204,7 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
     </thead>
     <tbody>
       {% for ed in employes %}
-      <tr>
+      <tr data-emp-id="{{ ed.employe.id }}">
         <td>
           <div class="emp-cell">
             {% if ed.employe.photoPath %}
@@ -242,23 +224,26 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
           </span>
         </td>
         <td>
-          {# ✅ Colonne salaire éditable inline #}
-          <input class="salaire-input"
-                 type="number"
-                 step="0.001"
-                 min="0"
-                 value="{{ ed.salaireJ }}"
-                 title="Cliquez pour modifier le salaire journalier"
-                 onchange="updateSalaire({{ ed.employe.id }}, this.value, this)"
-                 data-emp="{{ ed.employe.id }}">
-          <span style="font-size:10px;color:var(--text3)"> TND</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input class="salaire-input"
+                   type="number" step="0.001" min="1" max="5000"
+                   value="{{ ed.salaireJ }}"
+                   title="Modifier le salaire journalier — Entrée pour valider"
+                   onchange="updateSalaire({{ ed.employe.id }}, this.value, this)"
+                   data-emp="{{ ed.employe.id }}">
+            <span style="font-size:10px;color:var(--text3)">TND</span>
+          </div>
         </td>
-        <td class="num-gold">{{ ed.salaireBrut|number_format(0,'.','\u{202F}') }}</td>
-        <td class="num-g">{{ ed.salaireNet|number_format(0,'.','\u{202F}') }}</td>
-        <td style="color:var(--text2)">{{ ed.coutTotal|number_format(0,'.','\u{202F}') }}</td>
+        {# ✅ CORRIGÉ : |tnd au lieu de number_format + entité HTML cassée #}
+        <td class="num-gold cell-brut">{{ ed.salaireBrut|tnd }}</td>
+        <td class="num-g cell-net">{{ ed.salaireNet|tnd }}</td>
+        <td class="cell-cout" style="color:var(--text2)">{{ ed.coutTotal|tnd }}</td>
         <td>
+          {% set empFullName = (ed.employe.prenom ~ ' ' ~ ed.employe.nom)|e('js') %}
+          {% set empPhoto    = (ed.employe.photoPath ?? '')|e('js') %}
+          {% set empPoste    = (ed.employe.poste ?? '')|e('js') %}
           <button class="btn-sm"
-                  onclick="ouvrirBulletin({{ ed.employe.id }},'{{ ed.employe.prenom }} {{ ed.employe.nom }}')">
+                  onclick="ouvrirBulletin({{ ed.employe.id }}, '{{ empFullName }}', '{{ empPhoto }}', '{{ empPoste }}')">
             Bulletin
           </button>
         </td>
@@ -266,7 +251,8 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
       {% else %}
       <tr>
         <td colspan="7" style="text-align:center;padding:3rem;color:var(--text3)">
-          Aucun employé actif. Vérifiez que la migration SQL a été exécutée.
+          Aucun employé actif.<br>
+          <small>Exécutez <code>fix_salaires.sql</code> puis <code>php bin/console cache:clear</code></small>
         </td>
       </tr>
       {% endfor %}
@@ -274,10 +260,8 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
   </table>
 </div>
 
-{# ─── COLONNE DROITE ─── #}
+{# ── DROITE ── #}
 <div>
-
-  {# CNSS #}
   <div class="card" style="margin-bottom:1.5rem">
     <div class="card-hd">
       <div class="card-hd-t">Cotisations CNSS — Tunisie 2024</div>
@@ -287,13 +271,13 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
       <div class="cnss-c">
         <div class="cnss-pct">9.18%</div>
         <div class="cnss-who">Part employé</div>
-        <div class="cnss-amt">{{ (masseSalarialeMensuelle * 0.0918)|number_format(0) }}</div>
+        <div class="cnss-amt">{{ (masseSalarialeMensuelle * 0.0918)|tnd }}</div>
         <div class="cnss-lbl">TND / mois retenu</div>
       </div>
       <div class="cnss-c">
         <div class="cnss-pct">16.57%</div>
         <div class="cnss-who">Part employeur</div>
-        <div class="cnss-amt">{{ coutCNSSEmployeur|number_format(0) }}</div>
+        <div class="cnss-amt">{{ coutCNSSEmployeur|tnd }}</div>
         <div class="cnss-lbl">TND / mois à payer</div>
       </div>
     </div>
@@ -302,11 +286,8 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
     </div>
   </div>
 
-  {# CATÉGORIES #}
   <div class="card">
-    <div class="card-hd">
-      <div class="card-hd-t">Budget par catégorie</div>
-    </div>
+    <div class="card-hd"><div class="card-hd-t">Budget par catégorie</div></div>
     {% set catCols={'Récolte':'#c9a84c','Irrigation':'#378add','Fertilisation':'#5dcaa5','Maintenance':'#888780','Plantation':'#97c459','Administratif':'#7f77dd','Autre':'#4a6b52'} %}
     {% set mx=1 %}{% for cat,v in parCategorie %}{% if v.budget>mx %}{% set mx=v.budget %}{% endif %}{% endfor %}
     {% for cat,v in parCategorie %}
@@ -316,15 +297,14 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
       <div class="bar-t">
         <div class="bar-f" style="width:{{ ((v.budget/mx)*100)|round }}%;background:{{ catCols[cat]??'#888' }}"></div>
       </div>
-      <div class="cat-amt">{{ v.budget|number_format(0,'.','\u{202F}') }} TND</div>
+      <div class="cat-amt">{{ v.budget|tnd }} TND</div>
     </div>
     {% endfor %}
   </div>
-
 </div>
 </div>{# /grid #}
 
-{# ─── TÂCHES BUDGET FULL WIDTH ─── #}
+{# ── TÂCHES BUDGET ── #}
 <div class="card" style="margin-bottom:1.5rem;animation-delay:.55s">
   <div class="card-hd">
     <div class="card-hd-t">Analyse budgétaire des tâches</div>
@@ -338,32 +318,34 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
     <div class="tb-hd">
       <div>
         <div class="tb-nm">{{ td.tache.titre }}</div>
-        <div class="tb-sub">{{ td.categorie }} · {{ td.nomEmploye }} · {{ td.nbJours }} j
+        <div class="tb-sub">
+          {{ td.categorie }} · {{ td.nomEmploye }} · {{ td.nbJours }} j
           · <span class="cp {{ td.statut in ['Terminé','Validé'] ? 'cp-cdi' : 'cp-sais' }}" style="font-size:10px">{{ td.statut }}</span>
         </div>
       </div>
       <div class="tb-amts">
         <div style="color:{{ td.enSurbudget ? 'var(--red)' : 'var(--g300)' }};font-weight:500">
-          Réel : {{ td.coutReel|number_format(0,'.','\u{202F}') }} TND
+          Réel : {{ td.coutReel|tnd }} TND
         </div>
         {% if td.budgetPrevu>0 %}
-        <div style="color:var(--text3);font-size:11px">Prévu : {{ td.budgetPrevu|number_format(0,'.','\u{202F}') }} TND</div>
+        <div style="color:var(--text3);font-size:11px">Prévu : {{ td.budgetPrevu|tnd }} TND</div>
         {% endif %}
       </div>
     </div>
     {% if td.budgetPrevu>0 %}
     {% set pct=min(100,(td.coutReel/td.budgetPrevu*100)|round) %}
     <div class="bar-tr">
-      <div class="{{ pct>100?'bar-over':(pct>80?'bar-warn':'bar-ok') }}" style="width:{{ pct }}%;height:100%;border-radius:2px;transition:width 1.2s ease"></div>
+      <div class="{{ pct>100?'bar-over':(pct>80?'bar-warn':'bar-ok') }}"
+           style="width:{{ pct }}%;height:100%;border-radius:2px;transition:width 1.2s ease"></div>
     </div>
     <div class="tb-ecart {{ td.enSurbudget ? 'num-r' : 'num-g' }}">
-      {% if td.enSurbudget %}+{{ td.ecart|number_format(0,'.','\u{202F}') }} TND dépassement ({{ td.pctEcart|abs }}%)
-      {% else %}Économie {{ td.ecart|abs|number_format(0,'.','\u{202F}') }} TND ({{ td.pctEcart|abs }}%){% endif %}
+      {% if td.enSurbudget %}+{{ td.ecart|tnd }} TND dépassement ({{ td.pctEcart|abs }}%)
+      {% else %}Économie {{ td.ecart|abs|tnd }} TND ({{ td.pctEcart|abs }}%){% endif %}
     </div>
     {% endif %}
     <div class="tb-detail">
-      {{ td.salaireJ }} TND/j × {{ td.nbJours }} j = {{ td.coutSalaire|number_format(0) }} TND
-      {% if td.coutMateriel>0 %} · Matériaux {{ td.coutMateriel|number_format(0) }} TND{% endif %}
+      {{ td.salaireJ|tnd(3) }} TND/j × {{ td.nbJours }} j = {{ td.coutSalaire|tnd }} TND
+      {% if td.coutMateriel>0 %} · Matériaux {{ td.coutMateriel|tnd }} TND{% endif %}
     </div>
   </div>
   {% endif %}{% endfor %}
@@ -372,9 +354,11 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
 </div>{# /body #}
 </div>{# /frh #}
 
-{# ─── MODAL BULLETIN ─── #}
+{# ══════════════════════════════════════
+   MODAL BULLETIN DE PAIE — COMPLET
+══════════════════════════════════════ #}
 <div class="modal-bg" id="mBulletin" onclick="closeMod(event)">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="bul-dialog" onclick="event.stopPropagation()">
     <div class="modal-hd">
       <div>
         <div class="modal-t" id="mNom">Bulletin de paie</div>
@@ -382,12 +366,15 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
       </div>
       <button class="modal-x" onclick="closeMod()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="bul-body">
+
+      {# Sélecteur période + actions #}
       <div class="ms">
         <select id="sMois">
           {% for m in 1..12 %}
           <option value="{{ m }}" {{ m == "now"|date('n') ? 'selected' : '' }}>
-            {{ ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][m] }}
+            {{ ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet',
+                'Août','Septembre','Octobre','Novembre','Décembre'][m] }}
           </option>
           {% endfor %}
         </select>
@@ -397,10 +384,18 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
           {% endfor %}
         </select>
         <button class="btn-sm" onclick="loadBulletin()">Calculer</button>
+        {# ✅ Bouton PDF — activé après calcul #}
+        <button class="btn-pdf" id="btnPdf" onclick="exportPdf()" disabled>
+          ↓ PDF
+        </button>
       </div>
-      <div id="mContent" style="min-height:180px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px">
+
+      {# Zone de rendu dynamique #}
+      <div id="mContent"
+           style="min-height:200px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px">
         Sélectionnez le mois puis cliquez sur Calculer
       </div>
+
     </div>
   </div>
 </div>
@@ -409,14 +404,51 @@ body.finance-rh-page{background:var(--page);color:var(--text1);font-family:'Plus
 
 {% block javascripts %}
 <script>
-let curEmp = null;
+/* ══════════════════════════════════════════
+   URLS GÉNÉRÉES PAR SYMFONY (jamais codées en dur)
+══════════════════════════════════════════ */
+const BULLETIN_URL = '{{ path('finance_rh_bulletin', {id: '__ID__'}) }}';
+const BULLETIN_PDF_URL = '{{ path('finance_rh_bulletin_pdf', {id: '__ID__'}) }}';
 
-function ouvrirBulletin(id, nom) {
-  curEmp = id;
+/* ══════════════════════════════════════════
+   ÉTAT GLOBAL
+══════════════════════════════════════════ */
+var curEmp   = null;
+var curMois  = null;
+var curAnn   = null;
+var curPhoto = '';
+var curPoste = '';
+
+/* ══════════════════════════════════════════
+   FORMATAGE — U+202F espace fine, jamais entité HTML
+══════════════════════════════════════════ */
+function fmt(v, dec) {
+  if (v === undefined || v === null) return '—';
+  dec = (dec !== undefined) ? dec : 3;
+  return parseFloat(v || 0)
+    .toFixed(dec)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
+}
+
+/* ══════════════════════════════════════════
+   OUVRIR / FERMER MODAL
+══════════════════════════════════════════ */
+function ouvrirBulletin(id, nom, photo, poste) {
+  curEmp   = id;
+  curPhoto = photo || '';
+  curPoste = poste || '';
+  curMois  = null;
+  curAnn   = null;
+
   document.getElementById('mNom').textContent = nom;
+  document.getElementById('btnPdf').disabled = true;
+  document.getElementById('mContent').style.display = 'flex';
   document.getElementById('mContent').innerHTML =
-    '<span style="color:var(--text3)">Sélectionnez le mois puis cliquez sur Calculer</span>';
+    '<div style="text-align:center;padding:2rem;color:var(--text2)"><span class="spinner"></span> Chargement du bulletin…</div>';
   document.getElementById('mBulletin').classList.add('on');
+
+  /* Auto-charge le bulletin du mois courant */
+  setTimeout(loadBulletin, 100);
 }
 
 function closeMod(e) {
@@ -424,52 +456,202 @@ function closeMod(e) {
     document.getElementById('mBulletin').classList.remove('on');
 }
 
+/* ══════════════════════════════════════════
+   CALCUL BULLETIN (fetch → JSON → rendu HTML)
+══════════════════════════════════════════ */
 function loadBulletin() {
   if (!curEmp) return;
-  const mois  = document.getElementById('sMois').value;
-  const annee = document.getElementById('sAnnee').value;
-  const mc = document.getElementById('mContent');
-  mc.innerHTML = '<span class="spinner"></span> Calcul en cours…';
 
-  fetch(`/finance-rh/bulletin/${curEmp}?mois=${mois}&annee=${annee}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.error) { mc.innerHTML = `<span style="color:var(--red)">${d.error}</span>`; return; }
-      const f = v => parseFloat(v).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
-      mc.innerHTML = `
-        <div style="background:rgba(61,143,86,.08);border:1px solid rgba(93,174,116,.2);border-radius:10px;padding:.75rem 1rem;font-size:12px;margin-bottom:1rem">
-          Période : <strong style="color:var(--g300)">${d.mois} ${d.annee}</strong>
-          · Jours : <strong>${d.nbJoursTravailles}</strong>
-          · <span class="cp ${d.typeContrat==='CDI'?'cp-cdi':'cp-sais'}">${d.typeContrat}</span>
-        </div>
-        <div class="bl-r"><span class="bl-lbl">Salaire journalier</span><span class="bl-v">${f(d.salaireJournalier)} TND</span></div>
-        <div class="bl-r"><span class="bl-lbl">Salaire brut (${d.nbJoursTravailles} j)</span><span class="bl-v">${f(d.salaireBrut)} TND</span></div>
-        <div class="bl-r"><span class="bl-lbl">CNSS employé (${parseFloat(d.tauxCNSSEmp).toFixed(2)}%)</span><span class="bl-v minus">− ${f(d.cnssEmploye)} TND</span></div>
-        <div class="bl-r"><span class="bl-lbl">IRPP (barème mensuel)</span><span class="bl-v minus">− ${f(d.irpp)} TND</span></div>
-        <div class="bl-r tot"><span class="bl-lbl" style="color:var(--g300)">Salaire net à payer</span><span class="bl-v net">${f(d.salaireNet)} TND</span></div>
-        <div style="margin-top:1rem;padding:.85rem 1rem;background:rgba(224,84,84,.08);border-radius:8px;font-size:12px;color:var(--text2)">
-          Charge totale employeur : <strong style="color:var(--text1)">${f(d.coutTotalEmpl)} TND</strong>
-          <span style="color:var(--text3)"> (CNSS employeur ${parseFloat(d.tauxCNSSEmpr).toFixed(2)}% = ${f(d.cnssEmployeur)} TND)</span>
-        </div>`;
+  var mois  = document.getElementById('sMois').value;
+  var annee = document.getElementById('sAnnee').value;
+  var mc    = document.getElementById('mContent');
+
+  curMois = mois;
+  curAnn  = annee;
+
+  document.getElementById('btnPdf').disabled = true;
+  mc.style.display = 'block';
+  mc.innerHTML = '<div style="text-align:center;padding:2.5rem;color:var(--text2)">'
+    + '<span class="spinner"></span> Calcul en cours\u2026</div>';
+
+  var url = BULLETIN_URL.replace('__ID__', curEmp) + '?mois=' + mois + '&annee=' + annee;
+  console.log('[Bulletin] Fetching:', url);
+  fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
     })
-    .catch(() => mc.innerHTML = '<span style="color:var(--red)">Erreur de connexion.</span>');
+    .then(function(d) {
+      if (d.error) {
+        mc.innerHTML = '<div style="color:var(--red);text-align:center;padding:2rem">' + d.error + '</div>';
+        return;
+      }
+
+      /* Activer le bouton PDF */
+      document.getElementById('btnPdf').disabled = false;
+
+      /* Photo / avatar */
+      var empPhoto = (d.employe && d.employe.photo)
+        ? '<img src="' + d.employe.photo + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(93,174,116,.4)">'
+        : '<div style="width:44px;height:44px;border-radius:50%;background:rgba(61,143,86,.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--g300)">'
+          + (d.employe ? (d.employe.prenom[0] || '') + (d.employe.nom[0] || '') : '??') + '</div>';
+
+      var contratStyle = (d.typeContrat === 'CDI')
+        ? 'background:rgba(61,143,86,.18);color:#6ec285'
+        : 'background:rgba(186,117,23,.18);color:#ef9f27';
+
+      /* Rendu complet */
+      mc.innerHTML =
+
+        /* ── En-tête employé + période ── */
+        '<div style="display:flex;align-items:center;gap:12px;background:rgba(61,143,86,.08);border:1px solid rgba(93,174,116,.2);border-radius:12px;padding:12px 14px;margin-bottom:1.1rem">'
+          + empPhoto
+          + '<div style="flex:1">'
+            + '<div style="font-weight:600;font-size:14px;color:#f4faf5">' + (d.employe ? d.employe.prenom + '\u00a0' + d.employe.nom : '') + '</div>'
+            + '<div style="font-size:11px;color:#5e8268">' + (d.employe ? d.employe.poste || '' : '') + '</div>'
+          + '</div>'
+          + '<div style="text-align:right">'
+            + '<div style="font-size:13px;font-weight:500;color:#6ec285">' + d.mois + '\u00a0' + d.annee + '</div>'
+            + '<div style="font-size:11px;color:#5e8268">' + d.nbJoursTravailles + '\u00a0jours ouvrables</div>'
+            + '<span style="font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;' + contratStyle + '">' + d.typeContrat + '</span>'
+          + '</div>'
+        + '</div>'
+
+        /* ── Ligne salaire journalier ── */
+        + '<div class="bl-r">'
+          + '<span class="bl-lbl">Salaire journalier</span>'
+          + '<span class="bl-v">' + fmt(d.salaireJournalier, 3) + '\u202fTND/j</span>'
+        + '</div>'
+
+        /* ── Salaire brut ── */
+        + '<div class="bl-r" style="background:rgba(93,174,116,.04);border-radius:6px;padding:.6rem .5rem">'
+          + '<span class="bl-lbl" style="font-weight:500">Salaire brut\u00a0(' + d.nbJoursTravailles + '\u00a0j)</span>'
+          + '<span class="bl-v" style="font-size:15px">' + fmt(d.salaireBrut) + '\u202fTND</span>'
+        + '</div>'
+
+        /* ── CNSS employé ── */
+        + '<div class="bl-r">'
+          + '<span class="bl-lbl">CNSS employ\u00e9\u00a0(' + parseFloat(d.tauxCNSSEmp).toFixed(2) + '\u202f%)</span>'
+          + '<span class="bl-v minus">\u2212\u202f' + fmt(d.cnssEmploye) + '\u202fTND</span>'
+        + '</div>'
+
+        /* ── IRPP ── */
+        + '<div class="bl-r">'
+          + '<span class="bl-lbl">IRPP bar\u00e8me mensuel 2024</span>'
+          + '<span class="bl-v minus">\u2212\u202f' + fmt(d.irpp) + '\u202fTND</span>'
+        + '</div>'
+
+        /* ── Séparateur ── */
+        + '<div style="height:1px;background:rgba(93,174,116,.25);margin:.6rem 0"></div>'
+
+        /* ── NET À PAYER ── */
+        + '<div style="display:flex;justify-content:space-between;align-items:center;'
+          + 'background:rgba(33,77,46,.25);border-radius:10px;padding:.85rem 1rem;margin-bottom:.75rem">'
+          + '<span style="font-size:14px;font-weight:600;color:#6ec285">Salaire NET \u00e0 payer</span>'
+          + '<span style="font-size:22px;font-weight:700;color:#6ec285">' + fmt(d.salaireNet) + '\u202fTND</span>'
+        + '</div>'
+
+        /* ── Charge employeur ── */
+        + '<div style="padding:.85rem 1rem;background:rgba(224,84,84,.07);border:1px solid rgba(224,84,84,.15);border-radius:10px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+            + '<span style="font-size:13px;color:#a3c9af">Charge totale employeur</span>'
+            + '<strong style="font-size:15px;color:#f4faf5">' + fmt(d.coutTotalEmpl) + '\u202fTND</strong>'
+          + '</div>'
+          + '<div style="font-size:11px;color:#5e8268">'
+            + 'CNSS patronale\u00a0' + parseFloat(d.tauxCNSSEmpr).toFixed(2) + '\u202f%\u00a0'
+            + '= ' + fmt(d.cnssEmployeur) + '\u202fTND'
+          + '</div>'
+        + '</div>';
+
+    })
+  .catch(function(err) {
+    mc.innerHTML = '<div style="color:var(--red);text-align:center;padding:2rem">'
+      + '❌ Erreur de chargement du bulletin.<br>'
+      + '<small style="color:#5e8268">' + err.message + '</small><br>'
+      + '<small style="color:#5e8268">Vérifiez que vous êtes connecté et rechargez la page.</small></div>';
+    console.error('[Bulletin] Fetch error:', err);
+    document.getElementById('btnPdf').disabled = true;
+  });
 }
 
+/* ══════════════════════════════════════════
+   EXPORT PDF — ouvre dans un nouvel onglet
+══════════════════════════════════════════ */
+function exportPdf() {
+  if (!curEmp || !curMois || !curAnn) {
+    alert('Calculez d\'abord le bulletin avant d\'exporter en PDF.');
+    return;
+  }
+  var url = BULLETIN_PDF_URL.replace('__ID__', curEmp) + '?mois=' + curMois + '&annee=' + curAnn;
+  console.log('[PDF] Opening:', url);
+  window.open(url, '_blank');
+}
+
+/* ══════════════════════════════════════════
+   MISE À JOUR SALAIRE INLINE
+   → POST /finance-rh/salaire/{id}
+   → Met à jour les cellules sans rechargement
+   → Flash vert puis reload pour recalculer KPIs
+══════════════════════════════════════════ */
 function updateSalaire(idEmp, val, input) {
-  // Envoie le nouveau salaire au serveur
-  fetch(`/finance-rh/salaire/${idEmp}`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ salaire: parseFloat(val) })
-  }).then(r => r.json()).then(d => {
-    if (d.success) {
-      input.style.borderBottomColor = 'var(--g300)';
-      setTimeout(() => input.style.borderBottomColor = '', 1500);
-      location.reload(); // Recalcule les totaux
+  var salaire = parseFloat(val);
+  if (isNaN(salaire) || salaire <= 0 || salaire > 5000) {
+    input.style.borderBottomColor = 'var(--red)';
+    input.value = input.dataset.previous || input.value;
+    return;
+  }
+
+  input.dataset.previous = val;
+  input.style.borderBottomColor = 'rgba(201,168,76,.6)';
+
+  fetch('/finance-rh/salaire/' + idEmp, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ salaire: salaire })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(d) {
+    if (!d.success) {
+      input.style.borderBottomColor = 'var(--red)';
+      alert(d.error || 'Erreur lors de la mise à jour.');
+      return;
     }
-  }).catch(() => {});
+
+    /* Mise à jour visuelle immédiate des cellules de la ligne */
+    var row   = input.closest('tr');
+    var cBrut = row.querySelector('.cell-brut');
+    var cNet  = row.querySelector('.cell-net');
+    var cCout = row.querySelector('.cell-cout');
+
+    if (cBrut) cBrut.textContent = fmt(d.salaireBrut,  0);
+    if (cNet)  cNet.textContent  = fmt(d.salaireNet,   0);
+    if (cCout) cCout.textContent = fmt(d.coutTotal,    0);
+
+    /* Flash vert */
+    input.style.borderBottomColor = 'var(--g300)';
+    row.style.transition = 'background .3s';
+    row.style.background = 'rgba(93,174,116,.1)';
+
+    setTimeout(function() {
+      row.style.background = '';
+      input.style.borderBottomColor = '';
+      /* Rechargement pour recalculer les KPIs du header */
+      location.reload();
+    }, 1400);
+  })
+  .catch(function(err) {
+    input.style.borderBottomColor = 'var(--red)';
+    console.error('updateSalaire error:', err);
+  });
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeMod(); });
+/* Fermeture par Échap */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeMod();
+});
 </script>
 {% endblock %}
+ 

@@ -18,15 +18,15 @@ class Wishlist
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     private ?Produits $produit = null;
 
     #[ORM\Column(name: 'dateAjout', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private ?\DateTimeInterface $dateAjout = null;
+    private \DateTimeInterface $dateAjout;
 
     public function __construct()
     {
@@ -60,7 +60,7 @@ class Wishlist
         return $this;
     }
 
-    public function getDateAjout(): ?\DateTimeInterface
+    public function getDateAjout(): \DateTimeInterface
     {
         return $this->dateAjout;
     }

@@ -4,7 +4,6 @@ namespace App\Service\Evenement;
 
 use App\Entity\Evenement\Participation;
 use App\Repository\Evenement\ParticipationRepository;
-use App\Repository\Evenement\EvenementRepository;
 
 /**
  * Detects inactive / at-risk participants and computes risk scores.
@@ -13,8 +12,7 @@ use App\Repository\Evenement\EvenementRepository;
 class InactiveParticipantDetectionService
 {
     public function __construct(
-        private ParticipationRepository $participationRepo,
-        private EvenementRepository     $evenementRepo
+        private ParticipationRepository $participationRepo
     ) {}
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -25,10 +23,11 @@ class InactiveParticipantDetectionService
      * Analyse every participant and return risk profiles sorted by score desc.
      *
      * @param \App\Entity\UserAndDiag\User|null $creator Filter by event creator (for Agriculteurs)
-     * @return array[]  Each element is a risk-profile array (see buildProfile()).
+     * @return list<array<string, mixed>> Each element is a risk-profile array.
      */
     public function detecterParticipantsInactifs(?\App\Entity\UserAndDiag\User $creator = null): array
     {
+        /** @var list<Participation> $all */
         $all = $creator
             ? $this->participationRepo->findForCreator($creator)
             : $this->participationRepo->findAll();
@@ -55,6 +54,9 @@ class InactiveParticipantDetectionService
 
     /**
      * Returns global inactivity statistics over the given profiles.
+     *
+     * @param list<array<string, mixed>> $profiles
+     * @return array<string, float|int>
      */
     public function genererStatistiques(array $profiles): array
     {
@@ -76,6 +78,7 @@ class InactiveParticipantDetectionService
 
     /**
      * @param Participation[] $participations
+     * @return array<string, mixed>
      */
     private function analyserUtilisateur(int $userId, array $participations): array
     {

@@ -30,46 +30,54 @@ class StatsController extends AbstractController
             'total_parcelles' => $this->parcelleRepository->createQueryBuilder('p')
                 ->select('COUNT(p.id)')
                 ->getQuery()
+                ->enableResultCache(3600)
                 ->getSingleScalarResult(),
             'total_cultures' => $this->cultureRepository->createQueryBuilder('c')
                 ->select('COUNT(c.id)')
                 ->getQuery()
+                ->enableResultCache(3600)
                 ->getSingleScalarResult(),
             'surface_totale' => $this->parcelleRepository->createQueryBuilder('p')
                 ->select('SUM(p.surface)')
                 ->getQuery()
+                ->enableResultCache(3600)
                 ->getSingleScalarResult(),
             'production_estimee' => $this->cultureRepository->createQueryBuilder('c')
                 ->select('SUM(c.production_estimee)')
                 ->getQuery()
+                ->enableResultCache(3600)
                 ->getSingleScalarResult(),
         ];
 
         // Chart 1: Distribution des types de culture (donut)
         $typesRaw = $this->cultureRepository->createQueryBuilder('c')
-            ->select('c.type_culture as type, COUNT(c.id) as count')
+            ->select('new App\DTO\Parcelles_Cultures\ChartStatDTO(c.type_culture, COUNT(c.id))')
             ->groupBy('c.type_culture')
-            ->orderBy('count', 'DESC')
             ->getQuery()
+            ->enableResultCache(3600)
             ->getResult();
+
+        usort($typesRaw, fn($a, $b) => $b->count <=> $a->count);
 
         // Chart 2: Production totale + rendement moyen par type (bar)
         $productionRaw = $this->cultureRepository->createQueryBuilder('c')
-            ->select('c.type_culture as type, SUM(c.production_estimee) as total, AVG(c.rendement_estime) as avgRendement')
+            ->select('new App\DTO\Parcelles_Cultures\ChartStatDTO(c.type_culture, 0, SUM(c.production_estimee), AVG(c.rendement_estime))')
             ->groupBy('c.type_culture')
-            ->orderBy('total', 'DESC')
             ->getQuery()
+            ->enableResultCache(3600)
             ->getResult();
 
+        usort($productionRaw, fn($a, $b) => $b->total <=> $a->total);
+
         $chartTypes = [
-            'labels' => array_map(fn($r) => ucfirst($r['type']), $typesRaw),
-            'counts' => array_map(fn($r) => (int)$r['count'], $typesRaw),
+            'labels' => array_map(fn($r) => ucfirst($r->type ?? 'Inconnu'), $typesRaw),
+            'counts' => array_map(fn($r) => (int)$r->count, $typesRaw),
         ];
 
         $chartProduction = [
-            'labels'     => array_map(fn($r) => ucfirst($r['type']), $productionRaw),
-            'production' => array_map(fn($r) => round((float)$r['total'], 0), $productionRaw),
-            'rendement'  => array_map(fn($r) => round((float)$r['avgRendement'], 1), $productionRaw),
+            'labels'     => array_map(fn($r) => ucfirst($r->type ?? 'Inconnu'), $productionRaw),
+            'production' => array_map(fn($r) => round((float)$r->total, 0), $productionRaw),
+            'rendement'  => array_map(fn($r) => round((float)$r->avgRendement, 1), $productionRaw),
         ];
 
         return $this->render('parcelles_cultures/admin/stats/index.html.twig', [

@@ -30,7 +30,7 @@ class AdminReclamationController extends AbstractController
             'rejetee'    => 0,
         ];
         foreach ($reclamations as $rec) {
-            $s = strtolower($rec->getStatut());
+            $s = strtolower((string) $rec->getStatut());
             if (isset($stats[$s])) {
                 $stats[$s]++;
             }

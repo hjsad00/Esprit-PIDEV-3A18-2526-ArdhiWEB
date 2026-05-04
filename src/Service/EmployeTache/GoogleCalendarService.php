@@ -69,8 +69,9 @@ class GoogleCalendarService
             $client->setAuthConfig($this->credentialsPath);
 
             // Lire l'email du Service Account depuis credentials.json
-            $creds = json_decode(file_get_contents($this->credentialsPath), true);
-            $this->accountEmail = $creds['client_email'] ?? '';
+            $credsContent = file_get_contents($this->credentialsPath);
+            $creds = $credsContent !== false ? json_decode($credsContent, true) : [];
+            $this->accountEmail = is_array($creds) ? ($creds['client_email'] ?? '') : '';
 
             $this->calendarService = new Calendar($client);
             $this->connected       = true;
@@ -107,9 +108,9 @@ class GoogleCalendarService
      */
     public function creerEvenement(Tache $tache): ?string
     {
-        if (!$this->isConnected()) return null;
+        if (!$this->isConnected() || $this->calendarService === null) return null;
         try {
-            $event   = $this->tacheVersEvent($tache);
+            $event = $this->tacheVersEvent($tache);
             $created = $this->calendarService->events->insert($this->calendarId, $event);
 
             error_log('[GCal] ✅ Créé dans "' . $this->calendarId . '" : '
@@ -136,7 +137,7 @@ class GoogleCalendarService
      */
     public function mettreAJourEvenement(string $googleEventId, Tache $tache): bool
     {
-        if (!$this->isConnected() || !$googleEventId) return false;
+        if (!$this->isConnected() || $this->calendarService === null || !$googleEventId) return false;
         try {
             $event = $this->tacheVersEvent($tache);
             $this->calendarService->events->update($this->calendarId, $googleEventId, $event);
@@ -154,7 +155,7 @@ class GoogleCalendarService
      */
     public function supprimerEvenement(string $googleEventId): bool
     {
-        if (!$this->isConnected() || !$googleEventId) return false;
+        if (!$this->isConnected() || $this->calendarService === null || !$googleEventId) return false;
         try {
             $this->calendarService->events->delete($this->calendarId, $googleEventId);
             error_log('[GCal] ✅ Supprimé : ' . $googleEventId);
@@ -168,18 +169,21 @@ class GoogleCalendarService
 
     /**
      * Récupère les événements d'une période — identique à getEvenements() Java
+     *
+     * @return array<int, mixed>
      */
     public function getEvenements(\DateTimeInterface $debut, \DateTimeInterface $fin): array
     {
-        if (!$this->isConnected()) return [];
+        if (!$this->isConnected() || $this->calendarService === null) return [];
         try {
+            $finDt = \DateTime::createFromInterface($fin);
             $events = $this->calendarService->events->listEvents($this->calendarId, [
                 'timeMin'      => $debut->format(\DateTime::RFC3339),
-                'timeMax'      => (clone $fin)->modify('+1 day')->format(\DateTime::RFC3339),
+                'timeMax'      => $finDt->modify('+1 day')->format(\DateTime::RFC3339),
                 'orderBy'      => 'startTime',
                 'singleEvents' => true,
             ]);
-            $items = $events->getItems() ?? [];
+            $items = $events->getItems();
             error_log('[GCal] ' . count($items) . ' événement(s) dans "' . $this->calendarId . '"');
             return $items;
         } catch (\Exception $e) {
@@ -194,7 +198,7 @@ class GoogleCalendarService
      */
     public function getNomCalendrier(): ?string
     {
-        if (!$this->isConnected()) return null;
+        if (!$this->isConnected() || $this->calendarService === null) return null;
         try {
             return $this->calendarService->calendars->get($this->calendarId)->getSummary();
         } catch (\Exception $e) {
@@ -220,7 +224,7 @@ class GoogleCalendarService
             $desc .= $tache->getDescription() . "\n\n";
         }
         $desc .= "─── Ardhi ───\n";
-        $desc .= 'Statut    : ' . ($tache->getStatut() ?? '—') . "\n";
+        $desc .= 'Statut    : ' . $tache->getStatut() . "\n";
         $desc .= 'Priorité  : ' . $this->labelPrio($tache->getPriorite()) . "\n";
         $desc .= 'Catégorie : ' . ($tache->getCategorie() ?? '—') . "\n";
         if ($tache->getIdEmploye()) {

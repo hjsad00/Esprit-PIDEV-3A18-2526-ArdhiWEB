@@ -5,8 +5,8 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 use App\Service\Parcelles_Cultures\FinancialService;
 use App\Service\PythonRoiService;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
-use App\Repository\Parcelles_Cultures\RoiAnalyseRepository;
-use App\Entity\Parcelles_Cultures\RoiAnalyse;
+use App\Entity\Parcelles_Cultures\Parcelle;
+use App\Entity\UserAndDiag\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,7 +22,6 @@ class RoiController extends AbstractController
         private FinancialService $financialService,
         private PythonRoiService $pythonRoiService,
         private ParcelleRepository $parcelleRepository,
-        private RoiAnalyseRepository $roiAnalyseRepository,
         private EntityManagerInterface $entityManager
     ) {
     }
@@ -37,6 +36,7 @@ class RoiController extends AbstractController
     public function calculator(\Symfony\Component\HttpFoundation\Request $request): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
 
         $dto = new \App\DTO\Parcelles_Cultures\RoiDTO();
@@ -125,9 +125,9 @@ class RoiController extends AbstractController
             $dto->cout_autres = isset($data['autres_couts']) ? (float)$data['autres_couts'] : null;
             $dto->duree_pret = isset($data['duree_pret']) ? (int)$data['duree_pret'] : 5;
 
-            // 📍 Rechercher l'entité parcelle pour la validation
+            // 📍 Utiliser getReference() au lieu de find() car on n'a besoin que de la référence pour la validation
             if (isset($data['parcelle_id'])) {
-                $dto->parcelle = $this->parcelleRepository->find($data['parcelle_id']);
+                $dto->parcelle = $this->entityManager->getReference(Parcelle::class, (int) $data['parcelle_id']);
             }
 
             $errors = $validator->validate($dto);

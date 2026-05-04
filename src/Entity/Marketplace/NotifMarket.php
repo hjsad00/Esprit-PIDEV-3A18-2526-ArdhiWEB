@@ -24,13 +24,13 @@ class NotifMarket
     private ?User $user = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $type = null;
+    private string $type;
 
     #[ORM\Column(length: 255)]
-    private ?string $titre = null;
+    private string $titre;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $message = null;
+    private string $message;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
     #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: true, onDelete: 'SET NULL')]
@@ -44,7 +44,7 @@ class NotifMarket
     private bool $lue = false;
 
     #[ORM\Column(name: 'date_creation', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private ?\DateTimeInterface $dateCreation = null;
+    private \DateTimeInterface $dateCreation;
 
     public function __construct()
     {
@@ -67,7 +67,7 @@ class NotifMarket
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -78,7 +78,7 @@ class NotifMarket
         return $this;
     }
 
-    public function getTitre(): ?string
+    public function getTitre(): string
     {
         return $this->titre;
     }
@@ -89,7 +89,7 @@ class NotifMarket
         return $this;
     }
 
-    public function getMessage(): ?string
+    public function getMessage(): string
     {
         return $this->message;
     }
@@ -133,7 +133,7 @@ class NotifMarket
         return $this;
     }
 
-    public function getDateCreation(): ?\DateTimeInterface
+    public function getDateCreation(): \DateTimeInterface
     {
         return $this->dateCreation;
     }

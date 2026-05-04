@@ -32,14 +32,20 @@ class ParticipationPredictionService
      *   'facteurs'            => ['type','saison','lieu','historique' => float],
      *   'recommandations'     => ['materiel','restauration','espace','staff' => string],
      * ]
+     *
+     * @return array<string, mixed>
      */
     public function predireParticipation(Evenement $evenement): array
     {
-        $historiqueStats = $this->analyserHistorique($evenement->getType());
+        $type = $evenement->getType() ?? '';
+        $lieu = $evenement->getLieu() ?? '';
+        $nombrePlacesMax = $evenement->getNombrePlacesMax() ?? 10;
 
-        $scoreType       = $this->getScoreType($evenement->getType());
+        $historiqueStats = $this->analyserHistorique($type);
+
+        $scoreType       = $this->getScoreType($type);
         $scoreSaison     = $this->getScoreSaison($evenement->getDateDebut());
-        $scoreLieu       = $this->getScoreLieu($evenement->getLieu());
+        $scoreLieu       = $this->getScoreLieu($lieu);
         $scoreHistorique = $historiqueStats['moyenne'];
 
         $prediction = ($scoreType       * self::POIDS_TYPE)
@@ -51,7 +57,7 @@ class ParticipationPredictionService
         $prediction = $this->ajusterAvecTendances($prediction, $evenement);
 
         $participantsPredits = (int) round($prediction);
-        $participantsPredits = max(10, min($participantsPredits, $evenement->getNombrePlacesMax()));
+        $participantsPredits = max(10, min($participantsPredits, $nombrePlacesMax));
 
         $confiance = $this->calculerConfiance($historiqueStats);
 
@@ -71,6 +77,9 @@ class ParticipationPredictionService
 
     // ── Scoring helpers ──────────────────────────────────────────────────────
 
+    /**
+     * @return array{moyenne: float, max: float, min: float}
+     */
     private function analyserHistorique(string $type): array
     {
         $termines = array_filter(
@@ -134,7 +143,7 @@ class ParticipationPredictionService
 
     private function ajusterSelonContenu(float $prediction, Evenement $evenement): float
     {
-        $titre       = strtolower($evenement->getTitre());
+        $titre       = strtolower($evenement->getTitre() ?? '');
         $description = strtolower($evenement->getDescription() ?? '');
 
         if (strlen($titre) < 10 || preg_match('/[a-z]{20,}/', $titre)) {
@@ -173,6 +182,9 @@ class ParticipationPredictionService
         return $prediction;
     }
 
+    /**
+     * @param array{moyenne: float, max: float, min: float} $stats
+     */
     private function calculerConfiance(array $stats): float
     {
         $ecart = $stats['max'] - $stats['min'];
@@ -190,6 +202,9 @@ class ParticipationPredictionService
         return 'Faible';
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function genererRecommandations(int $n, Evenement $evenement): array
     {
         $reco = [

@@ -24,14 +24,23 @@ class CultureAdminController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        $rawQ = $request->query->get('q');
+        $rawType = $request->query->get('typeCulture');
+        $rawSaison = $request->query->get('saison');
+
         $query = $this->cultureRepository->searchAndFilter(
             null, // No user for admin
-            $request->query->get('q'),
-            $request->query->get('typeCulture'),
-            $request->query->get('saison')
+            is_scalar($rawQ) ? (string) $rawQ : null,
+            is_scalar($rawType) ? (string) $rawType : null,
+            is_scalar($rawSaison) ? (string) $rawSaison : null
         );
 
-        $cultures = $this->paginator->paginate($query, $request->query->getInt('page', 1), 10);
+        $cultures = $this->paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            10,
+            ['distinct' => false]
+        );
 
         return $this->render('parcelles_cultures/admin/cultures/index.html.twig', [
             'cultures' => $cultures,

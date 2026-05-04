@@ -20,12 +20,12 @@ class PanierProduit
      */
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Panier::class, inversedBy: 'panierProduits')]
-    #[ORM\JoinColumn(name: 'idPanier', referencedColumnName: 'idPanier', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_panier', referencedColumnName: 'idPanier', nullable: false, onDelete: 'CASCADE')]
     private ?Panier $panier = null;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     private ?Produits $produit = null;
 
     #[ORM\Column(options: ['default' => 1])]
@@ -74,6 +74,11 @@ class PanierProduit
      */
     public function getSousTotal(): float
     {
-        return round($this->produit->getPrixFinal() * $this->quantite, 2);
+        $produit = $this->produit;
+        if ($produit === null) {
+            return 0.0;
+        }
+
+        return round($produit->getPrixFinal() * $this->quantite, 2);
     }
 }

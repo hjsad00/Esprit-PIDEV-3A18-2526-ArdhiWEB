@@ -30,7 +30,7 @@ class AdminAgriculteurController extends AbstractController
         TacheRepository  $tacheRepo,
         Request          $request
     ): Response {
-        $search = $request->query->get('search', '');
+        $search = (string) $request->query->get('search', '');
 
         // Récupère tous les utilisateurs AGRICULTEUR
         $agriculteurs = $userRepo->findByRole('AGRICULTEUR', $search);
@@ -40,8 +40,8 @@ class AdminAgriculteurController extends AbstractController
         foreach ($agriculteurs as $agri) {
             $data[] = [
                 'user'       => $agri,
-                'nbEmployes' => $empRepo->countByAgriculteur($agri->getId()),
-                'nbTaches'   => count($tacheRepo->findByAgriculteur($agri->getId())),
+                'nbEmployes' => $empRepo->countByAgriculteur((int) $agri->getId()),
+                'nbTaches'   => count($tacheRepo->findByAgriculteur((int) $agri->getId())),
             ];
         }
 

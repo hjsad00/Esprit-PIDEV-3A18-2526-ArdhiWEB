@@ -128,9 +128,9 @@ PROMPT;
             $normalizedIntent = $this->normalizeIntent($decoded);
 
             // Fallback heuristique si intention = hors_sujet
-            if (($normalizedIntent['intention'] ?? 'hors_sujet') === 'hors_sujet') {
+            if ($normalizedIntent['intention'] === 'hors_sujet') {
                 $heuristic = $this->buildHeuristicIntent($messageUtilisateur);
-                if (($heuristic['intention'] ?? 'hors_sujet') !== 'hors_sujet') {
+                if ($heuristic['intention'] !== 'hors_sujet') {
                     return $heuristic;
                 }
             }
@@ -139,8 +139,8 @@ PROMPT;
             // on complete avec l'extraction heuristique du message original.
             $intentionsNeedingProducts = ['achat', 'supprimer_produit', 'disponibilite'];
             if (
-                in_array($normalizedIntent['intention'] ?? '', $intentionsNeedingProducts, true)
-                && ($normalizedIntent['produits'] ?? []) === []
+                in_array($normalizedIntent['intention'], $intentionsNeedingProducts, true)
+                && $normalizedIntent['produits'] === []
             ) {
                 $normalizedIntent['produits'] = $this->extractProduitFromMessage($messageUtilisateur);
             }
@@ -423,7 +423,7 @@ PROMPT;
 
         $quantite = 1;
         if (preg_match('/\b(\d+)\b/', $normalized, $matches) === 1) {
-            $quantite = max(1, (int) ($matches[1] ?? 1));
+            $quantite = max(1, (int) $matches[1]);
         }
 
         $clean = preg_replace('/\b\d+\b/', ' ', $normalized) ?? $normalized;
@@ -495,16 +495,16 @@ PROMPT;
         $prixMax = null;
 
         if (preg_match('/\bentre\s+(\d+(?:[.,]\d+)?)\s+et\s+(\d+(?:[.,]\d+)?)/', $normalizedText, $match) === 1) {
-            $prixMin = (float) str_replace(',', '.', (string) ($match[1] ?? ''));
-            $prixMax = (float) str_replace(',', '.', (string) ($match[2] ?? ''));
+            $prixMin = (float) str_replace(',', '.', (string) $match[1]);
+            $prixMax = (float) str_replace(',', '.', (string) $match[2]);
         }
 
         if ($prixMax === null && preg_match('/\bmoins de\s+(\d+(?:[.,]\d+)?)/', $normalizedText, $match) === 1) {
-            $prixMax = (float) str_replace(',', '.', (string) ($match[1] ?? ''));
+            $prixMax = (float) str_replace(',', '.', (string) $match[1]);
         }
 
         if ($prixMin === null && preg_match('/\bplus de\s+(\d+(?:[.,]\d+)?)/', $normalizedText, $match) === 1) {
-            $prixMin = (float) str_replace(',', '.', (string) ($match[1] ?? ''));
+            $prixMin = (float) str_replace(',', '.', (string) $match[1]);
         }
 
         if ($prixMin !== null && $prixMax !== null && $prixMax < $prixMin) {
@@ -522,7 +522,7 @@ PROMPT;
             return null;
         }
 
-        $candidate = trim((string) ($match[2] ?? ''));
+        $candidate = trim((string) $match[2]);
         $candidate = preg_replace('/\b(des|de|du|les|le|la|produit|produits|categorie)\b/', ' ', $candidate) ?? $candidate;
         $candidate = preg_replace('/\s+/', ' ', $candidate) ?? $candidate;
         $candidate = trim($candidate);

@@ -4,6 +4,7 @@ namespace App\Controller\Parcelles_Cultures\Farmer;
 
 use App\Entity\Parcelles_Cultures\Parcelle;
 use App\Entity\Parcelles_Cultures\Culture;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Parcelles_Cultures\ParcelleRepository;
 use App\Repository\Parcelles_Cultures\CultureRepository;
 use App\Service\ExternalAPI\GeminiService;
@@ -40,6 +41,7 @@ class RecommendationController extends AbstractController
     public function recommendCultures(): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
 
         return $this->render('parcelles_cultures/farmer/recommendations/cultures.html.twig', [
@@ -136,6 +138,7 @@ class RecommendationController extends AbstractController
     public function irrigationPlanner(): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $parcelles = $this->parcelleRepository->findByAgriculteur($user);
 
         return $this->render('parcelles_cultures/farmer/recommendations/irrigation.html.twig', [
@@ -191,6 +194,7 @@ class RecommendationController extends AbstractController
     public function roiCalculator(): Response
     {
         $user = $this->getUser();
+        assert($user instanceof User);
         $cultures = $this->cultureRepository->findByAgriculteur($user);
 
         return $this->render('parcelles_cultures/farmer/recommendations/roi.html.twig', [

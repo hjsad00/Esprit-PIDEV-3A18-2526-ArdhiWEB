@@ -27,7 +27,7 @@ class Maintenance
     )]
     private ?string $description = null;
 
-    #[ORM\Column(name: 'date_maintenance', type: 'datetime')]
+    #[ORM\Column(name: 'date_maintenance', type: 'datetime', nullable: true)]
     #[Assert\NotBlank(message: 'La date et l\'heure de maintenance sont obligatoires.')]
     #[Assert\GreaterThanOrEqual('today', message: "Tu ne peux pas mettre une date de maintenance au passé.")]
     #[Assert\Expression(

@@ -51,7 +51,7 @@ class AlerteTechnicienController extends AbstractController
     {
         // Sécurité : Si l'utilisateur n'est pas ADMIN, il doit être le propriétaire du matériel
         if (!$this->isGranted('ROLE_ADMIN')) {
-             if ($materiel->getUserId() !== $this->getUser()->getId()) {
+             if ($materiel->getUser()?->getId() !== $this->getUser()->getId()) {
                  throw $this->createAccessDeniedException("Vous n'êtes pas le propriétaire de ce matériel.");
              }
         }

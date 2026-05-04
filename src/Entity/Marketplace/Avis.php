@@ -21,12 +21,12 @@ class Avis
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: 'L\'utilisateur est obligatoire.')]
     private ?User $user = null;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: 'Le produit est obligatoire.')]
     private ?Produits $produit = null;
 
@@ -37,13 +37,13 @@ class Avis
         max: 5,
         notInRangeMessage: 'La note doit être comprise entre {{ min }} et {{ max }}.'
     )]
-    private ?int $note = null;
+    private int $note;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $commentaire = null;
 
     #[ORM\Column(name: 'dateAvis', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private ?\DateTimeInterface $dateAvis = null;
+    private \DateTimeInterface $dateAvis;
 
     #[ORM\Column(name: 'isVerifiedBuyer', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $isVerifiedBuyer = false;
@@ -82,7 +82,7 @@ class Avis
         return $this;
     }
 
-    public function getNote(): ?int
+    public function getNote(): int
     {
         return $this->note;
     }
@@ -104,7 +104,7 @@ class Avis
         return $this;
     }
 
-    public function getDateAvis(): ?\DateTimeInterface
+    public function getDateAvis(): \DateTimeInterface
     {
         return $this->dateAvis;
     }

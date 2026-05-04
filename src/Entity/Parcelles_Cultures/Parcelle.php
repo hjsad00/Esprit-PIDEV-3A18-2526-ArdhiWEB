@@ -21,19 +21,19 @@ class Parcelle
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'La surface est obligatoire')]
     #[Assert\GreaterThan(value: 0, message: 'La surface doit être supérieure à 0')]
-    private ?string $surface = null;
+    private string $surface;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'La localisation est obligatoire')]
-    private ?string $localisation = null;
+    private string $localisation;
 
     #[ORM\Column(type: 'string', length: 100)]
     #[Assert\NotBlank(message: 'Le type de sol est obligatoire')]
-    private ?string $type_sol = null;
+    private string $type_sol;
 
     #[ORM\Column(type: 'string', length: 100)]
     #[Assert\NotBlank(message: 'Le système d\'irrigation est obligatoire')]
-    private ?string $systeme_irrigation = null;
+    private string $systeme_irrigation;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'active'])]
     private string $statut = 'active';
@@ -45,10 +45,10 @@ class Parcelle
     private ?string $longitude = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $created_at = null;
+    private \DateTimeImmutable $created_at;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $updated_at = null;
+    private \DateTimeImmutable $updated_at;
 
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $polygon_geojson = null;
@@ -89,7 +89,7 @@ class Parcelle
         return $this->id;
     }
 
-    public function getSurface(): ?string
+    public function getSurface(): string
     {
         return $this->surface;
     }
@@ -100,7 +100,7 @@ class Parcelle
         return $this;
     }
 
-    public function getLocalisation(): ?string
+    public function getLocalisation(): string
     {
         return $this->localisation;
     }
@@ -111,7 +111,7 @@ class Parcelle
         return $this;
     }
 
-    public function getTypeSol(): ?string
+    public function getTypeSol(): string
     {
         return $this->type_sol;
     }
@@ -122,7 +122,7 @@ class Parcelle
         return $this;
     }
 
-    public function getSystemeIrrigation(): ?string
+    public function getSystemeIrrigation(): string
     {
         return $this->systeme_irrigation;
     }
@@ -166,7 +166,7 @@ class Parcelle
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->created_at;
     }
@@ -177,12 +177,12 @@ class Parcelle
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
+    public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updated_at;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
+    public function setUpdatedAt(\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
         return $this;
@@ -280,11 +280,17 @@ class Parcelle
         return $this;
     }
 
+    /**
+     * @return array<string,mixed>|null
+     */
     public function getPolygonGeojson(): ?array
     {
         return $this->polygon_geojson;
     }
 
+    /**
+     * @param array<string,mixed>|null $polygon_geojson
+     */
     public function setPolygonGeojson(?array $polygon_geojson): static
     {
         $this->polygon_geojson = $polygon_geojson;

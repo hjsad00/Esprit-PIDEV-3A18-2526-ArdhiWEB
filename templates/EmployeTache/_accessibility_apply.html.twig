@@ -1,0 +1,171 @@
+{#
+  templates/EmployeTache/_accessibility_apply.html.twig
+  ═══════════════════════════════════════════════════════
+  Module léger d'application des préférences d'accessibilité.
+  Inclure sur les pages liste (employe/index, tache/index).
+  Lit les préférences depuis localStorage et applique les
+  classes CSS sur <body> + crée le filtre bleu si besoin.
+  N'affiche PAS le panneau de configuration.
+#}
+
+{# Filtre bleu (créé dynamiquement via JS) #}
+<div id="acc-blue-filter-list" aria-hidden="true" hidden></div>
+<link id="acc-dyslexia-font-list" rel="stylesheet" href="" disabled>
+
+<style>
+/* ════════════════════════════════════════════════════════════════
+   FILTRE BLEU
+   ════════════════════════════════════════════════════════════════ */
+#acc-blue-filter-list {
+    position: fixed; inset: 0;
+    background: rgba(255, 120, 0, 0.09);
+    pointer-events: none;
+    z-index: 99998;
+    mix-blend-mode: multiply;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   POLICE DYSLEXIE
+   ════════════════════════════════════════════════════════════════ */
+body.acc-dyslexia,
+body.acc-dyslexia * {
+    font-family: 'OpenDyslexic', sans-serif !important;
+    letter-spacing: .05em;
+    line-height: 1.7;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TAILLES DE TEXTE
+   ════════════════════════════════════════════════════════════════ */
+body.acc-text-small  { font-size: 14px !important; }
+body.acc-text-normal { font-size: 16px !important; }
+body.acc-text-large  { font-size: 19px !important; }
+body.acc-text-xlarge { font-size: 22px !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   MODE SOMBRE — PAGE EMPLOYÉS
+   ════════════════════════════════════════════════════════════════ */
+body.acc-dark .emp-page {
+    background: #0a1a10 !important;
+    color: #c8e8d0 !important;
+}
+body.acc-dark .emp-topbar,
+body.acc-dark .emp-toolbar,
+body.acc-dark .emp-bottombar {
+    background: #0d2016 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4) !important;
+}
+body.acc-dark .emp-table-wrap {
+    background: #0d2016 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4) !important;
+}
+body.acc-dark .emp-topbar-title       { color: #7de0a0 !important; }
+body.acc-dark .badge-total            { background: #1a3d28 !important; color: #7de0a0 !important; }
+body.acc-dark .badge-actif            { background: #1a3d28 !important; color: #52c96e !important; }
+body.acc-dark .badge-inactif          { background: #3d1a1a !important; color: #ff9090 !important; }
+body.acc-dark .emp-search,
+body.acc-dark .tri-select             { background: #0a1a10 !important; color: #c8e8d0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .emp-search::placeholder{ color: #5a9a6e !important; }
+body.acc-dark .emp-table thead th     { background: #1a3d28 !important; color: #b0ddc0 !important; }
+body.acc-dark .emp-table tbody tr     { border-bottom-color: #1a3028 !important; }
+body.acc-dark .emp-table tbody tr:hover   { background: rgba(26,122,69,.18) !important; }
+body.acc-dark .emp-table tbody tr.selected{ background: rgba(26,122,69,.28) !important; }
+body.acc-dark .emp-table tbody td     { color: #c0e8cc !important; }
+body.acc-dark .emp-table tbody td a   { color: #7de0a0 !important; }
+body.acc-dark .btn-actualiser         { background: #0d2016 !important; color: #7de0a0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .btn-dir                { background: #0d2016 !important; color: #7de0a0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .btn-dir:hover,
+body.acc-dark .btn-dir.active         { background: #27ae60 !important; color: #fff !important; }
+body.acc-dark .toolbar-sep            { background: #1e4d2b !important; }
+body.acc-dark .tri-label              { color: #5a9a6e !important; }
+body.acc-dark .bottom-info            { color: #5a9a6e !important; }
+body.acc-dark .perf-modal             { background: #0d2016 !important; color: #c0e8cc !important; }
+body.acc-dark .perf-stat-label        { color: #7de0a0 !important; }
+body.acc-dark .perf-bar               { background: #1a3d28 !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   MODE SOMBRE — PAGE TÂCHES
+   ════════════════════════════════════════════════════════════════ */
+body.acc-dark .tache-page {
+    background: #0a1a10 !important;
+    color: #c8e8d0 !important;
+}
+body.acc-dark .kpi-bar,
+body.acc-dark .tache-toolbar,
+body.acc-dark .tache-bottombar {
+    background: #0d2016 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4) !important;
+}
+body.acc-dark .tache-table-wrap       { background: #0d2016 !important; box-shadow: 0 2px 12px rgba(0,0,0,.4) !important; }
+body.acc-dark .kpi-count              { color: #7de0a0 !important; }
+body.acc-dark .kpi-label              { color: #5a9a6e !important; }
+body.acc-dark .kpi-sep                { background: #1e4d2b !important; }
+body.acc-dark .tache-search,
+body.acc-dark .filter-select          { background: #0a1a10 !important; color: #c8e8d0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .tache-search::placeholder { color: #5a9a6e !important; }
+body.acc-dark .tache-table thead th   { background: #1a3d28 !important; color: #b0ddc0 !important; }
+body.acc-dark .tache-table tbody tr   { border-bottom-color: #1a3028 !important; }
+body.acc-dark .tache-table tbody tr:hover    { background: rgba(26,122,69,.18) !important; }
+body.acc-dark .tache-table tbody tr.selected { background: rgba(26,122,69,.28) !important; }
+body.acc-dark .tache-table tbody td   { color: #c0e8cc !important; }
+body.acc-dark .toolbar-sep            { background: #1e4d2b !important; }
+body.acc-dark .tri-label              { color: #5a9a6e !important; }
+body.acc-dark .btn-actualiser         { background: #0d2016 !important; color: #7de0a0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .btn-dir                { background: #0d2016 !important; color: #7de0a0 !important; border-color: #1e4d2b !important; }
+body.acc-dark .btn-dir:hover,
+body.acc-dark .btn-dir.active         { background: #27ae60 !important; color: #fff !important; }
+body.acc-dark .bottom-info            { color: #5a9a6e !important; }
+body.acc-dark .st-badge.st-attente    { background: #2d2200 !important; color: #ffd27a !important; }
+body.acc-dark .st-badge.st-encours    { background: #001a33 !important; color: #7ab8e8 !important; }
+body.acc-dark .st-badge.st-termine    { background: #0a2016 !important; color: #7de0a0 !important; }
+body.acc-dark .st-badge.st-valide     { background: #001f20 !important; color: #5de0d8 !important; }
+body.acc-dark .st-badge.st-annule     { background: #2d0008 !important; color: #ff9090 !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   CONTRASTE ÉLEVÉ — Pages liste
+   ════════════════════════════════════════════════════════════════ */
+body.acc-contrast .emp-page,
+body.acc-contrast .tache-page         { filter: contrast(1.3); }
+body.acc-contrast .emp-table thead th,
+body.acc-contrast .tache-table thead th { background: #0a2d16 !important; color: #fff !important; font-weight: 900 !important; }
+body.acc-contrast .emp-table tbody td,
+body.acc-contrast .tache-table tbody td { color: #111 !important; font-weight: 600 !important; }
+body.acc-contrast .emp-topbar-title   { color: #000 !important; font-weight: 900 !important; }
+body.acc-contrast .kpi-count          { font-weight: 900 !important; }
+body.acc-contrast .st-badge           { border: 1.5px solid currentColor !important; font-weight: 800 !important; }
+</style>
+
+<script>
+(function () {
+    'use strict';
+    const KEY = 'ardhi_acc_prefs';
+    const DEFAULTS = { dark: false, contrast: false, blue: false, dyslexia: false, size: 'normal' };
+
+    let prefs = DEFAULTS;
+    try {
+        const saved = localStorage.getItem(KEY);
+        if (saved) prefs = { ...DEFAULTS, ...JSON.parse(saved) };
+    } catch(e) {}
+
+    // ── Applique les classes sur <body> ─────────────────────────────
+    const b = document.body;
+    b.classList.toggle('acc-dark',     prefs.dark);
+    b.classList.toggle('acc-contrast', prefs.contrast);
+    b.classList.toggle('acc-dyslexia', prefs.dyslexia);
+    ['small', 'normal', 'large', 'xlarge'].forEach(s =>
+        b.classList.toggle('acc-text-' + s, prefs.size === s));
+
+    // ── Filtre bleu ─────────────────────────────────────────────────
+    const bf = document.getElementById('acc-blue-filter-list');
+    if (bf) bf.hidden = !prefs.blue;
+
+    // ── Police dyslexie ─────────────────────────────────────────────
+    if (prefs.dyslexia) {
+        const fontLink = document.getElementById('acc-dyslexia-font-list');
+        if (fontLink) {
+            fontLink.href = 'https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.min.css';
+            fontLink.removeAttribute('disabled');
+        }
+    }
+})();
+</script>

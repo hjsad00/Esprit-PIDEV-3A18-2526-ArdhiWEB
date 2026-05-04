@@ -4,11 +4,13 @@ namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Commande;
 use App\Entity\Marketplace\DetailsCommande;
+use App\Entity\UserAndDiag\User;
 use App\Repository\Marketplace\CommandeRepository;
 use App\Repository\Marketplace\NotifMarketRepository;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\CouponRepository;
 use App\Entity\Marketplace\CouponUtilisation;
+use App\Service\Marketplace\CommandeInvoicePdfGenerator;
 use App\Service\Marketplace\WishlistNotificationService;
 use App\Service\Marketplace\OrderEmailService;
 use App\Service\Marketplace\StripeCheckoutService;
@@ -22,8 +24,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use Karser\Recaptcha3Bundle\Validator\Constraints\Recaptcha3;
 
 /**
@@ -42,8 +42,8 @@ class CommandeController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
 
         $commandesRaw = $commandeRepo->findByUser($user);
         $commandes = $paginator->paginate(
@@ -72,8 +72,8 @@ class CommandeController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
 
         $commandesRaw = $commandeRepo->findOrdersBySeller($user);
         
@@ -104,10 +104,11 @@ class CommandeController extends AbstractController
         }
 
         // Vérifier que l'utilisateur est bien l'acheteur, un vendeur concerné, ou un ADMIN
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
         $isAdmin = $this->isGranted('ROLE_ADMIN');
-        $isOwner = $commande->getUser()->getId() === $user->getId();
+        $commandeUser = $commande->getUser();
+        $isOwner = $commandeUser !== null && $commandeUser->getId() === $user->getId();
         $isSeller = false;
         foreach ($commande->getDetails() as $detail) {
             if ($detail->getProduit() && $detail->getProduit()->getUser() && $detail->getProduit()->getUser()->getId() === $user->getId()) {
@@ -139,8 +140,8 @@ class CommandeController extends AbstractController
                 'id' => $commande->getId(),
                 'date' => $commande->getDateCommande()->format('d/m/Y'),
                 'etat' => $commande->getEtat(),
-                'total' => number_format($commande->getTotal(), 2, ',', ' '),
-                'fraisLivraison' => number_format($commande->getFraisLivraison(), 2, ',', ' '),
+                'total' => number_format((float) $commande->getTotal(), 2, ',', ' '),
+                'fraisLivraison' => number_format((float) $commande->getFraisLivraison(), 2, ',', ' '),
                 'modeLivraison' => $commande->getModeLivraison() ?? 'RECUPERATION',
                 'codeCoupon' => $commande->getCoupon() ? $commande->getCoupon()->getCode() : null,
                 'montantRemise' => $commande->getMontantRemise() > 0 ? number_format($commande->getMontantRemise(), 2, ',', ' ') : null,
@@ -175,8 +176,8 @@ class CommandeController extends AbstractController
         }
 
         // Vérifier que l'utilisateur est vendeur de cette commande
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
         $isSeller = false;
         foreach ($commande->getDetails() as $detail) {
             if ($detail->getProduit() && $detail->getProduit()->getUser() && $detail->getProduit()->getUser()->getId() === $user->getId()) {
@@ -252,12 +253,13 @@ class CommandeController extends AbstractController
         }
 
         // Notification in-app pour l'acheteur sur tout changement de statut.
-        if ($commande->getUser()) {
+        $commandeUser = $commande->getUser();
+        if ($commandeUser) {
             $notifMarketRepository->notifierChangementStatutCommande(
-                $commande->getUser()->getId(),
-                $commande->getId(),
+                (int) $commandeUser->getId(),
+                (int) $commande->getId(),
                 $status,
-                $commande->getTotal()
+                (float) $commande->getTotal()
             );
         }
 
@@ -343,8 +345,8 @@ class CommandeController extends AbstractController
     ): JsonResponse {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        assert($user instanceof User);
 
         // 1. Récupérer le panier de l'utilisateur
         $panier = $panierRepo->findOneBy(['user' => $user]);
@@ -363,7 +365,7 @@ class CommandeController extends AbstractController
         if (count($violations) > 0) {
             return $this->json([
                 'success' => false,
-                'message' => $violations[0]->getMessage() ?: 'Captcha invalide, veuillez réessayer.',
+                'message' => ($violations[0] ?? null)?->getMessage() ?: 'Captcha invalide, veuillez réessayer.',
             ], 400);
         }
 
@@ -443,7 +445,7 @@ class CommandeController extends AbstractController
 
             return $this->json([
                 'success' => true,
-                'checkoutUrl' => $checkout['checkoutUrl'],
+                'checkoutUrl' => (string) ($checkout['checkoutUrl'] ?? ''),
                 'message' => 'Redirection vers Stripe en cours...',
             ]);
         }
@@ -464,9 +466,9 @@ class CommandeController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
-        $sessionId = $request->query->get('session_id');
+        assert($user instanceof User);
+        $sessionId = (string) $request->query->get('session_id', '');
 
         if (!$sessionId) {
             $this->addFlash('danger', 'Session Stripe invalide.');
@@ -544,8 +546,8 @@ class CommandeController extends AbstractController
      * @return array<string, mixed>
      */
     private function prepareCheckoutData(
-        $user,
-        $panier,
+        User $user,
+        \App\Entity\Marketplace\Panier $panier,
         string $modeLivraison,
         ?string $couponCode,
         CouponRepository $couponRepo,
@@ -630,11 +632,12 @@ class CommandeController extends AbstractController
     /**
      * Finalise la création des commandes et notifications.
      *
+     * @param array<string, mixed> $prepared
      * @return array{nbCommandes:int}
      */
     private function finalizeCheckout(
-        $user,
-        $panier,
+        User $user,
+        \App\Entity\Marketplace\Panier $panier,
         array $prepared,
         string $paymentMethod,
         EntityManagerInterface $em,
@@ -732,9 +735,9 @@ class CommandeController extends AbstractController
                 $buyerName = trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? ''));
 
                 $notifMarketRepository->notifierNouvelleCommande(
-                    $seller->getId(),
-                    $cmd->getId(),
-                    $firstDetail->getProduit()->getId(),
+                    (int) $seller->getId(),
+                    (int) $cmd->getId(),
+                    (int) $firstDetail->getProduit()->getId(),
                     $buyerName !== '' ? $buyerName : 'Acheteur',
                     $cmd->getTotal()
                 );
@@ -755,16 +758,27 @@ class CommandeController extends AbstractController
      * Génère et télécharge la facture PDF d'une commande
      */
     #[Route('/marketplace/commande/{id}/facture-pdf', name: 'app_marketplace_commande_pdf')]
-    public function facturePdf(Commande $commande, MarketplaceQrService $marketplaceQrService, EntityManagerInterface $em): Response
+    public function facturePdf(
+        Commande $commande,
+        MarketplaceQrService $marketplaceQrService,
+        CommandeInvoicePdfGenerator $commandeInvoicePdfGenerator
+    ): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        /** @var \App\Entity\UserAndDiag\User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
         // Sécurité : seul le propriétaire, le vendeur ou l'admin peut accéder
-        $isOwner = $commande->getUser()->getId() === $user->getId();
+        $commandeUser = $commande->getUser();
+        if (!$commandeUser) {
+            throw $this->createAccessDeniedException('Commande sans utilisateur.');
+        }
+
+        $isOwner = $commandeUser->getId() === $user->getId();
         $isSeller = false;
         foreach ($commande->getDetails() as $detail) {
             if ($detail->getProduit() && $detail->getProduit()->getUser() && $detail->getProduit()->getUser()->getId() === $user->getId()) {
@@ -784,37 +798,15 @@ class CommandeController extends AbstractController
             if ($detail->getProduit()) {
                 // On génère le QR pour chaque produit (écrasera si le fichier existe déjà, 
                 // ce qui permet de mettre à jour si l'URL Ngrok change)
-                $productQrCodes[$detail->getProduit()->getId()] = $marketplaceQrService->generateForProduct($detail->getProduit());
+                $productQrCodes[] = $marketplaceQrService->generateForProduct($detail->getProduit());
             }
         }
 
-        // Options PDF
-        $pdfOptions = new Options();
-        $pdfOptions->set('defaultFont', 'Arial');
-        $pdfOptions->set('isRemoteEnabled', true); // Pour autoriser les images externes / liées
-        $pdfOptions->set('isPhpEnabled', true);    // Requis pour <script type="text/php"> (numérotation des pages)
-
-        // Instanciation de Dompdf
-        $dompdf = new Dompdf($pdfOptions);
-
-        // Récupérer le HTML depuis Twig
-        $html = $this->renderView('Marketplace/pdf_facture.html.twig', [
-            'commande' => $commande,
-            'productQrCodes' => $productQrCodes
-        ]);
-
-        // Charger le HTML en Dompdf
-        $dompdf->loadHtml($html);
-
-        // (Optionnel) Format de papier et orientation
-        $dompdf->setPaper('A4', 'portrait');
-
-        // Générer le PDF (en mémoire)
-        $dompdf->render();
+        $pdfContent = $commandeInvoicePdfGenerator->generate($commande, $productQrCodes);
 
         // Renvoyer le PDF pour le saut vers le téléchargement
         return new Response(
-            $dompdf->output(),
+            $pdfContent,
             200,
             array(
                 'Content-Type' => 'application/pdf',

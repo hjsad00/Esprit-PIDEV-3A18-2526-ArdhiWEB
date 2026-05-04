@@ -49,6 +49,7 @@ security:
     - { path: ^/employes/\d+/fiche, roles: PUBLIC_ACCESS }
     - { path: ^/evenement/calendar/callback, roles: PUBLIC_ACCESS }
     - { path: ^/machine/, roles: PUBLIC_ACCESS }
+    - { path: ^/marketplace/produit/\d+$, roles: PUBLIC_ACCESS }
     - { path: ^/admin, roles: ROLE_ADMIN }
     - { path: ^/materiel-et-maintenance, roles: ROLE_USER }
     - { path: ^/diagnostic, roles: ROLE_USER }

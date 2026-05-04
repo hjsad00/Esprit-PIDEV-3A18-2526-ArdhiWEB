@@ -17,15 +17,15 @@ class CouponUtilisation
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Coupon::class)]
-    #[ORM\JoinColumn(name: 'idCoupon', referencedColumnName: 'idCoupon', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_coupon', referencedColumnName: 'idCoupon', nullable: false, onDelete: 'CASCADE')]
     private ?Coupon $coupon = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Column(name: 'nombreUtilisation', options: ['default' => 0])]
-    private ?int $nombreUtilisation = 0;
+    private int $nombreUtilisation = 0;
 
     public function getId(): ?int
     {
@@ -54,7 +54,7 @@ class CouponUtilisation
         return $this;
     }
 
-    public function getNombreUtilisation(): ?int
+    public function getNombreUtilisation(): int
     {
         return $this->nombreUtilisation;
     }

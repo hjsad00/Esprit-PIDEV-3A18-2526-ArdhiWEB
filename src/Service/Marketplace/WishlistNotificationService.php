@@ -43,6 +43,10 @@ class WishlistNotificationService
 
         foreach ($wishlistEntries as $entry) {
             $user = $entry->getUser();
+            if (!$user) {
+                continue;
+            }
+
             $phone = $user->getPhone();
 
             if (!$phone) {
@@ -95,6 +99,7 @@ class WishlistNotificationService
             }
 
             $this->twilioService->sendWhatsAppMessage($phone, $message);
+            $this->logger->info('wishlist.notification.sent', ['phone' => $phone, 'product' => $produit->getId()]);
         }
     }
 
@@ -114,6 +119,10 @@ class WishlistNotificationService
 
             foreach ($wishlistEntries as $entry) {
                 $user = $entry->getUser();
+                if (!$user) {
+                    continue;
+                }
+
                 $phone = $user->getPhone();
 
                 if (!$phone) {
@@ -151,6 +160,7 @@ class WishlistNotificationService
         if (!$seller || !$seller->getPhone()) {
             return;
         }
+// Message de notification pour le vendeur
 
         $message = sprintf(
             "⚠️ *Ardhi Marketplace* ⚠️\n\n" .

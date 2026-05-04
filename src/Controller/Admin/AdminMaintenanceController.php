@@ -74,7 +74,7 @@ class AdminMaintenanceController extends AbstractController
                 // Notification pour le propriétaire du matériel avec message automatique
                 $materiel = $maintenance->getMateriel();
                 if ($materiel) {
-                    $userId = $materiel->getUserId();
+                    $userId = $materiel->getUser()?->getId();
                     $user = $userRepo->find($userId);
                     if ($user) {
                         $notif = new \App\Entity\MaterielEtMaintenance\NotificationMaintenance();
@@ -203,7 +203,7 @@ class AdminMaintenanceController extends AbstractController
         $materiel = $maintenance->getMateriel();
         $machineName = $materiel ? $materiel->getNom() : 'votre machine';
         
-        $userId = $materiel ? $materiel->getUserId() : null;
+        $userId = $materiel ? $materiel->getUser()?->getId() : null;
         $user = $userId ? $userRepo->find($userId) : null;
 
         if (!$user) {
@@ -239,7 +239,28 @@ class AdminMaintenanceController extends AbstractController
             $notif->setNouveauStatut('en_attente');
 
             // --- Envoi E-mail ---
-            $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            try {
+                $mailer->sendUrgentAcceptedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            } catch (\Throwable $e) {
+                $logger->error('Erreur lors de l\'envoi email maintenance urgente.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'user_id' => $user->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+                $this->addFlash('warning', 'Décision enregistrée, mais l\'e-mail n\'a pas pu être envoyé.');
+            }
+
+            // --- Envoi WhatsApp (uniquement pour décision urgente) ---
+            $phone = $user->getPhone();
+            if (!empty($phone)) {
+                $whatsApp->envoyer($phone, $msgNotif);
+            } else {
+                $logger->warning('Envoi WhatsApp urgent ignoré: numéro manquant pour le propriétaire du matériel.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'reponse_type' => $type,
+                    'user_id' => $user->getId(),
+                ]);
+            }
 
         } elseif ($type === 'non_urgent_planifier') {
             $maintenance->setDecisionAdmin('planification_demandee');
@@ -261,23 +282,20 @@ class AdminMaintenanceController extends AbstractController
             $notif->setNouveauStatut('en_cours');
 
             // --- Envoi E-mail ---
-            $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            try {
+                $mailer->sendPlanificationRequestedEmail($user->getEmail(), ($user->getPrenom() . ' ' . $user->getNom()));
+            } catch (\Throwable $e) {
+                $logger->error('Erreur lors de l\'envoi email planification maintenance.', [
+                    'maintenance_id' => $maintenance->getIdMaintenance(),
+                    'user_id' => $user->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+                $this->addFlash('warning', 'Décision enregistrée, mais l\'e-mail n\'a pas pu être envoyé.');
+            }
 
         } else {
             $this->addFlash('danger', 'Type de réponse invalide.');
             return $this->redirectToRoute('admin_maintenance_urgente');
-        }
-
-        // --- Envoi WhatsApp commun (urgent + non urgent) ---
-        $phone = $user->getPhone();
-        if (!empty($phone)) {
-            $whatsApp->envoyer($phone, $msgNotif);
-        } else {
-            $logger->warning('Envoi WhatsApp ignoré: numéro manquant pour le propriétaire du matériel.', [
-                'maintenance_id' => $maintenance->getIdMaintenance(),
-                'reponse_type' => $type,
-                'user_id' => $user->getId(),
-            ]);
         }
 
         // On persiste et on flush tout explicitement

@@ -111,7 +111,7 @@ class FicheEmployePdfService
         // Bloc QR Code (droite)
         $pdf->Rect(110, $yPhotoQr, 90, 60, 'DF');
         try {
-            $qrUrl = $this->qrCodeService->generateFicheUrl($employe->getId());
+            $qrUrl = $this->qrCodeService->generateFicheUrl((int) $employe->getId());
             $qrSvg = $this->qrCodeService->generateQrCodeSvg($qrUrl, 200);
             
             // Image magique depuis string en TCPDF SVG
@@ -136,7 +136,7 @@ class FicheEmployePdfService
         $pPoste = $employe->getPoste() ?? '—';
         $pStatut = $employe->isActif() ? "✓ " . $this->translator->trans('common.active') : "✗ " . $this->translator->trans('common.inactive');
 
-        $this->addRow($pdf, $this->translator->trans('employe.col.nom'), $pNom, $this->translator->trans('employe.col.prenom'), $pPrenom, true, $font);
+        $this->addRow($pdf, $this->translator->trans('employe.col.nom'), $pNom ?? '', $this->translator->trans('employe.col.prenom'), $pPrenom ?? '', true, $font);
         $this->addRow($pdf, $this->translator->trans('employe.col.poste'), $pPoste, $this->translator->trans('employe.col.actif'), $pStatut, false, $font);
 
         $pdf->SetY($pdf->GetY() + 5);
@@ -174,7 +174,7 @@ class FicheEmployePdfService
         return $pdf->Output('fiche.pdf', 'S');
     }
 
-    private function addSectionTitle(\TCPDF $pdf, string $title, int $r, int $g, int $b, string $font)
+    private function addSectionTitle(\TCPDF $pdf, string $title, int $r, int $g, int $b, string $font): void
     {
         $pdf->SetFillColor(27, 94, 32); // Vert foncé
         if ($r != 39) $pdf->SetFillColor(13, 71, 161); // Si bleu, on passe en bleu foncé
@@ -184,7 +184,7 @@ class FicheEmployePdfService
         $pdf->Cell(190, 8, '  ' . $title, 0, 1, 'L', true);
     }
 
-    private function addRow(\TCPDF $pdf, string $l1, string $v1, string $l2, string $v2, bool $gris, string $font)
+    private function addRow(\TCPDF $pdf, string $l1, string $v1, string $l2, string $v2, bool $gris, string $font): void
     {
         if ($gris) {
             $pdf->SetFillColor(245, 247, 250); // Gris clair

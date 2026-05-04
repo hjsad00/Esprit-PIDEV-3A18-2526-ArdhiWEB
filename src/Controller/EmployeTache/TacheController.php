@@ -28,6 +28,8 @@ class TacheController extends AbstractController
         private GoogleCalendarService      $gcal,
         private EmployeAutoInactifService  $autoInactif,
         private TranslatorInterface        $translator,
+        private \App\Service\EmployeTache\UrgentNotificationService $urgentNotif,
+        private \App\Service\EmployeTache\TacheRiskService $riskService,
     ) {}
 
     private function checkAccess(): int|Response
@@ -61,12 +63,12 @@ class TacheController extends AbstractController
         // ✅ Synchronisation automatique à chaque affichage de la liste
         $this->autoInactif->synchroniserStatuts($idAgriculteur);
 
-        $search    = $request->query->get('search', '');
-        $statut    = $request->query->get('statut', 'Tous');
-        $priorite  = $request->query->get('priorite', 'Toutes');
-        $categorie = $request->query->get('categorie', 'Toutes');
-        $tri       = $request->query->get('tri', 'dateDebut');
-        $direction = $request->query->get('direction', 'asc');
+        $search    = (string) $request->query->get('search', '');
+        $statut    = (string) $request->query->get('statut', 'Tous');
+        $priorite  = (string) $request->query->get('priorite', 'Toutes');
+        $categorie = (string) $request->query->get('categorie', 'Toutes');
+        $tri       = (string) $request->query->get('tri', 'dateDebut');
+        $direction = (string) $request->query->get('direction', 'asc');
 
         if (!in_array($tri, self::TRIS_VALIDES, true)) $tri = 'dateDebut';
         $direction = $direction === 'desc' ? 'desc' : 'asc';
@@ -117,7 +119,7 @@ class TacheController extends AbstractController
         $employes = $empRepo->findByAgriculteur($idAgriculteur);
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('tache_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('tache_new');
             }
@@ -137,6 +139,21 @@ class TacheController extends AbstractController
                 // ✅ Réactiver l'employé si besoin (il vient d'être assigné)
                 if ($data['idEmploye']) {
                     $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+
+                    // ✅ ALERTE URGENTE Twilio (Priorité Critique ou Risque ML > 75%)
+                    $employe = $empRepo->find($data['idEmploye']);
+                    if ($employe && $employe->isActif()) {
+                        if ($tache->getPriorite() === 4) {
+                            $msg = "⚠️ ALERTE ARDHI: La tâche critique '{$tache->getTitre()}' vous a été assignée. Action immédiate requise.";
+                            $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                        } else {
+                            $resultatRisk = $this->riskService->analyser($tache, $employe->getNomComplet());
+                            if (isset($resultatRisk['riskScore']) && $resultatRisk['riskScore'] > 75) {
+                                $msg = "🚨 ALERTE RISQUE ARDHI: La tâche '{$tache->getTitre()}' évaluée à haut risque d'échec (" . $resultatRisk['riskScore'] . "%). Vérifiez-la.";
+                                $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                            }
+                        }
+                    }
                 }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" créée.');
@@ -177,11 +194,12 @@ class TacheController extends AbstractController
         // Tous les employés (actifs ET inactifs) — idem new()
         $employes = $empRepo->findByAgriculteur($idAgriculteur);
 
-        // ✅ Mémoriser l'ancien employé AVANT modification
+        // ✅ Mémoriser l'ancien employé AVANT modification et son statut critique
         $ancienEmployeId = $tache->getIdEmploye();
+        $etaitCritique = ($tache->getPriorite() === 4);
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tache_form', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('tache_form', (string) $request->request->get('_token'))) {
                 $this->addFlash('danger', 'Token de sécurité invalide.');
                 return $this->redirectToRoute('tache_edit', ['id' => $id]);
             }
@@ -200,6 +218,26 @@ class TacheController extends AbstractController
                 }
                 if ($data['idEmploye'] && $data['idEmploye'] !== $ancienEmployeId) {
                     $this->autoInactif->synchroniserEmploye($data['idEmploye'], $idAgriculteur);
+                }
+
+                // ✅ ALERTE URGENTE Twilio - Seulement si la tâche passe Critique ou si on assigne un nouvel employé en priorité très risquée
+                if ($data['idEmploye']) {
+                    $employe = $empRepo->find($data['idEmploye']);
+                    if ($employe && $employe->isActif()) {
+                        // Si ça vient d'être mis à 4 OU qu'on vient de changer l'assignation
+                        $estNouveauCritique = ($tache->getPriorite() === 4 && (!$etaitCritique || $data['idEmploye'] !== $ancienEmployeId));
+                        
+                        if ($estNouveauCritique) {
+                            $msg = "⚠️ ALERTE ARDHI: La tâche critique '{$tache->getTitre()}' vous a été assignée ou updatée en Critique.";
+                            $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                        } elseif ($data['idEmploye'] !== $ancienEmployeId || !$etaitCritique) {
+                            $resultatRisk = $this->riskService->analyser($tache, $employe->getNomComplet());
+                            if (isset($resultatRisk['riskScore']) && $resultatRisk['riskScore'] > 75) {
+                                $msg = "🚨 ALERTE RISQUE ARDHI: La tâche '{$tache->getTitre()}' est évaluée à haut risque d'échec (" . $resultatRisk['riskScore'] . "%).";
+                                $this->urgentNotif->sendUrgentNotification($employe, $msg, 'both');
+                            }
+                        }
+                    }
                 }
 
                 $this->addFlash('success', '✅ Tâche "' . $tache->getTitre() . '" modifiée.');
@@ -231,7 +269,7 @@ class TacheController extends AbstractController
 
         $tache = $repo->find($id);
         if ($tache && $tache->getIdAgriculteur() === $idAgriculteur
-            && $this->isCsrfTokenValid('delete' . $id, $request->request->get('_token'))) {
+            && $this->isCsrfTokenValid('delete' . $id, (string) $request->request->get('_token'))) {
 
             $titre     = $tache->getTitre();
             $employeId = $tache->getIdEmploye(); // ✅ Mémoriser avant suppression
@@ -346,7 +384,7 @@ class TacheController extends AbstractController
             $pdf->SetFont('dejavusans', 'B', 16);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->SetXY($x, $y + 1);
-            $pdf->Cell($boxW, 8, $kpi['value'], 0, 0, 'C');
+            $pdf->Cell($boxW, 8, (string) $kpi['value'], 0, 0, 'C');
             $pdf->SetFont('dejavusans', '', 8);
             $pdf->SetXY($x, $y + 8);
             $pdf->Cell($boxW, 6, $kpi['label'], 0, 0, 'C');
@@ -386,8 +424,8 @@ class TacheController extends AbstractController
                 $rowIndex % 2 === 0 ? 250 : 255,
                 $rowIndex % 2 === 0 ? 245 : 255
             );
-            $pdf->Cell(12, 7, $tache->getId(), 1, 0, 'C', true);
-            $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre(), 0, 28, '...'), 1, 0, 'L', true);
+            $pdf->Cell(12, 7, (string) $tache->getId(), 1, 0, 'C', true);
+            $pdf->Cell(42, 7, mb_strimwidth($tache->getTitre() ?? '', 0, 28, '...'), 1, 0, 'L', true);
             $pdf->Cell(50, 7, mb_strimwidth($tache->getDescription() ?? '-', 0, 35, '...'), 1, 0, 'L', true);
 
             $statusKey = match($tache->getStatut()) {
@@ -594,8 +632,8 @@ class TacheController extends AbstractController
         $employeStats = [];
         foreach ($empData as $ed) {
             $employeStats[] = [
-                'nom'   => $mapEmployes[$ed['idEmploye']] ?? 'Inconnu',
-                'total' => $ed['total'],
+                'nom'   => $mapEmployes[(int)$ed->key] ?? 'Inconnu',
+                'total' => $ed->total,
             ];
         }
 
@@ -603,9 +641,9 @@ class TacheController extends AbstractController
         $evolution = [];
         foreach ($dateData as $dd) {
             $evolution[] = [
-                'date'  => $dd['dateDebut'] instanceof \DateTimeInterface
-                    ? $dd['dateDebut']->format('d/m/Y') : (string)$dd['dateDebut'],
-                'total' => $dd['total'],
+                'date'  => $dd->key instanceof \DateTimeInterface
+                    ? $dd->key->format('d/m/Y') : (string)$dd->key,
+                'total' => $dd->total,
             ];
         }
 
@@ -628,6 +666,10 @@ class TacheController extends AbstractController
 
     // ── Validation ────────────────────────────────────────────────────
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, string>
+     */
     private function validerDonnees(array $data, ValidatorInterface $validator): array
     {
         $errors = [];
@@ -636,24 +678,24 @@ class TacheController extends AbstractController
             new Assert\NotBlank(message: 'Le titre est obligatoire.'),
             new Assert\Length(max: 200, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.'),
         ]);
-        if (count($v)) $errors['titre'] = $v[0]->getMessage();
+        if (count($v)) $errors['titre'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['description'], [
             new Assert\NotBlank(message: 'La description est obligatoire.'),
         ]);
-        if (count($v)) $errors['description'] = $v[0]->getMessage();
+        if (count($v)) $errors['description'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['statut'], [
             new Assert\NotBlank(message: 'Le statut est obligatoire.'),
             new Assert\Choice(choices: Tache::STATUTS, message: 'Statut invalide.'),
         ]);
-        if (count($v)) $errors['statut'] = $v[0]->getMessage();
+        if (count($v)) $errors['statut'] = (string) $v[0]?->getMessage();
 
         $v = $validator->validate($data['priorite'], [
             new Assert\NotBlank(message: 'La priorité est obligatoire.'),
             new Assert\Choice(choices: [1, 2, 3, 4], message: 'Priorité invalide.'),
         ]);
-        if (count($v)) $errors['priorite'] = $v[0]->getMessage();
+        if (count($v)) $errors['priorite'] = (string) $v[0]?->getMessage();
 
         if ($data['dateDebut'] === null) {
             $errors['dateDebut'] = 'La date de début est obligatoire.';
@@ -671,20 +713,23 @@ class TacheController extends AbstractController
         return $errors;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function extractFormData(Request $r): array
     {
         $dateDebut = null;
         $dateFin   = null;
         if ($r->request->get('dateDebut')) {
-            try { $dateDebut = new \DateTime($r->request->get('dateDebut')); } catch (\Exception) {}
+            try { $dateDebut = new \DateTime((string) $r->request->get('dateDebut')); } catch (\Exception) {}
         }
         if ($r->request->get('dateFin')) {
-            try { $dateFin = new \DateTime($r->request->get('dateFin')); } catch (\Exception) {}
+            try { $dateFin = new \DateTime((string) $r->request->get('dateFin')); } catch (\Exception) {}
         }
 
         return [
-            'titre'       => trim($r->request->get('titre', '')),
-            'description' => trim($r->request->get('description', '')),
+            'titre'       => trim((string) $r->request->get('titre', '')),
+            'description' => trim((string) $r->request->get('description', '')),
             'statut'      => $r->request->get('statut', Tache::STATUT_EN_ATTENTE),
             'priorite'    => $r->request->get('priorite') ? (int)$r->request->get('priorite') : null,
             'categorie'   => $r->request->get('categorie') ?: 'Plantation',
@@ -694,6 +739,9 @@ class TacheController extends AbstractController
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function hydraterTache(Tache $tache, array $data): void
     {
         $tache->setTitre($data['titre']);

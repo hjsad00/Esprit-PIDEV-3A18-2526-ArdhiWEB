@@ -19,16 +19,16 @@ class Panier
     private ?int $id = null;
 
     #[ORM\Column(name: 'dateCreation', type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dateCreation = null;
+    private \DateTimeInterface $dateCreation;
 
-    #[ORM\Column(name: 'totalMontant', type: Types::FLOAT, options: ['default' => 0])]
-    private float $totalMontant = 0;
+    #[ORM\Column(name: 'totalMontant', type: Types::DECIMAL, precision: 12, scale: 2, options: ['default' => '0.00'])]
+    private string $totalMontant = '0.00';
 
     #[ORM\Column(name: 'totalProduits', options: ['default' => 0])]
     private int $totalProduits = 0;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     /** @var Collection<int, PanierProduit> */
@@ -50,7 +50,7 @@ class Panier
         return $this->id;
     }
 
-    public function getDateCreation(): ?\DateTimeInterface
+    public function getDateCreation(): \DateTimeInterface
     {
         return $this->dateCreation;
     }
@@ -63,12 +63,12 @@ class Panier
 
     public function getTotalMontant(): float
     {
-        return $this->totalMontant;
+        return (float) $this->totalMontant;
     }
 
     public function setTotalMontant(float $totalMontant): static
     {
-        $this->totalMontant = $totalMontant;
+        $this->totalMontant = number_format($totalMontant, 2, '.', '');
         return $this;
     }
 
@@ -132,11 +132,16 @@ class Panier
         $quantite = 0;
 
         foreach ($this->panierProduits as $ligne) {
-            $montant  += $ligne->getProduit()->getPrixFinal() * $ligne->getQuantite();
+            $produit = $ligne->getProduit();
+            if ($produit === null) {
+                continue;
+            }
+
+            $montant  += $produit->getPrixFinal() * $ligne->getQuantite();
             $quantite += $ligne->getQuantite();
         }
 
-        $this->totalMontant  = round($montant, 2);
+        $this->setTotalMontant(round($montant, 2));
         $this->totalProduits = $quantite;
     }
     /**
@@ -148,7 +153,12 @@ public function getNombreVendeurs(): int
     $vendeurIds = [];
 
     foreach ($this->panierProduits as $ligne) {
-        $vendeur = $ligne->getProduit()->getUser();
+        $produit = $ligne->getProduit();
+        if ($produit === null) {
+            continue;
+        }
+
+        $vendeur = $produit->getUser();
         if ($vendeur !== null) {
             $vendeurIds[$vendeur->getId()] = true;
         }

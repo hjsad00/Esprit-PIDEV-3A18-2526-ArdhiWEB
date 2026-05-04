@@ -16,18 +16,18 @@ class DetailsCommande
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'details')]
-    #[ORM\JoinColumn(name: 'idCommande', referencedColumnName: 'idCommande', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_commande', referencedColumnName: 'idCommande', nullable: false, onDelete: 'CASCADE')]
     private ?Commande $commande = null;
 
     #[ORM\ManyToOne(targetEntity: Produits::class)]
-    #[ORM\JoinColumn(name: 'idProduit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'idProduit', nullable: false, onDelete: 'CASCADE')]
     private ?Produits $produit = null;
 
     #[ORM\Column(options: ['default' => 1])]
     private int $quantite = 1;
 
     #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
-    private ?float $prixUnitaire = null;
+    private float $prixUnitaire;
 
     // ==================== GETTERS & SETTERS ====================
 
@@ -69,7 +69,7 @@ class DetailsCommande
         return $this;
     }
 
-    public function getPrixUnitaire(): ?float
+    public function getPrixUnitaire(): float
     {
         return $this->prixUnitaire;
     }

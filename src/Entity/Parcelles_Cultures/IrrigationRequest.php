@@ -19,40 +19,40 @@ class IrrigationRequest
 
     #[ORM\Column(type: 'date')]
     #[Assert\NotBlank(message: 'La date est obligatoire')]
-    private ?\DateTimeInterface $date = null;
+    private \DateTimeInterface $date;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'La température moyenne est obligatoire')]
-    private ?string $temperature_moyenne = null;
+    private string $temperature_moyenne;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'La température max est obligatoire')]
-    private ?string $temperature_max = null;
+    private string $temperature_max;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'La température min est obligatoire')]
-    private ?string $temperature_min = null;
+    private string $temperature_min;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'Les précipitations sont obligatoires')]
     #[Assert\GreaterThanOrEqual(value: 0, message: 'Les précipitations doivent être >= 0')]
-    private ?string $precipitations = null;
+    private string $precipitations;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
     #[Assert\NotBlank(message: 'L\'humidité est obligatoire')]
-    #[Assert\Range(min: 0, max: 100, message: 'L\'humidité doit être entre 0 et 100')]
-    private ?string $humidite = null;
+    #[Assert\Range(min: 0, max: 100, notInRangeMessage: 'L\'humidité doit être entre 0 et 100')]
+    private string $humidite;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
     #[Assert\NotBlank(message: 'Le coefficient Kc est obligatoire')]
     #[Assert\GreaterThan(value: 0, message: 'Kc doit être > 0')]
-    private ?string $kc = null;
+    private string $kc;
 
     #[ORM\Column(type: 'decimal', precision: 15, scale: 2, nullable: true)]
     private ?string $volume_litres = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private ?\DateTimeImmutable $created_at = null;
+    private \DateTimeImmutable $created_at;
 
     #[ORM\ManyToOne(targetEntity: Parcelle::class, inversedBy: 'irrigationRequests')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -68,7 +68,7 @@ class IrrigationRequest
         return $this->id;
     }
 
-    public function getDate(): ?\DateTimeInterface
+    public function getDate(): \DateTimeInterface
     {
         return $this->date;
     }
@@ -79,7 +79,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getTemperatureMoyenne(): ?string
+    public function getTemperatureMoyenne(): string
     {
         return $this->temperature_moyenne;
     }
@@ -90,7 +90,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getTemperatureMax(): ?string
+    public function getTemperatureMax(): string
     {
         return $this->temperature_max;
     }
@@ -101,7 +101,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getTemperatureMin(): ?string
+    public function getTemperatureMin(): string
     {
         return $this->temperature_min;
     }
@@ -112,7 +112,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getPrecipitations(): ?string
+    public function getPrecipitations(): string
     {
         return $this->precipitations;
     }
@@ -123,7 +123,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getHumidite(): ?string
+    public function getHumidite(): string
     {
         return $this->humidite;
     }
@@ -134,7 +134,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getKc(): ?string
+    public function getKc(): string
     {
         return $this->kc;
     }
@@ -156,7 +156,7 @@ class IrrigationRequest
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->created_at;
     }

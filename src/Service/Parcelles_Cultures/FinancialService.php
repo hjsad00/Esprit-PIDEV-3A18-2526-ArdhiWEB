@@ -150,6 +150,46 @@ class FinancialService
     }
 
     /**
+     * Calcul complet du ROI
+     * @param Culture $culture
+     * @param array $costs ['semences', 'engrais', 'mainOeuvre', 'irrigation', 'autres']
+     * @param float $salePrice Prix de vente unitaire
+     * @param array $weatherData Données météo
+     * @return array ROI calculation
+     */
+    public function calculateRoi(
+        \App\Entity\Parcelles_Cultures\Culture $culture,
+        array $costs,
+        float $salePrice = 0,
+        array $weatherData = []
+    ): array {
+        $surface = (float) $culture->getSurfaceUtilisee();
+        $rendement = (float) $culture->getRendementEstime();
+        
+        $coutTotal = $this->calculerCoutTotal(
+            $costs['semences'] ?? 0,
+            $costs['engrais'] ?? 0,
+            $costs['mainOeuvre'] ?? 0,
+            $costs['irrigation'] ?? 0,
+            $costs['autres'] ?? 0
+        );
+        
+        $facteurClimatique = $weatherData['facteurClimatique'] ?? 1.0;
+        $productionReelle = $this->calculerProductionReelle($surface, $rendement, $facteurClimatique);
+        $revenuBrut = $this->calculerRevenuBrut($productionReelle, $salePrice);
+        $margeBrute = $this->calculerMargeBrute($revenuBrut, $coutTotal);
+        $scoreROI = $this->calculerScoreROI($margeBrute, $coutTotal);
+        
+        return [
+            'roi_score' => $scoreROI,
+            'marge_brute' => $margeBrute,
+            'revenue' => $revenuBrut,
+            'cout_total' => $coutTotal,
+            'production' => $productionReelle
+        ];
+    }
+
+    /**
      * Calculer ROI complet
      */
     public function calculerRoi(

@@ -15,9 +15,14 @@ class TacheRiskService
         private TacheRepository $tacheRepo
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function analyser(Tache $tache, string $nomEmploye): array
     {
+        /** @var array<int, string> $facteurs */
         $facteurs = [];
+        /** @var array<int, string> $recommandations */
         $recommandations = [];
 
         // ── 1. Historique retards employé (30%) ──────────────────────
@@ -90,6 +95,9 @@ class TacheRiskService
         return $result;
     }
 
+    /**
+     * @param array<int, string> $facteurs
+     */
     private function calculerScoreHistorique(int $idEmploye, array &$facteurs): float
     {
         $historique = $this->tacheRepo->findHistoriquePourRisque($idEmploye);
@@ -102,7 +110,6 @@ class TacheRiskService
 
         $retards = 0;
         foreach ($historique as $t) {
-            // Un retard est compté si la date de modification (clôture) est après la date de fin
             if ($t->getDateFin() !== null && $t->getDateModification() > $t->getDateFin()) {
                 $retards++;
             }
@@ -123,6 +130,9 @@ class TacheRiskService
         return $tauxRetard;
     }
 
+    /**
+     * @param array<int, string> $facteurs
+     */
     private function calculerScoreCharge(int $idEmploye, int $idTache, array &$facteurs): float
     {
         $tachesActives = $this->tacheRepo->countChargeActuelle($idEmploye, $idTache);
@@ -143,6 +153,9 @@ class TacheRiskService
         return $score;
     }
 
+    /**
+     * @param array<int, string> $facteurs
+     */
     private function calculerScoreComplexite(Tache $tache, array &$facteurs): float
     {
         $score = 30.0;
@@ -167,7 +180,7 @@ class TacheRiskService
             'Maintenance' => 8,
             default => 5,
         };
-        
+
         $catLabels = [
             'Récolte' => "🌾 Catégorie : Récolte — dépendance météo forte",
             'Plantation' => "🌱 Catégorie : Plantation — timing critique",
@@ -175,13 +188,16 @@ class TacheRiskService
             'Fertilisation' => "🧪 Catégorie : Fertilisation — précision requise",
             'Maintenance' => "🔧 Catégorie : Maintenance — risque standard",
         ];
-        
+
         $facteurs[] = $catLabels[$cat] ?? "📂 Catégorie : $cat";
         $score += $bonus;
 
         return min(100.0, $score);
     }
 
+    /**
+     * @param array<int, string> $facteurs
+     */
     private function calculerScoreSaisonnier(Tache $tache, array &$facteurs): float
     {
         $date = $tache->getDateDebut() ?? new \DateTime();
@@ -206,6 +222,9 @@ class TacheRiskService
         }
     }
 
+    /**
+     * @param array<int, string> $facteurs
+     */
     private function calculerScoreDelai(Tache $tache, array &$facteurs): float
     {
         if ($tache->getDateFin() === null) {
@@ -214,7 +233,7 @@ class TacheRiskService
         }
 
         $debut = $tache->getDateDebut() ?? new \DateTime();
-        $fin = $tache->getDateFin();
+        $fin = \DateTime::createFromInterface($tache->getDateFin()); // Fix: DateTimeInterface → DateTime
         $now = new \DateTime('today');
 
         $dureeTotal = $debut->diff($fin)->days;
@@ -246,6 +265,9 @@ class TacheRiskService
         return $score;
     }
 
+    /**
+     * @param array<int, string> $recos
+     */
     private function genererRecommandations(float $riskScore, float $scoreHist, float $scoreCharge, float $scoreDelai, float $scoreComp, string $nomEmp, Tache $tache, array &$recos): void
     {
         if ($riskScore < 30) {
@@ -265,8 +287,11 @@ class TacheRiskService
 
         if ($scoreDelai > 70) {
             $recos[] = "📅 Prolonger la date limite ou mobiliser des ressources supplémentaires.";
-            if ($tache->getDateFin() !== null) {
-                $nouvelleDate = (clone $tache->getDateFin())->modify('+3 days');
+            $dateFin = $tache->getDateFin();
+            if ($dateFin !== null) {
+                // Fix: utiliser DateTime::createFromInterface pour pouvoir appeler modify()
+                $nouvelleDate = \DateTime::createFromInterface($dateFin);
+                $nouvelleDate->modify('+3 days');
                 $recos[] = "💡 Suggestion : repousser la deadline au " . $nouvelleDate->format('d/m/Y') . " (+3 jours).";
             }
         }

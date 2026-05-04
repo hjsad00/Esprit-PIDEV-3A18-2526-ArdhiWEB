@@ -15,17 +15,17 @@ class AlerteTechnicien
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateSignalement = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 20, nullable: true)]
     private ?string $statut = 'non_lu'; // non_lu, lu
 
     #[ORM\ManyToOne(inversedBy: 'alerteTechniciens')]
-    #[ORM\JoinColumn(name: "id_materiel", referencedColumnName: "id_materiel", nullable: false)]
+    #[ORM\JoinColumn(name: "id_materiel", referencedColumnName: "id_materiel", nullable: false, onDelete: 'CASCADE')]
     private ?Materiel $materiel = null;
 
     #[ORM\ManyToOne]

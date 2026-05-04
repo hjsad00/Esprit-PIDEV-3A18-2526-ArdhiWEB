@@ -30,6 +30,8 @@ class EmployeRepository extends ServiceEntityRepository
     /**
      * Tous les employés d'un agriculteur avec tri + recherche
      * Identique au SortedList + FilteredList du desktop JavaFX
+     *
+     * @return Employe[]
      */
     public function findByAgriculteurTrie(
         int    $idAgriculteur,
@@ -61,11 +63,15 @@ class EmployeRepository extends ServiceEntityRepository
             $qb->orderBy($champ, $dir);
         }
 
-        return $qb->getQuery()->getResult();
+        return $qb->getQuery()
+            ->setMaxResults(50)
+            ->getResult();
     }
 
     /**
      * Alias simple sans tri (utilisé en interne)
+     *
+     * @return Employe[]
      */
     public function findByAgriculteur(int $idAgriculteur): array
     {
@@ -74,6 +80,8 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Uniquement les employés ACTIFS d'un agriculteur
+     *
+     * @return Employe[]
      */
     public function findActifsByAgriculteur(int $idAgriculteur): array
     {
@@ -81,13 +89,14 @@ class EmployeRepository extends ServiceEntityRepository
             ->where('e.idAgriculteur = :id')
             ->andWhere('e.actif = true')
             ->setParameter('id', $idAgriculteur)
-            ->orderBy('e.nom', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
     /**
      * Recherche par nom / prénom / email / poste / téléphone
+     *
+     * @return Employe[]
      */
     public function search(string $terme, int $idAgriculteur,
                            string $tri = 'nom', string $direction = 'asc'): array
@@ -136,32 +145,37 @@ class EmployeRepository extends ServiceEntityRepository
 
     /**
      * Compte les employés par poste — pour les statistiques
+     *
+     * @return array<string, int>
      */
     public function countByPoste(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('e')
-            ->select('e.poste, COUNT(e.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(e.poste, COUNT(e.id))')
             ->where('e.idAgriculteur = :id')
             ->setParameter('id', $idAgriculteur)
             ->groupBy('e.poste')
-            ->orderBy('total', 'DESC')
+            ->orderBy('e.poste', 'DESC')
             ->getQuery()
             ->getResult();
 
         $counts = [];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            $counts[$r['poste'] ?? 'Non défini'] = (int)$r['total'];
+            $counts[$r->key ?? 'Non défini'] = (int)$r->total;
         }
         return $counts;
     }
 
     /**
      * Compte les employés actifs/inactifs — pour les statistiques
+     *
+     * @return array{actifs: int, inactifs: int}
      */
     public function countByActif(int $idAgriculteur): array
     {
         $results = $this->createQueryBuilder('e')
-            ->select('e.actif, COUNT(e.id) as total')
+            ->select('NEW App\DTO\EmployeTache\CountDTO(e.actif, COUNT(e.id))')
             ->where('e.idAgriculteur = :id')
             ->setParameter('id', $idAgriculteur)
             ->groupBy('e.actif')
@@ -169,11 +183,12 @@ class EmployeRepository extends ServiceEntityRepository
             ->getResult();
 
         $counts = ['actifs' => 0, 'inactifs' => 0];
+        /** @var \App\DTO\EmployeTache\CountDTO $r */
         foreach ($results as $r) {
-            if ($r['actif']) {
-                $counts['actifs'] = (int)$r['total'];
+            if ($r->key) {
+                $counts['actifs'] = (int)$r->total;
             } else {
-                $counts['inactifs'] = (int)$r['total'];
+                $counts['inactifs'] = (int)$r->total;
             }
         }
         return $counts;

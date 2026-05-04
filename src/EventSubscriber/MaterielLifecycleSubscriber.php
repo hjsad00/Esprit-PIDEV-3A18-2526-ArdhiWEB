@@ -50,10 +50,10 @@ class MaterielLifecycleSubscriber implements EventSubscriberInterface
 
     private function createNotification(Materiel $materiel, string $titre, string $message): void
     {
-        if (!$materiel->getUserId()) return;
+        if (!$materiel->getUser()?->getId()) return;
 
         // Récupération de l'objet User à partir de l'ID (on utilise getReference pour la performance)
-        $user = $this->entityManager->getReference('App\Entity\UserAndDiag\User', $materiel->getUserId());
+        $user = $this->entityManager->getReference('App\Entity\UserAndDiag\User', $materiel->getUser()?->getId());
 
         $notif = new NotificationMaintenance();
         $notif->setUser($user);
