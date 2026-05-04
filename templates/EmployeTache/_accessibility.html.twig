@@ -139,35 +139,38 @@
 
 <style>
 /* ════════════════════════════════════════════════════════════════
-   BOUTON DÉCLENCHEUR
+   BOUTON DÉCLENCHEUR — intégré en bas du panneau services
    ════════════════════════════════════════════════════════════════ */
 #acc-trigger {
-    position: fixed;
-    bottom: 180px;
-    right: 28px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0d3b1f, #1a7a45);
-    border: 2px solid #27ae60;
-    color: #fff;
-    font-size: 22px;
-    cursor: pointer;
-    z-index: 8998;
-    box-shadow: 0 4px 16px rgba(26,122,69,.35);
-    transition: transform .2s, box-shadow .2s;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 8px;
+    background: linear-gradient(135deg, rgba(26,122,69,.08), rgba(13,59,31,.04));
+    border: 1.5px dashed rgba(39,174,96,.45);
+    border-radius: 12px;
+    color: #1a7a45;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .22s;
+    text-align: left;
 }
 #acc-trigger:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 24px rgba(26,122,69,.5);
+    background: rgba(39,174,96,.15);
+    border-color: #27ae60;
+    border-style: solid;
 }
 #acc-trigger:focus-visible {
     outline: 3px solid #27ae60;
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
+.acc-trigger-icon  { font-size: 18px; flex-shrink: 0; }
+.acc-trigger-text  { flex: 1; line-height: 1.25; }
+.acc-trigger-text small { display: block; font-size: 10px; opacity: .55; font-weight: 400; margin-top: 2px; }
+.acc-trigger-chevron { font-size: 20px; opacity: .35; flex-shrink: 0; }
 
 /* ════════════════════════════════════════════════════════════════
    OVERLAY
@@ -185,9 +188,12 @@
    ════════════════════════════════════════════════════════════════ */
 #acc-panel {
     position: fixed;
-    bottom: 250px;
+    top: 50%;
     right: 28px;
+    transform: translateY(-50%);
     width: min(360px, calc(100vw - 40px));
+    max-height: 90vh;
+    overflow-y: auto;
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 24px 64px rgba(0,0,0,.16), 0 4px 16px rgba(0,0,0,.08);
