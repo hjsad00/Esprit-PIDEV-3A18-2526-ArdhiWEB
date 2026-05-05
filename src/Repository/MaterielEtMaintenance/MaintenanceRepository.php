@@ -20,7 +20,7 @@ class MaintenanceRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('m')
             ->join('m.materiel', 'mat')
-            ->andWhere('mat.userId = :userId')
+            ->andWhere('mat.user = :userId')
             ->setParameter('userId', $userId);
 
         if ($type) {
@@ -48,7 +48,7 @@ class MaintenanceRepository extends ServiceEntityRepository
         $total = $this->createQueryBuilder('m')
             ->select('count(m.id_maintenance)')
             ->join('m.materiel', 'mat')
-            ->andWhere('mat.userId = :userId')
+            ->andWhere('mat.user = :userId')
             ->setParameter('userId', $userId)
             ->getQuery()
             ->getSingleScalarResult();
@@ -56,7 +56,7 @@ class MaintenanceRepository extends ServiceEntityRepository
         $enCours = $this->createQueryBuilder('m')
             ->select('count(m.id_maintenance)')
             ->join('m.materiel', 'mat')
-            ->andWhere('mat.userId = :userId')
+            ->andWhere('mat.user = :userId')
             ->andWhere('m.statut_maintenance = :statut')
             ->setParameter('userId', $userId)
             ->setParameter('statut', 'en_cours')

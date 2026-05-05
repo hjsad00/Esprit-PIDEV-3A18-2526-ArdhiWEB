@@ -72,7 +72,7 @@ class MaterielController extends AbstractController
                 }
             }
 
-            $materiel->setUserId($this->getUser()->getId());
+            $materiel->setUser($this->getUser());
             
             // Initialisation du seuil par défaut si non précisé
             if (!$materiel->getSeuilMaintenanceHeures()) {
@@ -104,7 +104,7 @@ class MaterielController extends AbstractController
     {
         $user = $this->getUser();
         $userId = $user->getId();
-        $materiels = $repo->findBy(['userId' => $userId]);
+        $materiels = $repo->findBy(['user' => $user]);
         
         // Compter les alertes non lues pour l'agriculteur
         $countUnread = $alerteRepo->countUnreadForAgriculteur($userId);

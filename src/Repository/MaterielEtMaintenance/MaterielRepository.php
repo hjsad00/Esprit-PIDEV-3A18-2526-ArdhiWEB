@@ -19,7 +19,7 @@ class MaterielRepository extends ServiceEntityRepository
     public function searchByUser(int $userId, ?string $search = null, ?string $type = null, ?string $etat = null): array
     {
         $qb = $this->createQueryBuilder('m')
-            ->andWhere('m.userId = :userId')
+            ->andWhere('m.user = :userId')
             ->setParameter('userId', $userId);
 
         if ($search) {
@@ -46,14 +46,14 @@ class MaterielRepository extends ServiceEntityRepository
     {
         $total = $this->createQueryBuilder('m')
             ->select('count(m.id)')
-            ->andWhere('m.userId = :userId')
+            ->andWhere('m.user = :userId')
             ->setParameter('userId', $userId)
             ->getQuery()
             ->getSingleScalarResult();
 
         $enPanne = $this->createQueryBuilder('m')
             ->select('count(m.id)')
-            ->andWhere('m.userId = :userId')
+            ->andWhere('m.user = :userId')
             ->andWhere('m.etat = :etat')
             ->setParameter('userId', $userId)
             ->setParameter('etat', 'En panne')
@@ -69,7 +69,7 @@ class MaterielRepository extends ServiceEntityRepository
     public function findEnRetardByUser(int $userId): array
     {
         return $this->createQueryBuilder('m')
-            ->andWhere('m.userId = :userId')
+            ->andWhere('m.user = :userId')
             ->andWhere('m.dateProchaineMaintenance < :now')
             ->setParameter('userId', $userId)
             ->setParameter('now', new \DateTime())

@@ -29,7 +29,7 @@ class ChatbotController extends AbstractController
         $history[] = ['role' => 'user', 'content' => $userMessage];
 
         // Récupérer le contexte du matériel de l'utilisateur
-        $materiels = $materielRepository->findBy(['userId' => $this->getUser()->getId()]);
+        $materiels = $materielRepository->findBy(['user' => $this->getUser()]);
         $context = "Liste des matériels de cet agriculteur :\n";
         foreach ($materiels as $m) {
             $heuresRelatves = $m->getHeuresUtilisation() - $m->getDerniereMaintenanceHeures();
