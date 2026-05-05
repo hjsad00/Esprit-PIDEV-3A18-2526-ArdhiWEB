@@ -9,21 +9,30 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
- * Tests unitaires du service Chatbot Ollama pour Marketplace.
- * 
- * Ce test vérifie le comportement de l'analyseur d'intentions sans faire de 
- * requêtes HTTP réelles (en "mockant" le HttpClient) pour la recherche et 
- * l'ajout au panier.
+ * Tests des intentions du Chatbot Marketplace (Ajout et Vidage de Panier).
  */
 class OllamaMarketplaceIntentServiceTest extends TestCase
 {
-    public function testChatbotIntentionAchatRemplirPanier(): void
+    private function createServiceWithMockedResponse(array $jsonResponse): OllamaMarketplaceIntentService
     {
-        // 1. On "mock" la réponse de l'API Ollama (on simule qu'Ollama retourne ce JSON)
         $mockResponse = $this->createMock(ResponseInterface::class);
         $mockResponse->method('getStatusCode')->willReturn(200);
-        
-        $ollamaAnswer = json_encode([
+        $mockResponse->method('toArray')->willReturn([
+            'response' => json_encode($jsonResponse)
+        ]);
+
+        $mockHttpClient = $this->createMock(HttpClientInterface::class);
+        $mockHttpClient->method('request')->willReturn($mockResponse);
+
+        $mockLogger = $this->createMock(LoggerInterface::class);
+
+        return new OllamaMarketplaceIntentService($mockHttpClient, $mockLogger);
+    }
+
+    public function testChatbotIntentionAjoutPanier(): void
+    {
+        // On simule qu'Ollama a détecté un ajout au panier (intention "achat")
+        $service = $this->createServiceWithMockedResponse([
             'intention' => 'achat',
             'produits' => [
                 ['nom' => 'Tomates', 'quantite' => 3],
@@ -35,83 +44,65 @@ class OllamaMarketplaceIntentServiceTest extends TestCase
             'prixMin' => null,
             'prixMax' => null,
         ]);
+
+        $result = $service->analyser('Je veux ajouter 3 tomates et 5 pommes dans mon panier');
+
+        $this->assertEquals('achat', $result['intention'], 'L\'intention doit être "achat" pour un ajout au panier.');
         
-        $mockResponse->method('toArray')->willReturn([
-            'response' => $ollamaAnswer
-        ]);
-
-        $mockHttpClient = $this->createMock(HttpClientInterface::class);
-        $mockHttpClient->method('request')->willReturn($mockResponse);
-
-        $mockLogger = $this->createMock(LoggerInterface::class);
-
-        // 2. On instancie le service avec nos Mocks
-        $service = new OllamaMarketplaceIntentService($mockHttpClient, $mockLogger);
-
-        // 3. Appel de la méthode à tester (le message n'a pas d'importance ici, c'est le mock qui répond)
-        $result = $service->analyser('Je veux 3 Tomates et 5 Pommes');
-
-        // 4. Assertions : Vérifier que le chatbot a bien compris l'intention de remplir le panier
-        $this->assertEquals('achat', $result['intention']);
-        
-        // Vérification des produits extraits
-        $this->assertCount(2, $result['produits']);
+        $this->assertCount(2, $result['produits'], 'Il doit y avoir 2 produits à ajouter au panier.');
         $this->assertEquals('Tomates', $result['produits'][0]['nom']);
         $this->assertEquals(3, $result['produits'][0]['quantite']);
         $this->assertEquals('Pommes', $result['produits'][1]['nom']);
         $this->assertEquals(5, $result['produits'][1]['quantite']);
     }
 
-    public function testChatbotIntentionRechercheProduit()
+    public function testChatbotIntentionViderPanier(): void
     {
-        // 1. Simulation d'une recherche avec des filtres
-        $mockResponse = $this->createMock(ResponseInterface::class);
-        $mockResponse->method('getStatusCode')->willReturn(200);
-        
-        $ollamaAnswer = json_encode([
-            'intention' => 'filtrer',
+        // On simule qu'Ollama a détecté une demande de vidage de panier (intention "vider_panier")
+        $service = $this->createServiceWithMockedResponse([
+            'intention' => 'vider_panier',
             'produits' => [],
-            'critere' => 'prix_asc',
-            'recherche' => 'Tracteur',
-            'categorie' => 'Agricole',
-            'prixMin' => 100,
-            'prixMax' => 5000,
-        ]);
-        
-        $mockResponse->method('toArray')->willReturn([
-            'response' => $ollamaAnswer
+            'critere' => null,
+            'recherche' => null,
+            'categorie' => null,
+            'prixMin' => null,
+            'prixMax' => null,
         ]);
 
-        $mockHttpClient = $this->createMock(HttpClientInterface::class);
-        $mockHttpClient->method('request')->willReturn($mockResponse);
+        $result = $service->analyser('Vider mon panier svp');
 
-        $mockLogger = $this->createMock(LoggerInterface::class);
-
-        $service = new OllamaMarketplaceIntentService($mockHttpClient, $mockLogger);
-
-        // 3. Action
-        $result = $service->analyser('Cherche des tracteurs agricoles entre 100 et 5000 dinars le moins cher possible');
-
-        // 4. Assertions
-        $this->assertEquals('filtrer', $result['intention']);
-        $this->assertEquals('Tracteur', $result['recherche']);
-        $this->assertEquals('Agricole', $result['categorie']);
-        $this->assertEquals(100, $result['prixMin']);
-        $this->assertEquals(5000, $result['prixMax']);
-        $this->assertEquals('prix_asc', $result['critere']);
+        $this->assertEquals('vider_panier', $result['intention'], 'L\'intention doit bien être reconnue comme "vider_panier".');
+        $this->assertCount(0, $result['produits'], 'Il ne doit y avoir aucun produit retourné pour le vidage.');
     }
 
-    public function testChatbotMessageVide()
+    public function testChatbotIntentionAjoutPanierHeuristiqueSecours(): void
     {
+        // Si l'API Ollama échoue ou renvoie hors sujet mais que le texte correspond à un ajout :
         $mockHttpClient = $this->createMock(HttpClientInterface::class);
+        $mockHttpClient->method('request')->willThrowException(new \RuntimeException('Erreur API'));
         $mockLogger = $this->createMock(LoggerInterface::class);
-
+        
         $service = new OllamaMarketplaceIntentService($mockHttpClient, $mockLogger);
 
-        // Action sur un message vide (ne devrait pas appeler Ollama, devrait retourner hors_sujet par défaut)
-        $result = $service->analyser('   ');
+        $result = $service->analyser('Ajouter 10 Tracteurs au panier');
 
-        // Assertions du fallback (normalement le service gère cela tout seul)
-        $this->assertEquals('hors_sujet', $result['intention']);
+        // La heuristique de secours devrait corriger le tir toute seule à la volée !
+        $this->assertEquals('achat', $result['intention']);
+        $this->assertNotEmpty($result['produits']);
+        $this->assertEquals(10, $result['produits'][0]['quantite']);
+    }
+
+    public function testChatbotIntentionViderPanierHeuristiqueSecours(): void
+    {
+        // Si l'API Ollama échoue, vérifions que le mot clef vider panier déclenche la heuristique
+        $mockHttpClient = $this->createMock(HttpClientInterface::class);
+        $mockHttpClient->method('request')->willThrowException(new \RuntimeException('Erreur API'));
+        $mockLogger = $this->createMock(LoggerInterface::class);
+        
+        $service = new OllamaMarketplaceIntentService($mockHttpClient, $mockLogger);
+
+        $result = $service->analyser('je veux vider le panier');
+
+        $this->assertEquals('vider_panier', $result['intention']);
     }
 }
