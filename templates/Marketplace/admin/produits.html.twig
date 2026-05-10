@@ -217,7 +217,7 @@
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
                                             {% if p.image %}
-                                                <img src="{{ asset('uploads/produits/' ~ p.image) }}" class="mp-admin-img">
+                                                <img src="{{ product_image_url(p.image) }}" class="mp-admin-img">
                                             {% else %}
                                                 <div class="mp-admin-img d-flex align-items-center justify-content-center text-muted">
                                                     <i class="bi bi-image" style="font-size: 1rem;"></i>

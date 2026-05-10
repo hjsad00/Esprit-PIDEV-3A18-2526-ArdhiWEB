@@ -391,7 +391,7 @@ async function openDetails(id) {
     } else { document.getElementById('modal-delivery-row').style.display = 'none'; }
     let html = '';
     cmd.items.forEach(item => {
-      const img = item.image ? `<img src="/uploads/produits/${item.image}" class="cmd-detail-img">` : `<div class="cmd-detail-img-placeholder"><i class="bi bi-image"></i></div>`;
+    const img = item.image ? `<img src="${window.resolveProductImageUrl(item.image)}" class="cmd-detail-img">` : `<div class="cmd-detail-img-placeholder"><i class="bi bi-image"></i></div>`;
       html += `<div class="cmd-detail-item">${img}<div class="cmd-detail-info"><strong>${item.nom}</strong><small>${item.quantite} × ${item.prixUnitaire} DT — Vendeur : ${item.vendeur}</small></div><div class="cmd-detail-price">${item.sousTotal} DT</div></div>`;
     });
     body.innerHTML = html;

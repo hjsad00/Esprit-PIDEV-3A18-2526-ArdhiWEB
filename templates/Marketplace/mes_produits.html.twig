@@ -239,7 +239,7 @@
                   <td>
                     <div class="mp-table-img">
                       {% if produit.image %}
-                        <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}">
+                        <img src="{{ product_image_url(produit.image) }}" alt="{{ produit.nom }}">
                       {% else %}
                         <div class="mp-table-img-placeholder">
                           <i class="bi bi-image"></i>
@@ -511,7 +511,7 @@
                     <div class="mp-form-upload-preview" id="upload-preview">
                       {# Affiche l'image actuelle si on est en mode édition avec une image existante #}
                       {% if formProduit and formProduit.image %}
-                        <img src="{{ asset('uploads/produits/' ~ formProduit.image) }}" alt="Image actuelle">
+                        <img src="{{ product_image_url(formProduit.image) }}" alt="Image actuelle">
                       {% else %}
                         <i class="bi bi-cloud-arrow-up"></i>
                         <span>Glissez ou cliquez pour choisir</span>
@@ -628,7 +628,7 @@ function editProduit(row) {
 
   const preview = document.getElementById('upload-preview');
   preview.innerHTML = data.image
-    ? '<img src="/uploads/produits/' + data.image + '" alt="Image actuelle">'
+    ? '<img src="' + window.resolveProductImageUrl(data.image) + '" alt="Image actuelle">'
     : '<i class="bi bi-cloud-arrow-up"></i><span>Glissez ou cliquez pour choisir</span>';
 
   document.getElementById('form-title').innerHTML =
@@ -931,7 +931,7 @@ window.addEventListener('load', function () {
           const tbody = document.querySelector('#produits-table tbody');
 
           const imgHtml = p.image
-            ? `<img src="/uploads/produits/${p.image}" alt="${p.nom}">`
+            ? `<img src="${window.resolveProductImageUrl(p.image)}" alt="${p.nom}">`
             : `<div class="mp-table-img-placeholder"><i class="bi bi-image"></i></div>`;
 
           const catHtml = p.categorie

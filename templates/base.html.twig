@@ -321,6 +321,24 @@
   <!-- Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
+  <script>
+    window.resolveProductImageUrl = function(image) {
+      if (!image) {
+        return '';
+      }
+
+      if (/^https?:\/\//i.test(image)) {
+        return image;
+      }
+
+      if (/^[a-zA-Z]:\\/.test(image) || image.startsWith('\\\\')) {
+        return "{{ path('app_product_image_local') }}?path=" + encodeURIComponent(image);
+      }
+
+      return "{{ asset('uploads/produits/') }}" + image;
+    };
+  </script>
+
   {% block javascripts %}{% endblock %}
 
   <script>

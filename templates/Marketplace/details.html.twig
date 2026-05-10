@@ -32,7 +32,7 @@
           <div class="col-lg-5">
             <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.04);height:400px;display:flex;align-items:center;justify-content:center;">
               {% if produit.image %}
-                <img src="{{ asset('uploads/produits/' ~ produit.image) }}" alt="{{ produit.nom }}" style="width:100%;height:100%;object-fit:cover;">
+                <img src="{{ product_image_url(produit.image) }}" alt="{{ produit.nom }}" style="width:100%;height:100%;object-fit:cover;">
               {% else %}
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);">
                   <i class="bi bi-flower1" style="font-size:6rem;color:#4a8c3f;opacity:0.4;"></i>

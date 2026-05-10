@@ -73,7 +73,7 @@
                             <div style="display:flex;align-items:center;gap:14px;">
                               <div class="cart-table-img">
                                 {% if ligne.produit.image %}
-                                  <img src="{{ asset('uploads/produits/' ~ ligne.produit.image) }}"
+                                  <img src="{{ product_image_url(ligne.produit.image) }}"
                                        alt="{{ ligne.produit.nom }}">
                                 {% else %}
                                   <div style="width:62px;height:62px;background:#f0f7ee;border-radius:10px;

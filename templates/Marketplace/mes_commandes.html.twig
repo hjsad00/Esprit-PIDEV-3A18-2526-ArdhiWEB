@@ -551,7 +551,7 @@ async function openDetails(id) {
     let html = '';
     cmd.items.forEach(item => {
       const img = item.image
-        ? `<img src="/uploads/produits/${item.image}" alt="${item.nom}" class="cmd-detail-img">`
+        ? `<img src="${window.resolveProductImageUrl(item.image)}" alt="${item.nom}" class="cmd-detail-img">`
         : `<div class="cmd-detail-img-placeholder"><i class="bi bi-image"></i></div>`;
 
       html += `

@@ -139,11 +139,18 @@ class ProduitController extends AbstractController
             try {
                 $projectDir = $this->getParameter('kernel.project_dir');
                 $projectDir = is_string($projectDir) ? $projectDir : '';
-                $imageFile->move(
-                    $projectDir . '/public/uploads/produits',
-                    $newFilename
-                );
-                $produit->setImage($newFilename);
+                $imagesDir = $this->getParameter('app.product_images_dir');
+                $imagesDir = is_string($imagesDir) ? $imagesDir : '';
+                if ($imagesDir === '') {
+                    $imagesDir = $projectDir . '/public/uploads/produits';
+                }
+
+                if (!is_dir($imagesDir)) {
+                    mkdir($imagesDir, 0777, true);
+                }
+
+                $imageFile->move($imagesDir, $newFilename);
+                $produit->setImage($imagesDir . DIRECTORY_SEPARATOR . $newFilename);
             } catch (FileException $e) {
                 if ($isAjax)
                     return $this->json(['success' => false, 'message' => "Erreur upload image."], 500);
@@ -242,8 +249,19 @@ class ProduitController extends AbstractController
         if ($imageName) {
             $projectDir = $this->getParameter('kernel.project_dir');
             $projectDir = is_string($projectDir) ? $projectDir : '';
-            $path = $projectDir . '/public/uploads/produits/' . $imageName;
-            if (file_exists($path)) {
+            $path = '';
+
+            if (preg_match('#^https?://#i', $imageName)) {
+                $path = '';
+            } elseif (preg_match('#^[a-zA-Z]:\\\\#', $imageName) || str_starts_with($imageName, '\\\\')) {
+                $path = $imageName;
+            } elseif (str_starts_with($imageName, '/')) {
+                $path = $projectDir . '/public' . $imageName;
+            } else {
+                $path = $projectDir . '/public/uploads/produits/' . $imageName;
+            }
+
+            if ($path !== '' && file_exists($path)) {
                 @unlink($path);
             }
         }

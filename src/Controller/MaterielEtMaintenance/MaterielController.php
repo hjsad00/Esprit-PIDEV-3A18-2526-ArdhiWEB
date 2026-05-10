@@ -201,8 +201,24 @@ class MaterielController extends AbstractController
 
             foreach ($produitsAssocies as $produit) {
                 if ($produit->getImage()) {
-                    $imageProduitPath = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $produit->getImage();
-                    if (is_file($imageProduitPath)) {
+                    $imageProduitPath = '';
+                    $imageValue = $produit->getImage();
+
+                    if (preg_match('#^https?://#i', $imageValue)) {
+                        $imageProduitPath = '';
+                    } elseif (preg_match('#^[a-zA-Z]:\\\\#', $imageValue) || str_starts_with($imageValue, '\\\\')) {
+                        $imageProduitPath = $imageValue;
+                    } elseif (str_starts_with($imageValue, '/')) {
+                        $projectDir = $this->getParameter('kernel.project_dir');
+                        $projectDir = is_string($projectDir) ? $projectDir : '';
+                        $imageProduitPath = $projectDir . '/public' . $imageValue;
+                    } else {
+                        $projectDir = $this->getParameter('kernel.project_dir');
+                        $projectDir = is_string($projectDir) ? $projectDir : '';
+                        $imageProduitPath = $projectDir . '/public/uploads/produits/' . $imageValue;
+                    }
+
+                    if ($imageProduitPath !== '' && is_file($imageProduitPath)) {
                         unlink($imageProduitPath);
                     }
                 }
@@ -348,9 +364,19 @@ class MaterielController extends AbstractController
             if (file_exists($srcPath)) {
                 $ext = pathinfo($materiel->getImage(), PATHINFO_EXTENSION);
                 $newFilename = 'materiel-' . $materiel->getId() . '-' . uniqid() . '.' . $ext;
-                $destPath = $this->getParameter('kernel.project_dir') . '/public/uploads/produits/' . $newFilename;
+                $imagesDir = $this->getParameter('app.product_images_dir');
+                $imagesDir = is_string($imagesDir) ? $imagesDir : '';
+                if ($imagesDir === '') {
+                    $imagesDir = $this->getParameter('kernel.project_dir') . '/public/uploads/produits';
+                }
+
+                if (!is_dir($imagesDir)) {
+                    mkdir($imagesDir, 0777, true);
+                }
+
+                $destPath = rtrim($imagesDir, "\\/") . DIRECTORY_SEPARATOR . $newFilename;
                 copy($srcPath, $destPath);
-                $produit->setImage($newFilename);
+                $produit->setImage($destPath);
             }
         }
 

@@ -10,6 +10,7 @@ parameters:
   app.twilio_sid: "%env(string:MARKETPLACE_TWILIO_SID)%"
   app.twilio_token: "%env(string:MARKETPLACE_TWILIO_TOKEN)%"
   app.twilio_whatsapp_number: "%env(string:MARKETPLACE_TWILIO_WHATSAPP_NUMBER)%"
+  app.product_images_dir: 'C:\Users\mejsa\ArdhiImages'
 
 services:
   # default configuration for services in *this* file
@@ -19,6 +20,7 @@ services:
     bind:
       string $mailFrom: "%app.mail_from%"
       string $projectDir: "%kernel.project_dir%"
+      string $productImagesDir: "%app.product_images_dir%"
       string $twilioSid: "%env(MATERIEL_TWILIO_SID)%"
       string $twilioToken: "%env(MATERIEL_TWILIO_AUTH_TOKEN)%"
       string $twilioFrom: "%env(resolve:TWILIO_FROM)%"
