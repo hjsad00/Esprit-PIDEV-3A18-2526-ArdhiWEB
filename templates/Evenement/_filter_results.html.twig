@@ -16,8 +16,15 @@
     {% for e in evenements %}
     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index0%3)*100 }}">
       <div class="ev-card">
+
+        {# ── Image with path normalization (fixes desktop-uploaded images) ── #}
         {% if e.imageUrl %}
-          <img src="{{ asset(e.imageUrl) }}" class="ev-card-img" alt="{{ e.titre }}"
+          {% set imgPath = e.imageUrl %}
+          {% if imgPath starts with 'uploads/' %}
+            {% set imgPath = '/' ~ imgPath %}
+          {% endif %}
+          <img src="{{ imgPath starts with 'http' ? imgPath : asset(imgPath) }}"
+               class="ev-card-img" alt="{{ e.titre }}"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
           <div class="ev-card-placeholder" style="display:none;">
             {% if e.type=='FOIRE' %}🌾{% elseif e.type=='FORMATION' %}📚{% elseif e.type=='CONFERENCE' %}🎤{% else %}🔧{% endif %}
