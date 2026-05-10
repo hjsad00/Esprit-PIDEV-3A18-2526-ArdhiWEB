@@ -620,7 +620,10 @@ class EmployeController extends AbstractController
             $projectDir = $this->getParameter('kernel.project_dir');
             $dir = $projectDir . '/public/uploads/employes/';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
-            $filename = 'EMP_' . $idEmploye . '_' . time() . '.' . $file->guessExtension();
+
+            // Nom normalisé identique à Java : EMP_{id}.{ext}
+            // → les deux apps écrasent proprement la même entrée
+            $filename = 'EMP_' . $idEmploye . '.' . $file->guessExtension();
             $file->move($dir, $filename);
             return '/uploads/employes/' . $filename;
         } catch (\Exception) {

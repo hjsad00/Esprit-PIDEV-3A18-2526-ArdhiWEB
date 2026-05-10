@@ -137,6 +137,6 @@ class GroqPredictionServiceTest extends TestCase
         // Vérifications
         $this->assertIsArray($result);
         $this->assertTrue($result['error']);
-        $this->assertStringContainsString('Réponse vide de Groq', $result['message']);
+        $this->assertStringContainsString('Réponse vide ou malformée de Groq', $result['message']);
     }
 }
