@@ -183,8 +183,9 @@
                     {{ loop.index }}
                 </div>
                 <div style="margin-top:15px; display:flex; flex-direction:column; align-items:center;">
-                    {% if item.emp.hasPhoto %}
-                        <img src="{{ item.emp.photoPath }}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; margin-bottom:8px; border:2px solid {{ colors[loop.index] }};" alt="{{ item.emp.nomComplet }}">
+                    {% set top3Photo = photoUrlMap[item.emp.id] ?? null %}
+                    {% if top3Photo %}
+                        <img src="{{ asset(top3Photo) }}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; margin-bottom:8px; border:2px solid {{ colors[loop.index] }};" alt="{{ item.emp.nomComplet }}">
                     {% else %}
                         <div class="emp-avatar" style="width:50px; height:50px; background:{{ colors[loop.index] }}; margin-bottom:8px; border: 2px solid white; box-shadow:0 0 5px rgba(0,0,0,0.1);">{{ item.emp.initiales }}</div>
                     {% endif %}
@@ -232,10 +233,12 @@
             <tbody>
             {% for emp in employes %}
             {% set perf = performanceMap[emp.id] ?? null %}
+            {# ✅ Résolution photo : gère chemin relatif Symfony, legacy timestamp, et chemin absolu Java #}
+            {% set resolvedPhoto = photoUrlMap[emp.id] ?? null %}
             <tr id="row-{{ emp.id }}">
                 <td>
-                    {% if emp.hasPhoto %}
-                        <img src="{{ emp.photoPath }}" class="emp-photo" alt="{{ emp.nomComplet }}">
+                    {% if resolvedPhoto %}
+                        <img src="{{ asset(resolvedPhoto) }}" class="emp-photo" alt="{{ emp.nomComplet }}">
                     {% else %}
                         {% set colors = ['#1abc9c','#3498db','#9b59b6','#e67e22','#e74c3c','#27ae60'] %}
                         <div class="emp-avatar" style="background:{{ colors[emp.id % 6] }}">{{ emp.initiales }}</div>
