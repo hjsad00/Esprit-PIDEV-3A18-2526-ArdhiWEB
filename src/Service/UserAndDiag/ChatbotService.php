@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 
 class ChatbotService
 {
-    private const API_KEY = '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';
     private const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
     private const MODEL_NAME = 'llama-3.3-70b-versatile';
     private const MAX_MESSAGES = 20;
@@ -56,7 +55,7 @@ class ChatbotService
 
             $response = $this->client->request('POST', self::API_URL, [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . self::API_KEY,
+                    'Authorization' => 'Bearer ' . ($_ENV['GROQ_API_KEY'] ?? ''),
                     'Content-Type' => 'application/json',
                 ],
                 'json' => $jsonPayload,

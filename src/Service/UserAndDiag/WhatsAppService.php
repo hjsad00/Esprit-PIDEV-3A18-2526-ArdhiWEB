@@ -7,9 +7,6 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class WhatsAppService
 {
-    private const ACCOUNT_SID = 'AC9c3432ef37f1587d3c5aa66874381487';
-    private const AUTH_TOKEN = '20ad44cd17c2b3de97087777dc451f58';
-    private const FROM_WHATSAPP = 'whatsapp:+14155238886';
     private const TWILIO_API_URL = 'https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json';
 
     public function __construct(
@@ -28,14 +25,18 @@ class WhatsAppService
     {
         // Ensure the number has the whatsapp: prefix
         $to = str_starts_with($toPhoneNumber, 'whatsapp:') ? $toPhoneNumber : 'whatsapp:' . $toPhoneNumber;
-        $url = sprintf(self::TWILIO_API_URL, self::ACCOUNT_SID);
+        $accountSid = $_ENV['TWILIO_SID'] ?? '';
+        $authToken = $_ENV['TWILIO_TOKEN'] ?? '';
+        $fromWhatsapp = $_ENV['TWILIO_WHATSAPP_FROM'] ?? 'whatsapp:+14155238886';
+
+        $url = sprintf(self::TWILIO_API_URL, $accountSid);
 
         try {
             $response = $this->client->request('POST', $url, [
-                'auth_basic' => [self::ACCOUNT_SID, self::AUTH_TOKEN],
+                'auth_basic' => [$accountSid, $authToken],
                 'body' => [
                     'To' => $to,
-                    'From' => self::FROM_WHATSAPP,
+                    'From' => $fromWhatsapp,
                     'Body' => $body
                 ]
             ]);

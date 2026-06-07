@@ -19,7 +19,7 @@ class GroqPredictionService
         $this->httpClient = $httpClient;
         $this->logger = $logger;
         // La clé Groq utilisée pour le chatbot
-        $this->groqApiKey = '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';
+        $this->groqApiKey = $_ENV['GROQ_API_KEY'] ?? '';
     }
 
     public function generatePrediction(Materiel $materiel): array

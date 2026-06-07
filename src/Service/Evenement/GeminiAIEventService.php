@@ -11,7 +11,6 @@ use Psr\Log\LoggerInterface;
  */
 class GeminiAIEventService
 {
-    private const GROQ_API_KEY = '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';
     private const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
     private const GROQ_MODEL   = 'llama-3.1-8b-instant';
 
@@ -44,7 +43,7 @@ class GeminiAIEventService
         try {
             $response = $this->httpClient->request('POST', self::GROQ_URL, [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . self::GROQ_API_KEY,
+                    'Authorization' => 'Bearer ' . ($_ENV['GROQ_API_KEY'] ?? ''),
                     'Content-Type'  => 'application/json',
                 ],
                 'json' => [

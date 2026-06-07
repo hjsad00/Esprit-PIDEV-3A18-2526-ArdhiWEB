@@ -13,7 +13,7 @@ class ChatbotService
     {
         $this->httpClient = $httpClient;
         // La clé fournie par l'utilisateur
-        $this->groqApiKey = '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';
+        $this->groqApiKey = $_ENV['GROQ_API_KEY'] ?? '';
     }
 
     public function getResponse(array $messages, string $context): string

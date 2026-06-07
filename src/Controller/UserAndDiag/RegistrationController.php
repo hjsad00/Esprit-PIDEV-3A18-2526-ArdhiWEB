@@ -56,7 +56,7 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
-            $secret = '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
+            $secret = $_ENV['RECAPTCHA3_SECRET'] ?? '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
@@ -261,9 +261,9 @@ class RegistrationController extends AbstractController
         $session->set('sms_otp_phone', $phone);
 
         // Twilio API call
-        $twilioSid = 'AC9c3432ef37f1587d3c5aa66874381487';
-        $twilioToken = '20ad44cd17c2b3de97087777dc451f58';
-        $twilioFrom = '+13527902472'; // Your Twilio number
+        $twilioSid = $_ENV['TWILIO_SID'] ?? '';
+        $twilioToken = $_ENV['TWILIO_TOKEN'] ?? '';
+        $twilioFrom = $_ENV['TWILIO_FROM'] ?? '+13527902472'; // Your Twilio number
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://api.twilio.com/2010-04-01/Accounts/{$twilioSid}/Messages.json");

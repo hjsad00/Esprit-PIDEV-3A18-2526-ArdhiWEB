@@ -21,4 +21,6 @@
 
 ###> phpstan/phpstan ###
 phpstan.neon
-###< phpstan/phpstan ###
+###< phpstan/phpstaan ###
+
+/.env
