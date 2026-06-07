@@ -6,8 +6,13 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ImgBBService
 {
-    private const API_KEY = '99d0529ec6a3085b1b676ad6b7b9fa5f';
+    private string $apiKey;
     private const UPLOAD_URL = 'https://api.imgbb.com/1/upload';
+
+    public function __construct(string $imgbbApiKey)
+    {
+        $this->apiKey = $imgbbApiKey;
+    }
 
     /**
      * Uploads an image file to ImgBB and returns the direct display URL.

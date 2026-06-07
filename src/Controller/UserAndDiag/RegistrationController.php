@@ -56,7 +56,7 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_register');
             }
 
-            $secret = $_ENV['RECAPTCHA3_SECRET'] ?? '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
+            $secret = $_ENV['RECAPTCHA3_SECRET'] ?? '';
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");

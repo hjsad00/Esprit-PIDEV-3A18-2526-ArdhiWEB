@@ -26,6 +26,9 @@ services:
       string $twilioFrom: "%env(resolve:TWILIO_FROM)%"
       string $twilioWhatsAppFrom: "%env(resolve:TWILIO_WHATSAPP_FROM)%"
       string $geminiApiKey: "%env(GEMINI_API_KEY)%"
+      string $stripeSecretKey: "%env(string:STRIPE_SECRET_KEY)%"
+      string $imgbbApiKey: "%env(string:IMGBB_API_KEY)%"
+      string $recaptchaSecret: "%env(string:RECAPTCHA3_SECRET)%"
 
   # makes classes in src/ available to be used as services
   # this creates a service per class whose id is the fully-qualified class name
@@ -91,6 +94,7 @@ services:
       $httpClient: "@http_client"
       $logger: "@logger"
       $projectDir: "%kernel.project_dir%"
+      $unsplashAccessKey: "%env(string:UNSPLASH_API_KEY)%"
 
   App\Service\Evenement\GeminiAIEventService:
     arguments:
@@ -113,6 +117,8 @@ services:
       $logger: "@logger"
       $projectDir: "%kernel.project_dir%"
       $requestStack: "@request_stack"
+      $googleClientId: "%env(string:GOOGLE_CLIENT_ID)%"
+      $googleClientSecret: "%env(string:GOOGLE_CLIENT_SECRET)%"
 
   App\Service\Evenement\SmartEmailRecommendationService:
     arguments:

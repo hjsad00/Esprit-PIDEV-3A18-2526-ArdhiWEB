@@ -11,13 +11,13 @@ use Psr\Log\LoggerInterface;
  */
 class UnsplashImageService
 {
-    private const UNSPLASH_ACCESS_KEY = 'QLOSI6_S3p9kjO0uI8rKjw_4mpQzrzFgasED-jeQnfo';
-    private const UNSPLASH_API_URL    = 'https://api.unsplash.com/search/photos';
+    private const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 
     public function __construct(
         private HttpClientInterface $httpClient,
         private LoggerInterface     $logger,
-        private string              $projectDir   // injected via services.yaml bind
+        private string              $projectDir,
+        private string              $unsplashAccessKey
     ) {}
 
     /**
@@ -42,7 +42,7 @@ class UnsplashImageService
                 'query' => [
                     'query'      => $query,
                     'per_page'   => 1,
-                    'client_id'  => self::UNSPLASH_ACCESS_KEY,
+                    'client_id'  => $this->unsplashAccessKey,
                 ],
             ]);
 

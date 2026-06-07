@@ -12,11 +12,9 @@ class StripeService
     private HttpClientInterface $httpClient;
     private RequestStack $requestStack;
 
-    public function __construct(HttpClientInterface $httpClient, RequestStack $requestStack)
+    public function __construct(HttpClientInterface $httpClient, RequestStack $requestStack, string $stripeSecretKey)
     {
-        // Hardcoded key as per user's JavaFX code for testing.
-        // In production this should be $_ENV['STRIPE_SECRET_KEY']
-        $this->stripeSecretKey = "sk_test_51T5AXmGVNitoJdaIV0Z33VLG9vKRk0tUTsKbirlLbxwz7oceTClrPGPBMMU5Axw8f7QWaD59I7ZOgTn7pT5QZ5Z700z4GmwgVA";
+        $this->stripeSecretKey = $stripeSecretKey;
         $this->httpClient = $httpClient;
         $this->requestStack = $requestStack;
     }

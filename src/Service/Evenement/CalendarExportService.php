@@ -14,8 +14,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class CalendarExportService
 {
-    private const CLIENT_ID = '912344954797-lcmfd0q95p4enbp2lhtjllhs43563oup.apps.googleusercontent.com';
-    private const CLIENT_SECRET = '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';
     private const REDIRECT_URI = 'http://localhost:8000/evenement/calendar/callback';
     private const SCOPES = [Calendar::CALENDAR_EVENTS];
     private const APP_NAME = 'ARDHI - Module Evenements';
@@ -23,7 +21,9 @@ class CalendarExportService
     public function __construct(
         private LoggerInterface $logger,
         private string $projectDir,
-        private RequestStack $requestStack
+        private RequestStack $requestStack,
+        private string $googleClientId,
+        private string $googleClientSecret
     ) {}
 
     public function getAuthorizationUrl(string $userEmail): string
@@ -316,8 +316,8 @@ class CalendarExportService
     {
         $client = new Client();
         $client->setApplicationName(self::APP_NAME);
-        $client->setClientId(self::CLIENT_ID);
-        $client->setClientSecret(self::CLIENT_SECRET);
+        $client->setClientId($this->googleClientId);
+        $client->setClientSecret($this->googleClientSecret);
         $client->setRedirectUri(self::REDIRECT_URI);
         $client->setScopes(self::SCOPES);
         $client->setAccessType('offline');

@@ -9,10 +9,12 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class RecaptchaSubscriber implements EventSubscriberInterface
 {
     private RequestStack $requestStack;
+    private string $recaptchaSecret;
 
-    public function __construct(RequestStack $requestStack)
+    public function __construct(RequestStack $requestStack, string $recaptchaSecret)
     {
         $this->requestStack = $requestStack;
+        $this->recaptchaSecret = $recaptchaSecret;
     }
 
     public static function getSubscribedEvents(): array
@@ -36,7 +38,7 @@ class RecaptchaSubscriber implements EventSubscriberInterface
             throw new CustomUserMessageAuthenticationException('Veuillez activer la sécurité reCAPTCHA.');
         }
 
-        $secret = '6Lealb4sAAAAAMv5UN8i9JLYwq26SCpwtFKFTGAp';
+        $secret = $this->recaptchaSecret;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
