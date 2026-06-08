@@ -29,7 +29,7 @@ class ImgBBService
             curl_setopt($ch, CURLOPT_URL, self::UPLOAD_URL);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-                'key' => self::API_KEY,
+                'key' => $this->apiKey,
                 'image' => $base64,
             ]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
