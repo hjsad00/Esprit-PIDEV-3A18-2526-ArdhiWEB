@@ -21,6 +21,8 @@
 
 ###> phpstan/phpstan ###
 phpstan.neon
-###< phpstan/phpstaan ###
+###< phpstan/phpstan ###
 
 /.env
+
+scratch/
