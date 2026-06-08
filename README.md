@@ -1,7 +1,7 @@
 # ArdhiWEB
 
 ## Description
-ArdhiWEB est une plateforme web développée avec Symfony 6.4. Elle propose diverses fonctionnalités liées à la gestion de l'agriculture, des parcelles, la marketplace, et l'intégration de services IA et de communication.
+Ardhi est une plateforme web développée avec Symfony 6.4. Elle propose diverses fonctionnalités liées à la gestion de l'agriculture, des parcelles, la marketplace, et l'intégration de services IA et de communication.
 
 ## Technologies utilisées
 - Frontend : HTML, CSS, JS, Twig
@@ -45,5 +45,5 @@ Voir `.env.example`
 ## Auteurs, Classe, Tuteur
 - Auteurs : Souibgui Saifeddine, Affi Rim, Ben Attia Yasmine, Rahmouni Yasmine, Delhoumi Elyes, Haj Salem Adel 
 - Classe : 3A18
-- Tuteur : El Hakim Imen, Gaudria Khaled
+- Tuteur : Mme El Hakim Imen
 
